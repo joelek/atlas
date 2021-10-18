@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"declaration": true,
+		"lib": [
+			"esnext"
+		],
+		"module": "commonjs",
+		"outDir": "./build/",
+		"rootDir": "./source/",
+		"strict": true,
+		"target": "esnext"
+	},
+	"include": []
+}
