@@ -14,3 +14,10 @@ Relational database built on the Älmhult Cabinet storage system.
 * Investigate possibility of adding offset computation to RobinHoodHash.
 * Improve iterators for RobinHoodHash.
 * Optimize RobinHoodHash with minProbeDistance and maxProbeDistance.
+* Add support for storing null values in CompressedTrie.
+* Optimize CompressedTrie by storing total for each child within the node.
+* Optimize CompressedTrie by storing leaf residents at parent node.
+* Improve iterators for CompressedTrie.
+* Add support for smaller address spaces for CompressedTrie.
+* Investigate possibility of removing parent pointers from CompressedTrie through recursive calls.
+* Improve types wrapping buffers.
