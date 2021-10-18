@@ -22,6 +22,22 @@ export function compareKey(one: Key, two: Key): number {
 	return 0;
 };
 
+export function comparePathPart(one: PathPart, two: PathPart): number {
+	if (one.length < two.length) {
+		return -1;
+	}
+	if (one.length > two.length) {
+		return 1;
+	}
+	for (let i = 0; i < one.length; i++) {
+		let comparison = one[i] - two[i];
+		if (comparison !== 0) {
+			return comparison;
+		}
+	}
+	return 0;
+};
+
 export function computeCommonPrefixLength(one: PathPart, two: PathPart): number {
 	let length = Math.min(one.length, two.length);
 	for (let i = 0; i < length; i++) {
