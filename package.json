@@ -1,0 +1,27 @@
+{
+	"bin": {},
+	"dependencies": {
+		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.0"
+	},
+	"devDependencies": {
+		"@types/node": "^16.7",
+		"typescript": "^4.4"
+	},
+	"license": "UNLICENSED",
+	"main": "./dist/lib/index.js",
+	"name": "@joelek/billy",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/joelek/billy.git"
+	},
+	"scripts": {
+		"build": "npm run codegen && npm run compile && npm run package",
+		"clean": "rm -rf ./build/ ./node_modules/",
+		"codegen": "",
+		"compile": "rm -rf ./build/* && npx tsc --build",
+		"package": "rm -rf ./dist/* && cp -r ./build/* ./dist/",
+		"preversion": "npm run build && git add ./",
+		"postversion": "git push && git push --tags"
+	},
+	"version": "0.0.0"
+}
