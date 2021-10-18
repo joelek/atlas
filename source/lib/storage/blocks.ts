@@ -506,8 +506,12 @@ export class DiskBlockHandler implements BlockHandler {
 		this.writeEntry(indexTwo, entryOne);
 		let blockOne = this.blockCache.remove(indexOne);
 		let blockTwo = this.blockCache.remove(indexTwo);
-		this.blockCache.insert(indexOne, blockTwo);
-		this.blockCache.insert(indexTwo, blockOne);
+		if (is.present(blockTwo)) {
+			this.blockCache.insert(indexOne, blockTwo);
+		}
+		if (is.present(blockOne)) {
+			this.blockCache.insert(indexTwo, blockOne);
+		}
 	}
 
 	writeBlock(index: number, buffer?: Buffer, skipLength?: number): Buffer {
