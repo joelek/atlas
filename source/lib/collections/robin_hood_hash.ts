@@ -3,11 +3,7 @@ import { BlockHandler } from "../storage";
 import { StreamIterable } from "../stream";
 import * as is from "../is";
 import * as keys from "../keys";
-
-interface RobinHoodHashEntry {
-	key(): keys.Key;
-	value(): number
-};
+import * as shared from "./shared";
 
 interface RobinHoodHashDetail {
 	getKeyForValue(value: number): keys.Key;
@@ -212,7 +208,7 @@ export class RobinHoodHash {
 		this.writeHeader(header);
 	}
 
-	* [Symbol.iterator](): Iterator<RobinHoodHashEntry> {
+	* [Symbol.iterator](): Iterator<shared.Entry> {
 		let slotCount = this.getSlotCount();
 		for (let slotIndex = 0; slotIndex < slotCount; slotIndex++) {
 			let { isOccupied, probeDistance, value} = this.readSlot(slotIndex);
