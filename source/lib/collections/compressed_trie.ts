@@ -7,6 +7,8 @@ import * as shared from "./shared";
 
 export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 
+export type Direction = "increasing" | "decreasing";
+
 export interface SearchResults<A> extends Iterable<A> {
 	total(): number;
 };
@@ -110,7 +112,64 @@ export class CompressedTrie {
 	private blockHandler: BlockHandler;
 	private blockIndex: number;
 
-	private * createIterable(nodePath: NodePath, cursor: { offset: number, length: number }): Iterable<shared.Entry> {
+	private * createDecreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<shared.Entry<number>> {
+		let head = new NodeHead();
+		let { path, blockIndex } = nodePath;
+		if (DEBUG) IntegerAssert.atLeast(1, path.length);
+		this.blockHandler.readBlock(blockIndex, head.buffer, 0);
+		let total = head.total();
+		if (cursor.offset >= total) {
+			cursor.offset -= total;
+			return;
+		}
+		if (cursor.length <= 0) {
+			return;
+		}
+		let prefix = head.prefix();
+		if (this.blockHandler.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.blockHandler.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
+			for (let i = 16 - 1; i >= 0; i--) {
+				let child = body.child(i);
+				if (child !== 0) {
+					yield * this.createDecreasingIterable({
+						path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix, i]],
+						blockIndex: child
+					}, cursor, directions);
+					if (cursor.length <= 0) {
+						return;
+					}
+				}
+			}
+		}
+		let subtree = head.subtree();
+		if (subtree !== 0) {
+			yield * this.createIterable({
+				path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix], []],
+				blockIndex: subtree
+			}, cursor, directions);
+			if (cursor.length <= 0) {
+				return;
+			}
+		}
+		let resident = head.resident();
+		if (resident !== 0) {
+			if (cursor.offset === 0) {
+				yield {
+					key: () => keys.getKeyFromPath([...path.slice(0, -1), [...path[path.length - 1], ...prefix]]),
+					value: () => resident
+				};
+				cursor.length -= 1;
+				if (cursor.length <= 0) {
+					return;
+				}
+			} else {
+				cursor.offset -= 1;
+			}
+		}
+	}
+
+	private * createIncreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<shared.Entry<number>> {
 		let head = new NodeHead();
 		let { path, blockIndex } = nodePath;
 		if (DEBUG) IntegerAssert.atLeast(1, path.length);
@@ -144,7 +203,7 @@ export class CompressedTrie {
 			yield * this.createIterable({
 				path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix], []],
 				blockIndex: subtree
-			}, cursor);
+			}, cursor, directions);
 			if (cursor.length <= 0) {
 				return;
 			}
@@ -155,15 +214,25 @@ export class CompressedTrie {
 			for (let i = 0; i < 16; i++) {
 				let child = body.child(i);
 				if (child !== 0) {
-					yield * this.createIterable({
+					yield * this.createIncreasingIterable({
 						path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix, i]],
 						blockIndex: child
-					}, cursor);
+					}, cursor, directions);
 					if (cursor.length <= 0) {
 						return;
 					}
 				}
 			}
+		}
+	}
+
+	private * createIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<shared.Entry<number>> {
+		directions = [...directions];
+		let direction = directions.shift() ?? "increasing";
+		if (direction === "increasing") {
+			yield * this.createIncreasingIterable(nodePath, cursor, directions);
+		} else {
+			yield * this.createDecreasingIterable(nodePath, cursor, directions);
 		}
 	}
 
@@ -295,6 +364,84 @@ export class CompressedTrie {
 		return blockIndex;
 	}
 
+	private getMatchingRange2(key: keys.Key, relationship: Relationship): { offset: number, length: number } | undefined {
+		let head = new NodeHead();
+		this.blockHandler.readBlock(this.blockIndex, head.buffer);
+		let total = head.total();
+		let traversion = this.traverse(key);
+		this.blockHandler.readBlock(traversion.nodePath.blockIndex, head.buffer, 0);
+		let resident = head.resident();
+		let isPrefix = keys.isPathPrefix(key.map(keys.getNibblesFromBytes), traversion.nodePath.path);
+		if (relationship === "=") {
+			if (traversion.keyOrderRelativeToNode === 0) {
+				return {
+					offset: traversion.skipped,
+					length: (resident !== 0 ? 1 : 0)
+				};
+			}
+		} else if (relationship === "^=") {
+			if (traversion.keyOrderRelativeToNode === 0) {
+				return {
+					offset: traversion.skipped,
+					length: head.total()
+				};
+			} else if (traversion.keyOrderRelativeToNode < 0) {
+				return {
+					offset: traversion.skipped,
+					length: isPrefix ? head.total() : 0
+				};
+			}
+		} else if (relationship === "<") {
+			if (traversion.keyOrderRelativeToNode === 0) {
+				return {
+					offset: 0,
+					length: traversion.skipped
+				};
+			} else if (traversion.keyOrderRelativeToNode < 0) {
+				return {
+					offset: 0,
+					length: traversion.skipped
+				};
+			}
+		} else if (relationship === "<=") {
+			if (traversion.keyOrderRelativeToNode === 0) {
+				return {
+					offset: 0,
+					length: traversion.skipped + (resident !== 0 ? 1 : 0)
+				};
+			} else {
+				return {
+					offset: 0,
+					length: traversion.skipped
+				};
+			}
+		} else if (relationship === ">") {
+			if (traversion.keyOrderRelativeToNode === 0) {
+				return {
+					offset: traversion.skipped + (resident !== 0 ? 1 : 0),
+					length: total - traversion.skipped - (resident !== 0 ? 1 : 0)
+				};
+			} else {
+				return {
+					offset: traversion.skipped,
+					length: total - traversion.skipped
+				};
+			}
+		} else if (relationship === ">=") {
+			if (traversion.keyOrderRelativeToNode === 0) {
+				return {
+					offset: traversion.skipped,
+					length: total - traversion.skipped
+				};
+			} else {
+				return {
+					offset: traversion.skipped,
+					length: total - traversion.skipped
+				};
+			}
+		}
+	}
+
 	private getMatchingRange(key: keys.Key, relationship: Relationship): { offset: number, length: number } | undefined {
 		let head = new NodeHead();
 		let next = new NodeHead();
@@ -411,6 +558,10 @@ export class CompressedTrie {
 				blockIndex = child;
 			}
 			if (keyIndex + 1 < key.length) {
+				let resident = head.resident();
+				if (resident !== 0) {
+					count += 1;
+				}
 				let subtree = head.subtree();
 				if (subtree === 0) {
 					if (relationship === "<") {
@@ -464,7 +615,9 @@ export class CompressedTrie {
 				length: count
 			};
 		} else if (relationship === ">") {
-			count += resident !== 0 ? 1 : 0;
+			if (keys.comparePath([head.prefix()], key.map(keys.getNibblesFromBytes)) <= 0) {
+				count += resident !== 0 ? 1 : 0;
+			}
 			return {
 				offset: count,
 				length: total - count
@@ -478,46 +631,29 @@ export class CompressedTrie {
 		return;
 	}
 
-	private traverse(key: keys.Key): { nodePath: NodePath, skipped: number, relationship: Relationship } {
+	private traverse(key: keys.Key): { nodePath: NodePath, skipped: number, keyOrderRelativeToNode: number } {
 		let head = new NodeHead();
 		let next = new NodeHead();
 		let body = new NodeBody();
-		let path = new Array<Array<number>>();
+		let path = [[]] as keys.Path;
 		let blockIndex = this.blockIndex;
 		let skipped = 0;
-		for (let [keyIndex, keyPart] of key.entries()) {
-			path.push([]);
+		outer: for (let [keyIndex, keyPart] of key.entries()) {
 			let keyNibbles = keys.getNibblesFromBytes(keyPart);
-			while (true) {
+			inner: while (keyNibbles.length > 0) {
 				this.blockHandler.readBlock(blockIndex, head.buffer);
 				let nodeNibbles = head.prefix();
-				if (keyNibbles.length > 0) {
-					let commonPrefixLength = keys.computeCommonPrefixLength(nodeNibbles, keyNibbles);
-					if (commonPrefixLength < nodeNibbles.length) {
-						return {
-							nodePath: {
-								path,
-								blockIndex
-							},
-							skipped,
-							relationship: (keyIndex + 1 < key.length) ? "<" : "^="
-						};
-					}
-					keyNibbles = keyNibbles.slice(commonPrefixLength);
+				let commonPrefixLength = keys.computeCommonPrefixLength(nodeNibbles, keyNibbles);
+				if (commonPrefixLength < nodeNibbles.length) {
+					break outer;
 				}
+				keyNibbles.splice(0, commonPrefixLength);
 				let keyNibble = keyNibbles.shift();
 				if (is.absent(keyNibble)) {
-					break;
+					break inner;
 				}
 				if (this.blockHandler.getBlockSize(blockIndex) < NodeHead.LENGTH + NodeBody.LENGTH) {
-					return {
-						nodePath: {
-							path,
-							blockIndex
-						},
-						skipped,
-						relationship: ">"
-					};
+					break outer;
 				}
 				if (head.resident() !== 0) {
 					skipped += 1;
@@ -525,32 +661,26 @@ export class CompressedTrie {
 				this.blockHandler.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
 				let child = body.child(keyNibble);
 				if (child === 0) {
-					let lastChild: number | undefined;
+					let precedingNibble: number | undefined;
 					for (let i = keyNibble - 1; i >= 0; i--) {
 						let child = body.child(i);
 						if (child !== 0) {
-							lastChild = i;
+							precedingNibble = i;
 							break;
 						}
 					}
-					if (is.present(lastChild)) {
-						for (let i = 0; i < lastChild; i++) {
+					if (is.present(precedingNibble)) {
+						for (let i = 0; i < precedingNibble; i++) {
 							let child = body.child(i);
 							if (child !== 0) {
 								this.blockHandler.readBlock(child, next.buffer, 0);
 								skipped += next.total();
 							}
 						}
-						blockIndex = body.child(lastChild);
+						path[path.length-1].push(...nodeNibbles, precedingNibble);
+						blockIndex = body.child(precedingNibble);
 					}
-					return {
-						nodePath: {
-							path,
-							blockIndex
-						},
-						skipped,
-						relationship: "<"
-					};
+					break outer;
 				}
 				for (let i = 0; i < keyNibble; i++) {
 					let child = body.child(i);
@@ -559,31 +689,32 @@ export class CompressedTrie {
 						skipped += next.total();
 					}
 				}
-				path[path.length - 1].push(...nodeNibbles, keyNibble);
+				path[path.length-1].push(...nodeNibbles, keyNibble);
 				blockIndex = child;
 			}
 			if (keyIndex + 1 < key.length) {
+				let resident = head.resident();
+				if (resident !== 0) {
+					skipped += 1;
+				}
 				let subtree = head.subtree();
 				if (subtree === 0) {
-					return {
-						nodePath: {
-							path,
-							blockIndex
-						},
-						skipped,
-						relationship: ">"
-					};
+					break outer;
 				}
+				path[path.length-1].push(...head.prefix());
+				path.push([]);
 				blockIndex = subtree;
 			}
 		}
+		this.blockHandler.readBlock(blockIndex, head.buffer);
+		path[path.length-1].push(...head.prefix());
 		return {
 			nodePath: {
 				path,
 				blockIndex
 			},
 			skipped,
-			relationship: "="
+			keyOrderRelativeToNode: keys.comparePath(key.map(keys.getNibblesFromBytes), path)
 		};
 	}
 
@@ -624,14 +755,14 @@ export class CompressedTrie {
 		this.blockIndex = blockIndex;
 	}
 
-	* [Symbol.iterator](): Iterator<shared.Entry> {
+	* [Symbol.iterator](): Iterator<shared.Entry<number>> {
 		yield * this.createIterable({
 			path: [[]],
 			blockIndex: this.blockIndex
 		}, {
 			offset: 0,
 			length: this.length()
-		});
+		}, []);
 	}
 
 	debug(nodePath?: NodePath): void {
@@ -653,6 +784,51 @@ export class CompressedTrie {
 				subtree: head.subtree()
 			});
 		}
+	}
+
+	branch(key: keys.Key): CompressedTrie | undefined {
+		let traversion = this.traverse(key);
+		if (traversion.keyOrderRelativeToNode !== 0) {
+			return;
+		}
+		let { blockIndex } = traversion.nodePath;
+		let head = new NodeHead();
+		this.blockHandler.readBlock(blockIndex, head.buffer, 0);
+		let subtree = head.subtree();
+		if (subtree === 0) {
+			return;
+		}
+		return new CompressedTrie(this.blockHandler, subtree);
+	}
+
+	private doDelete(index: number): void {
+		let head = new NodeHead();
+		this.blockHandler.readBlock(index, head.buffer, 0);
+		let subtree = head.subtree();
+		if (this.blockHandler.getBlockSize(index) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.blockHandler.readBlock(index, body.buffer, NodeBody.OFFSET);
+			for (let i = 0; i < 16; i++) {
+				let child = body.child(i);
+				if (child !== 0) {
+					this.doDelete(child);
+				}
+			}
+		}
+		if (subtree !== 0) {
+			this.doDelete(subtree);
+		}
+		this.blockHandler.deleteBlock(index);
+	}
+
+	delete(): void {
+		this.doDelete(this.blockIndex);
+	}
+
+	export(): { block: number } {
+		return {
+			block: this.blockIndex
+		};
 	}
 
 	insert(key: keys.Key, value: number): boolean {
@@ -680,7 +856,7 @@ export class CompressedTrie {
 	lookup(key: keys.Key): number | undefined {
 		let head = new NodeHead();
 		let traversion = this.traverse(key);
-		if (traversion.relationship !== "=") {
+		if (traversion.keyOrderRelativeToNode !== 0) {
 			return;
 		}
 		let { blockIndex } = traversion.nodePath;
@@ -695,7 +871,7 @@ export class CompressedTrie {
 	remove(key: keys.Key): boolean {
 		let head = new NodeHead();
 		let traversion = this.traverse(key);
-		if (traversion.relationship !== "=") {
+		if (traversion.keyOrderRelativeToNode !== 0) {
 			return false;
 		}
 		let { blockIndex } = traversion.nodePath;
@@ -709,7 +885,7 @@ export class CompressedTrie {
 		return true;
 	}
 
-	search(key: keys.Key, relationship: Relationship, offset?: number, length?: number): SearchResults<shared.Entry> {
+	search(key: keys.Key, relationship: Relationship, options?: { anchor?: keys.Key, offset?: number, length?: number, directions?: Array<Direction> }): SearchResults<shared.Entry<number>> {
 		let range = this.getMatchingRange(key, relationship);
 		if (is.absent(range)) {
 			return {
@@ -717,16 +893,31 @@ export class CompressedTrie {
 				total: () => 0
 			};
 		}
-		offset = Math.max(0, Math.min(offset ?? 0, range.length));
-		length = Math.max(0, Math.min(length ?? 10, range.length - offset));
-		offset += range.offset;
+		let directions = options?.directions ?? [];
+		let direction = directions[0] ?? "increasing";
+		let anchor = options?.anchor;
+		if (is.present(anchor)) {
+			let anchorRange = this.getMatchingRange(anchor, direction === "increasing" ? ">" : "<");
+			if (is.present(anchorRange)) {
+				range = anchorRange; // TODO: Overlap.
+			}
+		}
+		let offset = Math.max(0, Math.min(options?.offset ?? 0, range.length));
+		let length = Math.max(0, Math.min(options?.length ?? 10, range.length - offset));
+		if (direction === "increasing") {
+			offset += range.offset;
+		} else {
+			let head = new NodeHead();
+			this.blockHandler.readBlock(this.blockIndex, head.buffer, 0);
+			offset += head.total() - (range.length + range.offset);
+		}
 		let iterable = this.createIterable({
 			path: [[]],
 			blockIndex: this.blockIndex
 		}, {
 			offset,
 			length
-		});
+		}, directions);
 		let total = range.length;
 		return {
 			* [Symbol.iterator]() {
@@ -735,4 +926,6 @@ export class CompressedTrie {
 			total: () => total
 		};
 	}
+
+	static readonly INITIAL_SIZE = NodeHead.LENGTH;
 };

@@ -6,6 +6,10 @@ export type Key = Array<KeyPart>;
 export type PathPart = Array<number>;
 export type Path = Array<PathPart>;
 
+export function compareKeyPart(one: KeyPart, two: KeyPart): number {
+	return one.compare(two);
+};
+
 export function compareKey(one: Key, two: Key): number {
 	if (one.length < two.length) {
 		return -1;
@@ -14,7 +18,7 @@ export function compareKey(one: Key, two: Key): number {
 		return 1;
 	}
 	for (let i = 0; i < one.length; i++) {
-		let comparison = one[i].compare(two[i]);
+		let comparison = compareKeyPart(one[i], two[i]);
 		if (comparison !== 0) {
 			return comparison;
 		}
@@ -36,6 +40,40 @@ export function comparePathPart(one: PathPart, two: PathPart): number {
 		}
 	}
 	return 0;
+};
+
+export function comparePath(one: Path, two: Path): number {
+	if (one.length < two.length) {
+		return -1;
+	}
+	if (one.length > two.length) {
+		return 1;
+	}
+	for (let i = 0; i < one.length; i++) {
+		let comparison = comparePathPart(one[i], two[i]);
+		if (comparison !== 0) {
+			return comparison;
+		}
+	}
+	return 0;
+};
+
+export function isPathPrefix(one: Path, two: Path): boolean {
+	if (one.length > two.length) {
+		return false;
+	}
+	for (let i = 0; i < one.length; i++) {
+		if (i < one.length - 1) {
+			if (comparePathPart(one[i], two[i]) !== 0) {
+				return false;
+			}
+		} else {
+			if (comparePathPart(one[i], two[i]) > 0) {
+				return false;
+			}
+		}
+	}
+	return true;
 };
 
 export function computeCommonPrefixLength(one: PathPart, two: PathPart): number {

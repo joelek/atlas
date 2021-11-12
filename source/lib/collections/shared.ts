@@ -1,6 +1,6 @@
 import * as keys from "../keys";
 
-export interface Entry {
+export interface Entry<A> {
 	key(): keys.Key;
-	value(): number
+	value(): A
 };

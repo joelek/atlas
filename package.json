@@ -1,7 +1,9 @@
 {
 	"bin": {},
 	"dependencies": {
-		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.0"
+		"@joelek/bedrock": "github:joelek/bedrock#semver:^0.4",
+		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5.11",
+		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.1"
 	},
 	"devDependencies": {
 		"@types/node": "^16.7",
@@ -9,15 +11,15 @@
 	},
 	"license": "UNLICENSED",
 	"main": "./dist/lib/index.js",
-	"name": "@joelek/billy",
+	"name": "@joelek/atlas",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/joelek/billy.git"
+		"url": "https://github.com/joelek/atlas.git"
 	},
 	"scripts": {
 		"build": "npm run codegen && npm run compile && npm run package",
 		"clean": "rm -rf ./build/ ./node_modules/",
-		"codegen": "",
+		"codegen": "npx autoguard",
 		"compile": "rm -rf ./build/* && npx tsc --build",
 		"package": "rm -rf ./dist/* && cp -r ./build/* ./dist/",
 		"preversion": "npm run build && git add ./",

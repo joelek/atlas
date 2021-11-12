@@ -1,1 +1,1 @@
-export const DEBUG = process.env["DEBUG"] === "true";
+export const DEBUG = (globalThis as any)?.process?.env["DEBUG"] === "true";
