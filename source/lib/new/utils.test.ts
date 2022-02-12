@@ -127,3 +127,21 @@ test(`It should encode unsigned 4 byte little endian integers.`, async (assert) 
 	assert.true(buffer[2] === 0x03);
 	assert.true(buffer[3] === 0x04);
 });
+
+test(`It should support queing synchronous functions.`, async (assert) => {
+	let queue = new index.PromiseQueue();
+	let observed = await queue.enqueue(() => 1);
+	assert.true(observed === 1);
+});
+
+test(`It should support queing promises.`, async (assert) => {
+	let queue = new index.PromiseQueue();
+	let observed = await queue.enqueue(Promise.resolve(1));
+	assert.true(observed === 1);
+});
+
+test(`It should support queing asynchronous functions.`, async (assert) => {
+	let queue = new index.PromiseQueue();
+	let observed = await queue.enqueue(async () => 1);
+	assert.true(observed === 1);
+});

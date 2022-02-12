@@ -6,14 +6,12 @@ CAUTION: This software is experimental and under heavy development. Breaking cha
 
 ```ts
 import * as atlas from "@joelek/atlas";
-let users = atlas.createStore(
-	{
-		user_id: atlas.createBinaryField(),
-		name: atlas.createStringField()
-	},
-	["user_id"]
-);
-let manager = atlas.createManager("./private/db/", {
+let context = atlas.createContext();
+let users = context.createStore({
+	user_id: context.createBinaryField(),
+	name: context.createStringField()
+}, ["user_id"]);
+let manager = context.createManager("./private/db/", {
 	users
 });
 await manager.enqueueWritableTransaction(async ({ users }) => {
@@ -31,15 +29,17 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ## Overview
 
-### Store
+### Contexts
 
-### Field
+### Stores
 
-### Link
+### Fields
 
-### Manager
+### Links
 
-### Transaction
+### Managers
+
+### Transactions
 
 #### ReadableTransaction
 

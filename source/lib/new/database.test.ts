@@ -1,5 +1,5 @@
-import { Database } from "./database";
-import { DurableFile, VirtualFile } from "./files";
+import { DatabaseManager } from "./database";
+import { VirtualFile } from "./files";
 import { test } from "../test";
 
 async function delay(ms: number): Promise<void> {
@@ -10,27 +10,27 @@ async function delay(ms: number): Promise<void> {
 
 test(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let database = new Database(file, new Map(), new Map());
+	let database = new DatabaseManager(file, new Map(), new Map());
 	let events = new Array<string>();
-	let transactionOne = database.getReadAccess(async (access) => {
+	let transactionOne = database.enqueueReadableTransaction(async (access) => {
 		events.push("1S");
 		await delay(0);
 		events.push("1E");
 		return 1;
 	});
-	let transactionTwo = database.getReadAccess(async (access) => {
+	let transactionTwo = database.enqueueReadableTransaction(async (access) => {
 		events.push("2S");
 		await delay(0);
 		events.push("2E");
 		return 2;
 	});
-	let transactionThree = database.getWriteAccess(async (access) => {
+	let transactionThree = database.enqueueWritableTransaction(async (access) => {
 		events.push("3S");
 		await delay(0);
 		events.push("3E");
 		return 3;
 	});
-	let transactionFour = database.getWriteAccess(async (access) => {
+	let transactionFour = database.enqueueWritableTransaction(async (access) => {
 		events.push("4S");
 		await delay(0);
 		events.push("4E");
@@ -47,27 +47,27 @@ test(`It should wait for all read actions to complete before starting a write ac
 
 test(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let database = new Database(file, new Map(), new Map());
+	let database = new DatabaseManager(file, new Map(), new Map());
 	let events = new Array<string>();
-	let transactionOne = database.getWriteAccess(async (access) => {
+	let transactionOne = database.enqueueWritableTransaction(async (access) => {
 		events.push("1S");
 		await delay(0);
 		events.push("1E");
 		return 1;
 	});
-	let transactionTwo = database.getWriteAccess(async (access) => {
+	let transactionTwo = database.enqueueWritableTransaction(async (access) => {
 		events.push("2S");
 		await delay(0);
 		events.push("2E");
 		return 2;
 	});
-	let transactionThree = database.getReadAccess(async (access) => {
+	let transactionThree = database.enqueueReadableTransaction(async (access) => {
 		events.push("3S");
 		await delay(0);
 		events.push("3E");
 		return 3;
 	});
-	let transactionFour = database.getReadAccess(async (access) => {
+	let transactionFour = database.enqueueReadableTransaction(async (access) => {
 		events.push("4S");
 		await delay(0);
 		events.push("4E");
@@ -84,16 +84,16 @@ test(`It should wait for all write actions to complete before starting a read ac
 
 test(`It should recover from transactions that throw errors.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let database = new Database(file, new Map(), new Map());
+	let database = new DatabaseManager(file, new Map(), new Map());
 	let events = new Array<string>();
-	let transactionOne = database.getWriteAccess(async (access) => {
+	let transactionOne = database.enqueueWritableTransaction(async (access) => {
 		events.push("1S");
 		await delay(0);
 		throw ``;
 		events.push("1E");
 		return 1;
 	});
-	let transactionTwo = database.getWriteAccess(async (access) => {
+	let transactionTwo = database.enqueueWritableTransaction(async (access) => {
 		events.push("2S");
 		await delay(0);
 		events.push("2E");

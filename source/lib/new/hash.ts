@@ -83,7 +83,7 @@ export class Table {
 
 	private computeOptimalSlot(key: keys.Chunks): number {
 		let slotCount = this.getSlotCount();
-		let hash = Buffer.of();
+		let hash = Buffer.alloc(6);
 		for (let keyPart of key) {
 			hash = libcrypto.createHash("sha256")
 				.update(hash)

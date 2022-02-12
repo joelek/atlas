@@ -1,3 +1,4 @@
+import * as bedrock from "@joelek/bedrock";
 import { Record, Value } from "./records";
 
 export abstract class Filter<A extends Value> {
@@ -19,7 +20,9 @@ export class EqualityFilter<A extends Value> extends Filter<A> {
 	}
 
 	matches(value: A): boolean {
-		throw `TODO`;
+		let one = bedrock.codecs.Any.encodePayload(this.value);
+		let two = bedrock.codecs.Any.encodePayload(value);
+		return bedrock.utils.Chunk.comparePrefixes(one, two) === 0;
 	}
 };
 

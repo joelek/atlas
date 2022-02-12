@@ -2,6 +2,7 @@ import * as bedrock from "@joelek/bedrock";
 import * as asserts from "../asserts";
 import * as is from "../is";
 import { DEBUG } from "../env";
+import { Value } from "./records";
 
 export type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";
 
@@ -86,5 +87,22 @@ export class Binary {
 			}
 			return value;
 		}
+	}
+};
+
+export class PromiseQueue {
+	private lock: Promise<any>;
+
+	constructor() {
+		this.lock = Promise.resolve();
+	}
+
+	enqueue<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A> {
+		return this.lock = this.lock
+			.then(operation instanceof Promise ? () => operation : operation);
+	}
+
+	wait(): Promise<any> {
+		return this.lock;
 	}
 };

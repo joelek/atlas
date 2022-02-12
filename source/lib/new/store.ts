@@ -1,192 +1,44 @@
 import * as bedrock from "@joelek/bedrock";
+import { CountQueuingStrategy } from "stream/web";
 import { StreamIterable } from "../stream";
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
-import { Fields, Record, Keys, KeysRecord, RecordManager, FieldManagers, AllocatedFields, AllocatedField } from "./records";
+import { Fields, Record, Keys, KeysRecord, RecordManager, FieldManagers, FieldManager, Key } from "./records";
 import { BlockHandler } from "./vfs";
 
 export const StoreSchema = bedrock.codecs.Object.of({
 	fieldBids: bedrock.codecs.Record.of(bedrock.codecs.Integer),
 	keys: bedrock.codecs.Array.of(bedrock.codecs.String),
-	storageBid: bedrock.codecs.Integer
+	tableBid: bedrock.codecs.Integer,
+	indexBids: bedrock.codecs.Record.of(bedrock.codecs.Integer)
 });
 
 export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
-
-export class Store<A extends Record, B extends Keys<A>> {
-	private fields: Fields<A>;
-	private keys: [...B];
-
-	constructor(fields: Fields<A>, keys: [...B]) {
-		this.fields = fields;
-		this.keys = keys;
-	}
-
-	allocate(blockHandler: BlockHandler): AllocatedStore<A, B> {
-		let allocatedFields = {} as AllocatedFields<A>;
-		for (let key in this.fields) {
-			allocatedFields[key] = this.fields[key].allocate(blockHandler);
-		}
-		let fieldBids = {} as StoreSchema["fieldBids"];
-		for (let key in allocatedFields) {
-			fieldBids[key] = allocatedFields[key].getBid();
-		}
-		let keys = this.keys;
-		let storageBid = blockHandler.createBlock(Table.LENGTH);
-		let schema: StoreSchema = {
-			fieldBids,
-			keys,
-			storageBid
-		};
-		let buffer = StoreSchema.encode(schema);
-		let bid = blockHandler.createBlock(buffer.length);
-		blockHandler.writeBlock(bid, buffer);
-		return new AllocatedStore(allocatedFields, keys, blockHandler, bid, storageBid);
-	}
-};
-
-export class AllocatedStore<A extends Record, B extends Keys<A>> {
-	private allocatedFields: AllocatedFields<A>;
-	private keys: [...B];
-	private blockHandler: BlockHandler;
-	private bid: number;
-	private storageBid: number;
-
-	constructor(allocatedFields: AllocatedFields<A>, keys: [...B], blockHandler: BlockHandler, bid: number, storageBid: number) {
-		this.allocatedFields = allocatedFields;
-		this.keys = keys;
-		this.blockHandler = blockHandler;
-		this.bid = bid;
-		this.storageBid = storageBid;
-	}
-
-	createManager(): StoreManager<A, B> {
-		let fieldManagers = {} as FieldManagers<A>;
-		for (let key in this.allocatedFields) {
-			fieldManagers[key] = this.allocatedFields[key].createManager();
-		}
-		return new StoreManager(fieldManagers, this.keys, this.blockHandler, this.storageBid);
-	}
-
-	deallocate(): void {
-		for (let key in this.allocatedFields) {
-			this.allocatedFields[key].deallocate();
-		}
-		this.blockHandler.deleteBlock(this.storageBid); // TODO: Let table handle deletion.
-		this.blockHandler.deleteBlock(this.bid);
-	}
-
-	getBid(): number {
-		return this.bid;
-	}
-
-	migrateData<C extends Record, D extends Keys<C>>(that: AllocatedStore<C, D>): AllocatedStore<C, D> {
-		if (this.bid !== that.bid) {
-			let thisManager = this.createManager();
-			let thatManager = that.createManager();
-			if (this.requiresDataMigration(that)) {
-				for (let entry of thisManager.filter()) {
-					let thisRecord = entry.record();
-					let thatRecord = {} as C;
-					for (let thatKey in that.allocatedFields) {
-						let thatField = that.allocatedFields[thatKey];
-						let thisValue = thisRecord[thatKey];
-						let thatValue = thatField.migrateData(thisValue);
-						thatRecord[thatKey] = thatValue;
-					}
-					thatManager.insert(thatRecord);
-				}
-			} else {
-				let storageBid = that.storageBid; that.storageBid = this.storageBid; this.storageBid = storageBid;
-			}
-			this.deallocate();
-		}
-		return that;
-	}
-
-	requiresDataMigration<C extends Record, D extends Keys<C>>(that: AllocatedStore<C, D>): boolean {
-		if (this.keys.length !== that.keys.length) {
-			return true;
-		}
-		for (let i = 0; i < this.keys.length; i++) {
-			if (this.keys[i] !== that.keys[i]) {
-				return true;
-			}
-		}
-		for (let thisKey in this.allocatedFields) {
-			let thatField = that.allocatedFields[thisKey];
-			if (thatField == null) {
-				return true;
-			}
-		}
-		for (let thatKey in that.allocatedFields) {
-			let thatField = that.allocatedFields[thatKey];
-			let thisField = this.allocatedFields[thatKey];
-			if (thisField == null) {
-				return true;
-			}
-			if (thisField.requiresDataMigration(thatField)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	static loadFromBid(blockHandler: BlockHandler, bid: number): AllocatedStore<any, any> {
-		let schema = StoreSchema.decode(blockHandler.readBlock(bid));
-		let allocatedFields = {} as AllocatedFields<any>;
-		let keys = schema.keys;
-		for (let key in schema.fieldBids) {
-			let bid = schema.fieldBids[key];
-			allocatedFields[key] = AllocatedField.loadFromBid(blockHandler, bid);
-		}
-		let storageBid = schema.storageBid;
-		return new AllocatedStore(allocatedFields, keys, blockHandler, bid, storageBid);
-	}
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export type Entry<A extends Record> = {
 	bid(): number;
 	record(): A;
 };
 
+// TODO: Handle indices.
 export class StoreManager<A extends Record, B extends Keys<A>> {
+	private blockHandler: BlockHandler;
+	private bid: number;
 	private fieldManagers: FieldManagers<A>;
 	private keys: [...B];
-	private blockHandler: BlockHandler;
-	private recordCodec: RecordManager<A>;
-	private storage: Table;
+	private recordManager: RecordManager<A>;
+	private table: Table;
 
-	// constructor(blockManager: BlockManager, recordManager: RecordManager<A, B>, storageManager: StorageManager)
-	constructor(fieldManagers: FieldManagers<A>, keys: [...B], blockHandler: BlockHandler, storageBid: number) {
-		this.fieldManagers = fieldManagers;
-		this.keys = keys;
-		this.blockHandler = blockHandler;
-		this.recordCodec = new RecordManager(fieldManagers);
-		this.storage = new Table(blockHandler, {
-			getKeyFromValue: (value) => {
-				let buffer = this.blockHandler.readBlock(value);
-				let record = this.recordCodec.decode(buffer);
-				return this.recordCodec.encodeKeys(this.keys, record);
-			}
-		}, {
-			bid: storageBid
-		});
+	private delete(): void {
+		for (let entry of this) {
+			this.blockHandler.deleteBlock(entry.bid());
+		}
+		for (let key in this.fieldManagers) {
+			this.fieldManagers[key].delete();
+		}
+		this.table.delete();
+		this.blockHandler.deleteBlock(this.bid);
 	}
 
 	private filterIterable(iterable: Iterable<number>, filters: FilterMap<A>, orders: OrderMap<A>): Iterable<Entry<A>> {
@@ -195,7 +47,7 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 		let entries = StreamIterable.of(bids)
 			.map((bid) => {
 				let buffer = this.blockHandler.readBlock(bid);
-				let record = this.recordCodec.decode(buffer);
+				let record = this.recordManager.decode(buffer);
 				return {
 					bid: () => bid,
 					record: () => record
@@ -235,30 +87,62 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 		return entries;
 	}
 
-	[Symbol.iterator](): Iterable<Entry<A>> {
-		return this.filter();
+	private saveSchema(): void {
+		let fieldBids = {} as StoreSchema["fieldBids"];
+		for (let key in this.fieldManagers) {
+			fieldBids[key] = this.fieldManagers[key].getBid();
+		}
+		let keys = this.keys;
+		let tableBid = this.table.getBid();
+		let indexBids = {} as StoreSchema["indexBids"];
+		let schema: StoreSchema = {
+			fieldBids,
+			keys,
+			tableBid,
+			indexBids
+		};
+		let buffer = StoreSchema.encode(schema);
+		this.blockHandler.resizeBlock(this.bid, buffer.length);
+		this.blockHandler.writeBlock(this.bid, buffer);
+	}
+
+	private constructor(blockHandler: BlockHandler, bid: number, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
+		this.blockHandler = blockHandler;
+		this.bid = bid;
+		this.fieldManagers = fieldManagers;
+		this.keys = keys;
+		this.recordManager = new RecordManager(fieldManagers);
+		this.table = table;
+	}
+
+	* [Symbol.iterator](): Iterator<Entry<A>> {
+		yield * this.filter();
+	}
+
+	getBid(): number {
+		return this.bid;
 	}
 
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>> {
 		// TODO: Use indices.
 		let filtersRemaining = { ...filters } as FilterMap<A>;
 		let ordersRemaining = { ...orders } as OrderMap<A>;
-		let iterable = StreamIterable.of(this.storage)
+		let iterable = StreamIterable.of(this.table)
 			.map((entry) => entry.value());
 		return this.filterIterable(iterable, filtersRemaining, ordersRemaining);
 	}
 
 	insert(record: A): void {
-		let key = this.recordCodec.encodeKeys(this.keys, record);
-		let encoded = this.recordCodec.encode(record);
-		let index = this.storage.lookup(key);
+		let key = this.recordManager.encodeKeys(this.keys, record);
+		let encoded = this.recordManager.encode(record);
+		let index = this.table.lookup(key);
 		if (index == null) {
 			index = this.blockHandler.createBlock(encoded.length);
 			this.blockHandler.writeBlock(index, encoded);
-			this.storage.insert(key, index);
+			this.table.insert(key, index);
 		} else {
 			let buffer = this.blockHandler.readBlock(index);
-			let oldRecord = this.recordCodec.decode(buffer);
+			let oldRecord = this.recordManager.decode(buffer);
 			this.blockHandler.resizeBlock(index, encoded.length);
 			this.blockHandler.writeBlock(index, encoded);
 			// TODO: Remove old record from indices.
@@ -267,29 +151,226 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 	}
 
 	length(): number {
-		return this.storage.length();
+		return this.table.length();
 	}
 
 	lookup(keysRecord: KeysRecord<A, B>): A {
-		let key = this.recordCodec.encodeKeys(this.keys, keysRecord);
-		let index = this.storage.lookup(key);
+		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
+		let index = this.table.lookup(key);
 		if (index == null) {
-			throw `Expected a matching record for key ${keysRecord}!`;
+			let key = this.keys.map((key) => keysRecord[key]).join(", ");
+			throw `Expected a matching record for key ${key}!`;
 		}
 		let buffer = this.blockHandler.readBlock(index);
-		let record = this.recordCodec.decode(buffer);
+		let record = this.recordManager.decode(buffer);
 		return record;
 	}
 
 	remove(keysRecord: KeysRecord<A, B>): void {
-		let key = this.recordCodec.encodeKeys(this.keys, keysRecord);
-		let index = this.storage.lookup(key);
+		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
+		let index = this.table.lookup(key);
 		if (index != null) {
 			let buffer = this.blockHandler.readBlock(index);
-			let oldRecord = this.recordCodec.decode(buffer);
-			this.storage.remove(key);
+			let oldRecord = this.recordManager.decode(buffer);
+			this.table.remove(key);
 			this.blockHandler.deleteBlock(index);
 			// TODO: Remove old record from indices.
 		}
 	}
+
+	update(record: A): void {
+		return this.insert(record);
+	}
+
+	static compareFields(oldFields: FieldManagers<any>, newFields: Fields<any>): { create: Array<Key<any>>, remove: Array<Key<any>>, update: Array<Key<any>>, equal: boolean } {
+		let create = [] as Array<Key<any>>;
+		let remove = [] as Array<Key<any>>;
+		let update = [] as Array<Key<any>>;
+		for (let key in newFields) {
+			if (oldFields[key] == null) {
+				create.push(key);
+			}
+		}
+		for (let key in oldFields) {
+			if (newFields[key] == null) {
+				remove.push(key);
+			}
+		}
+		for (let key in newFields) {
+			if (oldFields[key] != null) {
+				if (!newFields[key].isCompatibleWith(oldFields[key])) {
+					update.push(key);
+				}
+			}
+		}
+		let equal = create.length === 0 && remove.length === 0 && update.length === 0;
+		return {
+			create,
+			remove,
+			update,
+			equal
+		};
+	}
+
+	static compareIndices(oldIndices: Array<Keys<any>>, newIndices: Array<Keys<any>>): { create: Array<Keys<any>>, remove: Array<Keys<any>>, equal: boolean } {
+		let create = [] as Array<Keys<any>>;
+		let remove = [] as Array<Keys<any>>;
+		newIndices: for (let newIndex of newIndices) {
+			oldIndices: for (let oldIndex of oldIndices) {
+				if (this.compareKeys(oldIndex, newIndex)) {
+					continue newIndices;
+				}
+			}
+			create.push(newIndex);
+		}
+		oldIndices: for (let oldIndex of oldIndices) {
+			newIndices: for (let newIndex of newIndices) {
+				if (this.compareKeys(oldIndex, newIndex)) {
+					continue oldIndices;
+				}
+			}
+			remove.push(oldIndex);
+		}
+		let equal = create.length === 0 && remove.length === 0;
+		return {
+			create,
+			remove,
+			equal
+		};
+	}
+
+	static compareKeys(oldKeys: Keys<any>, newKeys: Keys<any>): { equal: boolean } {
+		if (oldKeys.length !== newKeys.length) {
+			return { equal: false };
+		}
+		for (let i = 0; i < oldKeys.length; i++) {
+			if (oldKeys[i] !== newKeys[i]) {
+				return { equal: false };
+			}
+		}
+		return { equal: true };
+	}
+
+	static migrate<A extends Record, B extends Keys<A>>(oldManager: StoreManager<any, any>, options: {
+		fields: Fields<A>,
+		keys: [...B],
+		indices: Array<Keys<A>>
+	}): StoreManager<A, B> {
+		let keyComparison = StoreManager.compareKeys(oldManager.keys, options.keys);
+		let fieldComparison = StoreManager.compareFields(oldManager.fieldManagers, options.fields);
+		if (keyComparison.equal && fieldComparison.equal) {
+			let indexComparison = StoreManager.compareIndices([], options.indices);
+			// TODO: Handle migration of indices.
+			return oldManager;
+		} else {
+			let newManager = StoreManager.construct(oldManager.blockHandler, null, options);
+			for (let entry of oldManager) {
+				try {
+					let oldRecord = entry.record();
+					let newRecord = {} as A;
+					for (let key in options.fields) {
+						newRecord[key] = options.fields[key].convertValue(oldRecord[key]);
+					}
+					newManager.insert(newRecord);
+				} catch (error) {}
+			}
+			let bid = oldManager.bid; oldManager.bid = newManager.bid; newManager.bid = bid;
+			oldManager.delete();
+			newManager.saveSchema();
+			return newManager;
+		}
+	}
+
+	static construct<A extends Record, B extends Keys<A>>(blockHandler: BlockHandler, bid: number | null, options?: {
+		fields: Fields<A>,
+		keys: [...B],
+		indices: Array<Keys<A>>
+	}): StoreManager<A, B> {
+		if (bid == null) {
+			if (options == null) {
+				return StoreManager.construct<any, any>(blockHandler, null, {
+					fields: {},
+					keys: [],
+					indices: []
+				});
+			} else {
+				let fieldManagers = {} as FieldManagers<A>;
+				for (let key in options.fields) {
+					fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
+				}
+				let keys = options.keys;
+				let recordManager = new RecordManager(fieldManagers);
+				let storage = new Table(blockHandler, {
+					getKeyFromValue: (value) => {
+						let buffer = blockHandler.readBlock(value);
+						let record = recordManager.decode(buffer);
+						return recordManager.encodeKeys(keys, record);
+					}
+				});
+				bid = blockHandler.createBlock(64);
+				let manager = new StoreManager(blockHandler, bid, fieldManagers, keys, storage);
+				manager.saveSchema();
+				return manager;
+			}
+		} else {
+			if (options == null) {
+				let schema = StoreSchema.decode(blockHandler.readBlock(bid));
+				let fieldManagers = {} as FieldManagers<A>;
+				for (let key in schema.fieldBids) {
+					fieldManagers[key as keyof A] = FieldManager.construct(blockHandler, schema.fieldBids[key]);
+				}
+				let keys = schema.keys as [...B];
+				let recordManager = new RecordManager(fieldManagers);
+				let storage = new Table(blockHandler, {
+					getKeyFromValue: (value) => {
+						let buffer = blockHandler.readBlock(value);
+						let record = recordManager.decode(buffer);
+						return recordManager.encodeKeys(keys, record);
+					}
+				}, {
+					bid: schema.tableBid
+				});
+				let manager = new StoreManager(blockHandler, bid, fieldManagers, keys, storage);
+				return manager;
+			} else {
+				return StoreManager.migrate(StoreManager.construct(blockHandler, bid), options);
+			}
+		}
+	}
+};
+
+export type StoreManagers<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
+};
+
+export class Store<A extends Record, B extends Keys<A>> {
+	fields: Fields<A>;
+	keys: [...B];
+	indices: Array<Keys<A>>;
+
+	constructor(fields: Fields<A>, keys: [...B], indices: Array<Keys<A>>) {
+		this.fields = fields;
+		this.keys = keys;
+		this.indices = indices;
+	}
+
+	createManager(blockHandler: BlockHandler, bid: number | null): StoreManager<A, B> {
+		return StoreManager.construct(blockHandler, bid, {
+			fields: this.fields,
+			keys: this.keys,
+			indices: this.indices
+		});
+	}
+};
+
+export type Stores<A> = {
+	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;
+};
+
+export class StoreReference<A extends Record, B extends Keys<A>> {
+	private StoreReference!: "StoreReference";
+};
+
+export type StoreReferences<A> = {
+	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : never;
 };

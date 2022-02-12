@@ -27,35 +27,19 @@ export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record>
 
 
 export abstract class FieldManager<A extends Value> {
-	protected codec: bedrock.codecs.Codec<A>;
-
-	constructor(codec: bedrock.codecs.Codec<A>) {
-		this.codec = codec;
-	}
-
-	getCodec(): bedrock.codecs.Codec<A> {
-		return this.codec;
-	}
-};
-
-export type FieldManagers<A extends Record> = {
-	[B in keyof A]: FieldManager<A[B]>;
-};
-
-export abstract class AllocatedField<A extends Value> {
 	protected blockHandler: BlockHandler;
 	protected bid: number;
+	protected codec: bedrock.codecs.Codec<A>;
 	protected defaultValue: A;
 
-	constructor(blockHandler: BlockHandler, bid: number, defaultValue: A) {
+	constructor(blockHandler: BlockHandler, bid: number, codec: bedrock.codecs.Codec<A>, defaultValue: A) {
 		this.blockHandler = blockHandler;
 		this.bid = bid;
+		this.codec = codec;
 		this.defaultValue = defaultValue;
 	}
 
-	abstract createManager(): FieldManager<A>;
-
-	deallocate(): void {
+	delete(): void {
 		this.blockHandler.deleteBlock(this.bid);
 	}
 
@@ -63,29 +47,38 @@ export abstract class AllocatedField<A extends Value> {
 		return this.bid;
 	}
 
-	abstract migrateData(value: Value | undefined): A;
+	getCodec(): bedrock.codecs.Codec<A> {
+		return this.codec;
+	}
 
-	abstract requiresDataMigration(that: AllocatedField<any>): boolean;
-
-	static loadFromBid(blockHandler: BlockHandler, bid: number): AllocatedField<any> {
+	static construct(blockHandler: BlockHandler, bid: number): FieldManager<any> {
 		try {
-			return new AllocatedBinaryField(blockHandler, bid);
+			return BinaryFieldManager.construct(blockHandler, bid);
 		} catch (error) {}
 		try {
-			return new AllocatedStringField(blockHandler, bid);
+			return BooleanFieldManager.construct(blockHandler, bid);
 		} catch (error) {}
-		throw `Expected to load an allocated field!`;
+		try {
+			return StringFieldManager.construct(blockHandler, bid);
+		} catch (error) {}
+		throw `Expected to construct a field manager!`;
 	}
 };
 
-export type AllocatedFields<A extends Record> = {
-	[B in keyof A]: AllocatedField<A[B]>;
+export type FieldManagers<A extends Record> = {
+	[B in keyof A]: FieldManager<A[B]>;
 };
 
 export abstract class Field<A extends Value> {
-	constructor() {}
+	protected defaultValue: A;
 
-	abstract allocate(blockHandler: BlockHandler): AllocatedField<A>;
+	constructor(defaultValue: A) {
+		this.defaultValue = defaultValue;
+	}
+
+	abstract convertValue(value: Value | undefined): A;
+	abstract createManager(blockHandler: BlockHandler, bid: number | null): FieldManager<A>;
+	abstract isCompatibleWith(that: FieldManager<any>): boolean;
 };
 
 export type Fields<A extends Record> = {
@@ -128,52 +121,69 @@ export const BinaryFieldSchema = bedrock.codecs.Object.of({
 export type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
 
 export class BinaryFieldManager extends FieldManager<Uint8Array> {
-	constructor() {
-		super(bedrock.codecs.Binary);
+	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: Uint8Array) {
+		super(blockHandler, bid, bedrock.codecs.Binary, defaultValue);
+	}
+
+	static construct(blockHandler: BlockHandler, bid: number | null, schema?: BinaryFieldSchema): BinaryFieldManager {
+		if (bid == null) {
+			schema = schema ?? {
+				type: "binary",
+				defaultValue: Uint8Array.of()
+			};
+			let buffer = BinaryFieldSchema.encode(schema);
+			bid = blockHandler.createBlock(buffer.length);
+			blockHandler.writeBlock(bid, buffer);
+		} else {
+			if (schema == null) {
+				schema = BinaryFieldSchema.decode(blockHandler.readBlock(bid));
+			} else {
+				let buffer = BinaryFieldSchema.encode(schema);
+				blockHandler.resizeBlock(bid, buffer.length);
+				blockHandler.writeBlock(bid, buffer);
+			}
+		}
+		let defaultValue = schema.defaultValue;
+		return new BinaryFieldManager(blockHandler, bid, defaultValue);
 	}
 };
 
-export class AllocatedBinaryField extends AllocatedField<Uint8Array> {
-	constructor(blockHandler: BlockHandler, bid: number) {
-		let schema = BinaryFieldSchema.decode(blockHandler.readBlock(bid));
-		super(blockHandler, bid, schema.defaultValue);
+export class BinaryField extends Field<Uint8Array> {
+	constructor(defaultValue: Uint8Array) {
+		super(defaultValue);
 	}
 
-	createManager(): FieldManager<Uint8Array> {
-		return new BinaryFieldManager();
-	}
-
-	migrateData(value: Value | undefined): Uint8Array {
+	convertValue(value: Value | undefined): Uint8Array {
 		if (value instanceof Uint8Array) {
 			return value;
 		}
 		return this.defaultValue;
 	}
 
-	requiresDataMigration(that: AllocatedField<any>): boolean {
-		if (that instanceof AllocatedBinaryField) {
-			return false;
-		}
-		return true;
-	}
-};
-
-export class BinaryField extends Field<Uint8Array> {
-	constructor() {
-		super();
-	}
-
-	allocate(blockHandler: BlockHandler): AllocatedField<Uint8Array> {
-		let schema: BinaryFieldSchema = {
+	createManager(blockHandler: BlockHandler, bid: number | null): FieldManager<Uint8Array> {
+		return BinaryFieldManager.construct(blockHandler, bid, {
 			type: "binary",
-			defaultValue: Uint8Array.of()
-		};
-		let buffer = BinaryFieldSchema.encode(schema);
-		let bid = blockHandler.createBlock(buffer.length);
-		blockHandler.writeBlock(bid, buffer);
-		return new AllocatedBinaryField(blockHandler, bid);
+			defaultValue: this.defaultValue
+		});
+	}
+
+	isCompatibleWith(that: FieldManager<any>): boolean {
+		if (that instanceof BinaryFieldManager) {
+			return true;
+		}
+		return false;
 	}
 };
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -203,50 +213,57 @@ export const StringFieldSchema = bedrock.codecs.Object.of({
 export type StringFieldSchema = ReturnType<typeof StringFieldSchema["decode"]>;
 
 export class StringFieldManager extends FieldManager<string> {
-	constructor() {
-		super(bedrock.codecs.String);
+	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: string) {
+		super(blockHandler, bid, bedrock.codecs.String, defaultValue);
+	}
+
+	static construct(blockHandler: BlockHandler, bid: number | null, schema?: StringFieldSchema): StringFieldManager {
+		if (bid == null) {
+			schema = schema ?? {
+				type: "string",
+				defaultValue: ""
+			};
+			let buffer = StringFieldSchema.encode(schema);
+			bid = blockHandler.createBlock(buffer.length);
+			blockHandler.writeBlock(bid, buffer);
+		} else {
+			if (schema == null) {
+				schema = StringFieldSchema.decode(blockHandler.readBlock(bid));
+			} else {
+				let buffer = StringFieldSchema.encode(schema);
+				blockHandler.resizeBlock(bid, buffer.length);
+				blockHandler.writeBlock(bid, buffer);
+			}
+		}
+		let defaultValue = schema.defaultValue;
+		return new StringFieldManager(blockHandler, bid, defaultValue);
 	}
 };
 
-export class AllocatedStringField extends AllocatedField<string> {
-	constructor(blockHandler: BlockHandler, bid: number) {
-		let schema = StringFieldSchema.decode(blockHandler.readBlock(bid));
-		super(blockHandler, bid, schema.defaultValue);
+export class StringField extends Field<string> {
+	constructor(defaultValue: string) {
+		super(defaultValue);
 	}
 
-	createManager(): FieldManager<string> {
-		return new StringFieldManager();
-	}
-
-	migrateData(value: Value | undefined): string {
+	convertValue(value: Value | undefined): string {
 		if (typeof value === "string") {
 			return value;
 		}
 		return this.defaultValue;
 	}
 
-	requiresDataMigration(that: AllocatedField<any>): boolean {
-		if (that instanceof AllocatedStringField) {
-			return false;
-		}
-		return true;
-	}
-};
-
-export class StringField extends Field<string> {
-	constructor() {
-		super();
-	}
-
-	allocate(blockHandler: BlockHandler): AllocatedField<string> {
-		let schema: StringFieldSchema = {
+	createManager(blockHandler: BlockHandler, bid: number | null): FieldManager<string> {
+		return StringFieldManager.construct(blockHandler, bid, {
 			type: "string",
-			defaultValue: ""
-		};
-		let buffer = StringFieldSchema.encode(schema);
-		let bid = blockHandler.createBlock(buffer.length);
-		blockHandler.writeBlock(bid, buffer);
-		return new AllocatedStringField(blockHandler, bid);
+			defaultValue: this.defaultValue
+		});
+	}
+
+	isCompatibleWith(that: FieldManager<any>): boolean {
+		if (that instanceof StringFieldManager) {
+			return true;
+		}
+		return false;
 	}
 };
 
@@ -264,6 +281,73 @@ export class StringField extends Field<string> {
 
 
 
+export const NullableStringFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("nullable_string"),
+	defaultValue: bedrock.codecs.Union.of(
+		bedrock.codecs.String,
+		bedrock.codecs.Null
+	)
+});
+
+export type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
+
+export class NullableStringFieldManager extends FieldManager<string | null> {
+	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: string | null) {
+		super(blockHandler, bid, bedrock.codecs.Union.of(
+			bedrock.codecs.String,
+			bedrock.codecs.Null
+		), defaultValue);
+	}
+
+	static construct(blockHandler: BlockHandler, bid: number | null, schema?: NullableStringFieldSchema): NullableStringFieldManager {
+		if (bid == null) {
+			schema = schema ?? {
+				type: "nullable_string",
+				defaultValue: null
+			};
+			let buffer = NullableStringFieldSchema.encode(schema);
+			bid = blockHandler.createBlock(buffer.length);
+			blockHandler.writeBlock(bid, buffer);
+		} else {
+			if (schema == null) {
+				schema = NullableStringFieldSchema.decode(blockHandler.readBlock(bid));
+			} else {
+				let buffer = NullableStringFieldSchema.encode(schema);
+				blockHandler.resizeBlock(bid, buffer.length);
+				blockHandler.writeBlock(bid, buffer);
+			}
+		}
+		let defaultValue = schema.defaultValue;
+		return new NullableStringFieldManager(blockHandler, bid, defaultValue);
+	}
+};
+
+export class NullableStringField extends Field<string | null> {
+	constructor(defaultValue: string | null) {
+		super(defaultValue);
+	}
+
+	convertValue(value: Value | undefined): string | null {
+		if (typeof value === "string" || value === null) {
+			return value;
+		}
+		return this.defaultValue;
+	}
+
+	createManager(blockHandler: BlockHandler, bid: number | null): FieldManager<string | null> {
+		return NullableStringFieldManager.construct(blockHandler, bid, {
+			type: "nullable_string",
+			defaultValue: this.defaultValue
+		});
+	}
+
+	isCompatibleWith(that: FieldManager<any>): boolean {
+		if (that instanceof StringFieldManager) {
+			return true;
+		}
+		return false;
+	}
+};
 
 
 
@@ -273,6 +357,70 @@ export class StringField extends Field<string> {
 
 
 
+
+
+
+export const BooleanFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("boolean"),
+	defaultValue: bedrock.codecs.Boolean
+});
+
+export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
+
+export class BooleanFieldManager extends FieldManager<boolean> {
+	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: boolean) {
+		super(blockHandler, bid, bedrock.codecs.Boolean, defaultValue);
+	}
+
+	static construct(blockHandler: BlockHandler, bid: number | null, schema?: BooleanFieldSchema): BooleanFieldManager {
+		if (bid == null) {
+			schema = schema ?? {
+				type: "boolean",
+				defaultValue: false
+			};
+			let buffer = BooleanFieldSchema.encode(schema);
+			bid = blockHandler.createBlock(buffer.length);
+			blockHandler.writeBlock(bid, buffer);
+		} else {
+			if (schema == null) {
+				schema = BooleanFieldSchema.decode(blockHandler.readBlock(bid));
+			} else {
+				let buffer = BooleanFieldSchema.encode(schema);
+				blockHandler.resizeBlock(bid, buffer.length);
+				blockHandler.writeBlock(bid, buffer);
+			}
+		}
+		let defaultValue = schema.defaultValue;
+		return new BooleanFieldManager(blockHandler, bid, defaultValue);
+	}
+};
+
+export class BooleanField extends Field<boolean> {
+	constructor(defaultValue: boolean) {
+		super(defaultValue);
+	}
+
+	convertValue(value: Value | undefined): boolean {
+		if (typeof value === "boolean") {
+			return value;
+		}
+		return this.defaultValue;
+	}
+
+	createManager(blockHandler: BlockHandler, bid: number | null): FieldManager<boolean> {
+		return BooleanFieldManager.construct(blockHandler, bid, {
+			type: "boolean",
+			defaultValue: this.defaultValue
+		});
+	}
+
+	isCompatibleWith(that: FieldManager<any>): boolean {
+		if (that instanceof BooleanFieldManager) {
+			return true;
+		}
+		return false;
+	}
+};
 
 
 

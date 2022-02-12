@@ -1,193 +1,183 @@
-import * as autoguard from "@joelek/ts-autoguard";
-import * as guards from "./guards";
+import * as bedrock from "@joelek/bedrock";
 import { File } from "./files";
-import { Record, Keys, KeysRecord } from "./records";
-import { Link, LinkHandler, Store, StoreHandler } from "./Store";
+import { Record, Keys } from "./records";
+import { Link, LinkManager, LinkManagers, LinkReference, Links } from "./link";
+import { Store, StoreManager, StoreManagers, StoreReference, Stores } from "./store";
+import { PromiseQueue } from "./utils";
 import { BlockHandler } from "./vfs";
 
-export interface ReadAccess {
-	filter<A extends Record, B extends Keys<A>>(store: Store<A, B>): Iterable<A>;
-	length<A extends Record, B extends Keys<A>>(store: Store<A, B>): number;
-	linked<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>>(link: Link<A, B, C, D>, keysRecord: KeysRecord<A, B>): Iterable<C>;
-	lookup<A extends Record, B extends Keys<A>>(store: Store<A, B>, keysRecord: KeysRecord<A, B>): A;
-};
+export class ReadableStore<A extends Record, B extends Keys<A>> {
+	protected storeManager: StoreManager<A, B>;
+	protected queue: PromiseQueue;
 
-export interface WriteAccess extends ReadAccess {
-	insert<A extends Record, B extends Keys<A>>(store: Store<A, B>, record: A): void;
-	remove<A extends Record, B extends Keys<A>>(store: Store<A, B>, keysRecord: KeysRecord<A, B>): void;
-};
-
-export class Database {
-	static create(file: File, links: Array<Link<any, any, any, any>>, stores: Map<string, Store<any, any>>): Database {
-		file.discard();
-		let guard = guards.Database as autoguard.serialization.MessageGuardBase<guards.Database>;
-		let blockHandler = new BlockHandler(file);
-		if (blockHandler.getBlockCount() === 0) {
-			let storeHandlers = new Map<Store<any, any>, StoreHandler<any, any>>();
-			for (let [name, store] of stores) {
-				let storeHandler = store.createHandler(blockHandler);
-				storeHandlers.set(store, storeHandler);
-			}
-			let data = guard.encode(autoguard.codecs.bedrock.CODEC, database);
-			blockHandler.createBlock(Math.min(64, data.length));
-			blockHandler.writeBlock(0, data);
-		}
-
-
-
-/*
-
-
-kommer behöva läsa gamla records från disk genom en storehandler
-
-
-
-
-allocate block
-run constructor
-constructor checks block init
-one block for database root => { stores, links }
-one block for each store => { hashBlock }
-one block for each link => {}
-one block for each index => { treeBlock, keys }
-one block for each field => { name, type }
-export function for each object
-
-
-migrateDataFrom(that: StoreHandler<any, any>): void {
-	for (let entry of that.filter()) {
-
-	}
-}
-
-{
-	stores: [
-		{
-			name: "users",
-			storageBlock: 1,
-			fields: [
-				{
-					name: "user_id",
-					type: "binary"
-				},
-				{
-					name: "name",
-					type: "string"
-				}
-			],
-			keys: ["user_id"]
-		},
-		{
-			name: "posts",
-			storageBlock: 2,
-			fields: [
-				{
-					name: "post_id",
-					type: "binary"
-				},
-				{
-					name: "user_id",
-					type: "binary"
-				},
-				{
-					name: "title",
-					type: "string"
-				}
-			],
-			keys: ["post_id"]
-		}
-	],
-	links: [
-		{
-			parent: "users",
-			child: "posts",
-			keys: ["user_id"]
-		}
-	]
-}
-
-*/
-
-
-		let data = blockHandler.readBlock(0);
-
-		// load database from disk
-		// run migration
-		for (let [name, store] of stores) {
-			let blockId = 0; // TODO: Get from loaded database.
-			let storeHandler = store.createHandler(blockHandler, blockId);
-			storeHandlers.set(store, storeHandler);
-		}
-		file.persist();
-		return new Database(file, storeHandlers);
+	constructor(storeManager: StoreManager<A, B>, queue: PromiseQueue) {
+		this.storeManager = storeManager;
+		this.queue = queue;
 	}
 
+	filter(...parameters: Parameters<StoreManager<A, B>["filter"]>): Promise<ReturnType<StoreManager<A, B>["filter"]>> {
+		return this.queue.enqueue(() => this.storeManager.filter(...parameters));
+	}
+
+	length(...parameters: Parameters<StoreManager<A, B>["length"]>): Promise<ReturnType<StoreManager<A, B>["length"]>> {
+		return this.queue.enqueue(() => this.storeManager.length(...parameters));
+	}
+
+	lookup(...parameters: Parameters<StoreManager<A, B>["lookup"]>): Promise<ReturnType<StoreManager<A, B>["lookup"]>> {
+		return this.queue.enqueue(() => this.storeManager.lookup(...parameters));
+	}
+};
+
+export type ReadableStores<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
+};
+
+export class WritableStore<A extends Record, B extends Keys<A>> extends ReadableStore<A, B> {
+	constructor(storeManager: StoreManager<A, B>, queue: PromiseQueue) {
+		super(storeManager, queue);
+	}
+
+	insert(...parameters: Parameters<StoreManager<A, B>["insert"]>): Promise<ReturnType<StoreManager<A, B>["insert"]>> {
+		return this.queue.enqueue(() => this.storeManager.insert(...parameters));
+	}
+
+	remove(...parameters: Parameters<StoreManager<A, B>["remove"]>): Promise<ReturnType<StoreManager<A, B>["remove"]>> {
+		return this.queue.enqueue(() => this.storeManager.remove(...parameters));
+	}
+};
+
+export type WritableStores<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
+};
+
+export class ReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> {
+	protected linkManager: LinkManager<A, B, C, D>;
+	protected queue: PromiseQueue;
+
+	constructor(linkManager: LinkManager<A, B, C, D>, queue: PromiseQueue) {
+		this.linkManager = linkManager;
+		this.queue = queue;
+	}
+
+	filter(...parameters: Parameters<LinkManager<A, B, C, D>["filter"]>): Promise<ReturnType<LinkManager<A, B, C, D>["filter"]>> {
+		return this.queue.enqueue(() => this.linkManager.filter(...parameters));
+	}
+
+	lookup(...parameters: Parameters<LinkManager<A, B, C, D>["lookup"]>): Promise<ReturnType<LinkManager<A, B, C, D>["lookup"]>> {
+		return this.queue.enqueue(() => this.linkManager.lookup(...parameters));
+	}
+};
+
+export type ReadableLinks<A> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F> ? ReadableLink<C, D, E, F> : never;
+};
+
+export class WritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> extends ReadableLink<A, B, C, D> {
+	constructor(linkManager: LinkManager<A, B, C, D>, queue: PromiseQueue) {
+		super(linkManager, queue);
+	}
+};
+
+export type WritableLinks<A> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F> ? WritableLink<C, D, E, F> : never;
+};
+
+export const DatabaseSchema = bedrock.codecs.Object.of({
+	storeBids: bedrock.codecs.Record.of(bedrock.codecs.Integer),
+	linkBids: bedrock.codecs.Record.of(bedrock.codecs.Integer)
+});
+
+export type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
+
+export type ReadableTransaction<A, B, C> = (stores: ReadableStores<A>, links: ReadableLinks<B>) => Promise<C>;
+
+export type WritableTransaction<A, B, C> = (stores: WritableStores<A>, links: WritableLinks<B>) => Promise<C>;
+
+export class DatabaseManager<A, B> {
+	private blockHandler: BlockHandler;
+	private bid: number;
 	private file: File;
-	private readSync: Promise<any>;
-	private writeSync: Promise<any>;
-	private linkHandlers: Map<Link<any, any, any, any>, LinkHandler<any, any, any, any>>;
-	private storeHandlers: Map<Store<any, any>, StoreHandler<any, any>>;
+	private readableTransactionLock: Promise<any>;
+	private writableTransactionLock: Promise<any>;
+	private storeManagers: StoreManagers<A>;
+	private linkManagers: LinkManagers<B>;
 
-	constructor(file: File, linkHandlers: Map<Link<any, any, any, any>, LinkHandler<any, any, any, any>>, storeHandlers: Map<Store<any, any>, StoreHandler<any, any>>) {
+	private createReadableLinks(queue: PromiseQueue): ReadableLinks<B> {
+		let links = {} as ReadableLinks<B>;
+		for (let key in this.linkManagers) {
+			let linkManager = this.linkManagers[key];
+			let link = new ReadableLink(linkManager, queue);
+			links[key] = link as any;
+		}
+		return links;
+	}
+
+	private createReadableStores(queue: PromiseQueue): ReadableStores<A> {
+		let stores = {} as ReadableStores<A>;
+		for (let key in this.storeManagers) {
+			let storeManager = this.storeManagers[key];
+			let store = new ReadableStore(storeManager, queue);
+			stores[key] = store as any;
+		}
+		return stores;
+	}
+
+	private createWritableLinks(queue: PromiseQueue): WritableLinks<B> {
+		let links = {} as WritableLinks<B>;
+		for (let key in this.linkManagers) {
+			let linkManager = this.linkManagers[key];
+			let link = new ReadableLink(linkManager, queue);
+			links[key] = link as any;
+		}
+		return links;
+	}
+
+	private createWritableStores(queue: PromiseQueue): WritableStores<A> {
+		let stores = {} as WritableStores<A>;
+		for (let key in this.storeManagers) {
+			let storeManager = this.storeManagers[key];
+			let store = new WritableStore(storeManager, queue); // TODO: Pass detail to writable
+			stores[key] = store as any;
+		}
+		return stores;
+	}
+
+	private saveSchema(): void {
+		let storeBids = {} as DatabaseSchema["storeBids"];
+		for (let key in this.storeManagers) {
+			storeBids[key] = this.storeManagers[key].getBid();
+		}
+		let linkBids = {} as DatabaseSchema["linkBids"];
+		for (let key in this.linkManagers) {
+			linkBids[key] = this.linkManagers[key].getBid();
+		}
+		let schema: DatabaseSchema = {
+			storeBids,
+			linkBids
+		};
+		let buffer = DatabaseSchema.encode(schema);
+		this.blockHandler.resizeBlock(this.bid, buffer.length);
+		this.blockHandler.writeBlock(this.bid, buffer);
+	}
+
+	private constructor(blockHandler: BlockHandler, bid: number, file: File, storeManagers: StoreManagers<A>, linkManagers: LinkManagers<B>) {
+		this.blockHandler = blockHandler;
+		this.bid = bid;
 		this.file = file;
-		this.readSync = Promise.resolve();
-		this.writeSync = Promise.resolve();
-		this.linkHandlers = linkHandlers;
-		this.storeHandlers = storeHandlers;
+		this.readableTransactionLock = Promise.resolve();
+		this.writableTransactionLock = Promise.resolve();
+		this.storeManagers = storeManagers;
+		this.linkManagers = linkManagers;
 	}
 
-	private createReadAccess(): ReadAccess {
-		return {
-			filter: (store) => {
-				return this.getStoreHandler(store).filter();
-			},
-			length: (store) => {
-				return this.getStoreHandler(store).length();
-			},
-			linked: (link, keysRecord) => {
-				return this.getLinkHandler(link).lookup(keysRecord);
-			},
-			lookup: (store, keysRecord) => {
-				return this.getStoreHandler(store).lookup(keysRecord);
-			}
-		};
-	}
-
-	private createWriteAccess(): WriteAccess {
-		return {
-			...this.createReadAccess(),
-			insert: (store, record) => {
-				// TODO: Execute constraints based on information in links.
-				return this.getStoreHandler(store).insert(record);
-			},
-			remove: (store, keysRecord) => {
-				// TODO: Cascade deletes based on information in links.
-				return this.getStoreHandler(store).remove(keysRecord);
-			}
-		};
-	}
-
-	private getLinkHandler<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>>(link: Link<A, B, C, D>): LinkHandler<A, B, C, D> {
-		let linkHandler = this.linkHandlers.get(link);
-		if (linkHandler == null) {
-			throw `Expected link to be present in database!`;
-		}
-		return linkHandler;
-	}
-
-	private getStoreHandler<A extends Record, B extends Keys<A>>(store: Store<A, B>): StoreHandler<A, B> {
-		let storeHandler = this.storeHandlers.get(store);
-		if (storeHandler == null) {
-			throw `Expected store to be present in database!`;
-		}
-		return storeHandler;
-	}
-
-	async getReadAccess<A>(transaction: (access: ReadAccess) => Promise<A>): Promise<A> {
-		let access = this.createReadAccess();
-		let promise = this.readSync
-			.then(() => transaction(access));
-		this.writeSync = this.writeSync
+	async enqueueReadableTransaction<C>(transaction: ReadableTransaction<A, B, C>): Promise<C> {
+		let queue = new PromiseQueue();
+		let stores = this.createReadableStores(queue);
+		let links = this.createReadableLinks(queue);
+		let promise = this.readableTransactionLock
+			.then(() => transaction(stores, links))
+			.then(() => queue.wait());
+		this.writableTransactionLock = this.writableTransactionLock
 			.then(() => promise)
 			.catch(() => {});
 		try {
@@ -198,11 +188,14 @@ migrateDataFrom(that: StoreHandler<any, any>): void {
 		}
 	}
 
-	async getWriteAccess<A>(transaction: (access: WriteAccess) => Promise<A>): Promise<A> {
-		let access = this.createWriteAccess();
-		let promise = this.writeSync
-			.then(() => transaction(access));
-		this.writeSync = this.readSync = this.writeSync
+	async enqueueWritableTransaction<C>(transaction: WritableTransaction<A, B, C>): Promise<C> {
+		let queue = new PromiseQueue();
+		let stores = this.createWritableStores(queue);
+		let links = this.createWritableLinks(queue);
+		let promise = this.writableTransactionLock
+			.then(() => transaction(stores, links))
+			.then(() => queue.wait());
+		this.writableTransactionLock = this.readableTransactionLock = this.writableTransactionLock
 			.then(() => promise)
 			.catch(() => {});
 		try {
@@ -212,6 +205,67 @@ migrateDataFrom(that: StoreHandler<any, any>): void {
 		} catch (error) {
 			this.file.discard();
 			throw error;
+		}
+	}
+
+	static migrate<A extends Stores<A>, B extends Links<B>>(oldDatabase: DatabaseManager<any, any>, options: {
+		stores: A,
+		links: B
+	}): DatabaseManager<A, B> {
+		let migratedStores = [] as Array<keyof A>;
+		for (let key in options.stores) {
+			if (oldDatabase.storeManagers[key] == null) {
+
+			}
+		}
+		for (let key in oldDatabase.storeManagers) {
+			if (options.stores[key as string as keyof A] == null) {
+				// remove store
+			}
+		}
+	}
+
+	// TODO: Handle schema outside.
+	static construct<A extends Stores<A>, B extends Links<B>>(blockHandler: BlockHandler, bid: number | null, file: File, options?: {
+		stores: A,
+		links: B
+	}): DatabaseManager<A, B> {
+		if (bid == null) {
+			if (options == null) {
+				return DatabaseManager.construct<any, any>(blockHandler, null, file, {
+					stores: {},
+					links: {}
+				});
+			} else {
+				let storeManagers = {} as StoreManagers<A>;
+				for (let key in options.stores) {
+					storeManagers[key] = options.stores[key].createManager(blockHandler, null) as any;
+				}
+				let linkManagers = {} as LinkManagers<B>;
+				for (let key in options.links) {
+					linkManagers[key] = options.links[key].createManager(blockHandler, null) as any;
+				}
+				bid = blockHandler.createBlock(64);
+				let manager = new DatabaseManager(blockHandler, bid, file, storeManagers, linkManagers);
+				manager.saveSchema();
+				return manager;
+			}
+		} else {
+			if (options == null) {
+				let schema = DatabaseSchema.decode(blockHandler.readBlock(bid));
+				let storeManagers = {} as StoreManagers<A>;
+				for (let key in schema.storeBids) {
+					storeManagers[key as keyof A] = StoreManager.construct(blockHandler, schema.storeBids[key]) as any;
+				}
+				let linkManagers = {} as LinkManagers<B>;
+				for (let key in schema.linkBids) {
+					linkManagers[key as keyof A] = LinkManager.construct(blockHandler, schema.linkBids[key]) as any;
+				}
+				let manager = new DatabaseManager(blockHandler, bid, file, storeManagers, linkManagers);
+				return manager;
+			} else {
+				return DatabaseManager.migrate(DatabaseManager.construct(blockHandler, bid, file), options);
+			}
 		}
 	}
 };
