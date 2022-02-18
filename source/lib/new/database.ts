@@ -8,7 +8,6 @@ import { StoreManager, StoreManagers, Stores } from "./store";
 import { TransactionManager } from "./transaction";
 import { BlockHandler } from "./vfs";
 
-
 function isCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject is V {
 	try {
 		codec.encode(subject);
@@ -47,6 +46,7 @@ export class DatabaseManager<A, B> {
 			fieldManagers[key] = this.createFieldManager(schema.fields[key]);
 		}
 		let keys = schema.keys;
+		// TODO: Create index managers.
 		let recordManager = new RecordManager(fieldManagers);
 		let storage = new Table(blockHandler, {
 			getKeyFromValue: (value) => {
@@ -70,9 +70,9 @@ export class DatabaseManager<A, B> {
 		let storeManagers = {} as StoreManagers<Stores<A>>;
 		let linkManagers = {} as LinkManagers<Links<B>>;
 		for (let key in this.schema.stores) {
-			let storeSchema = this.schema.stores[key];
-
+			storeManagers[key as keyof A] = this.createStoreManager(this.schema.stores[key]) as any;
 		}
+		// TODO: Links.
 		return new TransactionManager(this.file, storeManagers, linkManagers);
 	}
 
