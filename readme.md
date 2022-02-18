@@ -38,7 +38,9 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ### Links
 
-### Managers
+### Storage
+
+### TransactionManagers
 
 ### Transactions
 
