@@ -101,8 +101,4 @@ export class PromiseQueue {
 		return this.lock = this.lock
 			.then(operation instanceof Promise ? () => operation : operation);
 	}
-
-	wait(): Promise<any> {
-		return this.lock;
-	}
 };
