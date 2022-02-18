@@ -4,6 +4,7 @@ import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringF
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
+import { DatabaseManager } from "./database";
 
 export class FileReference {
 	private FileReference!: "FileReference";
@@ -13,6 +14,30 @@ export class Context {
 	private files: Map<FileReference, File>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
+
+	private getFile(reference: FileReference): File {
+		let file = this.files.get(reference);
+		if (file == null) {
+			throw `Expected file to be defined in context!`;
+		}
+		return file;
+	}
+
+	private getLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>>(reference: LinkReference<A, B, C, D, E>): Link<A, B, C, D, E> {
+		let link = this.links.get(reference);
+		if (link == null) {
+			throw `Expected link to be defined in context!`;
+		}
+		return link;
+	}
+
+	private getStore<A extends Record, B extends Keys<A>>(reference: StoreReference<A, B>): Store<A, B> {
+		let store = this.stores.get(reference);
+		if (store == null) {
+			throw `Expected store to be defined in context!`;
+		}
+		return store;
+	}
 
 	constructor() {
 		this.files = new Map();
@@ -66,28 +91,19 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences<A>, B extends LinkReferences<B>>(storage: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<Stores<A>, Links<B>> {
+	createTransactionManager<A extends StoreReferences<A>, B extends LinkReferences<B>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<Stores<A>, Links<B>> {
 		storeReferences = storeReferences ?? {} as A;
 		linkReferences = linkReferences ?? {} as B;
+		let file = this.getFile(fileReference);
 		let stores = {} as Stores<A>;
 		for (let key in storeReferences) {
-			let storeReference = storeReferences[key];
-			let store = this.stores.get(storeReference);
-			if (store == null) {
-				throw `Expected store to be defined in context!`;
-			}
-			stores[key] = store as any;
+			stores[key] = this.getStore(storeReferences[key]) as any;
 		}
 		let links = {} as Links<B>;
 		for (let key in linkReferences) {
-			let linkReference = linkReferences[key];
-			let link = this.links.get(linkReference);
-			if (link == null) {
-				throw `Expected link to be defined in context!`;
-			}
-			links[key] = link as any;
+			links[key] = this.getLink(linkReferences[key]) as any;
 		}
-
-
+		let databaseManager = new DatabaseManager(file, stores, links);
+		return databaseManager.createTransactionManager();
 	}
 };
