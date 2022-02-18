@@ -1,9 +1,9 @@
 import * as bedrock from "@joelek/bedrock";
 import { File } from "./files";
 import { Table } from "./hash";
-import { LinkManagers, Links } from "./link";
-import { BinaryFieldManager, BooleanFieldManager, FieldManager, FieldManagers, NullableStringFieldManager, RecordManager, StringFieldManager } from "./records";
-import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, FieldSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema } from "./schema";
+import { LinkManager, LinkManagers, Links } from "./link";
+import { BinaryFieldManager, BooleanFieldManager, FieldManager, FieldManagers, KeysRecordMap, NullableStringFieldManager, RecordManager, StringFieldManager } from "./records";
+import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, FieldSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema } from "./schema";
 import { StoreManager, StoreManagers, Stores } from "./store";
 import { TransactionManager } from "./transaction";
 import { BlockHandler } from "./vfs";
@@ -20,7 +20,6 @@ function isCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject 
 export class DatabaseManager<A, B> {
 	private file: File;
 	private blockHandler: BlockHandler;
-	private schema: DatabaseSchema;
 
 	private createFieldManager(schema: FieldSchema): FieldManager<any> {
 		let blockHandler = this.blockHandler;
@@ -60,19 +59,35 @@ export class DatabaseManager<A, B> {
 		return new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
 	}
 
-	private constructor(file: File, blockHandler: BlockHandler, schema: DatabaseSchema) {
+	private createLinkManager(schema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
+		let parent = storeManagers[schema.parent] as StoreManager<any, any> | undefined;
+		if (parent == null) {
+			throw `Expected store with name "${schema.parent}"!`;
+		}
+		let child = storeManagers[schema.child] as StoreManager<any, any> | undefined;
+		if (child == null) {
+			throw `Expected store with name "${schema.child}"!`;
+		}
+		let recordKeysMap = schema.keys as KeysRecordMap<any, any, any>;
+		return new LinkManager(parent, child, recordKeysMap);
+	}
+
+	private constructor(file: File, blockHandler: BlockHandler) {
 		this.file = file;
 		this.blockHandler = blockHandler;
-		this.schema = schema;
 	}
 
 	createTransactionManager(): TransactionManager<Stores<A>, Links<B>> {
-		let storeManagers = {} as StoreManagers<Stores<A>>;
-		let linkManagers = {} as LinkManagers<Links<B>>;
-		for (let key in this.schema.stores) {
-			storeManagers[key as keyof A] = this.createStoreManager(this.schema.stores[key]) as any;
+		let schema = DatabaseSchema.decode(this.blockHandler.readBlock(0));
+		let storeManagers = {} as StoreManagers<any>;
+		for (let key in schema.stores) {
+			storeManagers[key] = this.createStoreManager(schema.stores[key]);
 		}
-		// TODO: Links.
+		let linkManagers = {} as LinkManagers<any>;
+		for (let key in schema.links) {
+			linkManagers[key] = this.createLinkManager(schema.links[key], storeManagers);
+		}
+		// ConsistencyManager
 		return new TransactionManager(this.file, storeManagers, linkManagers);
 	}
 
@@ -92,8 +107,6 @@ export class DatabaseManager<A, B> {
 			blockHandler.createBlock(buffer.length);
 			blockHandler.writeBlock(0, buffer);
 		}
-		let buffer = blockHandler.readBlock(0);
-		let schema = DatabaseSchema.decode(buffer);
-		return new DatabaseManager(file, blockHandler, schema);
+		return new DatabaseManager(file, blockHandler);
 	}
 };

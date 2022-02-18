@@ -59,7 +59,7 @@ export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
 export const LinkSchema = bedrock.codecs.Object.of({
 	parent: bedrock.codecs.String,
 	child: bedrock.codecs.String,
-	keys: bedrock.codecs.Array.of(bedrock.codecs.String)
+	keys: bedrock.codecs.Record.of(bedrock.codecs.String)
 });
 
 export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;

@@ -6,21 +6,21 @@ import { Entry, StoreManager, StoreReference } from "./store";
 export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
 	private parent: StoreManager<A, B>;
 	private child: StoreManager<C, D>;
-	private recordKeysMap: E;
+	private keysRecordMap: E;
 	private orders: OrderMap<C>;
 
-	private constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
+	constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>) {
 		this.parent = parent;
 		this.child = child;
-		this.recordKeysMap = recordKeysMap;
+		this.keysRecordMap = keysRecordMap;
 		this.orders = orders ?? {};
 	}
 
 	filter(keysRecord: KeysRecord<A, B>): Iterable<Entry<C>> {
 		let filters = {} as FilterMap<C>;
-		for (let key in this.recordKeysMap) {
+		for (let key in this.keysRecordMap) {
 			let keyOne = key as B[number];
-			let keyTwo = this.recordKeysMap[keyOne];
+			let keyTwo = this.keysRecordMap[keyOne];
 			filters[keyTwo] = new EqualityFilter(keysRecord[keyOne]) as any;
 		}
 		return this.child.filter(filters, this.orders);
@@ -28,9 +28,9 @@ export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, 
 
 	lookup(record: C | Pick<C, E[B[number]]>): A {
 		let keysRecord = {} as KeysRecord<A, B>;
-		for (let key in this.recordKeysMap) {
+		for (let key in this.keysRecordMap) {
 			let keyOne = key as B[number];
-			let keyTwo = this.recordKeysMap[keyOne];
+			let keyTwo = this.keysRecordMap[keyOne];
 			keysRecord[keyOne] = record[keyTwo] as any;
 		}
 		return this.parent.lookup(keysRecord);
