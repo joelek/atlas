@@ -15,7 +15,8 @@ test(``, async () => {
 	let userPosts = context.createLink(users, posts, {
 		user_id: "user_id"
 	});
-	let manager = context.createTransactionManager("./private/atlas", {
+	let storage = context.createMemoryStorage();
+	let manager = context.createTransactionManager(storage, {
 		users
 	}, {
 		userPosts
