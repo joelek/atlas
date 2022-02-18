@@ -106,7 +106,7 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 		this.blockHandler.writeBlock(this.bid, buffer);
 	}
 
-	private constructor(blockHandler: BlockHandler, bid: number, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
+	constructor(blockHandler: BlockHandler, bid: number, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
 		this.blockHandler = blockHandler;
 		this.bid = bid;
 		this.fieldManagers = fieldManagers;

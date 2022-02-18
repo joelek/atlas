@@ -121,7 +121,7 @@ export const BinaryFieldSchema = bedrock.codecs.Object.of({
 export type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
 
 export class BinaryFieldManager extends FieldManager<Uint8Array> {
-	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: Uint8Array) {
+	constructor(blockHandler: BlockHandler, bid: number, defaultValue: Uint8Array) {
 		super(blockHandler, bid, bedrock.codecs.Binary, defaultValue);
 	}
 
@@ -213,7 +213,7 @@ export const StringFieldSchema = bedrock.codecs.Object.of({
 export type StringFieldSchema = ReturnType<typeof StringFieldSchema["decode"]>;
 
 export class StringFieldManager extends FieldManager<string> {
-	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: string) {
+	constructor(blockHandler: BlockHandler, bid: number, defaultValue: string) {
 		super(blockHandler, bid, bedrock.codecs.String, defaultValue);
 	}
 
@@ -292,7 +292,7 @@ export const NullableStringFieldSchema = bedrock.codecs.Object.of({
 export type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
 
 export class NullableStringFieldManager extends FieldManager<string | null> {
-	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: string | null) {
+	constructor(blockHandler: BlockHandler, bid: number, defaultValue: string | null) {
 		super(blockHandler, bid, bedrock.codecs.Union.of(
 			bedrock.codecs.String,
 			bedrock.codecs.Null
@@ -368,7 +368,7 @@ export const BooleanFieldSchema = bedrock.codecs.Object.of({
 export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
 
 export class BooleanFieldManager extends FieldManager<boolean> {
-	private constructor(blockHandler: BlockHandler, bid: number, defaultValue: boolean) {
+	constructor(blockHandler: BlockHandler, bid: number, defaultValue: boolean) {
 		super(blockHandler, bid, bedrock.codecs.Boolean, defaultValue);
 	}
 
