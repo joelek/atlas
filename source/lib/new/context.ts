@@ -95,13 +95,13 @@ export class Context {
 		storeReferences = storeReferences ?? {} as A;
 		linkReferences = linkReferences ?? {} as B;
 		let file = this.getFile(fileReference);
-		let stores = {} as Stores<A>;
+		let stores = {} as Stores<any>;
 		for (let key in storeReferences) {
-			stores[key] = this.getStore(storeReferences[key]) as any;
+			stores[key] = this.getStore(storeReferences[key]);
 		}
-		let links = {} as Links<B>;
+		let links = {} as Links<any>;
 		for (let key in linkReferences) {
-			links[key] = this.getLink(linkReferences[key]) as any;
+			links[key] = this.getLink(linkReferences[key]);
 		}
 		let databaseManager = DatabaseManager.construct(file).migrateSchema(stores, links);
 		let transactionManager = databaseManager.createTransactionManager();

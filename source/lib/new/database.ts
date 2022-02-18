@@ -69,6 +69,7 @@ export class DatabaseManager<A, B> {
 			throw `Expected store with name "${schema.child}"!`;
 		}
 		let recordKeysMap = schema.keys as KeysRecordMap<any, any, any>;
+		// TODO: Order.
 		return new LinkManager(parent, child, recordKeysMap);
 	}
 
