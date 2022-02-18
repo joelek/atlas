@@ -1,6 +1,6 @@
 import { Link, LinkReference, LinkReferences, Links } from "./link";
 import { Store, StoreReference, StoreReferences, Stores } from "./store";
-import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringField } from "./records";
+import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 
@@ -23,6 +23,10 @@ export class Context {
 
 	createStringField(): StringField {
 		return new StringField("");
+	}
+
+	createNullableStringField(): NullableStringField {
+		return new NullableStringField(null);
 	}
 
 	createLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
