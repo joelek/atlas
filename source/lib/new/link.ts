@@ -1,7 +1,7 @@
 import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
 import { Keys, KeysRecord, KeysRecordMap, Record } from "./records";
-import { Entry, StoreManager } from "./store";
+import { Entry, StoreManager, StoreReference } from "./store";
 
 export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
 	private parent: StoreManager<A, B>;
@@ -9,7 +9,7 @@ export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, 
 	private recordKeysMap: E;
 	private orders: OrderMap<C>;
 
-	constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
+	private constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
 		this.parent = parent;
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;
@@ -35,58 +35,38 @@ export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, 
 		}
 		return this.parent.lookup(keysRecord);
 	}
+
+	static construct<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>): LinkManager<A, B, C, D, E> {
+		return new LinkManager(parent, child, recordKeysMap, orders);
+	}
 };
-/*
-
-export const LinkSchema = bedrock.codecs.Object.of({
-	parent: bedrock.codecs.String,
-	child: bedrock.codecs.String,
-	keys: bedrock.codecs.Array.of(bedrock.codecs.String)
-});
-
-export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
-
 
 export type LinkManagers<A> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F> ? LinkManager<C, D, E, F> : never;
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
 };
 
-export class Link<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> {
+export class LinkReference<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
+	private LinkReference!: "LinkReference";
+};
+
+export type LinkReferences<A> = {
+	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? LinkReference<C, D, E, F, G> : never;
+};
+
+export class Link<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
 	parent: StoreReference<A, B>;
 	child: StoreReference<C, D>;
-	recordKeysMap: KeysRecordMap<A, B, C>;
-	orders: OrderMap<C>;
+	recordKeysMap: E;
+	orders?: OrderMap<C>;
 
-	constructor(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders: OrderMap<C>) {
+	constructor(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
 		this.parent = parent;
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;
 		this.orders = orders;
 	}
-
-	createManager(blockHandler: BlockHandler, bid: number | null, ): LinkManager<A, B, C, D> {
-		let parent = ;
-		let child = ;
-		let recordKeysMap = this.recordKeysMap;
-		let orders = this.orders;
-		return LinkManager.construct(blockHandler, bid, {
-			parent,
-			child,
-			recordKeysMap,
-			orders
-		});
-	}
 };
 
 export type Links<A> = {
-	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F> ? Link<C, D, E, F> : never;
+	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
-
-export class LinkReference<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> {
-	private LinkReference!: "LinkReference";
-};
-
-export type LinkReferences<A> = {
-	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F> ? LinkReference<C, D, E, F> : never;
-};
- */

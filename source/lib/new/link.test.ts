@@ -31,7 +31,7 @@ function createUsersAndPosts() {
 
 test(`It should support filtering without explicit ordering for a referencing link.`, async (assert) => {
 	let { users, posts } = { ...createUsersAndPosts() };
-	let userPosts = new LinkManager(users, posts, {
+	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	});
 	users.insert({
@@ -62,7 +62,7 @@ test(`It should support filtering without explicit ordering for a referencing li
 
 test(`It should support filtering with explicit ordering for a referencing link.`, async (assert) => {
 	let { users, posts } = { ...createUsersAndPosts() };
-	let userPosts = new LinkManager(users, posts, {
+	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	}, {
 		post_id: new IncreasingOrder()
@@ -95,7 +95,7 @@ test(`It should support filtering with explicit ordering for a referencing link.
 
 test(`It should support looking up the corresponding parent for a referencing link.`, async (assert) => {
 	let { users, posts } = { ...createUsersAndPosts() };
-	let userPosts = new LinkManager(users, posts, {
+	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	});
 	users.insert({
@@ -131,7 +131,7 @@ function createDirectories() {
 
 test(`It should support filtering without explicit ordering for a self-referencing link.`, async (assert) => {
 	let { directories } = { ...createDirectories() };
-	let childDirectories = new LinkManager(directories, directories, {
+	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
 	directories.insert({
@@ -156,7 +156,7 @@ test(`It should support filtering without explicit ordering for a self-referenci
 
 test(`It should support filtering with explicit ordering for a self-referencing link.`, async (assert) => {
 	let { directories } = { ...createDirectories() };
-	let childDirectories = new LinkManager(directories, directories, {
+	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	}, {
 		directory_id: new IncreasingOrder()
@@ -183,7 +183,7 @@ test(`It should support filtering with explicit ordering for a self-referencing 
 
 test(`It should support looking up the corresponding parent for a self-referencing link.`, async (assert) => {
 	let { directories } = { ...createDirectories() };
-	let childDirectories = new LinkManager(directories, directories, {
+	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
 	directories.insert({

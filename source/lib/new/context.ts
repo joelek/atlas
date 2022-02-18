@@ -5,7 +5,7 @@ import { DatabaseManager } from "./database";
 import { OrderMap } from "./orders";
 
 export class Context {
-	private links: Map<LinkReference<any, any, any, any>, Link<any, any, any, any>>;
+	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
 
 	constructor() {
@@ -25,9 +25,9 @@ export class Context {
 		return new StringField("");
 	}
 
-	createLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D> {
-		let reference = new LinkReference<A, B, C, D>();
-		let link = new Link(parent, child, recordKeysMap, orders ?? {});
+	createLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
+		let reference = new LinkReference<A, B, C, D, E>();
+		let link = new Link(parent, child, recordKeysMap, orders);
 		this.links.set(reference, link);
 		return reference;
 	}

@@ -343,6 +343,14 @@ export type StoreManagers<A> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
 
+export class StoreReference<A extends Record, B extends Keys<A>> {
+	private StoreReference!: "StoreReference";
+};
+
+export type StoreReferences<A> = {
+	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : never;
+};
+
 export class Store<A extends Record, B extends Keys<A>> {
 	fields: Fields<A>;
 	keys: [...B];
@@ -365,12 +373,4 @@ export class Store<A extends Record, B extends Keys<A>> {
 
 export type Stores<A> = {
 	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;
-};
-
-export class StoreReference<A extends Record, B extends Keys<A>> {
-	private StoreReference!: "StoreReference";
-};
-
-export type StoreReferences<A> = {
-	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : never;
 };

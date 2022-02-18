@@ -1,6 +1,6 @@
 import * as bedrock from "@joelek/bedrock";
 import { File } from "./files";
-import { Record, Keys } from "./records";
+import { Record, Keys, KeysRecordMap } from "./records";
 import { Link, LinkManager, LinkManagers, LinkReference, Links } from "./link";
 import { Store, StoreManager, StoreManagers, StoreReference, Stores } from "./store";
 import { PromiseQueue } from "./utils";
@@ -50,52 +50,43 @@ export type WritableStores<A> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
-export class ReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> {
-	protected linkManager: LinkManager<A, B, C, D>;
+export class ReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
+	protected linkManager: LinkManager<A, B, C, D, E>;
 	protected queue: PromiseQueue;
 
-	constructor(linkManager: LinkManager<A, B, C, D>, queue: PromiseQueue) {
+	constructor(linkManager: LinkManager<A, B, C, D, E>, queue: PromiseQueue) {
 		this.linkManager = linkManager;
 		this.queue = queue;
 	}
 
-	filter(...parameters: Parameters<LinkManager<A, B, C, D>["filter"]>): Promise<ReturnType<LinkManager<A, B, C, D>["filter"]>> {
+	filter(...parameters: Parameters<LinkManager<A, B, C, D, E>["filter"]>): Promise<ReturnType<LinkManager<A, B, C, D, E>["filter"]>> {
 		return this.queue.enqueue(() => this.linkManager.filter(...parameters));
 	}
 
-	lookup(...parameters: Parameters<LinkManager<A, B, C, D>["lookup"]>): Promise<ReturnType<LinkManager<A, B, C, D>["lookup"]>> {
+	lookup(...parameters: Parameters<LinkManager<A, B, C, D, E>["lookup"]>): Promise<ReturnType<LinkManager<A, B, C, D, E>["lookup"]>> {
 		return this.queue.enqueue(() => this.linkManager.lookup(...parameters));
 	}
 };
 
 export type ReadableLinks<A> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F> ? ReadableLink<C, D, E, F> : never;
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : never;
 };
 
-export class WritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> extends ReadableLink<A, B, C, D> {
-	constructor(linkManager: LinkManager<A, B, C, D>, queue: PromiseQueue) {
+export class WritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> extends ReadableLink<A, B, C, D, E> {
+	constructor(linkManager: LinkManager<A, B, C, D, E>, queue: PromiseQueue) {
 		super(linkManager, queue);
 	}
 };
 
 export type WritableLinks<A> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F> ? WritableLink<C, D, E, F> : never;
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
-
-export const DatabaseSchema = bedrock.codecs.Object.of({
-	storeBids: bedrock.codecs.Record.of(bedrock.codecs.Integer),
-	linkBids: bedrock.codecs.Record.of(bedrock.codecs.Integer)
-});
-
-export type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
 
 export type ReadableTransaction<A, B, C> = (stores: ReadableStores<A>, links: ReadableLinks<B>) => Promise<C>;
 
 export type WritableTransaction<A, B, C> = (stores: WritableStores<A>, links: WritableLinks<B>) => Promise<C>;
 
 export class DatabaseManager<A, B> {
-	private blockHandler: BlockHandler;
-	private bid: number;
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
@@ -136,33 +127,14 @@ export class DatabaseManager<A, B> {
 		let stores = {} as WritableStores<A>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
-			let store = new WritableStore(storeManager, queue); // TODO: Pass detail to writable
+			// TODO: Pass detail to writable that handles cascading deletions and insert constraints.
+			let store = new WritableStore(storeManager, queue);
 			stores[key] = store as any;
 		}
 		return stores;
 	}
 
-	private saveSchema(): void {
-		let storeBids = {} as DatabaseSchema["storeBids"];
-		for (let key in this.storeManagers) {
-			storeBids[key] = this.storeManagers[key].getBid();
-		}
-		let linkBids = {} as DatabaseSchema["linkBids"];
-		for (let key in this.linkManagers) {
-			linkBids[key] = this.linkManagers[key].getBid();
-		}
-		let schema: DatabaseSchema = {
-			storeBids,
-			linkBids
-		};
-		let buffer = DatabaseSchema.encode(schema);
-		this.blockHandler.resizeBlock(this.bid, buffer.length);
-		this.blockHandler.writeBlock(this.bid, buffer);
-	}
-
-	private constructor(blockHandler: BlockHandler, bid: number, file: File, storeManagers: StoreManagers<A>, linkManagers: LinkManagers<B>) {
-		this.blockHandler = blockHandler;
-		this.bid = bid;
+	constructor(file: File, storeManagers: StoreManagers<A>, linkManagers: LinkManagers<B>) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
@@ -207,7 +179,25 @@ export class DatabaseManager<A, B> {
 			throw error;
 		}
 	}
-
+/*
+	static saveSchema(): void {
+		let storeBids = {} as DatabaseSchema["storeBids"];
+		for (let key in this.storeManagers) {
+			storeBids[key] = this.storeManagers[key].getBid();
+		}
+		let links = {} as DatabaseSchema["links"];
+		for (let key in this.linkManagers) {
+			links[key] = this.linkManagers[key].getBid();
+		}
+		let schema: DatabaseSchema = {
+			storeBids,
+			links
+		};
+		let buffer = DatabaseSchema.encode(schema);
+		this.blockHandler.resizeBlock(this.bid, buffer.length);
+		this.blockHandler.writeBlock(this.bid, buffer);
+	}
+ */
 	static migrate<A extends Stores<A>, B extends Links<B>>(oldDatabase: DatabaseManager<any, any>, options: {
 		stores: A,
 		links: B
@@ -269,3 +259,28 @@ export class DatabaseManager<A, B> {
 		}
 	}
 };
+
+
+
+
+
+
+
+
+
+
+
+export const LinkSchema = bedrock.codecs.Object.of({
+	parent: bedrock.codecs.String,
+	child: bedrock.codecs.String,
+	keys: bedrock.codecs.Array.of(bedrock.codecs.String)
+});
+
+export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
+
+export const DatabaseSchema = bedrock.codecs.Object.of({
+	storeBids: bedrock.codecs.Record.of(bedrock.codecs.Integer),
+	links: bedrock.codecs.Record.of(LinkSchema)
+});
+
+export type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
