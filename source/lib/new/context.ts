@@ -103,6 +103,8 @@ export class Context {
 		for (let key in linkReferences) {
 			links[key] = this.getLink(linkReferences[key]) as any;
 		}
-		return DatabaseManager.createTransactionManager(file, stores, links);
+		let databaseManager = DatabaseManager.construct(file).migrateSchema(stores, links);
+		let transactionManager = databaseManager.createTransactionManager();
+		return transactionManager;
 	}
 };

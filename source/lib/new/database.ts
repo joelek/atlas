@@ -5,19 +5,42 @@ import { StoreManagers, Stores } from "./store";
 import { TransactionManager } from "./transaction";
 import { BlockHandler } from "./vfs";
 
-export class DatabaseManager {
-	private constructor() {}
+export class DatabaseManager<A, B> {
+	private file: File;
+	private blockHandler: BlockHandler;
+	private schema: DatabaseSchema;
 
-	static createTransactionManager<A, B>(file: File, stores: Stores<A>, links: Links<B>): TransactionManager<Stores<A>, Links<B>> {
-		let blockHandler = new BlockHandler(file);
+	private constructor(file: File, blockHandler: BlockHandler, schema: DatabaseSchema) {
+		this.file = file;
+		this.blockHandler = blockHandler;
+		this.schema = schema;
+	}
+
+	createTransactionManager(): TransactionManager<Stores<A>, Links<B>> {
 		let storeManagers = {} as StoreManagers<Stores<A>>;
 		let linkManagers = {} as LinkManagers<Links<B>>;
-		if (blockHandler.getBlockCount() === 0) {
+		// TODO: Create managers from schema.
+		return new TransactionManager(this.file, storeManagers, linkManagers);
+	}
 
-		} else {
-			let schema = DatabaseSchema.decode(blockHandler.readBlock(0));
-			console.log(schema);
+	migrateSchema<C, D>(stores: Stores<C>, links: Links<D>): DatabaseManager<C, D> {
+		// TODO: Migrate.
+		return this as any;
+	}
+
+	static construct(file: File): DatabaseManager<any, any> {
+		let blockHandler = new BlockHandler(file);
+		if (blockHandler.getBlockCount() === 0) {
+			let schema: DatabaseSchema = {
+				stores: {},
+				links: {}
+			};
+			let buffer = DatabaseSchema.encode(schema);
+			blockHandler.createBlock(buffer.length);
+			blockHandler.writeBlock(0, buffer);
 		}
-		return new TransactionManager(file, storeManagers, linkManagers);
+		let buffer = blockHandler.readBlock(0);
+		let schema = DatabaseSchema.decode(buffer);
+		return new DatabaseManager(file, blockHandler, schema);
 	}
 };
