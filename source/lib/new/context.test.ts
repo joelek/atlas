@@ -15,7 +15,7 @@ test(``, async () => {
 	let userPosts = context.createLink(users, posts, {
 		user_id: "user_id"
 	});
-	let manager = context.createManager("./private/atlas", {
+	let manager = context.createTransactionManager("./private/atlas", {
 		users
 	}, {
 		userPosts

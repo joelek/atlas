@@ -1,7 +1,7 @@
 import { Link, LinkReference, LinkReferences, Links } from "./link";
 import { Store, StoreReference, StoreReferences, Stores } from "./store";
 import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringField } from "./records";
-import { DatabaseManager } from "./database";
+import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 
 export class Context {
@@ -39,7 +39,7 @@ export class Context {
 		return reference;
 	}
 
-	createManager<A extends StoreReferences<A>, B extends LinkReferences<B>>(path: string, stores?: A, links?: B): DatabaseManager<Stores<A>, Links<B>> {
+	createTransactionManager<A extends StoreReferences<A>, B extends LinkReferences<B>>(path: string, stores?: A, links?: B): TransactionManager<Stores<A>, Links<B>> {
 		throw `TODO`;
 	}
 };

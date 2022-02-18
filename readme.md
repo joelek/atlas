@@ -11,7 +11,7 @@ let users = context.createStore({
 	user_id: context.createBinaryField(),
 	name: context.createStringField()
 }, ["user_id"]);
-let manager = context.createManager("./private/db/", {
+let manager = context.createTransactionManager("./private/db/", {
 	users
 });
 await manager.enqueueWritableTransaction(async ({ users }) => {

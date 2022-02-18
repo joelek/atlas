@@ -86,7 +86,7 @@ export type ReadableTransaction<A, B, C> = (stores: ReadableStores<A>, links: Re
 
 export type WritableTransaction<A, B, C> = (stores: WritableStores<A>, links: WritableLinks<B>) => Promise<C>;
 
-export class DatabaseManager<A, B> {
+export class TransactionManager<A, B> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
@@ -198,10 +198,10 @@ export class DatabaseManager<A, B> {
 		this.blockHandler.writeBlock(this.bid, buffer);
 	}
  */
-	static migrate<A extends Stores<A>, B extends Links<B>>(oldDatabase: DatabaseManager<any, any>, options: {
+	static migrate<A extends Stores<A>, B extends Links<B>>(oldDatabase: TransactionManager<any, any>, options: {
 		stores: A,
 		links: B
-	}): DatabaseManager<A, B> {
+	}): TransactionManager<A, B> {
 		let migratedStores = [] as Array<keyof A>;
 		for (let key in options.stores) {
 			if (oldDatabase.storeManagers[key] == null) {
@@ -219,10 +219,10 @@ export class DatabaseManager<A, B> {
 	static construct<A extends Stores<A>, B extends Links<B>>(blockHandler: BlockHandler, bid: number | null, file: File, options?: {
 		stores: A,
 		links: B
-	}): DatabaseManager<A, B> {
+	}): TransactionManager<A, B> {
 		if (bid == null) {
 			if (options == null) {
-				return DatabaseManager.construct<any, any>(blockHandler, null, file, {
+				return TransactionManager.construct<any, any>(blockHandler, null, file, {
 					stores: {},
 					links: {}
 				});
@@ -236,7 +236,7 @@ export class DatabaseManager<A, B> {
 					linkManagers[key] = options.links[key].createManager(blockHandler, null) as any;
 				}
 				bid = blockHandler.createBlock(64);
-				let manager = new DatabaseManager(blockHandler, bid, file, storeManagers, linkManagers);
+				let manager = new TransactionManager(blockHandler, bid, file, storeManagers, linkManagers);
 				manager.saveSchema();
 				return manager;
 			}
@@ -251,10 +251,10 @@ export class DatabaseManager<A, B> {
 				for (let key in schema.linkBids) {
 					linkManagers[key as keyof A] = LinkManager.construct(blockHandler, schema.linkBids[key]) as any;
 				}
-				let manager = new DatabaseManager(blockHandler, bid, file, storeManagers, linkManagers);
+				let manager = new TransactionManager(blockHandler, bid, file, storeManagers, linkManagers);
 				return manager;
 			} else {
-				return DatabaseManager.migrate(DatabaseManager.construct(blockHandler, bid, file), options);
+				return TransactionManager.migrate(TransactionManager.construct(blockHandler, bid, file), options);
 			}
 		}
 	}
