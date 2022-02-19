@@ -73,9 +73,18 @@ export class DatabaseManager<A, B> {
 		return new LinkManager(parent, child, recordKeysMap);
 	}
 
-	private constructor(file: File, blockHandler: BlockHandler) {
+	constructor(file: File) {
 		this.file = file;
-		this.blockHandler = blockHandler;
+		this.blockHandler = new BlockHandler(file);
+		if (this.blockHandler.getBlockCount() === 0) {
+			let schema: DatabaseSchema = {
+				stores: {},
+				links: {}
+			};
+			let buffer = DatabaseSchema.encode(schema);
+			this.blockHandler.createBlock(buffer.length);
+			this.blockHandler.writeBlock(0, buffer);
+		}
 	}
 
 	createTransactionManager(): TransactionManager<Stores<A>, Links<B>> {
@@ -95,19 +104,5 @@ export class DatabaseManager<A, B> {
 	migrateSchema<C, D>(stores: Stores<C>, links: Links<D>): DatabaseManager<C, D> {
 		// TODO: Migrate.
 		return this as any;
-	}
-
-	static construct(file: File): DatabaseManager<any, any> {
-		let blockHandler = new BlockHandler(file);
-		if (blockHandler.getBlockCount() === 0) {
-			let schema: DatabaseSchema = {
-				stores: {},
-				links: {}
-			};
-			let buffer = DatabaseSchema.encode(schema);
-			blockHandler.createBlock(buffer.length);
-			blockHandler.writeBlock(0, buffer);
-		}
-		return new DatabaseManager(file, blockHandler);
 	}
 };

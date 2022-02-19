@@ -125,7 +125,6 @@ export class TransactionManager<A, B> {
 		let stores = {} as WritableStores<A>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
-			// TODO: Pass detail to writable that handles cascading deletions and insert constraints.
 			let store = new WritableStore(storeManager, queue);
 			stores[key] = store as any;
 		}
