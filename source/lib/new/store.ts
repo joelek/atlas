@@ -1,5 +1,4 @@
 import * as bedrock from "@joelek/bedrock";
-import { CountQueuingStrategy } from "stream/web";
 import { StreamIterable } from "../stream";
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
@@ -21,7 +20,28 @@ export type Entry<A extends Record> = {
 	record(): A;
 };
 
+export interface ReadableStore<A extends Record, B extends Keys<A>> {
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<Entry<A>>>;
+	length(): Promise<number>;
+	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
+};
+
+export type ReadableStores<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
+};
+
+export interface WritableStore<A extends Record, B extends Keys<A>> extends ReadableStore<A, B> {
+	insert(record: A): Promise<void>;
+	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
+	update(record: A): Promise<void>;
+};
+
+export type WritableStores<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
+};
+
 // TODO: Handle indices.
+// TODO: Implement interface WritableStore.
 export class StoreManager<A extends Record, B extends Keys<A>> {
 	private blockHandler: BlockHandler;
 	private bid: number;

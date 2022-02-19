@@ -1,10 +1,10 @@
 import { File } from "./files";
 import { Record, Keys, KeysRecordMap } from "./records";
 import { Link, LinkManager, LinkManagers } from "./link";
-import { Store, StoreManager, StoreManagers } from "./store";
+import { ReadableStore, ReadableStores, StoreManager, StoreManagers, WritableStore, WritableStores } from "./store";
 import { PromiseQueue } from "./utils";
 
-export class ReadableStore<A extends Record, B extends Keys<A>> {
+export class QueuedReadableStore<A extends Record, B extends Keys<A>> implements ReadableStore<A, B> {
 	protected storeManager: StoreManager<A, B>;
 	protected queue: PromiseQueue;
 
@@ -13,43 +13,35 @@ export class ReadableStore<A extends Record, B extends Keys<A>> {
 		this.queue = queue;
 	}
 
-	filter(...parameters: Parameters<StoreManager<A, B>["filter"]>): Promise<ReturnType<StoreManager<A, B>["filter"]>> {
+	filter(...parameters: Parameters<ReadableStore<A, B>["filter"]>): ReturnType<ReadableStore<A, B>["filter"]> {
 		return this.queue.enqueue(() => this.storeManager.filter(...parameters));
 	}
 
-	length(...parameters: Parameters<StoreManager<A, B>["length"]>): Promise<ReturnType<StoreManager<A, B>["length"]>> {
+	length(...parameters: Parameters<ReadableStore<A, B>["length"]>): ReturnType<ReadableStore<A, B>["length"]> {
 		return this.queue.enqueue(() => this.storeManager.length(...parameters));
 	}
 
-	lookup(...parameters: Parameters<StoreManager<A, B>["lookup"]>): Promise<ReturnType<StoreManager<A, B>["lookup"]>> {
+	lookup(...parameters: Parameters<ReadableStore<A, B>["lookup"]>): ReturnType<ReadableStore<A, B>["lookup"]> {
 		return this.queue.enqueue(() => this.storeManager.lookup(...parameters));
 	}
 };
 
-export type ReadableStores<A> = {
-	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
-};
-
-export class WritableStore<A extends Record, B extends Keys<A>> extends ReadableStore<A, B> {
+export class QueuedWritableStore<A extends Record, B extends Keys<A>> extends QueuedReadableStore<A, B> implements WritableStore<A, B> {
 	constructor(storeManager: StoreManager<A, B>, queue: PromiseQueue) {
 		super(storeManager, queue);
 	}
 
-	insert(...parameters: Parameters<StoreManager<A, B>["insert"]>): Promise<ReturnType<StoreManager<A, B>["insert"]>> {
+	insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
 		return this.queue.enqueue(() => this.storeManager.insert(...parameters));
 	}
 
-	remove(...parameters: Parameters<StoreManager<A, B>["remove"]>): Promise<ReturnType<StoreManager<A, B>["remove"]>> {
+	remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
 		return this.queue.enqueue(() => this.storeManager.remove(...parameters));
 	}
 
-	update(...parameters: Parameters<StoreManager<A, B>["update"]>): Promise<ReturnType<StoreManager<A, B>["update"]>> {
+	update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
 		return this.queue.enqueue(() => this.storeManager.update(...parameters));
 	}
-};
-
-export type WritableStores<A> = {
-	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
 export class ReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
@@ -109,7 +101,7 @@ export class TransactionManager<A, B> {
 		let stores = {} as ReadableStores<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
-			let store = new ReadableStore(storeManager, queue);
+			let store = new QueuedReadableStore(storeManager, queue);
 			stores[key] = store;
 		}
 		return stores;
@@ -129,7 +121,7 @@ export class TransactionManager<A, B> {
 		let stores = {} as WritableStores<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
-			let store = new WritableStore(storeManager, queue);
+			let store = new QueuedWritableStore(storeManager, queue);
 			stores[key] = store;
 		}
 		return stores;
