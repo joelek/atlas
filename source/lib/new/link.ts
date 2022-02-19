@@ -20,7 +20,23 @@ export type WritableLinks<A> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
-// TODO: Implement interface WritableLink.
+export class WritableLinkManager<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
+	protected linkManager: LinkManager<A, B, C, D, E>;
+
+	constructor(linkManager: LinkManager<A, B, C, D, E>) {
+		this.linkManager = linkManager;
+	}
+
+	async filter(...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
+		return this.linkManager.filter(...parameters);
+	}
+
+	async lookup(...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {
+		return this.linkManager.lookup(...parameters);
+	}
+};
+
+// TODO: Implement interface WritableLink directly.
 export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
 	private parent: StoreManager<A, B>;
 	private child: StoreManager<C, D>;
