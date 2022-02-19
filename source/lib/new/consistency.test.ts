@@ -268,38 +268,3 @@ test(`It should remove orphaned records for linked records in different stores.`
 	assert.array.equals(Array.from(users.records.keys()).sort(), [0]);
 	assert.array.equals(Array.from(posts.records.keys()).sort(), [1]);
 });
-/*
-
-
-
-
-case 1: single parent is deleted from store
-	add parent to deletion queue for parent store
-	while deletion queues are non empty
-
-	end
-
-
-case 2: consistency check after schema change
-	while deletion queues are non empty
-		for each link that changed (link added or changed child store)
-			if link forbids orphans
-				for each child in link
-					lookup parent based on child
-					if parent is missing
-						add child to deletion queue
-					end
-				end
-			end
-		end
-		for each link that changed
-			if link forbids orphans
-
-			end
-		end
-	end
-
-functionality needed:
-	get all links from given store
-
-*/

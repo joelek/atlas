@@ -1,4 +1,5 @@
 import * as bedrock from "@joelek/bedrock";
+import { ConsistencyManager } from "./consistency";
 import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links } from "./link";
@@ -69,7 +70,7 @@ export class DatabaseManager<A, B> {
 			throw `Expected store with name "${schema.child}"!`;
 		}
 		let recordKeysMap = schema.keys as KeysRecordMap<any, any, any>;
-		// TODO: Order.
+		// TODO: Read order from array.
 		return new LinkManager(parent, child, recordKeysMap);
 	}
 
@@ -97,8 +98,10 @@ export class DatabaseManager<A, B> {
 		for (let key in schema.links) {
 			linkManagers[key] = this.createLinkManager(schema.links[key], storeManagers);
 		}
-		// ConsistencyManager
-		return new TransactionManager(this.file, storeManagers, linkManagers);
+		let consistencyManager = new ConsistencyManager<any, any>(storeManagers, linkManagers, schema);
+		let writableStores = consistencyManager.createWritableStores();
+		let writableLinks = consistencyManager.createWritableLinks();
+		return new TransactionManager(this.file, writableStores, writableLinks);
 	}
 
 	migrateSchema<C, D>(stores: Stores<C>, links: Links<D>): DatabaseManager<C, D> {
