@@ -1,70 +1,70 @@
 import { File } from "./files";
 import { Record, Keys, KeysRecordMap } from "./records";
-import { LinkManager, LinkManagers, ReadableLink, ReadableLinks, WritableLink, WritableLinks } from "./link";
-import { ReadableStore, ReadableStores, StoreManager, StoreManagers, WritableStore, WritableStores } from "./store";
+import { ReadableLink, ReadableLinks, WritableLink, WritableLinks } from "./link";
+import { ReadableStore, ReadableStores, WritableStore, WritableStores } from "./store";
 import { PromiseQueue } from "./utils";
 
 export class QueuedReadableStore<A extends Record, B extends Keys<A>> implements ReadableStore<A, B> {
-	protected storeManager: StoreManager<A, B>;
+	protected writableStore: WritableStore<A, B>;
 	protected queue: PromiseQueue;
 
-	constructor(storeManager: StoreManager<A, B>, queue: PromiseQueue) {
-		this.storeManager = storeManager;
+	constructor(writableStore: WritableStore<A, B>, queue: PromiseQueue) {
+		this.writableStore = writableStore;
 		this.queue = queue;
 	}
 
 	filter(...parameters: Parameters<ReadableStore<A, B>["filter"]>): ReturnType<ReadableStore<A, B>["filter"]> {
-		return this.queue.enqueue(() => this.storeManager.filter(...parameters));
+		return this.queue.enqueue(() => this.writableStore.filter(...parameters));
 	}
 
 	length(...parameters: Parameters<ReadableStore<A, B>["length"]>): ReturnType<ReadableStore<A, B>["length"]> {
-		return this.queue.enqueue(() => this.storeManager.length(...parameters));
+		return this.queue.enqueue(() => this.writableStore.length(...parameters));
 	}
 
 	lookup(...parameters: Parameters<ReadableStore<A, B>["lookup"]>): ReturnType<ReadableStore<A, B>["lookup"]> {
-		return this.queue.enqueue(() => this.storeManager.lookup(...parameters));
+		return this.queue.enqueue(() => this.writableStore.lookup(...parameters));
 	}
 };
 
 export class QueuedWritableStore<A extends Record, B extends Keys<A>> extends QueuedReadableStore<A, B> implements WritableStore<A, B> {
-	constructor(storeManager: StoreManager<A, B>, queue: PromiseQueue) {
-		super(storeManager, queue);
+	constructor(writableStore: WritableStore<A, B>, queue: PromiseQueue) {
+		super(writableStore, queue);
 	}
 
 	insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
-		return this.queue.enqueue(() => this.storeManager.insert(...parameters));
+		return this.queue.enqueue(() => this.writableStore.insert(...parameters));
 	}
 
 	remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
-		return this.queue.enqueue(() => this.storeManager.remove(...parameters));
+		return this.queue.enqueue(() => this.writableStore.remove(...parameters));
 	}
 
 	update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
-		return this.queue.enqueue(() => this.storeManager.update(...parameters));
+		return this.queue.enqueue(() => this.writableStore.update(...parameters));
 	}
 };
 
 export class QueuedReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> implements ReadableLink<A, B, C, D, E> {
-	protected linkManager: LinkManager<A, B, C, D, E>;
+	protected writableLink: WritableLink<A, B, C, D, E>;
 	protected queue: PromiseQueue;
 
-	constructor(linkManager: LinkManager<A, B, C, D, E>, queue: PromiseQueue) {
-		this.linkManager = linkManager;
+	constructor(writableLink: WritableLink<A, B, C, D, E>, queue: PromiseQueue) {
+		this.writableLink = writableLink;
 		this.queue = queue;
 	}
 
 	filter(...parameters: Parameters<ReadableLink<A, B, C, D, E>["filter"]>): ReturnType<ReadableLink<A, B, C, D, E>["filter"]> {
-		return this.queue.enqueue(() => this.linkManager.filter(...parameters));
+		return this.queue.enqueue(() => this.writableLink.filter(...parameters));
 	}
 
 	lookup(...parameters: Parameters<ReadableLink<A, B, C, D, E>["lookup"]>): ReturnType<ReadableLink<A, B, C, D, E>["lookup"]> {
-		return this.queue.enqueue(() => this.linkManager.lookup(...parameters));
+		return this.queue.enqueue(() => this.writableLink.lookup(...parameters));
 	}
 };
 
 export class QueuedWritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> extends QueuedReadableLink<A, B, C, D, E> implements WritableLink<A, B, C, D, E> {
-	constructor(linkManager: LinkManager<A, B, C, D, E>, queue: PromiseQueue) {
-		super(linkManager, queue);
+	constructor(writableLink: WritableLink<A, B, C, D, E>, queue: PromiseQueue) {
+		super(writableLink, queue);
 	}
 };
 
@@ -76,55 +76,47 @@ export class TransactionManager<A, B> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
-	private storeManagers: StoreManagers<A>;
-	private linkManagers: LinkManagers<B>;
+	private writableStores: WritableStores<A>;
+	private writableLinks: WritableLinks<B>;
 
 	private createReadableLinks(queue: PromiseQueue): ReadableLinks<B> {
-		let links = {} as ReadableLinks<any>;
-		for (let key in this.linkManagers) {
-			let linkManager = this.linkManagers[key];
-			let link = new QueuedReadableLink(linkManager, queue);
-			links[key] = link;
+		let readableLinks = {} as ReadableLinks<any>;
+		for (let key in this.writableLinks) {
+			readableLinks[key] = new QueuedReadableLink(this.writableLinks[key], queue);
 		}
-		return links;
+		return readableLinks;
 	}
 
 	private createReadableStores(queue: PromiseQueue): ReadableStores<A> {
-		let stores = {} as ReadableStores<any>;
-		for (let key in this.storeManagers) {
-			let storeManager = this.storeManagers[key];
-			let store = new QueuedReadableStore(storeManager, queue);
-			stores[key] = store;
+		let readableStores = {} as ReadableStores<any>;
+		for (let key in this.writableStores) {
+			readableStores[key] = new QueuedReadableStore(this.writableStores[key], queue);
 		}
-		return stores;
+		return readableStores;
 	}
 
 	private createWritableLinks(queue: PromiseQueue): WritableLinks<B> {
-		let links = {} as WritableLinks<any>;
-		for (let key in this.linkManagers) {
-			let linkManager = this.linkManagers[key];
-			let link = new QueuedWritableLink(linkManager, queue);
-			links[key] = link;
+		let writableLinks = {} as WritableLinks<any>;
+		for (let key in this.writableLinks) {
+			writableLinks[key] = new QueuedWritableLink(this.writableLinks[key], queue);
 		}
-		return links;
+		return writableLinks;
 	}
 
 	private createWritableStores(queue: PromiseQueue): WritableStores<A> {
-		let stores = {} as WritableStores<any>;
-		for (let key in this.storeManagers) {
-			let storeManager = this.storeManagers[key];
-			let store = new QueuedWritableStore(storeManager, queue);
-			stores[key] = store;
+		let writableStores = {} as WritableStores<any>;
+		for (let key in this.writableStores) {
+			writableStores[key] = new QueuedWritableStore(this.writableStores[key], queue);
 		}
-		return stores;
+		return writableStores;
 	}
 
-	constructor(file: File, storeManagers: StoreManagers<A>, linkManagers: LinkManagers<B>) {
+	constructor(file: File, writableStores: WritableStores<A>, writableLinks: WritableLinks<B>) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
-		this.storeManagers = storeManagers;
-		this.linkManagers = linkManagers;
+		this.writableStores = writableStores;
+		this.writableLinks = writableLinks;
 	}
 
 	async enqueueReadableTransaction<C>(transaction: ReadableTransaction<A, B, C>): Promise<C> {
