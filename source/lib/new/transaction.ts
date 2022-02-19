@@ -42,6 +42,10 @@ export class WritableStore<A extends Record, B extends Keys<A>> extends Readable
 	remove(...parameters: Parameters<StoreManager<A, B>["remove"]>): Promise<ReturnType<StoreManager<A, B>["remove"]>> {
 		return this.queue.enqueue(() => this.storeManager.remove(...parameters));
 	}
+
+	update(...parameters: Parameters<StoreManager<A, B>["update"]>): Promise<ReturnType<StoreManager<A, B>["update"]>> {
+		return this.queue.enqueue(() => this.storeManager.update(...parameters));
+	}
 };
 
 export type WritableStores<A> = {
