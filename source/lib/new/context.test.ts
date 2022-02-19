@@ -21,7 +21,10 @@ test(``, async () => {
 	}, {
 		userPosts
 	});
-	manager.enqueueReadableTransaction(async ({ users }, { userPosts }) => {
-
+	manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
+		return users.insert({
+			user_id: Uint8Array.of(1),
+			name: "Joel"
+		});
 	});
 });
