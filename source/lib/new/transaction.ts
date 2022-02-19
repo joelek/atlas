@@ -92,41 +92,41 @@ export class TransactionManager<A, B> {
 	private linkManagers: LinkManagers<B>;
 
 	private createReadableLinks(queue: PromiseQueue): ReadableLinks<B> {
-		let links = {} as ReadableLinks<B>;
+		let links = {} as ReadableLinks<any>;
 		for (let key in this.linkManagers) {
 			let linkManager = this.linkManagers[key];
 			let link = new ReadableLink(linkManager, queue);
-			links[key] = link as any;
+			links[key] = link;
 		}
 		return links;
 	}
 
 	private createReadableStores(queue: PromiseQueue): ReadableStores<A> {
-		let stores = {} as ReadableStores<A>;
+		let stores = {} as ReadableStores<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
 			let store = new ReadableStore(storeManager, queue);
-			stores[key] = store as any;
+			stores[key] = store;
 		}
 		return stores;
 	}
 
 	private createWritableLinks(queue: PromiseQueue): WritableLinks<B> {
-		let links = {} as WritableLinks<B>;
+		let links = {} as WritableLinks<any>;
 		for (let key in this.linkManagers) {
 			let linkManager = this.linkManagers[key];
 			let link = new ReadableLink(linkManager, queue);
-			links[key] = link as any;
+			links[key] = link;
 		}
 		return links;
 	}
 
 	private createWritableStores(queue: PromiseQueue): WritableStores<A> {
-		let stores = {} as WritableStores<A>;
+		let stores = {} as WritableStores<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
 			let store = new WritableStore(storeManager, queue);
-			stores[key] = store as any;
+			stores[key] = store;
 		}
 		return stores;
 	}
