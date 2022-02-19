@@ -40,8 +40,40 @@ export type WritableStores<A> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
+export class WritableStoreManager<A extends Record, B extends Keys<A>> implements WritableStore<A, B> {
+	private storeManager: StoreManager<A, B>;
+
+	constructor(storeManager: StoreManager<A, B>) {
+		this.storeManager = storeManager;
+	}
+
+	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
+		return this.storeManager.filter(...parameters);
+	}
+
+	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
+		return this.storeManager.insert(...parameters);
+	}
+
+	async length(...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]> {
+		return this.storeManager.length(...parameters);
+	}
+
+	async lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]> {
+		return this.storeManager.lookup(...parameters);
+	}
+
+	async remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
+		return this.storeManager.remove(...parameters);
+	}
+
+	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
+		return this.storeManager.update(...parameters);
+	}
+};
+
 // TODO: Handle indices.
-// TODO: Implement interface WritableStore.
+// TODO: Implement interface WritableStore directly.
 export class StoreManager<A extends Record, B extends Keys<A>> {
 	private blockHandler: BlockHandler;
 	private bid: number;
