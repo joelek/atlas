@@ -3,6 +3,24 @@ import { OrderMap } from "./orders";
 import { Keys, KeysRecord, KeysRecordMap, Record } from "./records";
 import { Entry, StoreManager, StoreReference } from "./store";
 
+export interface ReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
+	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<Entry<C>>>;
+	lookup(record: C | Pick<C, E[B[number]]>): Promise<A>;
+};
+
+export type ReadableLinks<A> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : never;
+};
+
+export interface WritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> extends ReadableLink<A, B, C, D, E> {
+
+};
+
+export type WritableLinks<A> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
+};
+
+// TODO: Implement interface WritableLink.
 export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
 	private parent: StoreManager<A, B>;
 	private child: StoreManager<C, D>;

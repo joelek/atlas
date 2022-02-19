@@ -1,6 +1,6 @@
 import { File } from "./files";
 import { Record, Keys, KeysRecordMap } from "./records";
-import { Link, LinkManager, LinkManagers } from "./link";
+import { LinkManager, LinkManagers, ReadableLink, ReadableLinks, WritableLink, WritableLinks } from "./link";
 import { ReadableStore, ReadableStores, StoreManager, StoreManagers, WritableStore, WritableStores } from "./store";
 import { PromiseQueue } from "./utils";
 
@@ -44,7 +44,7 @@ export class QueuedWritableStore<A extends Record, B extends Keys<A>> extends Qu
 	}
 };
 
-export class ReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {
+export class QueuedReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> implements ReadableLink<A, B, C, D, E> {
 	protected linkManager: LinkManager<A, B, C, D, E>;
 	protected queue: PromiseQueue;
 
@@ -53,27 +53,19 @@ export class ReadableLink<A extends Record, B extends Keys<A>, C extends Record,
 		this.queue = queue;
 	}
 
-	filter(...parameters: Parameters<LinkManager<A, B, C, D, E>["filter"]>): Promise<ReturnType<LinkManager<A, B, C, D, E>["filter"]>> {
+	filter(...parameters: Parameters<ReadableLink<A, B, C, D, E>["filter"]>): ReturnType<ReadableLink<A, B, C, D, E>["filter"]> {
 		return this.queue.enqueue(() => this.linkManager.filter(...parameters));
 	}
 
-	lookup(...parameters: Parameters<LinkManager<A, B, C, D, E>["lookup"]>): Promise<ReturnType<LinkManager<A, B, C, D, E>["lookup"]>> {
+	lookup(...parameters: Parameters<ReadableLink<A, B, C, D, E>["lookup"]>): ReturnType<ReadableLink<A, B, C, D, E>["lookup"]> {
 		return this.queue.enqueue(() => this.linkManager.lookup(...parameters));
 	}
 };
 
-export type ReadableLinks<A> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : never;
-};
-
-export class WritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> extends ReadableLink<A, B, C, D, E> {
+export class QueuedWritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> extends QueuedReadableLink<A, B, C, D, E> implements WritableLink<A, B, C, D, E> {
 	constructor(linkManager: LinkManager<A, B, C, D, E>, queue: PromiseQueue) {
 		super(linkManager, queue);
 	}
-};
-
-export type WritableLinks<A> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
 export type ReadableTransaction<A, B, C> = (stores: ReadableStores<A>, links: ReadableLinks<B>) => Promise<C>;
@@ -91,7 +83,7 @@ export class TransactionManager<A, B> {
 		let links = {} as ReadableLinks<any>;
 		for (let key in this.linkManagers) {
 			let linkManager = this.linkManagers[key];
-			let link = new ReadableLink(linkManager, queue);
+			let link = new QueuedReadableLink(linkManager, queue);
 			links[key] = link;
 		}
 		return links;
@@ -111,7 +103,7 @@ export class TransactionManager<A, B> {
 		let links = {} as WritableLinks<any>;
 		for (let key in this.linkManagers) {
 			let linkManager = this.linkManagers[key];
-			let link = new ReadableLink(linkManager, queue);
+			let link = new QueuedWritableLink(linkManager, queue);
 			links[key] = link;
 		}
 		return links;
