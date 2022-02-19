@@ -84,15 +84,10 @@ The features of Atlas are built using a hierarchical variant of the radix tree d
 
 ## Roadmap
 
+* Create implementation of StoreManager that handles constraints and cascades, pass to TransactionManager.
+* Restrict Context from creating more than one TransactionManager per File.
 * Allow BlockHandler to keep track of contained block data size.
-* Improve iterators for RobinHoodHash.
-* Optimize RobinHoodHash with minProbeDistance and maxProbeDistance.
-* Optimize CompressedTrie by storing leaf residents at parent node.
-* Improve iterators for CompressedTrie.
-* Investigate possibility of removing parent pointers from CompressedTrie through recursive calls.
-* Rename CompressedTrie to RadixTree.
-* Rename RobinHoodHash to HashTable.
+* Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Implement sorting for index searches.
 * Tokenize based on capitalization OneTwo => ["one", "two"].
-* Perform migration in two passes. First remove unused data and then migrate.
 * Ensure that all constraints are respected during migration.
