@@ -41,10 +41,8 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 		this.blockHandler.deleteBlock(this.bid);
 	}
 
-	private filterIterable(iterable: Iterable<number>, filters: FilterMap<A>, orders: OrderMap<A>): Iterable<Entry<A>> {
-		let bids = StreamIterable.of(iterable)
-			.collect();
-		let entries = StreamIterable.of(bids)
+	private filterIterable(bids: Iterable<number>, filters: FilterMap<A>, orders: OrderMap<A>): Iterable<Entry<A>> {
+		return StreamIterable.of(bids)
 			.map((bid) => {
 				let buffer = this.blockHandler.readBlock(bid);
 				let record = this.recordManager.decode(buffer);
@@ -52,9 +50,8 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 					bid: () => bid,
 					record: () => record
 				};
-			});
-		if (Object.keys(filters).length > 0) {
-			entries = entries.filter((entry) => {
+			})
+			.filter((entry) => {
 				for (let key in filters) {
 					let filter = filters[key];
 					if (filter == null) {
@@ -66,25 +63,20 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 					}
 				}
 				return true;
-			});
-		}
-		if (Object.keys(orders).length > 0) {
-			entries = entries
-				.sort((one, two) => {
-					for (let key in orders) {
-						let order = orders[key];
-						if (order == null) {
-							continue;
-						}
-						let comparison = order.compare(one.record()[key], two.record()[key]);
-						if (comparison !== 0) {
-							return comparison;
-						}
+			})
+			.sort((one, two) => {
+				for (let key in orders) {
+					let order = orders[key];
+					if (order == null) {
+						continue;
 					}
-					return 0;
-				});
-		}
-		return entries;
+					let comparison = order.compare(one.record()[key], two.record()[key]);
+					if (comparison !== 0) {
+						return comparison;
+					}
+				}
+				return 0;
+			});
 	}
 
 	private saveSchema(): void {
