@@ -3,8 +3,9 @@ import { ConsistencyManager } from "./consistency";
 import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links } from "./link";
+import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { BinaryFieldManager, BooleanFieldManager, FieldManager, FieldManagers, KeysRecordMap, NullableStringFieldManager, RecordManager, StringFieldManager } from "./records";
-import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, FieldSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema } from "./schema";
+import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, DecreasingOrderSchema, FieldSchema, IncreasingOrderSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema, OrderSchema } from "./schema";
 import { StoreManager, StoreManagers, Stores } from "./store";
 import { TransactionManager } from "./transaction";
 import { BlockHandler } from "./vfs";
@@ -35,6 +36,16 @@ export class DatabaseManager<A, B> {
 		}
 		if (isCompatible(NullableStringFieldSchema, schema)) {
 			return new NullableStringFieldManager(blockHandler, 1337, schema.defaultValue);
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
+	private createOrderManager(schema: OrderSchema): Order<any> {
+		if (isCompatible(DecreasingOrderSchema, schema)) {
+			return new DecreasingOrder();
+		}
+		if (isCompatible(IncreasingOrderSchema, schema)) {
+			return new IncreasingOrder();
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -70,8 +81,11 @@ export class DatabaseManager<A, B> {
 			throw `Expected store with name "${schema.child}"!`;
 		}
 		let recordKeysMap = schema.keys as KeysRecordMap<any, any, any>;
-		// TODO: Read order from array.
-		return new LinkManager(parent, child, recordKeysMap);
+		let orders = {} as OrderMap<any>;
+		for (let order of schema.orders) {
+			orders[order.key] = this.createOrderManager(order.order);
+		}
+		return new LinkManager(parent, child, recordKeysMap, orders);
 	}
 
 	constructor(file: File) {
