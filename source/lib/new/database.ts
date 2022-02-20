@@ -96,9 +96,10 @@ export class DatabaseManager<A, B> {
 		}
 		let linkManagers = {} as LinkManagers<any>;
 		for (let key in schema.links) {
+			// TODO: Build parent and child lists here?
 			linkManagers[key] = this.createLinkManager(schema.links[key], storeManagers);
 		}
-		let consistencyManager = new ConsistencyManager<any, any>(storeManagers, linkManagers, schema);
+		let consistencyManager = new ConsistencyManager<any, any>(storeManagers, linkManagers);
 		let writableStores = consistencyManager.createWritableStores();
 		let writableLinks = consistencyManager.createWritableLinks();
 		return new TransactionManager(this.file, writableStores, writableLinks);

@@ -1,18 +1,4 @@
 /*
-
-
-rename DatabaseManager to SchemaManager which creates new class DatabaseManager which has both
-
-
-
-
-
-
-
-
-
-
-
 link.consistencyCheck(...)
 for all newly added or modified links
 	loop through all entries in child store
@@ -23,27 +9,11 @@ for all newly added or modified links
 run removal code
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 case 1: single parent is deleted from store
 	add parent to deletion queue for parent store
 	while deletion queues are non empty
 
 	end
-
 
 case 2: consistency check after schema change
 	while deletion queues are non empty
@@ -63,24 +33,20 @@ case 2: consistency check after schema change
 			end
 		end
 	end
-
-functionality needed:
-	get all links from given store
-
 */
-
-import { FilterMap } from "./filters";
 import { LinkManager, LinkManagers, Links, WritableLink, WritableLinks } from "./link";
-import { OrderMap } from "./orders";
-import { Record, Keys, KeysRecord, KeysRecordMap } from "./records";
-import { DatabaseSchema } from "./schema";
-import { Entry, StoreManager, StoreManagers, Stores, WritableStore, WritableStores } from "./store";
+import { Record, Keys, KeysRecordMap } from "./records";
+import { StoreManager, StoreManagers, Stores, WritableStore, WritableStores } from "./store";
 
 export class ConsistentWritableStore<A extends Record, B extends Keys<A>> implements WritableStore<A, B> {
 	private storeManager: StoreManager<A, B>;
+	private linksWhereStoreIsParent: Set<LinkManager<any, any, any, any, any>>;
+	private linksWhereStoreIsChild: Set<LinkManager<any, any, any, any, any>>;
 
-	constructor(storeManager: StoreManager<A, B>) {
+	constructor(storeManager: StoreManager<A, B>, linksWhereStoreIsParent: Set<LinkManager<any, any, any, any, any>>, linksWhereStoreIsChild: Set<LinkManager<any, any, any, any, any>>) {
 		this.storeManager = storeManager;
+		this.linksWhereStoreIsParent = linksWhereStoreIsParent;
+		this.linksWhereStoreIsChild = linksWhereStoreIsChild;
 	}
 
 	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
@@ -88,12 +54,10 @@ export class ConsistentWritableStore<A extends Record, B extends Keys<A>> implem
 	}
 
 	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
-/*
-for all links where store is child
-	if child record points to parent record (consider nulls)
-		lookup parent (throws if not found)
-return actual store call
-*/
+		for (let linkManager of this.linksWhereStoreIsChild) {
+			// TODO: Handle valid nulls here?
+			linkManager.lookup(parameters[0]);
+		}
 		return this.storeManager.insert(...parameters);
 	}
 
@@ -106,12 +70,11 @@ return actual store call
 	}
 
 	async remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
-/*
-add record to deletion queue for store
-for all links where store is parent
-	lookup children
-	add children to deletion queue for child store
-*/
+		// TODO: Add record to deletion queue.
+		for (let linkManager of this.linksWhereStoreIsParent) {
+			let entries = linkManager.filter(parameters[0]);
+			// TODO: Add entries to deletion queue.
+		}
 		return this.storeManager.remove(...parameters);
 	}
 
@@ -139,19 +102,38 @@ export class ConsistentWritableLink<A extends Record, B extends Keys<A>, C exten
 export class ConsistencyManager<A, B> {
 	private storeManagers: StoreManagers<Stores<A>>;
 	private linkManagers: LinkManagers<Links<B>>;
-	private schema: DatabaseSchema;
 
-	constructor(storeManagers: StoreManagers<Stores<A>>, linkManagers: LinkManagers<Links<B>>, schema: DatabaseSchema) {
+	private getLinksWhereStoreIsParent(storeManager: StoreManager<any, any>): Set<LinkManager<any, any, any, any, any>> {
+		let linksWhereStoreIsParent = new Set<LinkManager<any, any, any, any, any>>();
+		for (let key in this.linkManagers) {
+			if (storeManager === this.linkManagers[key].getParent()) {
+				linksWhereStoreIsParent.add(this.linkManagers[key]);
+			}
+		}
+		return linksWhereStoreIsParent;
+	}
+
+	private getLinksWhereStoreIsChild(storeManager: StoreManager<any, any>): Set<LinkManager<any, any, any, any, any>> {
+		let linksWhereStoreIsChild = new Set<LinkManager<any, any, any, any, any>>();
+		for (let key in this.linkManagers) {
+			if (storeManager === this.linkManagers[key].getChild()) {
+				linksWhereStoreIsChild.add(this.linkManagers[key]);
+			}
+		}
+		return linksWhereStoreIsChild;
+	}
+
+	constructor(storeManagers: StoreManagers<Stores<A>>, linkManagers: LinkManagers<Links<B>>) {
 		this.storeManagers = storeManagers;
 		this.linkManagers = linkManagers;
-		this.schema = schema;
 	}
 
 	createWritableStores(): WritableStores<A> {
 		let writableStores = {} as WritableStores<any>;
 		for (let key in this.storeManagers) {
-			// determine child and parent relationships
-			writableStores[key] = new ConsistentWritableStore(this.storeManagers[key]);
+			let linksWhereStoreIsParent = this.getLinksWhereStoreIsParent(this.storeManagers[key]);
+			let linksWhereStoreIsChild = this.getLinksWhereStoreIsChild(this.storeManagers[key]);
+			writableStores[key] = new ConsistentWritableStore(this.storeManagers[key], linksWhereStoreIsParent, linksWhereStoreIsChild);
 		}
 		return writableStores;
 	}
