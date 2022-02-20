@@ -84,6 +84,7 @@ The features of Atlas are built using a hierarchical variant of the radix tree d
 
 ## Roadmap
 
+* Make Cache inspect the size of the available memory to determine when to start evicting entries.
 * Create implementation of StoreManager that handles constraints and cascades, pass to TransactionManager.
 * Restrict Context from creating more than one TransactionManager per File.
 * Allow BlockHandler to keep track of contained block data size.
