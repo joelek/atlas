@@ -96,6 +96,44 @@ export class ConsistencyManager<A, B> {
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 	private linksWhereStoreIsChild: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 
+	private doInsert<A extends Record, B extends Keys<A>>(storeManager: StoreManager<A, B>, records: Array<A>): void {
+		for (let record of records) {
+			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
+				linkManager.lookup(record);
+			}
+			storeManager.insert(record);
+		}
+	}
+
+	private doRemove<A extends Record, B extends Keys<A>>(storeManager: StoreManager<A, B>, records: Array<A>): void {
+		let queue = new Array<{ storeManager: StoreManager<Record, Keys<Record>>, records: Array<Record> }>();
+		queue.push({
+			storeManager,
+			records
+		});
+		while (queue.length > 0) {
+			let queueEntry = queue.splice(0, 1)[0];
+			for (let record of queueEntry.records) {
+				queueEntry.storeManager.remove(record);
+			}
+			for (let linkManager of this.getLinksWhereStoreIsParent(queueEntry.storeManager)) {
+				let storeManager = linkManager.getChild();
+				let records = new Array<Record>();
+				for (let record of queueEntry.records) {
+					for (let entry of linkManager.filter(record)) {
+						records.push(entry.record());
+					}
+				}
+				if (records.length > 0) {
+					queue.push({
+						storeManager,
+						records
+					});
+				}
+			}
+		}
+	}
+
 	private getLinksWhereStoreIsParent(storeManager: StoreManager<any, any>): Set<LinkManager<any, any, any, any, any>> {
 		let set = this.linksWhereStoreIsParent.get(storeManager);
 		if (set == null) {
@@ -110,10 +148,6 @@ export class ConsistencyManager<A, B> {
 			throw `Expected link set!`;
 		}
 		return set;
-	}
-
-	private remove(deletionQueues: Map<StoreManager<any, any>, Set<number>>): void {
-
 	}
 
 	constructor(storeManagers: StoreManagers<Stores<A>>, linkManagers: LinkManagers<Links<B>>) {
@@ -144,19 +178,8 @@ export class ConsistencyManager<A, B> {
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
 			writableStores[key] = new OverridableWritableStore(storeManager, {
-				insert: async (record) => {
-					for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
-						linkManager.lookup(record);
-					}
-					return storeManager.insert(record);
-				},
-				remove: async (record) => {
-					for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
-						let entries = linkManager.filter(record);
-						// TODO: Add entries to deletion queue.
-					}
-					return storeManager.remove(record);
-				}
+				insert: async (record) => this.doInsert(storeManager, [record]),
+				remove: async (record) => this.doRemove(storeManager, [record])
 			});
 		}
 		return writableStores;
