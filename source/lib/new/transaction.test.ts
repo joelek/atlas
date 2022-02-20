@@ -1,6 +1,9 @@
 import { test } from "../test";
 import { TransactionManager } from "./transaction";
 import { VirtualFile } from "./files";
+import { WritableStoreManager, StoreManager } from "./store";
+import { BlockHandler } from "./vfs";
+import { StringField } from "./records";
 
 async function delay(ms: number): Promise<void> {
 	await new Promise((resolve, reject) => {
@@ -106,4 +109,25 @@ test(`It should recover from transactions that throw errors.`, async (assert) =>
 	assert.true(await transactionTwo === 2);
 	events.push("E");
 	assert.array.equals(events, ["S", "1S", "2S", "2E", "E"]);
+});
+
+test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
+	let file = new VirtualFile(0);
+	let blockHandler = new BlockHandler(file);
+	let dummy = new WritableStoreManager(StoreManager.construct(blockHandler, null, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: []
+	}));
+	let manager = new TransactionManager<any, any>(file, {
+		dummy
+	}, {});
+	let access = await manager.enqueueWritableTransaction(async (access) => {
+		return access;
+	});
+	await assert.throws(async () => {
+		access.dummy.length();
+	});
 });

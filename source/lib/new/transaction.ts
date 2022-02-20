@@ -134,6 +134,8 @@ export class TransactionManager<A, B> {
 			return value;
 		} catch (error) {
 			throw error;
+		} finally {
+			queue.close();
 		}
 	}
 
@@ -154,6 +156,8 @@ export class TransactionManager<A, B> {
 		} catch (error) {
 			this.file.discard();
 			throw error;
+		} finally {
+			queue.close();
 		}
 	}
 };
