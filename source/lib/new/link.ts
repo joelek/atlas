@@ -50,6 +50,14 @@ export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, 
 		this.orders = orders ?? {};
 	}
 
+	getParent(): StoreManager<A, B> {
+		return this.parent;
+	}
+
+	getChild(): StoreManager<C, D> {
+		return this.child;
+	}
+
 	filter(keysRecord: KeysRecord<A, B>): Iterable<Entry<C>> {
 		let filters = {} as FilterMap<C>;
 		for (let key in this.keysRecordMap) {
@@ -60,6 +68,7 @@ export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, 
 		return this.child.filter(filters, this.orders);
 	}
 
+	// TODO: Add logic for determining valid nulls.
 	lookup(record: C | Pick<C, E[B[number]]>): A {
 		let keysRecord = {} as KeysRecord<A, B>;
 		for (let key in this.keysRecordMap) {
