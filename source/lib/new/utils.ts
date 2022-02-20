@@ -92,12 +92,21 @@ export class Binary {
 
 export class PromiseQueue {
 	private lock: Promise<any>;
+	private open: boolean;
 
 	constructor() {
 		this.lock = Promise.resolve();
+		this.open = true;
+	}
+
+	close(): void {
+		this.open = false;
 	}
 
 	enqueue<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A> {
+		if (!this.open) {
+			throw `Expected queue to be open!`;
+		}
 		return this.lock = this.lock
 			.then(operation instanceof Promise ? () => operation : operation);
 	}
