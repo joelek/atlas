@@ -164,4 +164,40 @@ export class ConsistencyManager<A extends StoreManagers<A>, B extends LinkManage
 		}
 		return writableLinks;
 	}
+
+	enforceStoreConsistency<C extends Keys<A>>(keys: [...C]): void {
+		for (let key of keys) {
+			let storeManager = this.storeManagers[key];
+			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+				let child = linkManager.getChild();
+				let records = [] as Array<Record>;
+				for (let entry of child) {
+					let record = entry.record();
+					try {
+						linkManager.lookup(record);
+					} catch (error) {
+						records.push(record);
+					}
+				}
+				this.doRemove(child, records);
+			}
+		}
+	}
+
+	enforceLinkConsistency<C extends Keys<B>>(keys: [...C]): void {
+		for (let key of keys) {
+			let linkManager = this.linkManagers[key];
+			let child = linkManager.getChild();
+			let records = [] as Array<Record>;
+			for (let entry of child) {
+				let record = entry.record();
+				try {
+					linkManager.lookup(record);
+				} catch (error) {
+					records.push(record);
+				}
+			}
+			this.doRemove(child, records);
+		}
+	}
 };
