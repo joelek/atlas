@@ -61,3 +61,4 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 * Allow BlockHandler to keep track of contained buffer size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Tokenize based on capitalization OneTwo => ["one", "two"].
+* Improve type-safety checks for serialized keys.
