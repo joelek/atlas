@@ -34,11 +34,17 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ### Stores
 
-### Fields
+#### Fields
+
+#### Keys
 
 ### Links
 
 ### Storage
+
+#### DiskStorage
+
+#### MemoryStorage
 
 ### TransactionManagers
 
@@ -48,47 +54,10 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 #### WriteableTransaction
 
-
-
-
-
-
-
-
-
-## Features
-
-### Automated schema migration
-
-Atlas performs automated schema migration since the database is embedded into its corresponding software.
-
-###	Advanced subset retrieval
-
-Atlas features native support for anchors and optimized subset retrieval, even when using numeric offsets.
-
-### Bi-directional index traversal
-
-Unlike most databases, Atlas does not require specific directional ordering for composite indices. All indices, composite or single-keyed, may be traversed in any combination of directions.
-
-### Filter optimization
-
-## Technology
-
-### Transactional virtual file system
-
-Atlas is built on top of a transactional virtual file system.
-
-### Hierarchical Radix Tree
-
-The features of Atlas are built using a hierarchical variant of the radix tree data structure.
-
 ## Roadmap
 
-* Make Cache inspect the size of the available memory to determine when to start evicting entries.
-* Create implementation of StoreManager that handles constraints and cascades, pass to TransactionManager.
+* Make memory limit configurable for Cache.
 * Restrict Context from creating more than one TransactionManager per File.
-* Allow BlockHandler to keep track of contained block data size.
+* Allow BlockHandler to keep track of contained buffer size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
-* Implement sorting for index searches.
 * Tokenize based on capitalization OneTwo => ["one", "two"].
-* Ensure that all constraints are respected during migration.
