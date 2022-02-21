@@ -171,7 +171,7 @@ test(`It should support inserting records for self-referencing links.`, async (a
 		directory_id: "Directory 0",
 		parent_directory_id: null
 	});
-	assert.array.equals(Array.from(await writableStores.directories.filter()).map((record) => record.record().directory_id).sort(), ["User 0"]);
+	assert.array.equals(Array.from(await writableStores.directories.filter()).map((record) => record.record().directory_id).sort(), ["Directory 0"]);
 });
 
 test(`It should prevent inserting orphaned records for self-referencing links.`, async (assert) => {
