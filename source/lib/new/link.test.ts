@@ -107,7 +107,7 @@ test(`It should support looking up the corresponding parent for a referencing li
 	});
 	let observed = userPosts.lookup({
 		post_user_id: "User 1"
-	});
+	}) as any;
 	let expected = {
 		user_id: "User 1"
 	};
@@ -196,10 +196,30 @@ test(`It should support looking up the corresponding parent for a self-referenci
 	});
 	let observed = childDirectories.lookup({
 		parent_directory_id: "Directory 1"
-	});
+	}) as any;
 	let expected = {
 		directory_id: "Directory 1",
 		parent_directory_id: null
 	};
 	assert.record.equals(observed, expected);
+});
+
+test(`It should support looking up absent parents for a self-referencing link.`, async (assert) => {
+	let { directories } = { ...createDirectories() };
+	let childDirectories = LinkManager.construct(directories, directories, {
+		directory_id: "parent_directory_id"
+	});
+	directories.insert({
+		directory_id: "Directory 1",
+		parent_directory_id: null
+	});
+	directories.insert({
+		directory_id: "Directory 2",
+		parent_directory_id: "Directory 1"
+	});
+	let observed = childDirectories.lookup({
+		parent_directory_id: null
+	});
+	let expected = undefined;
+	assert.true(observed === expected);
 });

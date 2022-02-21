@@ -5,7 +5,7 @@ import { Entry, StoreManager, StoreReference } from "./store";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<Entry<C>>>;
-	lookup(record: C | Pick<C, E[B[number]]>): Promise<A>;
+	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
 export type ReadableLinks<A> = {
@@ -68,12 +68,14 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 		return this.child.filter(filters, this.orders);
 	}
 
-	// TODO: Add logic for determining valid nulls.
-	lookup(record: C | Pick<C, E[B[number]]>): A {
+	lookup(record: C | Pick<C, E[B[number]]>): A | undefined {
 		let keysRecord = {} as KeysRecord<A, B>;
 		for (let key in this.keysRecordMap) {
 			let keyOne = key as any as B[number];
 			let keyTwo = this.keysRecordMap[keyOne];
+			if (record[keyTwo] === null) {
+				return;
+			}
 			keysRecord[keyOne] = record[keyTwo] as any;
 		}
 		return this.parent.lookup(keysRecord);
