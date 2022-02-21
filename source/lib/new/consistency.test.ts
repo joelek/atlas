@@ -283,6 +283,14 @@ test(`It should remove orphaned records for linked records in different stores.`
 
 
 
+
+
+
+
+
+
+
+
 function createUsersPostsAndComments() {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
 	let users = StoreManager.construct(blockHandler, null, {
@@ -337,31 +345,23 @@ function createUsersPostsAndComments() {
 	};
 };
 
-function createDirectories() {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let directories = StoreManager.construct(blockHandler, null, {
-		fields: {
-			directory_id: new StringField(""),
-			parent_directory_id: new NullableStringField(null)
-		},
-		keys: ["directory_id"],
-		indices: []
+test(`It should support inserting records for referencing links.`, async (assert) => {
+	let { storeManagers, writableStores } = createUsersPostsAndComments();
+	await writableStores.users.insert({
+		user_id: "User 0"
 	});
-	let childDirectories = LinkManager.construct(directories, directories, {
-		directory_id: "parent_directory_id"
+	assert.array.equals(Array.from(await writableStores.users.filter()).map((record) => record.record().user_id).sort(), ["User 0"]);
+});
+
+test(`It should prevent inserting orphaned records for referencing links.`, async (assert) => {
+	let { storeManagers, writableStores } = createUsersPostsAndComments();
+	await assert.throws(async () => {
+		await writableStores.posts.insert({
+			post_id: "Post 0",
+			post_user_id: "User 0"
+		});
 	});
-	let consistencyManager = new ConsistencyManager({
-		directories
-	}, {
-		childDirectories
-	});
-	return {
-		storeManagers: {
-			directories
-		},
-		writableStores: consistencyManager.createWritableStores()
-	};
-};
+});
 
 test(`It should remove orphaned child records for referencing links.`, async (assert) => {
 	let { storeManagers, writableStores } = createUsersPostsAndComments();
@@ -421,6 +421,51 @@ test(`It should not remove records with parents for referencing links.`, async (
 	assert.array.equals(Array.from(await writableStores.users.filter()).map((record) => record.record().user_id).sort(), ["User 0"]);
 	assert.array.equals(Array.from(await writableStores.posts.filter()).map((record) => record.record().post_id).sort(), []);
 	assert.array.equals(Array.from(await writableStores.comments.filter()).map((record) => record.record().comment_id).sort(), []);
+});
+
+function createDirectories() {
+	let blockHandler = new BlockHandler(new VirtualFile(0));
+	let directories = StoreManager.construct(blockHandler, null, {
+		fields: {
+			directory_id: new StringField(""),
+			parent_directory_id: new NullableStringField(null)
+		},
+		keys: ["directory_id"],
+		indices: []
+	});
+	let childDirectories = LinkManager.construct(directories, directories, {
+		directory_id: "parent_directory_id"
+	});
+	let consistencyManager = new ConsistencyManager({
+		directories
+	}, {
+		childDirectories
+	});
+	return {
+		storeManagers: {
+			directories
+		},
+		writableStores: consistencyManager.createWritableStores()
+	};
+};
+
+test(`It should support inserting records for self-referencing links.`, async (assert) => {
+	let { storeManagers, writableStores } = createDirectories();
+	await writableStores.directories.insert({
+		directory_id: "Directory 0",
+		parent_directory_id: null
+	});
+	assert.array.equals(Array.from(await writableStores.directories.filter()).map((record) => record.record().directory_id).sort(), ["User 0"]);
+});
+
+test(`It should prevent inserting orphaned records for self-referencing links.`, async (assert) => {
+	let { storeManagers, writableStores } = createDirectories();
+	await assert.throws(async () => {
+		await writableStores.directories.insert({
+			directory_id: "Directory 1",
+			parent_directory_id: "Directory 0"
+		});
+	});
 });
 
 test(`It should remove orphaned child records for self-referencing links.`, async (assert) => {
