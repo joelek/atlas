@@ -1,10 +1,10 @@
 import { File } from "./files";
-import { Record, Keys, KeysRecordMap } from "./records";
+import { Record, Keys, KeysRecordMap, RequiredKeys } from "./records";
 import { ReadableLink, ReadableLinks, WritableLink, WritableLinks } from "./link";
 import { ReadableStore, ReadableStores, WritableStore, WritableStores } from "./store";
 import { PromiseQueue } from "./utils";
 
-export class QueuedReadableStore<A extends Record, B extends Keys<A>> implements ReadableStore<A, B> {
+export class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
 	protected writableStore: WritableStore<A, B>;
 	protected queue: PromiseQueue;
 
@@ -26,7 +26,7 @@ export class QueuedReadableStore<A extends Record, B extends Keys<A>> implements
 	}
 };
 
-export class QueuedWritableStore<A extends Record, B extends Keys<A>> extends QueuedReadableStore<A, B> implements WritableStore<A, B> {
+export class QueuedWritableStore<A extends Record, B extends RequiredKeys<A>> extends QueuedReadableStore<A, B> implements WritableStore<A, B> {
 	constructor(writableStore: WritableStore<A, B>, queue: PromiseQueue) {
 		super(writableStore, queue);
 	}
@@ -44,7 +44,7 @@ export class QueuedWritableStore<A extends Record, B extends Keys<A>> extends Qu
 	}
 };
 
-export class QueuedReadableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> implements ReadableLink<A, B, C, D, E> {
+export class QueuedReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements ReadableLink<A, B, C, D, E> {
 	protected writableLink: WritableLink<A, B, C, D, E>;
 	protected queue: PromiseQueue;
 
@@ -62,7 +62,7 @@ export class QueuedReadableLink<A extends Record, B extends Keys<A>, C extends R
 	}
 };
 
-export class QueuedWritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> extends QueuedReadableLink<A, B, C, D, E> implements WritableLink<A, B, C, D, E> {
+export class QueuedWritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> extends QueuedReadableLink<A, B, C, D, E> implements WritableLink<A, B, C, D, E> {
 	constructor(writableLink: WritableLink<A, B, C, D, E>, queue: PromiseQueue) {
 		super(writableLink, queue);
 	}

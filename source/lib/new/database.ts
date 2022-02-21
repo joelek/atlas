@@ -56,7 +56,7 @@ export class DatabaseManager<A, B> {
 		for (let key in schema.fields) {
 			fieldManagers[key] = this.createFieldManager(schema.fields[key]);
 		}
-		let keys = schema.keys;
+		let keys = schema.keys as any;
 		// TODO: Create index managers.
 		let recordManager = new RecordManager(fieldManagers);
 		let storage = new Table(blockHandler, {

@@ -1,8 +1,8 @@
 import { LinkManager, LinkManagers, WritableLink } from "./link";
-import { Record, Keys, KeysRecordMap } from "./records";
+import { Record, Keys, KeysRecordMap, RequiredKeys } from "./records";
 import { StoreManager, StoreManagers, WritableStore } from "./store";
 
-export class OverridableWritableStore<A extends Record, B extends Keys<A>> implements WritableStore<A, B> {
+export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
 	private storeManager: StoreManager<A, B>;
 	private overrides: Partial<WritableStore<A, B>>;
 
@@ -36,7 +36,7 @@ export class OverridableWritableStore<A extends Record, B extends Keys<A>> imple
 	}
 };
 
-export class OverridableWritableLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
+export class OverridableWritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
 	private linkManager: LinkManager<A, B, C, D, E>;
 	private overrides: Partial<WritableLink<A, B, C, D, E>>;
 
@@ -68,7 +68,7 @@ export class ConsistencyManager<A extends StoreManagers<A>, B extends LinkManage
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 	private linksWhereStoreIsChild: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 
-	private doInsert<C extends Record, D extends Keys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
+	private doInsert<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
 		for (let record of records) {
 			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
 				linkManager.lookup(record);
@@ -77,8 +77,8 @@ export class ConsistencyManager<A extends StoreManagers<A>, B extends LinkManage
 		}
 	}
 
-	private doRemove<C extends Record, D extends Keys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
-		let queue = new Array<{ storeManager: StoreManager<Record, Keys<Record>>, records: Array<Record> }>();
+	private doRemove<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
+		let queue = new Array<{ storeManager: StoreManager<any, any>, records: Array<Record> }>();
 		queue.push({
 			storeManager,
 			records

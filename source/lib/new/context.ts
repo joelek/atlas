@@ -1,6 +1,6 @@
 import { Link, LinkReference, LinkReferences, Links } from "./link";
 import { Store, StoreReference, StoreReferences, Stores } from "./store";
-import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField } from "./records";
+import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
@@ -23,7 +23,7 @@ export class Context {
 		return file;
 	}
 
-	private getLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>>(reference: LinkReference<A, B, C, D, E>): Link<A, B, C, D, E> {
+	private getLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(reference: LinkReference<A, B, C, D, E>): Link<A, B, C, D, E> {
 		let link = this.links.get(reference);
 		if (link == null) {
 			throw `Expected link to be defined in context!`;
@@ -31,7 +31,7 @@ export class Context {
 		return link;
 	}
 
-	private getStore<A extends Record, B extends Keys<A>>(reference: StoreReference<A, B>): Store<A, B> {
+	private getStore<A extends Record, B extends RequiredKeys<A>>(reference: StoreReference<A, B>): Store<A, B> {
 		let store = this.stores.get(reference);
 		if (store == null) {
 			throw `Expected store to be defined in context!`;
@@ -61,14 +61,14 @@ export class Context {
 		return new NullableStringField(null);
 	}
 
-	createLink<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
+	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
 		let reference = new LinkReference<A, B, C, D, E>();
 		let link = new Link(parent, child, recordKeysMap, orders);
 		this.links.set(reference, link);
 		return reference;
 	}
 
-	createStore<A extends Record, B extends Keys<A>>(fields: Fields<A>, keys: [...B]): StoreReference<A, B> {
+	createStore<A extends Record, B extends RequiredKeys<A>>(fields: Fields<A>, keys: [...B]): StoreReference<A, B> {
 		let reference = new StoreReference<A, B>();
 		let store = new Store(fields, keys, []);
 		this.stores.set(reference, store);

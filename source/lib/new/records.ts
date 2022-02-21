@@ -6,8 +6,12 @@ export type Value = Uint8Array | bigint | boolean | null | number | string;
 export type Record = { [key: string]: Value; };
 export type Key<A> = keyof A & string;
 export type Keys<A> = Array<Key<A>>;
-export type KeysRecord<A extends Record, B extends Keys<A>> = A | Pick<A, B[number]>;
-export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record> = {
+export type RequiredKey<A> = Key<A> & {
+	[B in keyof A]: null extends A[B] ? never : B;
+}[keyof A];
+export type RequiredKeys<A> = Array<RequiredKey<A>>;
+export type KeysRecord<A extends Record, B extends RequiredKeys<A>> = A | Pick<A, B[number]>;
+export type KeysRecordMap<A extends Record, B extends RequiredKeys<A>, C extends Record> = {
 	[D in B[number]]: {
 		[E in keyof C]: A[D] extends C[E] ? E : never;
 	}[keyof C];

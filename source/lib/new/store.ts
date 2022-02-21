@@ -3,7 +3,7 @@ import { StreamIterable } from "../stream";
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
-import { Fields, Record, Keys, KeysRecord, RecordManager, FieldManagers, FieldManager, Key } from "./records";
+import { Fields, Record, Keys, KeysRecord, RecordManager, FieldManagers, FieldManager, Key, RequiredKeys } from "./records";
 import { BlockHandler } from "./vfs";
 
 export const StoreSchema = bedrock.codecs.Object.of({
@@ -20,7 +20,7 @@ export type Entry<A extends Record> = {
 	record(): A;
 };
 
-export interface ReadableStore<A extends Record, B extends Keys<A>> {
+export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<Entry<A>>>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
@@ -30,7 +30,7 @@ export type ReadableStores<A> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
 };
 
-export interface WritableStore<A extends Record, B extends Keys<A>> extends ReadableStore<A, B> {
+export interface WritableStore<A extends Record, B extends RequiredKeys<A>> extends ReadableStore<A, B> {
 	insert(record: A): Promise<void>;
 	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
 	update(record: A): Promise<void>;
@@ -40,7 +40,7 @@ export type WritableStores<A> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
-export class WritableStoreManager<A extends Record, B extends Keys<A>> implements WritableStore<A, B> {
+export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
 	private storeManager: StoreManager<A, B>;
 
 	constructor(storeManager: StoreManager<A, B>) {
@@ -74,7 +74,7 @@ export class WritableStoreManager<A extends Record, B extends Keys<A>> implement
 
 // TODO: Handle indices.
 // TODO: Implement interface WritableStore directly.
-export class StoreManager<A extends Record, B extends Keys<A>> {
+export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockHandler: BlockHandler;
 	private bid: number;
 	private fieldManagers: FieldManagers<A>;
@@ -295,7 +295,7 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 		return { equal: true };
 	}
 
-	static migrate<A extends Record, B extends Keys<A>>(oldManager: StoreManager<any, any>, options: {
+	static migrate<A extends Record, B extends RequiredKeys<A>>(oldManager: StoreManager<any, any>, options: {
 		fields: Fields<A>,
 		keys: [...B],
 		indices: Array<Keys<A>>
@@ -325,7 +325,7 @@ export class StoreManager<A extends Record, B extends Keys<A>> {
 		}
 	}
 
-	static construct<A extends Record, B extends Keys<A>>(blockHandler: BlockHandler, bid: number | null, options?: {
+	static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, bid: number | null, options?: {
 		fields: Fields<A>,
 		keys: [...B],
 		indices: Array<Keys<A>>
@@ -387,7 +387,7 @@ export type StoreManagers<A> = {
 	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreManager<C, D> : never;
 };
 
-export class StoreReference<A extends Record, B extends Keys<A>> {
+export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
 	private StoreReference!: "StoreReference";
 };
 
@@ -395,7 +395,7 @@ export type StoreReferences<A> = {
 	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : never;
 };
 
-export class Store<A extends Record, B extends Keys<A>> {
+export class Store<A extends Record, B extends RequiredKeys<A>> {
 	fields: Fields<A>;
 	keys: [...B];
 	indices: Array<Keys<A>>;
