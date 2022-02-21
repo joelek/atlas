@@ -1,5 +1,5 @@
 import { StoreManager } from "./store";
-import { BooleanField, NullableStringField, StringField } from "./records";
+import { BooleanField, StringField } from "./records";
 import { BlockHandler } from "./vfs";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";

@@ -2,7 +2,6 @@ import * as bedrock from "@joelek/bedrock";
 import * as asserts from "../asserts";
 import * as is from "../is";
 import { DEBUG } from "../env";
-import { Value } from "./records";
 
 export type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";
 

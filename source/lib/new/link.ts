@@ -1,6 +1,6 @@
 import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
-import { Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
+import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
 import { Entry, StoreManager, StoreReference } from "./store";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {

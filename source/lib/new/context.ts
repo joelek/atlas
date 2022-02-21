@@ -1,6 +1,6 @@
 import { Link, LinkReference, LinkReferences, Links } from "./link";
 import { Store, StoreReference, StoreReferences, Stores } from "./store";
-import { Record, Keys, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
