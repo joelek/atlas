@@ -116,11 +116,10 @@ export class DatabaseManager<A, B> {
 		let consistencyManager = new ConsistencyManager<any, any>(storeManagers, linkManagers);
 		let writableStores = consistencyManager.createWritableStores();
 		let writableLinks = consistencyManager.createWritableLinks();
-		return new TransactionManager(this.file, writableStores, writableLinks);
+		return new TransactionManager<any, any>(this.file, writableStores, writableLinks);
 	}
 
 	migrateSchema<C, D>(stores: Stores<C>, links: Links<D>): DatabaseManager<C, D> {
-		// TODO: Migrate.
-		return this as any;
+		throw `Unimplemented!`;
 	}
 };

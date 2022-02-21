@@ -85,7 +85,7 @@ export class LinkManager<A extends Record, B extends Keys<A>, C extends Record, 
 };
 
 export type LinkManagers<A> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
+	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
 };
 
 export class LinkReference<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>, E extends KeysRecordMap<A, B, C>> {

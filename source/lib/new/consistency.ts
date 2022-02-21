@@ -1,42 +1,6 @@
-/*
-link.consistencyCheck(...)
-for all newly added or modified links
-	loop through all entries in child store
-	if child record points to parent record (consider nulls)
-		lookup parent (throws if not found)
-		if no parent
-			add child record to deletion queue
-run removal code
-
-
-case 1: single parent is deleted from store
-	add parent to deletion queue for parent store
-	while deletion queues are non empty
-
-	end
-
-case 2: consistency check after schema change
-	while deletion queues are non empty
-		for each link that changed (link added or changed child store)
-			if link forbids orphans
-				for each child in link
-					lookup parent based on child
-					if parent is missing
-						add child to deletion queue
-					end
-				end
-			end
-		end
-		for each link that changed
-			if link forbids orphans
-
-			end
-		end
-	end
-*/
-import { LinkManager, LinkManagers, Links, WritableLink, WritableLinks } from "./link";
+import { LinkManager, LinkManagers, WritableLink } from "./link";
 import { Record, Keys, KeysRecordMap } from "./records";
-import { StoreManager, StoreManagers, Stores, WritableStore, WritableStores } from "./store";
+import { StoreManager, StoreManagers, WritableStore } from "./store";
 
 export class OverridableWritableStore<A extends Record, B extends Keys<A>> implements WritableStore<A, B> {
 	private storeManager: StoreManager<A, B>;
@@ -90,13 +54,21 @@ export class OverridableWritableLink<A extends Record, B extends Keys<A>, C exte
 	}
 };
 
-export class ConsistencyManager<A, B> {
-	private storeManagers: StoreManagers<Stores<A>>;
-	private linkManagers: LinkManagers<Links<B>>;
+export type WritableStoresFromStoreManagers<A extends StoreManagers<A>> = {
+	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
+};
+
+export type WritableLinksFromLinkManagers<A extends LinkManagers<A>> = {
+	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
+};
+
+export class ConsistencyManager<A extends StoreManagers<A>, B extends LinkManagers<B>> {
+	private storeManagers: A;
+	private linkManagers: B;
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 	private linksWhereStoreIsChild: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 
-	private doInsert<A extends Record, B extends Keys<A>>(storeManager: StoreManager<A, B>, records: Array<A>): void {
+	private doInsert<C extends Record, D extends Keys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
 		for (let record of records) {
 			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
 				linkManager.lookup(record);
@@ -105,7 +77,7 @@ export class ConsistencyManager<A, B> {
 		}
 	}
 
-	private doRemove<A extends Record, B extends Keys<A>>(storeManager: StoreManager<A, B>, records: Array<A>): void {
+	private doRemove<C extends Record, D extends Keys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
 		let queue = new Array<{ storeManager: StoreManager<Record, Keys<Record>>, records: Array<Record> }>();
 		queue.push({
 			storeManager,
@@ -150,7 +122,7 @@ export class ConsistencyManager<A, B> {
 		return set;
 	}
 
-	constructor(storeManagers: StoreManagers<Stores<A>>, linkManagers: LinkManagers<Links<B>>) {
+	constructor(storeManagers: A, linkManagers: B) {
 		this.storeManagers = storeManagers;
 		this.linkManagers = linkManagers;
 		this.linksWhereStoreIsParent = new Map();
@@ -173,8 +145,8 @@ export class ConsistencyManager<A, B> {
 		}
 	}
 
-	createWritableStores(): WritableStores<A> {
-		let writableStores = {} as WritableStores<any>;
+	createWritableStores(): WritableStoresFromStoreManagers<A> {
+		let writableStores = {} as WritableStoresFromStoreManagers<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
 			writableStores[key] = new OverridableWritableStore(storeManager, {
@@ -185,8 +157,8 @@ export class ConsistencyManager<A, B> {
 		return writableStores;
 	}
 
-	createWritableLinks(): WritableLinks<B> {
-		let writableLinks = {} as WritableLinks<any>;
+	createWritableLinks(): WritableLinksFromLinkManagers<B> {
+		let writableLinks = {} as WritableLinksFromLinkManagers<any>;
 		for (let key in this.linkManagers) {
 			writableLinks[key] = new OverridableWritableLink(this.linkManagers[key], {});
 		}
