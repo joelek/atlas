@@ -56,6 +56,7 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ## Roadmap
 
+* Consider implementing file locks.
 * Make memory limit configurable for Cache.
 * Allow BlockHandler to keep track of contained buffer size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
