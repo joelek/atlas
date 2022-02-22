@@ -64,3 +64,4 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 * Improve type-safety checks for serialized keys.
 * Add field references to context.
 * Implement index support.
+* Implement search support.
