@@ -1,16 +1,14 @@
 import * as bedrock from "@joelek/bedrock";
-import { ConsistencyManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
-import { File } from "./files";
+import { DatabaseManager } from "./consistency";
 import { Table } from "./hash";
-import { Link, LinkManager, LinkManagers, Links, LinksFromLinkReferences } from "./link";
+import { Link, LinkManager, LinkManagers, Links } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { BinaryField, BinaryFieldManager, BooleanField, BooleanFieldManager, Field, FieldManager, FieldManagers, Fields, Key, Keys, KeysRecordMap, NullableStringField, NullableStringFieldManager, RecordManager, StringField, StringFieldManager } from "./records";
-import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, DecreasingOrderSchema, FieldSchema, IncreasingOrderSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema, OrderSchema, FieldsSchema, IndicesSchema, KeysSchema, IndexSchema, StoresSchema } from "./schema";
-import { Index, Store, StoreManager, StoreManagers, Stores, StoresFromStoreReferences } from "./store";
-import { TransactionManager } from "./transaction";
+import { BinaryField, BinaryFieldManager, BooleanField, BooleanFieldManager, Field, FieldManager, FieldManagers, Fields, Keys, KeysRecordMap, NullableStringField, NullableStringFieldManager, RecordManager, RequiredKeys, StringField, StringFieldManager, Record, Value } from "./records";
+import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, DecreasingOrderSchema, FieldSchema, IncreasingOrderSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema, OrderSchema, FieldsSchema, IndicesSchema, KeysSchema, IndexSchema, StoresSchema, LinksSchema, KeyOrdersSchema, KeyMapSchema } from "./schema";
+import { Index, Store, StoreManager, StoreManagers, Stores } from "./store";
 import { BlockHandler } from "./vfs";
 
-class Database<A extends Stores, B extends Links> {
+export class Database<A extends Stores, B extends Links> {
 	stores: A;
 	links: B;
 
@@ -20,7 +18,7 @@ class Database<A extends Stores, B extends Links> {
 	}
 };
 
-export function isCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject is V {
+export function isSchemaCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject is V {
 	try {
 		codec.encode(subject);
 		return true;
@@ -28,63 +26,6 @@ export function isCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): s
 		return false;
 	}
 }
-
-export type FieldComparison = boolean;
-
-export type FieldsComparison = {
-	fieldsToCreate: Array<Key<any>>;
-	fieldsToRemove: Array<Key<any>>;
-	fieldsToUpdate: Array<Key<any>>;
-};
-
-export type KeysComparison = boolean;
-
-export type IndexComparison = boolean;
-
-export type IndicesComparison = {
-	indicesToCreate: Array<Keys<any>>;
-	indicesToRemove: Array<Keys<any>>;
-};
-
-export type StoreComparison = {
-	fields: FieldsComparison;
-	keys: KeysComparison;
-	indices: IndicesComparison;
-};
-
-export type Action = "create" | "remove" | "update";
-
-export type StoresComparison = {
-	stores: globalThis.Record<string, StoreComparison>;
-	status: Action;
-};
-
-export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
-	private file: File;
-	private storeManagers: A;
-	private linkManagers: B;
-
-	constructor(file: File, storeManagers: A, linkManagers: B) {
-		this.file = file;
-		this.storeManagers = storeManagers;
-		this.linkManagers = linkManagers;
-	}
-
-	createTransactionManager(): TransactionManager<WritableStoresFromStoreManagers<A>, WritableLinksFromLinkManagers<B>> {
-		let consistencyManager = new ConsistencyManager(this.storeManagers, this.linkManagers);
-		let writableStores = consistencyManager.createWritableStores();
-		let writableLinks = consistencyManager.createWritableLinks();
-		return new TransactionManager(this.file, writableStores, writableLinks);
-	}
-
-	getStoreManager<C extends Key<A>>(key: C): A[C] {
-		return this.storeManagers[key];
-	}
-
-	getLinkManager<D extends Key<B>>(key: D): B[D] {
-		return this.linkManagers[key];
-	}
-};
 
 export type StoreManagersFromStores<A extends Stores> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
@@ -95,40 +36,57 @@ export type LinkManagersFromLinks<A extends Links> = {
 };
 
 export class SchemaManager {
-	constructor() {}
+	private getStoreName<A extends Record, B extends RequiredKeys<A>>(store: Store<A, B>, stores: Stores): string {
+		for (let key in stores) {
+			if (stores[key] === store) {
+				return key;
+			}
+		}
+		throw `Expected store!`;
+	}
 
-	createFieldManager(blockHandler: BlockHandler, fieldSchema: FieldSchema): FieldManager<any> {
-		if (isCompatible(BinaryFieldSchema, fieldSchema)) {
+	private initializeDatabase(blockHandler: BlockHandler): void {
+		let databaseSchema: DatabaseSchema = {
+			stores: {},
+			links: {}
+		};
+		let buffer = DatabaseSchema.encode(databaseSchema);
+		blockHandler.createBlock(buffer.length);
+		blockHandler.writeBlock(0, buffer);
+	}
+
+	private loadFieldManager(blockHandler: BlockHandler, fieldSchema: FieldSchema): FieldManager<any> {
+		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
 			return new BinaryFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
 		}
-		if (isCompatible(BooleanFieldSchema, fieldSchema)) {
+		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
 			return new BooleanFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
 		}
-		if (isCompatible(StringFieldSchema, fieldSchema)) {
+		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
 			return new StringFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
 		}
-		if (isCompatible(NullableStringFieldSchema, fieldSchema)) {
+		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
 			return new NullableStringFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
 		}
 		throw `Expected code to be unreachable!`;
 	}
 
-	createOrderManager(orderSchema: OrderSchema): Order<any> {
-		if (isCompatible(DecreasingOrderSchema, orderSchema)) {
+	private loadOrderManager(orderSchema: OrderSchema): Order<any> {
+		if (isSchemaCompatible(DecreasingOrderSchema, orderSchema)) {
 			return new DecreasingOrder();
 		}
-		if (isCompatible(IncreasingOrderSchema, orderSchema)) {
+		if (isSchemaCompatible(IncreasingOrderSchema, orderSchema)) {
 			return new IncreasingOrder();
 		}
 		throw `Expected code to be unreachable!`;
 	}
 
-	createStoreManager(blockHandler: BlockHandler, storeSchema: StoreSchema): StoreManager<any, any> {
+	private loadStoreManager(blockHandler: BlockHandler, oldSchema: StoreSchema): StoreManager<any, any> {
 		let fieldManagers = {} as FieldManagers<any>;
-		for (let key in storeSchema.fields) {
-			fieldManagers[key] = this.createFieldManager(blockHandler, storeSchema.fields[key]);
+		for (let key in oldSchema.fields) {
+			fieldManagers[key] = this.loadFieldManager(blockHandler, oldSchema.fields[key]);
 		}
-		let keys = storeSchema.keys as any;
+		let keys = oldSchema.keys as any;
 		// TODO: Create index managers.
 		let recordManager = new RecordManager(fieldManagers);
 		let storage = new Table(blockHandler, {
@@ -138,12 +96,12 @@ export class SchemaManager {
 				return recordManager.encodeKeys(keys, record);
 			}
 		}, {
-			bid: storeSchema.storageBid
+			bid: oldSchema.storageBid
 		});
 		return new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
 	}
 
-	createLinkManager(linkSchema: LinkSchema, storeManagers: StoreManagers): LinkManager<any, any, any, any, any> {
+	private loadLinkManager(blockHandler: BlockHandler, linkSchema: LinkSchema, storeManagers: StoreManagers): LinkManager<any, any, any, any, any> {
 		let parent = storeManagers[linkSchema.parent] as StoreManager<any, any> | undefined;
 		if (parent == null) {
 			throw `Expected store with name "${linkSchema.parent}"!`;
@@ -152,70 +110,40 @@ export class SchemaManager {
 		if (child == null) {
 			throw `Expected store with name "${linkSchema.child}"!`;
 		}
-		let recordKeysMap = linkSchema.keys as KeysRecordMap<any, any, any>;
+		let recordKeysMap = linkSchema.keysMap as KeysRecordMap<any, any, any>;
 		let orders = {} as OrderMap<any>;
 		for (let order of linkSchema.orders) {
-			orders[order.key] = this.createOrderManager(order.order);
+			orders[order.key] = this.loadOrderManager(order.order);
 		}
 		return new LinkManager(parent, child, recordKeysMap, orders);
 	}
 
-	createDatabaseManager<A extends Stores, B extends Links>(file: File, stores: A, links: B): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
-		let blockHandler = new BlockHandler(file);
-		if (blockHandler.getBlockCount() === 0) {
-			let databaseSchema: DatabaseSchema = {
-				stores: {},
-				links: {}
-			};
-			let buffer = DatabaseSchema.encode(databaseSchema);
-			blockHandler.createBlock(buffer.length);
-			blockHandler.writeBlock(0, buffer);
-		}
-		throw `Migration code`;
-		let databaseSchema = DatabaseSchema.decode(blockHandler.readBlock(0));
-		let storeManagers = {} as StoreManagersFromStores<A>;
+	private loadDatabaseManager(databaseSchema: DatabaseSchema, blockHandler: BlockHandler): DatabaseManager<any, any> {
+		let storeManagers = {} as StoreManagers;
 		for (let key in databaseSchema.stores) {
-			storeManagers[key as keyof A] = this.createStoreManager(blockHandler, databaseSchema.stores[key]) as StoreManagersFromStores<A>[keyof A];
+			storeManagers[key] = this.loadStoreManager(blockHandler, databaseSchema.stores[key]);
 		}
-		let linkManagers = {} as LinkManagersFromLinks<B>;
+		let linkManagers = {} as LinkManagers;
 		for (let key in databaseSchema.links) {
-			linkManagers[key as keyof B] = this.createLinkManager(databaseSchema.links[key], storeManagers) as  LinkManagersFromLinks<B>[keyof B];
+			linkManagers[key] = this.loadLinkManager(blockHandler, databaseSchema.links[key], storeManagers);
 		}
-		return new DatabaseManager(file, storeManagers, linkManagers);
+		return new DatabaseManager(storeManagers, linkManagers);
 	}
-/*
-a store is dirty when keys or fields change, requires full recreation and migration of data
-a link is dirty when the parent or child stores are dirty (keys or fields change) or when the link itself changes
-*/
-/* 	migrateSchema(): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
-		let databaseSchema = DatabaseSchema.decode(this.blockHandler.readBlock(0));
-		let database: Database<any, any> = {
-			stores,
-			links
-		};
-		let migratedStores = [] as Array<string>;
 
-		throw `TODO`;
-		let buffer = DatabaseSchema.encode(databaseSchema);
-		this.blockHandler.resizeBlock(0, buffer.length);
-		this.blockHandler.writeBlock(0, buffer);
-		return this as unknown as SchemaManager<C, D>;
-	}
- */
-	static compareField(fieldSchema: FieldSchema, field: Field<any>): FieldComparison {
-		if (isCompatible(BinaryFieldSchema, fieldSchema)) {
+	private compareField<A extends Value>(field: Field<A>, schema: FieldSchema): boolean {
+		if (isSchemaCompatible(BinaryFieldSchema, schema)) {
 			if (field instanceof BinaryField) {
 				return true;
 			}
 			return false;
 		}
-		if (isCompatible(BooleanFieldSchema, fieldSchema)) {
+		if (isSchemaCompatible(BooleanFieldSchema, schema)) {
 			if (field instanceof BooleanField) {
 				return true;
 			}
 			return false;
 		}
-		if (isCompatible(StringFieldSchema, fieldSchema)) {
+		if (isSchemaCompatible(StringFieldSchema, schema)) {
 			if (field instanceof StringField) {
 				return true;
 			}
@@ -224,7 +152,7 @@ a link is dirty when the parent or child stores are dirty (keys or fields change
 			}
 			return false;
 		}
-		if (isCompatible(NullableStringFieldSchema, fieldSchema)) {
+		if (isSchemaCompatible(NullableStringFieldSchema, schema)) {
 			if (field instanceof NullableStringField) {
 				return true;
 			}
@@ -233,101 +161,307 @@ a link is dirty when the parent or child stores are dirty (keys or fields change
 		throw `Expected code to be unreachable!`;
 	}
 
-	static compareFields(fieldsSchema: FieldsSchema, fields: Fields<any>): FieldsComparison {
-		let fieldsToCreate = [] as Array<Key<any>>;
-		let fieldsToRemove = [] as Array<Key<any>>;
-		let fieldsToUpdate = [] as Array<Key<any>>;
-		for (let key in fieldsSchema) {
+	private compareFields<A extends Record>(fields: Fields<A>, oldSchema: FieldsSchema): boolean {
+		for (let key in fields) {
 			if (fields[key] == null) {
-				fieldsToRemove.push(key);
+				return false;
 			}
 		}
 		for (let key in fields) {
-			if (fieldsSchema[key] == null) {
-				fieldsToCreate.push(key);
+			if (oldSchema[key] == null) {
+				return false;
 			} else {
-				if (!SchemaManager.compareField(fieldsSchema[key], fields[key])) {
-					fieldsToUpdate.push(key);
+				if (!this.compareField(fields[key], oldSchema[key])) {
+					return false;
 				}
 			}
 		}
-		return {
-			fieldsToCreate,
-			fieldsToRemove,
-			fieldsToUpdate
-		};
+		return true;
 	}
 
-	static compareKeys(keysSchema: KeysSchema, keys: Keys<any>): KeysComparison {
-		if (keysSchema.length !== keys.length) {
+	private compareKeys<A extends Record>(keys: Keys<A>, oldSchema: KeysSchema): boolean {
+		if (oldSchema.length !== keys.length) {
 			return false;
 		}
-		for (let i = 0; i < keysSchema.length; i++) {
-			if (keysSchema[i] !== keys[i]) {
+		for (let i = 0; i < oldSchema.length; i++) {
+			if (oldSchema[i] !== keys[i]) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	static compareIndex(indexSchema: IndexSchema, index: Index<any>): IndexComparison {
-		return SchemaManager.compareKeys(indexSchema.keys, index.keys);
+	private compareIndex<A extends Record>(index: Index<A>, oldSchema: IndexSchema): boolean {
+		return this.compareKeys(oldSchema.keys, index.keys);
 	}
 
-	static compareIndices(indicesSchema: IndicesSchema, indices: Array<Index<any>>): IndicesComparison {
-		let indicesToCreate = [] as Array<Keys<any>>;
-		let indicesToRemove = [] as Array<Keys<any>>;
-		newIndices: for (let index of indices) {
-			oldIndices: for (let indexSchema of indicesSchema) {
-				if (SchemaManager.compareIndex(indexSchema, index)) {
-					continue newIndices;
-				}
-			}
-			indicesToCreate.push(index.keys);
+	private compareStore<A extends Record, B extends RequiredKeys<A>>(store: Store<A, B>, oldSchema: StoreSchema): boolean {
+		if (!this.compareKeys(store.keys, oldSchema.keys)) {
+			return false;
 		}
-		oldIndices: for (let indexSchema of indicesSchema) {
-			newIndices: for (let index of indices) {
-				if (SchemaManager.compareIndex(indexSchema, index)) {
-					continue oldIndices;
-				}
-			}
-			indicesToRemove.push(indexSchema.keys);
+		if (!this.compareFields(store.fields, oldSchema.fields)) {
+			return false;
 		}
-		return {
-			indicesToCreate,
-			indicesToRemove
-		};
+		return true;
 	}
 
-	static compareStore(storeSchema: StoreSchema, store: Store<any, any>): StoreComparison {
-		let fields = SchemaManager.compareFields(storeSchema.fields, store.fields);
-		let keys = SchemaManager.compareKeys(storeSchema.keys, store.keys);
-		let indices = SchemaManager.compareIndices(storeSchema.indices, store.indices);
-		return {
+	private compareLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(stores: Stores, link: Link<A, B, C, D, E>, oldSchema: LinkSchema): boolean {
+		if (this.getStoreName(link.parent, stores) !== oldSchema.parent) {
+			return false;
+		}
+		if (this.getStoreName(link.child, stores) !== oldSchema.child) {
+			return false;
+		}
+		for (let key in link.recordKeysMap) {
+			if (oldSchema.keysMap[key] !== link.recordKeysMap[key]) {
+				return false;
+			}
+		}
+		for (let key in oldSchema.keysMap) {
+			if (oldSchema.keysMap[key] !== link.recordKeysMap[key as keyof E]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private createField<A extends Value>(field: Field<A>): FieldSchema {
+		if (field instanceof BinaryField) {
+			return {
+				type: "BinaryField",
+				defaultValue: field.defaultValue
+			};
+		}
+		if (field instanceof BooleanField) {
+			return {
+				type: "BooleanField",
+				defaultValue: field.defaultValue
+			};
+		}
+		if (field instanceof StringField) {
+			return {
+				type: "StringField",
+				defaultValue: field.defaultValue
+			};
+		}
+		if (field instanceof NullableStringField) {
+			return {
+				type: "NullableStringField",
+				defaultValue: field.defaultValue
+			};
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
+	private createStore<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, store: Store<A, B>): StoreSchema {
+		let version = 0;
+		let fields: FieldsSchema = {};
+		for (let key in store.fields) {
+			fields[key] = this.createField(store.fields[key]);
+		}
+		let keys: KeysSchema = store.keys;
+		let indices: IndicesSchema = [];
+		for (let i = 0; i < store.indices.length; i++) {
+			// TODO: Handle indices.
+		}
+		let schema: StoreSchema = {
+			version,
 			fields,
 			keys,
-			indices
+			indices,
+			storageBid: blockHandler.createBlock(Table.LENGTH)
 		};
+		return schema;
 	}
 
-	static compareStores(storesSchema: StoresSchema, stores: StoresFromStoreReferences<any>): StoresComparison {
-		let storesToCreate = [] as Array<Key<any>>;
-		let storesToRemove = [] as Array<Key<any>>;
-		let storesToUpdate = [] as Array<Key<any>>;
-		for (let key in storesSchema) {
+	private deleteStore(blockHandler: BlockHandler, oldSchema: StoreSchema): void {
+		this.loadStoreManager(blockHandler, oldSchema).delete();
+	}
+
+	private updateStore<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, store: Store<A, B>, oldSchema: StoreSchema): StoreSchema {
+		if (this.compareStore(store, oldSchema)) {
+			let indices: IndicesSchema = [];
+			newIndices: for (let index of store.indices) {
+				oldIndices: for (let indexSchema of oldSchema.indices) {
+					if (this.compareIndex(index, indexSchema)) {
+						continue newIndices;
+					}
+				}
+				// TODO: Create index and insert existing records.
+			}
+			oldIndices: for (let indexSchema of oldSchema.indices) {
+				newIndices: for (let index of store.indices) {
+					if (this.compareIndex(index, indexSchema)) {
+						continue oldIndices;
+					}
+				}
+				// TODO: Delete index.
+			}
+			return {
+				...oldSchema,
+				indices
+			};
+		} else {
+			let newSchema = this.createStore(blockHandler, store);
+			let oldManager = this.loadStoreManager(blockHandler, oldSchema);
+			let newManager = this.loadStoreManager(blockHandler, newSchema);
+			for (let entry of oldManager) {
+				try {
+					let oldRecord = entry.record();
+					let newRecord = {} as A;
+					for (let key in store.fields) {
+						newRecord[key] = store.fields[key].convertValue(oldRecord[key]);
+					}
+					newManager.insert(newRecord);
+				} catch (error) {}
+			}
+			oldManager.delete();
+			newSchema.version = oldSchema.version + 1;
+			return newSchema;
+		}
+	}
+
+	private updateStores<A extends Stores>(blockHandler: BlockHandler, stores: A, oldSchema: StoresSchema): StoresSchema {
+		let newSchema: StoresSchema = {};
+		for (let key in oldSchema) {
 			if (stores[key] == null) {
-				storesToRemove.push(key);
+				this.deleteStore(blockHandler, oldSchema[key]);
 			}
 		}
 		for (let key in stores) {
-			if (storesSchema[key] == null) {
-				storesToCreate.push(key);
+			if (oldSchema[key] == null) {
+				newSchema[key] = this.createStore(blockHandler, stores[key]);
 			} else {
-				if (!SchemaManager.compareStore(storesSchema[key], stores[key])) {
-					storesToUpdate.push(key);
-				}
+				newSchema[key] = this.updateStore(blockHandler, stores[key], oldSchema[key]);
 			}
 		}
-		throw ``;
+		return newSchema;
+	}
+
+	private createOrder<A extends Value>(order: Order<A>): OrderSchema {
+		if (order instanceof DecreasingOrder) {
+			return {
+				type: "DecreasingOrder"
+			};
+		}
+		if (order instanceof IncreasingOrder) {
+			return {
+				type: "IncreasingOrder"
+			};
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
+	private createKeyOrders<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(blockHandler: BlockHandler, link: Link<A, B, C, D, E>): KeyOrdersSchema {
+		let orders: KeyOrdersSchema = [];
+		for (let key in link.orders) {
+			let order = link.orders[key];
+			if (order == null) {
+				continue;
+			}
+			orders.push({
+				key,
+				order: this.createOrder(order)
+			});
+		}
+		return orders;
+	}
+
+	private createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(blockHandler: BlockHandler, stores: Stores, link: Link<A, B, C, D, E>): LinkSchema {
+		let version = 0;
+		let parent = this.getStoreName(link.parent, stores);
+		let child = this.getStoreName(link.child, stores);
+		let keysMap = link.recordKeysMap as KeyMapSchema;
+		let orders = this.createKeyOrders(blockHandler, link);
+		return {
+			version,
+			parent,
+			child,
+			keysMap,
+			orders
+		};
+	}
+
+	private deleteLink(blockHandler: BlockHandler, oldSchema: LinkSchema): void {
+
+	}
+
+	private updateLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(blockHandler: BlockHandler, stores: Stores, link: Link<A, B, C, D, E>, oldSchema: LinkSchema): LinkSchema {
+		if (this.compareLink(stores, link, oldSchema)) {
+			let orders = this.createKeyOrders(blockHandler, link);
+			return {
+				...oldSchema,
+				orders
+			};
+		} else {
+			let newSchema = this.createLink(blockHandler, stores, link);
+			newSchema.version = oldSchema.version + 1;
+			return newSchema;
+		}
+	}
+
+	private updateLinks<A extends Stores, B extends Links>(blockHandler: BlockHandler, stores: A, links: B, oldSchema: LinksSchema): LinksSchema {
+		let newSchema: LinksSchema = {};
+		for (let key in oldSchema) {
+			if (links[key] == null) {
+				this.deleteLink(blockHandler, oldSchema[key]);
+			}
+		}
+		for (let key in links) {
+			if (oldSchema[key] == null) {
+				newSchema[key] = this.createLink(blockHandler, stores, links[key]);
+			} else {
+				newSchema[key] = this.updateLink(blockHandler, stores, links[key], oldSchema[key]);
+			}
+		}
+		return newSchema;
+	}
+
+	private updateDatabase<A extends Stores, B extends Links>(blockHandler: BlockHandler, database: Database<A, B>, oldSchema: DatabaseSchema): DatabaseSchema {
+		let stores = this.updateStores(blockHandler, database.stores, oldSchema.stores);
+		let links = this.updateLinks(blockHandler, database.stores, database.links, oldSchema.links);
+		let newSchema: DatabaseSchema = {
+			stores,
+			links
+		};
+		return newSchema;
+	}
+
+	private getDirtyStoreNames(oldSchema: StoresSchema, newSchema: StoresSchema): Array<string> {
+		let names = [] as Array<string>;
+		for (let key in newSchema) {
+			if (newSchema[key].version !== oldSchema[key]?.version) {
+				names.push(key);
+			}
+		}
+		return names;
+	}
+
+	private getDirtyLinkNames(oldSchema: LinksSchema, newSchema: LinksSchema): Array<string> {
+		let names = [] as Array<string>;
+		for (let key in newSchema) {
+			if (newSchema[key].version !== oldSchema[key]?.version) {
+				names.push(key);
+			}
+		}
+		return names;
+	}
+
+	constructor() {}
+
+	createDatabaseManager<A extends Stores, B extends Links>(blockHandler: BlockHandler, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
+		if (blockHandler.getBlockCount() === 0) {
+			this.initializeDatabase(blockHandler);
+		}
+		let oldSchema = DatabaseSchema.decode(blockHandler.readBlock(0));
+		let newSchema = this.updateDatabase(blockHandler, database, oldSchema);
+		let buffer = DatabaseSchema.encode(newSchema);
+		blockHandler.resizeBlock(0, buffer.length);
+		blockHandler.writeBlock(0, buffer);
+		let databaseManager = this.loadDatabaseManager(newSchema, blockHandler);
+		let dirtyLinkNames = this.getDirtyLinkNames(oldSchema.links, newSchema.links);
+		let dirtyStoreNames = this.getDirtyStoreNames(oldSchema.stores, newSchema.stores);
+		databaseManager.enforceConsistency(dirtyStoreNames, dirtyLinkNames);
+		return databaseManager as DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>>;
 	}
 };

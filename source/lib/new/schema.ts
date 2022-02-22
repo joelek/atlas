@@ -60,6 +60,7 @@ export const IndicesSchema = bedrock.codecs.Array.of(IndexSchema);
 export type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
 
 export const StoreSchema = bedrock.codecs.Object.of({
+	version: bedrock.codecs.Integer,
 	fields: FieldsSchema,
 	keys: KeysSchema,
 	indices: IndicesSchema,
@@ -91,14 +92,27 @@ export const OrderSchema = bedrock.codecs.Union.of(
 
 export type OrderSchema = ReturnType<typeof OrderSchema["decode"]>;
 
+export const KeyOrderSchema = bedrock.codecs.Object.of({
+	key: bedrock.codecs.String,
+	order: OrderSchema
+});
+
+export type KeyOrderSchema = ReturnType<typeof KeyOrderSchema["decode"]>;
+
+export const KeyOrdersSchema = bedrock.codecs.Array.of(KeyOrderSchema);
+
+export type KeyOrdersSchema = ReturnType<typeof KeyOrdersSchema["decode"]>;
+
+export const KeysMapSchema = bedrock.codecs.Record.of(bedrock.codecs.String);
+
+export type KeyMapSchema = ReturnType<typeof KeysMapSchema["decode"]>;
+
 export const LinkSchema = bedrock.codecs.Object.of({
+	version: bedrock.codecs.Integer,
 	parent: bedrock.codecs.String,
 	child: bedrock.codecs.String,
-	keys: bedrock.codecs.Record.of(bedrock.codecs.String),
-	orders: bedrock.codecs.Array.of(bedrock.codecs.Object.of({
-		key: bedrock.codecs.String,
-		order: OrderSchema
-	}))
+	keysMap: KeysMapSchema,
+	orders: KeyOrdersSchema
 });
 
 export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;

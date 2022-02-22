@@ -74,7 +74,7 @@ export type FieldManagers<A extends Record> = {
 };
 
 export abstract class Field<A extends Value> {
-	protected defaultValue: A;
+	defaultValue: A;
 
 	constructor(defaultValue: A) {
 		this.defaultValue = defaultValue;

@@ -1,6 +1,6 @@
 import { test } from "../test";
 import { StringField, NullableStringField } from "./records";
-import { ConsistencyManager } from "./consistency";
+import { DatabaseManager } from "./consistency";
 import { BlockHandler } from "./vfs";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./store";
@@ -41,7 +41,7 @@ function createUsersPostsAndComments() {
 	let userComments = LinkManager.construct(users, comments, {
 		user_id: "comment_user_id"
 	});
-	let consistencyManager = new ConsistencyManager({
+	let consistencyManager = new DatabaseManager({
 		users,
 		posts,
 		comments
@@ -151,7 +151,7 @@ function createDirectories() {
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
-	let consistencyManager = new ConsistencyManager({
+	let consistencyManager = new DatabaseManager({
 		directories
 	}, {
 		childDirectories

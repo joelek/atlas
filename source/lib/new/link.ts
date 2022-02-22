@@ -1,7 +1,7 @@
 import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
 import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
-import { Entry, StoreManager, StoreReference } from "./store";
+import { Entry, Store, StoreManager, StoreReference } from "./store";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<Entry<C>>>;
@@ -115,12 +115,12 @@ export type LinkReferences = {
 };
 
 export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	parent: StoreReference<A, B>;
-	child: StoreReference<C, D>;
+	parent: Store<A, B>;
+	child: Store<C, D>;
 	recordKeysMap: E;
-	orders?: OrderMap<C>;
+	orders: OrderMap<C>;
 
-	constructor(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
+	constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders: OrderMap<C>) {
 		this.parent = parent;
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;

@@ -1,6 +1,8 @@
+import { File } from "./files";
 import { LinkManager, LinkManagers, WritableLink } from "./link";
 import { Record, Keys, KeysRecordMap, RequiredKeys } from "./records";
 import { StoreManager, StoreManagers, WritableStore } from "./store";
+import { TransactionManager } from "./transaction";
 
 export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
 	private storeManager: StoreManager<A, B>;
@@ -62,7 +64,7 @@ export type WritableLinksFromLinkManagers<A extends LinkManagers> = {
 	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
-export class ConsistencyManager<A extends StoreManagers, B extends LinkManagers> {
+export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
 	private storeManagers: A;
 	private linkManagers: B;
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
@@ -145,6 +147,12 @@ export class ConsistencyManager<A extends StoreManagers, B extends LinkManagers>
 		}
 	}
 
+	createTransactionManager(file: File): TransactionManager<WritableStoresFromStoreManagers<A>, WritableLinksFromLinkManagers<B>> {
+		let writableStores = this.createWritableStores();
+		let writableLinks = this.createWritableLinks();
+		return new TransactionManager(file, writableStores, writableLinks);
+	}
+
 	createWritableStores(): WritableStoresFromStoreManagers<A> {
 		let writableStores = {} as WritableStoresFromStoreManagers<any>;
 		for (let key in this.storeManagers) {
@@ -165,8 +173,8 @@ export class ConsistencyManager<A extends StoreManagers, B extends LinkManagers>
 		return writableLinks;
 	}
 
-	enforceStoreConsistency<C extends Keys<A>>(keys: [...C]): void {
-		for (let key of keys) {
+	enforceStoreConsistency<C extends Keys<A>>(storeNames: [...C]): void {
+		for (let key of storeNames) {
 			let storeManager = this.storeManagers[key];
 			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
 				let child = linkManager.getChild();
@@ -184,9 +192,35 @@ export class ConsistencyManager<A extends StoreManagers, B extends LinkManagers>
 		}
 	}
 
-	enforceLinkConsistency<C extends Keys<B>>(keys: [...C]): void {
-		for (let key of keys) {
+	enforceLinkConsistency<D extends Keys<B>>(linkNames: [...D]): void {
+		for (let key of linkNames) {
 			let linkManager = this.linkManagers[key];
+			let child = linkManager.getChild();
+			let records = [] as Array<Record>;
+			for (let entry of child) {
+				let record = entry.record();
+				try {
+					linkManager.lookup(record);
+				} catch (error) {
+					records.push(record);
+				}
+			}
+			this.doRemove(child, records);
+		}
+	}
+
+	enforceConsistency<C extends Keys<A>, D extends Keys<B>>(storeNames: [...C], linkNames: [...D]): void {
+		let linkManagers = new Set<LinkManager<any, any, any, any, any>>();
+		for (let key of storeNames) {
+			for (let linkManager of this.getLinksWhereStoreIsParent(this.storeManagers[key])) {
+				linkManagers.add(linkManager);
+			}
+		}
+		for (let key of linkNames) {
+			let linkManager = this.linkManagers[key];
+			linkManagers.add(linkManager);
+		}
+		for (let linkManager of linkManagers) {
 			let child = linkManager.getChild();
 			let records = [] as Array<Record>;
 			for (let entry of child) {

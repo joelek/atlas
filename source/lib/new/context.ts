@@ -1,11 +1,12 @@
-import { Link, LinkReference, LinkReferences, LinksFromLinkReferences, WritableLinksFromLinks } from "./link";
-import { Store, StoreReference, StoreReferences, StoresFromStoreReferences, WritableStoresFromStores } from "./store";
+import { Link, LinkReference, LinkReferences, LinksFromLinkReferences } from "./link";
+import { Store, StoreReference, StoreReferences, StoresFromStoreReferences } from "./store";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
-import { DatabaseManager, LinkManagersFromLinks, SchemaManager, StoreManagersFromStores } from "./database";
-import { WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
+import { Database, LinkManagersFromLinks, SchemaManager, StoreManagersFromStores } from "./database";
+import { DatabaseManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
+import { BlockHandler } from "./vfs";
 
 export class FileReference {
 	private FileReference!: "FileReference";
@@ -66,7 +67,7 @@ export class Context {
 
 	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
 		let reference = new LinkReference<A, B, C, D, E>();
-		let link = new Link(parent, child, recordKeysMap, orders);
+		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders ?? {});
 		this.links.set(reference, link);
 		return reference;
 	}
@@ -103,16 +104,24 @@ export class Context {
 		let file = this.getFile(fileReference);
 		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
-			stores[key] = this.getStore(storeReferences[key]) as any;
+			stores[key as keyof A] = this.getStore(storeReferences[key]) as StoresFromStoreReferences<A>[keyof A];
 		}
 		let links = {} as LinksFromLinkReferences<B>;
 		for (let key in linkReferences) {
-			links[key] = this.getLink(linkReferences[key]) as any;
+			links[key as keyof B] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
 		}
 		let schemaManager = new SchemaManager();
-		let databaseManager = schemaManager.createDatabaseManager(file, stores, links);
+		let blockHandler = new BlockHandler(file);
+		for (let block of blockHandler) {
+			console.log(block);
+		}
+		let database: Database<StoresFromStoreReferences<A>, LinksFromLinkReferences<B>> = {
+			stores,
+			links
+		};
+		let databaseManager = schemaManager.createDatabaseManager(blockHandler, database);
 		this.databaseManagers.set(fileReference, databaseManager);
-		let transactionManager = databaseManager.createTransactionManager();
+		let transactionManager = databaseManager.createTransactionManager(file);
 		return transactionManager;
 	}
 };

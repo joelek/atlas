@@ -98,17 +98,6 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private recordManager: RecordManager<A>;
 	private table: Table;
 
-	private delete(): void {
-		for (let entry of this) {
-			this.blockHandler.deleteBlock(entry.bid());
-		}
-		for (let key in this.fieldManagers) {
-			this.fieldManagers[key].delete();
-		}
-		this.table.delete();
-		this.blockHandler.deleteBlock(this.bid);
-	}
-
 	private filterIterable(bids: Iterable<number>, filters: FilterMap<A>, orders: OrderMap<A>): Iterable<Entry<A>> {
 		return StreamIterable.of(bids)
 			.map((bid) => {
@@ -181,6 +170,13 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 
 	getBid(): number {
 		return this.bid;
+	}
+
+	delete(): void {
+		for (let entry of this) {
+			this.blockHandler.deleteBlock(entry.bid());
+		}
+		this.table.delete();
 	}
 
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>> {

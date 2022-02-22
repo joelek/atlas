@@ -1,30 +1,39 @@
 import { test } from "../test";
 import { Context } from "./context";
 
-test(``, async () => {
+test(`It should work.`, async (assert) => {
 	let context = new Context();
 	let users = context.createStore({
-		user_id: context.createBinaryField(),
+		user_id: context.createStringField(),
 		name: context.createStringField()
 	}, ["user_id"]);
 	let posts = context.createStore({
-		post_id: context.createBinaryField(),
-		user_id: context.createBinaryField(),
+		post_id: context.createStringField(),
+		user_id: context.createStringField(),
 		name: context.createStringField()
 	}, ["post_id"]);
 	let userPosts = context.createLink(users, posts, {
 		user_id: "user_id"
 	});
-	let storage = context.createMemoryStorage();
+	let storage = context.createDiskStorage("./private/atlas");
 	let manager = context.createTransactionManager(storage, {
-		users
+		users,
+		posts
 	}, {
 		userPosts
 	});
-	manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
-		return users.insert({
-			user_id: Uint8Array.of(1),
+	let observed = await manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
+		users.insert({
+			user_id: "User 1",
 			name: "Joel"
 		});
+		return users.lookup({
+			user_id: "User 1"
+		});
 	});
+	let expected = {
+		user_id: "User 1",
+		name: "Joel"
+	};
+	assert.record.equals(observed, expected);
 });

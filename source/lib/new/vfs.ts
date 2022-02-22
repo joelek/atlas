@@ -101,18 +101,20 @@ export class BlockHandler {
 		return id;
 	}
 
-	private readBlockHeader(id: number, header: BlockHeader, deleted: boolean): void {
+	private readBlockHeader(id: number, header: BlockHeader, deleted?: boolean): void {
 		let count = this.getBlockCount();
 		if (DEBUG) asserts.IntegerAssert.between(0, id, count - 1);
 		let offset = this.header.table.offset();
 		header.read(this.file, offset + id * BlockHeader.LENGTH);
-		if (deleted) {
-			if (!header.flag(BlockFlags.DELETED)) {
-				throw `Expected block to be deleted!`;
-			}
-		} else {
-			if (header.flag(BlockFlags.DELETED)) {
-				throw `Expected block to not be deleted!`;
+		if (deleted != null) {
+			if (deleted) {
+				if (!header.flag(BlockFlags.DELETED)) {
+					throw `Expected block to be deleted!`;
+				}
+			} else {
+				if (header.flag(BlockFlags.DELETED)) {
+					throw `Expected block to not be deleted!`;
+				}
 			}
 		}
 	}
@@ -122,6 +124,20 @@ export class BlockHandler {
 		if (DEBUG) asserts.IntegerAssert.between(0, id, count - 1);
 		let offset = this.header.table.offset();
 		header.write(this.file, offset + id * BlockHeader.LENGTH);
+	}
+
+	* [Symbol.iterator](): Iterator<{ bid: number, buffer: Uint8Array }> {
+		for (let bid = 0; bid < this.getBlockCount(); bid++) {
+			let header = new BlockHeader();
+			this.readBlockHeader(bid, header);
+			if (!header.flag(BlockFlags.DELETED)) {
+				let buffer = this.readBlock(bid);
+				yield {
+					bid,
+					buffer
+				};
+			}
+		}
 	}
 
 	clearBlock(id: number): void {
