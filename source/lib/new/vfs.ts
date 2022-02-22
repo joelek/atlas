@@ -1,4 +1,4 @@
-import * as asserts from "../asserts";
+import * as asserts from "../../mod/asserts";
 import { BinHeader, BlockReference, BlockHeader, BlockFlags, Readable, Writable } from "./chunks";
 import { File } from "./files";
 import { DEBUG } from "./env";

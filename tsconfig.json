@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"declaration": true,
+		"composite": true,
 		"lib": [
 			"esnext"
 		],
@@ -12,6 +12,9 @@
 	},
 	"include": [],
 	"references": [
+		{
+			"path": "./source/mod/"
+		},
 		{
 			"path": "./source/lib/"
 		}

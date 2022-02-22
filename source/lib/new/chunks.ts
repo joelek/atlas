@@ -1,5 +1,5 @@
 import * as utils from "./utils";
-import * as asserts from "../asserts";
+import * as asserts from "../../mod/asserts";
 import { DEBUG } from "./env";
 
 export interface Readable {
