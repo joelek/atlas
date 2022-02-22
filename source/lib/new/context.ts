@@ -4,7 +4,7 @@ import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, 
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
-import { Database, DatabaseManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
+import { Database, DatabaseManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./database";
 import { BlockHandler } from "./vfs";
 import { SchemaManager } from "./schema";
 

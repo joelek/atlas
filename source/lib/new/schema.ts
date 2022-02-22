@@ -1,5 +1,5 @@
 import * as bedrock from "@joelek/bedrock";
-import { Database, DatabaseManager } from "./consistency";
+import { Database, DatabaseManager } from "./database";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
