@@ -1,5 +1,6 @@
 import * as bedrock from "@joelek/bedrock";
 import { Database, DatabaseManager } from "./database";
+import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
@@ -558,7 +559,11 @@ export class SchemaManager {
 
 	constructor() {}
 
-	createDatabaseManager<A extends Stores, B extends Links>(blockHandler: BlockHandler, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
+	createDatabaseManager<A extends Stores, B extends Links>(file: File, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
+		let blockHandler = new BlockHandler(file);
+		for (let block of blockHandler) {
+			console.log(block);
+		}
 		if (blockHandler.getBlockCount() === 0) {
 			this.initializeDatabase(blockHandler);
 		}
@@ -571,6 +576,7 @@ export class SchemaManager {
 		let dirtyLinkNames = this.getDirtyLinkNames(oldSchema.links, newSchema.links);
 		let dirtyStoreNames = this.getDirtyStoreNames(oldSchema.stores, newSchema.stores);
 		databaseManager.enforceConsistency(dirtyStoreNames, dirtyLinkNames);
+		file.persist();
 		return databaseManager as DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>>;
 	}
 };

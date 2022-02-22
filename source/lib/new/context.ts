@@ -5,7 +5,6 @@ import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
 import { Database, DatabaseManager } from "./database";
-import { BlockHandler } from "./vfs";
 import { SchemaManager } from "./schema";
 
 export class FileReference {
@@ -111,15 +110,11 @@ export class Context {
 			links[key as keyof B] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
 		}
 		let schemaManager = new SchemaManager();
-		let blockHandler = new BlockHandler(file);
-		for (let block of blockHandler) {
-			console.log(block);
-		}
 		let database: Database<StoresFromStoreReferences<A>, LinksFromLinkReferences<B>> = {
 			stores,
 			links
 		};
-		let databaseManager = schemaManager.createDatabaseManager(blockHandler, database);
+		let databaseManager = schemaManager.createDatabaseManager(file, database);
 		this.databaseManagers.set(fileReference, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager(file);
 		return transactionManager;
