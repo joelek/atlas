@@ -2,7 +2,6 @@
 	"bin": {},
 	"dependencies": {
 		"@joelek/bedrock": "github:joelek/bedrock#semver:^0.4",
-		"@joelek/ts-autoguard": "github:joelek/ts-autoguard#semver:^5.11",
 		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.1"
 	},
 	"devDependencies": {
