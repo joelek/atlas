@@ -1,8 +1,6 @@
 # @joelek/atlas
 
-Embedded relational database for NodeJS written completely in TypeScript.
-
-CAUTION: This software is experimental and under heavy development. Breaking changes and force pushes to master may occur until the first release has been made.
+Embedded database for NodeJS with automatic schema migration and type-inferrence written completely in TypeScript.
 
 ```ts
 import * as atlas from "@joelek/atlas";
@@ -56,6 +54,7 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ## Roadmap
 
+* Decide on how to migrate records when the primary key changes.
 * Consider implementing file locks.
 * Make memory limit configurable for Cache.
 * Allow BlockHandler to keep track of contained buffer size.
