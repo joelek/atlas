@@ -403,6 +403,10 @@ export type StoreManagersFromStores<A extends Stores> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
 
+export type WritableStoresFromStoreManagers<A extends StoreManagers> = {
+	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
+};
+
 export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
 	private StoreReference!: "StoreReference";
 };
@@ -445,4 +449,38 @@ export type StoresFromStoreReferences<A extends StoreReferences> = {
 
 export type Stores = {
 	[key: string]: Store<any, any>;
+};
+
+export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
+	private storeManager: StoreManager<A, B>;
+	private overrides: Partial<WritableStore<A, B>>;
+
+	constructor(storeManager: StoreManager<A, B>, overrides: Partial<WritableStore<A, B>>) {
+		this.storeManager = storeManager;
+		this.overrides = overrides;
+	}
+
+	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
+		return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
+	}
+
+	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
+		return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
+	}
+
+	async length(...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]> {
+		return this.overrides.length?.(...parameters) ?? this.storeManager.length(...parameters);
+	}
+
+	async lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]> {
+		return this.overrides.lookup?.(...parameters) ?? this.storeManager.lookup(...parameters);
+	}
+
+	async remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
+		return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
+	}
+
+	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
+		return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
+	}
 };

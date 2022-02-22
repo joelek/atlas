@@ -1,68 +1,8 @@
 import { File } from "./files";
-import { LinkManager, LinkManagers, Links, WritableLink } from "./link";
-import { Record, Keys, KeysRecordMap, RequiredKeys } from "./records";
-import { StoreManager, StoreManagers, Stores, WritableStore } from "./store";
+import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./link";
+import { Record, Keys, RequiredKeys } from "./records";
+import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./store";
 import { TransactionManager } from "./transaction";
-
-export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
-	private storeManager: StoreManager<A, B>;
-	private overrides: Partial<WritableStore<A, B>>;
-
-	constructor(storeManager: StoreManager<A, B>, overrides: Partial<WritableStore<A, B>>) {
-		this.storeManager = storeManager;
-		this.overrides = overrides;
-	}
-
-	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
-	}
-
-	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
-		return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
-	}
-
-	async length(...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]> {
-		return this.overrides.length?.(...parameters) ?? this.storeManager.length(...parameters);
-	}
-
-	async lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]> {
-		return this.overrides.lookup?.(...parameters) ?? this.storeManager.lookup(...parameters);
-	}
-
-	async remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
-		return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
-	}
-
-	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
-		return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
-	}
-};
-
-export class OverridableWritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
-	private linkManager: LinkManager<A, B, C, D, E>;
-	private overrides: Partial<WritableLink<A, B, C, D, E>>;
-
-	constructor(linkManager: LinkManager<A, B, C, D, E>, overrides: Partial<WritableLink<A, B, C, D, E>>) {
-		this.linkManager = linkManager;
-		this.overrides = overrides;
-	}
-
-	async filter(...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
-	}
-
-	async lookup(...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {
-		return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);
-	}
-};
-
-export type WritableStoresFromStoreManagers<A extends StoreManagers> = {
-	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
-};
-
-export type WritableLinksFromLinkManagers<A extends LinkManagers> = {
-	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
-};
 
 export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
 	private storeManagers: A;

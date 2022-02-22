@@ -1,10 +1,10 @@
-import { Link, LinkManagersFromLinks, LinkReference, LinkReferences, LinksFromLinkReferences } from "./link";
-import { Store, StoreManagersFromStores, StoreReference, StoreReferences, StoresFromStoreReferences } from "./store";
+import { Link, LinkManagersFromLinks, LinkReference, LinkReferences, LinksFromLinkReferences, WritableLinksFromLinkManagers } from "./link";
+import { Store, StoreManagersFromStores, StoreReference, StoreReferences, StoresFromStoreReferences, WritableStoresFromStoreManagers } from "./store";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
-import { Database, DatabaseManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./database";
+import { Database, DatabaseManager } from "./database";
 import { BlockHandler } from "./vfs";
 import { SchemaManager } from "./schema";
 
