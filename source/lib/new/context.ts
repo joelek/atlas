@@ -4,9 +4,10 @@ import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, 
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
-import { Database, SchemaManager } from "./database";
+import { Database } from "./database";
 import { DatabaseManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
 import { BlockHandler } from "./vfs";
+import { SchemaManager } from "./schema";
 
 export class FileReference {
 	private FileReference!: "FileReference";
