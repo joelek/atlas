@@ -40,17 +40,29 @@ export const FieldSchema = bedrock.codecs.Union.of(
 
 export type FieldSchema = ReturnType<typeof FieldSchema["decode"]>;
 
+export const FieldsSchema = bedrock.codecs.Record.of(FieldSchema);
+
+export type FieldsSchema = ReturnType<typeof FieldsSchema["decode"]>;
+
+export const KeysSchema = bedrock.codecs.Array.of(bedrock.codecs.String);
+
+export type KeysSchema = ReturnType<typeof KeysSchema["decode"]>;
+
 export const IndexSchema = bedrock.codecs.Object.of({
-	keys: bedrock.codecs.Array.of(bedrock.codecs.String),
+	keys: KeysSchema,
 	bid: bedrock.codecs.Integer
 });
 
 export type IndexSchema = ReturnType<typeof IndexSchema["decode"]>;
 
+export const IndicesSchema = bedrock.codecs.Array.of(IndexSchema);
+
+export type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
+
 export const StoreSchema = bedrock.codecs.Object.of({
-	fields: bedrock.codecs.Record.of(FieldSchema),
-	keys: bedrock.codecs.Array.of(bedrock.codecs.String),
-	indices: bedrock.codecs.Array.of(IndexSchema),
+	fields: FieldsSchema,
+	keys: KeysSchema,
+	indices: IndicesSchema,
 	storageBid: bedrock.codecs.Integer
 });
 
