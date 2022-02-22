@@ -1,5 +1,3 @@
-import * as is from "../is";
-
 export type Primitive = boolean | null | number | string | undefined;
 
 export interface CacheDetail<A, B> {
@@ -19,7 +17,7 @@ export class Cache<A extends Primitive, B> {
 	private status: CacheStatus;
 
 	private purgeIfNecessary(): void {
-		if (is.present(this.status.maxWeight)) {
+		if (this.status.maxWeight != null) {
 			for (let [key, value] of this.map.entries()) {
 				if (this.status.weight <= this.status.maxWeight) {
 					break;
@@ -69,7 +67,7 @@ export class Cache<A extends Primitive, B> {
 
 	remove(key: A): B | undefined {
 		let value = this.map.get(key);
-		if (is.absent(value)) {
+		if (value == null) {
 			return;
 		}
 		this.status.weight -= this.detail.getWeightForValue(value);

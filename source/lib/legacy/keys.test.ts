@@ -1,5 +1,5 @@
 import * as keys from "./keys";
-import { test } from "./test";
+import { test } from "../new/test";
 
 test(`It should ...`, async (assert) => {
 	let observed = keys.isPathPrefix([[1]], [[]]);

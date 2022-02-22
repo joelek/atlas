@@ -1,4 +1,4 @@
-import { test } from "../test";
+import { test } from "./test";
 import { TransactionManager } from "./transaction";
 import { VirtualFile } from "./files";
 import { WritableStoreManager, StoreManager } from "./store";

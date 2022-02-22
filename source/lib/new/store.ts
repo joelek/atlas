@@ -1,5 +1,5 @@
 import * as bedrock from "@joelek/bedrock";
-import { StreamIterable } from "../stream";
+import { StreamIterable } from "./streams";
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";

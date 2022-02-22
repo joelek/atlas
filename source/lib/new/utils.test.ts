@@ -1,5 +1,5 @@
 import * as index from "./utils";
-import { test } from "../test";
+import { test } from "./test";
 
 test(`It should decode strings.`, async (assert) => {
 	let buffer = Uint8Array.of(0xFF, 0x00);

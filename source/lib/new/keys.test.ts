@@ -1,5 +1,5 @@
 import * as keys from "./keys";
-import { test } from "../test";
+import { test } from "./test";
 
 test(`It should compare a single chunk ([0] < [0,1]).`, async (assert) => {
 	let observed = keys.compareChunk(Uint8Array.of(0), Uint8Array.of(0, 1));

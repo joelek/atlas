@@ -1,8 +1,7 @@
 import * as libcrypto from "crypto";
 import { BlockHandler } from "./vfs";
-import * as is from "../is";
 import { BlockReference, Chunk } from "./chunks";
-import { DEBUG } from "../env";
+import { DEBUG } from "./env";
 import * as asserts from "../asserts";
 import * as keys from "./keys";
 import { IntegerAssert } from "../asserts";
@@ -61,7 +60,7 @@ export class Table {
 		this.detail = detail;
 		this.header = new HashTableHeader();
 		this.minimumCapacity = asserts.IntegerAssert.atLeast(1, options?.minimumCapacity ?? 64);
-		if (is.present(blockId)) {
+		if (blockId != null) {
 			this.header.read(blockHandler.makeReadable(blockId), 0);
 		}
 		if (this.header.table.value() === 0) {
@@ -251,7 +250,7 @@ export class Table {
 	insert(key: keys.Chunks, value: number): boolean {
 		if (DEBUG) IntegerAssert.atLeast(1, value);
 		let slotIndex = this.doInsert(key, value);
-		if (is.absent(slotIndex)) {
+		if (slotIndex == null) {
 			return false;
 		}
 		this.header.count.value(this.header.count.value() + 1);
@@ -266,7 +265,7 @@ export class Table {
 
 	lookup(key: keys.Chunks): number | undefined {
 		let slotIndex = this.doLookup(key);
-		if (is.absent(slotIndex)) {
+		if (slotIndex == null) {
 			return;
 		}
 		let slot = new HashTableSlot();
@@ -276,7 +275,7 @@ export class Table {
 
 	remove(key: keys.Chunks): boolean {
 		let slotIndex = this.doRemove(key);
-		if (is.absent(slotIndex)) {
+		if (slotIndex == null) {
 			return false;
 		}
 		this.header.count.value(this.header.count.value() - 1);

@@ -1,7 +1,7 @@
 import * as asserts from "../asserts";
 import { BinHeader, BlockReference, BlockHeader, BlockFlags, Readable, Writable } from "./chunks";
 import { File } from "./files";
-import { DEBUG } from "../env";
+import { DEBUG } from "./env";
 
 export class BlockHandler {
 	private file: File;

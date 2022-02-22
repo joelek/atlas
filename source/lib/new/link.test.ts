@@ -1,4 +1,4 @@
-import { test } from "../test";
+import { test } from "./test";
 import { VirtualFile } from "./files";
 import { LinkManager } from "./link";
 import { IncreasingOrder } from "./orders";

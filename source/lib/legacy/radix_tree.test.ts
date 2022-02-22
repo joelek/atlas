@@ -1,8 +1,8 @@
 import { InMemoryBlockHandler } from "../storage";
-import { StreamIterable } from "../stream";
+import { StreamIterable } from "../new/streams";
 import * as keys from "../keys";
-import * as subject from "./";
-import { test } from "../test";
+import * as subject from "./radix_tree";
+import { test } from "../new/test";
 
 (async () => {
 	let blockHandler = new InMemoryBlockHandler();

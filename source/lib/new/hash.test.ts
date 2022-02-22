@@ -2,7 +2,7 @@ import * as hash from "./hash";
 import * as files from "./files";
 import * as utils from "./utils";
 import * as vfs from "./vfs";
-import { test } from "../test";
+import { test } from "./test";
 
 const DETAIL: hash.TableDetail = {
 	getKeyFromValue: (value) => {

@@ -1,5 +1,5 @@
 import * as files from "./files";
-import { test } from "../test";
+import { test } from "./test";
 
 const constructors = {
 	CachedFile: () => new files.CachedFile(new files.VirtualFile(0)),

@@ -3,11 +3,11 @@ import * as bedrock from "@joelek/bedrock";
 import * as stdlib from "@joelek/ts-stdlib";
 import * as storage from "./storage";
 import * as guards from "./guards";
-import * as keys from "./keys";
+import * as keys from "../keys";
 import * as is from "./is";
-import * as collections from "./collections";
-import { CompressedTrie } from "./collections";
-import * as sorters from "./sorters";
+import * as collections from ".";
+import { CompressedTrie } from ".";
+import * as sorters from "../sorters";
 
 export class Keys<A extends Record, B extends [...(keyof A)[]]> {
 	private keys: [...B];

@@ -1,6 +1,6 @@
 import { BlockHandler } from "../storage";
 import { IntegerAssert } from "../asserts";
-import { DEBUG } from "../env";
+import { DEBUG } from "../new/env";
 import * as is from "../is";
 import * as keys from "../keys";
 import * as shared from "./shared";

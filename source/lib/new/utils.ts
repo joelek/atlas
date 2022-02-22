@@ -1,7 +1,6 @@
 import * as bedrock from "@joelek/bedrock";
 import * as asserts from "../asserts";
-import * as is from "../is";
-import { DEBUG } from "../env";
+import { DEBUG } from "./env";
 
 export type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";
 
@@ -13,7 +12,7 @@ export class Binary {
 	static string(buffer: Uint8Array, offset: number, length: number, encoding: Encoding, value?: string): string {
 		if (DEBUG) asserts.IntegerAssert.between(0, offset, buffer.byteLength - 1);
 		if (DEBUG) asserts.IntegerAssert.between(0, length, buffer.byteLength - offset);
-		if (is.absent(value)) {
+		if (value == null) {
 			let subarray = buffer.subarray(offset, offset + length);
 			let value = bedrock.utils.Chunk.toString(subarray, encoding).replace(/[\0]*$/g, "");
 			return value;
@@ -29,7 +28,7 @@ export class Binary {
 	static boolean(buffer: Uint8Array, offset: number, bit: number, value?: boolean): boolean {
 		if (DEBUG) asserts.IntegerAssert.between(0, bit, 7);
 		if (DEBUG) asserts.IntegerAssert.between(0, offset, buffer.byteLength - 1);
-		if (is.absent(value)) {
+		if (value == null) {
 			let byte = buffer[offset];
 			let value = ((byte >> bit) & 0x01) === 0x01;
 			return value;
@@ -43,7 +42,7 @@ export class Binary {
 	static signed(buffer: Uint8Array, offset: number, length: number, value?: number, endian?: Endian): number {
 		if (DEBUG) asserts.IntegerAssert.between(1, length, 6);
 		let bias = 2 ** (length * 8 - 1);
-		if (is.absent(value)) {
+		if (value == null) {
 			let value = this.unsigned(buffer, offset, length, undefined, endian);
 			if (value >= bias) {
 				value -= bias + bias;
@@ -62,7 +61,7 @@ export class Binary {
 	static unsigned(buffer: Uint8Array, offset: number, length: number, value?: number, endian?: Endian): number {
 		if (DEBUG) asserts.IntegerAssert.between(1, length, 6);
 		if (DEBUG) asserts.IntegerAssert.between(0, offset, buffer.byteLength - length);
-		if (is.absent(value)) {
+		if (value == null) {
 			let value = 0;
 			for (let i = 0; i < length; i++) {
 				value *= 256;

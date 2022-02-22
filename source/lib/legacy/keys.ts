@@ -1,5 +1,5 @@
 import { IntegerAssert } from "./asserts";
-import { DEBUG } from "./env";
+import { DEBUG } from "./new/env";
 
 export type KeyPart = Buffer;
 export type Key = Array<KeyPart>;

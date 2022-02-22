@@ -4,7 +4,7 @@ import { BlockHandler } from "./vfs";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder } from "./orders";
-import { test } from "../test";
+import { test } from "./test";
 
 test(`It should support iteration of the records stored.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));

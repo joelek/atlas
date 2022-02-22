@@ -1,4 +1,4 @@
-import { test } from "../test";
+import { test } from "./test";
 import { StringField, NullableStringField } from "./records";
 import { DatabaseManager } from "./database";
 import { BlockHandler } from "./vfs";

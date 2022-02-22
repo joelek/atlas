@@ -1,6 +1,6 @@
 import * as utils from "./utils";
 import * as asserts from "../asserts";
-import { DEBUG } from "../env";
+import { DEBUG } from "./env";
 
 export interface Readable {
 	read(buffer: Uint8Array, offset: number): Uint8Array;

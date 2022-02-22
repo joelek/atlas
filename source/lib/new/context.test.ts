@@ -1,5 +1,5 @@
-import { benchmark } from "../benchmark";
-import { test } from "../test";
+import { benchmark } from "./benchmark";
+import { test } from "./test";
 import { Context } from "./context";
 
 test(`It should work.`, async (assert) => {

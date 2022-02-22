@@ -2,8 +2,8 @@ import * as stdlib from "@joelek/ts-stdlib";
 import * as libfs from "fs";
 import * as libpath from "path";
 import * as asserts from "../asserts";
-import { Cache } from "../storage";
-import { DEBUG } from "../env";
+import { Cache } from "./cache";
+import { DEBUG } from "./env";
 import { LogDeltaHeader, LogHeader } from "./chunks";
 
 export abstract class File {

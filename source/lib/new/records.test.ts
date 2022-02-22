@@ -1,5 +1,5 @@
 import * as records from "./records";
-import { test } from "../test";
+import { test } from "./test";
 import { BlockHandler } from "./vfs";
 import { VirtualFile } from "./files";
 

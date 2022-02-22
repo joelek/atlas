@@ -1,6 +1,6 @@
 import * as files from "./files";
 import * as vfs from "./vfs";
-import { test } from "../test";
+import { test } from "./test";
 import { BlockFlags } from "./chunks";
 
 test(`It should not support creating blocks with a size of 0.`, async (assert) => {
