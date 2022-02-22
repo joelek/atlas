@@ -52,7 +52,7 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 #### ReadableTransaction
 
-#### WriteableTransaction
+#### WritableTransaction
 
 ## Roadmap
 
