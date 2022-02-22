@@ -395,22 +395,30 @@ export type StoreReferences<A> = {
 	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : never;
 };
 
+export class Index<A extends Record> {
+	keys: Keys<A>;
+
+	constructor(keys: Keys<A>) {
+		this.keys = keys;
+	}
+};
+
 export class Store<A extends Record, B extends RequiredKeys<A>> {
 	fields: Fields<A>;
 	keys: [...B];
-	indices: Array<Keys<A>>;
+	indices: Array<Index<A>>;
 
-	constructor(fields: Fields<A>, keys: [...B], indices: Array<Keys<A>>) {
+	constructor(fields: Fields<A>, keys: [...B]) {
 		this.fields = fields;
 		this.keys = keys;
-		this.indices = indices;
+		this.indices = [];
 	}
 
 	createManager(blockHandler: BlockHandler, bid: number | null): StoreManager<A, B> {
 		return StoreManager.construct(blockHandler, bid, {
 			fields: this.fields,
 			keys: this.keys,
-			indices: this.indices
+			indices: this.indices.map((index) => index.keys)
 		});
 	}
 };

@@ -72,7 +72,7 @@ export class Context {
 
 	createStore<A extends Record, B extends RequiredKeys<A>>(fields: Fields<A>, keys: [...B]): StoreReference<A, B> {
 		let reference = new StoreReference<A, B>();
-		let store = new Store(fields, keys, []);
+		let store = new Store(fields, keys);
 		this.stores.set(reference, store);
 		return reference;
 	}
