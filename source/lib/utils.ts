@@ -1,5 +1,5 @@
 import * as bedrock from "@joelek/bedrock";
-import * as asserts from "../../mod/asserts";
+import * as asserts from "../mod/asserts";
 import { DEBUG } from "./env";
 
 export type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";

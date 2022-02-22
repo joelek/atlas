@@ -1,7 +1,7 @@
 import * as stdlib from "@joelek/ts-stdlib";
 import * as libfs from "fs";
 import * as libpath from "path";
-import * as asserts from "../../mod/asserts";
+import * as asserts from "../mod/asserts";
 import { Cache } from "./cache";
 import { DEBUG } from "./env";
 import { LogDeltaHeader, LogHeader } from "./chunks";

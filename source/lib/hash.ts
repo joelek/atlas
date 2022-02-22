@@ -2,9 +2,9 @@ import * as libcrypto from "crypto";
 import { BlockHandler } from "./vfs";
 import { BlockReference, Chunk } from "./chunks";
 import { DEBUG } from "./env";
-import * as asserts from "../../mod/asserts";
+import * as asserts from "../mod/asserts";
 import * as keys from "./keys";
-import { IntegerAssert } from "../../mod/asserts";
+import { IntegerAssert } from "../mod/asserts";
 
 export class HashTableHeader extends Chunk {
 	readonly count: BlockReference;
