@@ -399,6 +399,10 @@ export type StoreManagers = {
 	[key: string]: StoreManager<any, any>;
 };
 
+export type StoreManagersFromStores<A extends Stores> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
+};
+
 export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
 	private StoreReference!: "StoreReference";
 };

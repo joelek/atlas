@@ -1,11 +1,11 @@
 import * as bedrock from "@joelek/bedrock";
 import { DatabaseManager } from "./consistency";
 import { Table } from "./hash";
-import { Link, LinkManager, LinkManagers, Links } from "./link";
+import { Link, LinkManager, LinkManagers, LinkManagersFromLinks, Links } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { BinaryField, BinaryFieldManager, BooleanField, BooleanFieldManager, Field, FieldManager, FieldManagers, Fields, Keys, KeysRecordMap, NullableStringField, NullableStringFieldManager, RecordManager, RequiredKeys, StringField, StringFieldManager, Record, Value } from "./records";
 import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, DecreasingOrderSchema, FieldSchema, IncreasingOrderSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema, OrderSchema, FieldsSchema, IndicesSchema, KeysSchema, IndexSchema, StoresSchema, LinksSchema, KeyOrdersSchema, KeyMapSchema } from "./schema";
-import { Index, Store, StoreManager, StoreManagers, Stores } from "./store";
+import { Index, Store, StoreManager, StoreManagers, StoreManagersFromStores, Stores } from "./store";
 import { BlockHandler } from "./vfs";
 
 export class Database<A extends Stores, B extends Links> {
@@ -26,14 +26,6 @@ export function isSchemaCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: a
 		return false;
 	}
 }
-
-export type StoreManagersFromStores<A extends Stores> = {
-	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
-};
-
-export type LinkManagersFromLinks<A extends Links> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
-};
 
 export class SchemaManager {
 	private getStoreName<A extends Record, B extends RequiredKeys<A>>(store: Store<A, B>, stores: Stores): string {
