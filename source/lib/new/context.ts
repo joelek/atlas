@@ -14,6 +14,7 @@ export class Context {
 	private files: Map<FileReference, File>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
+	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
 
 	private getFile(reference: FileReference): File {
 		let file = this.files.get(reference);
@@ -43,6 +44,7 @@ export class Context {
 		this.files = new Map();
 		this.links = new Map();
 		this.stores = new Map();
+		this.databaseManagers = new Map();
 	}
 
 	createBinaryField(): BinaryField {
@@ -92,6 +94,9 @@ export class Context {
 	}
 
 	createTransactionManager<A extends StoreReferences<A>, B extends LinkReferences<B>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<Stores<A>, Links<B>> {
+		if (this.databaseManagers.has(fileReference)) {
+			throw `Expected given storage to not be in use by another database!`;
+		}
 		storeReferences = storeReferences ?? {} as A;
 		linkReferences = linkReferences ?? {} as B;
 		let file = this.getFile(fileReference);
@@ -104,6 +109,7 @@ export class Context {
 			links[key] = this.getLink(linkReferences[key]);
 		}
 		let databaseManager = new DatabaseManager(file).migrateSchema(stores, links);
+		this.databaseManagers.set(fileReference, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager();
 		return transactionManager;
 	}

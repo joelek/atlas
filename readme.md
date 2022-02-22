@@ -57,7 +57,6 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 ## Roadmap
 
 * Make memory limit configurable for Cache.
-* Restrict Context from creating more than one TransactionManager per File.
 * Allow BlockHandler to keep track of contained buffer size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Tokenize based on capitalization OneTwo => ["one", "two"].
