@@ -1,3 +1,4 @@
+import { benchmark } from "../benchmark";
 import { test } from "../test";
 import { Context } from "./context";
 
@@ -15,7 +16,7 @@ test(`It should work.`, async (assert) => {
 	let userPosts = context.createLink(users, posts, {
 		user_id: "user_id"
 	});
-	let storage = context.createDiskStorage("./private/atlas");
+	let storage = context.createMemoryStorage();
 	let manager = context.createTransactionManager(storage, {
 		users,
 		posts
@@ -24,14 +25,18 @@ test(`It should work.`, async (assert) => {
 	});
 	let observed = await benchmark(async () => {
 		return await manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
+			users.insert({
+				user_id: "User 1",
+				name: "Joel Ek"
+			});
 			return users.lookup({
 				user_id: "User 1"
 			});
 		});
-	}, 1);
+	}, 10000);
 	let expected = {
 		user_id: "User 1",
-		name: "Joel"
+		name: "Joel Ek"
 	};
 	assert.record.equals(observed, expected);
 });
