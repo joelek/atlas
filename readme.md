@@ -62,3 +62,5 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Tokenize based on capitalization OneTwo => ["one", "two"].
 * Improve type-safety checks for serialized keys.
+* Add field references to context.
+* Implement index support.
