@@ -1,7 +1,7 @@
 import { File } from "./files";
-import { LinkManager, LinkManagers, WritableLink } from "./link";
+import { LinkManager, LinkManagers, Links, WritableLink } from "./link";
 import { Record, Keys, KeysRecordMap, RequiredKeys } from "./records";
-import { StoreManager, StoreManagers, WritableStore } from "./store";
+import { StoreManager, StoreManagers, Stores, WritableStore } from "./store";
 import { TransactionManager } from "./transaction";
 
 export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
@@ -233,5 +233,15 @@ export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
 			}
 			this.doRemove(child, records);
 		}
+	}
+};
+
+export class Database<A extends Stores, B extends Links> {
+	stores: A;
+	links: B;
+
+	constructor(stores: A, links: B) {
+		this.stores = stores;
+		this.links = links;
 	}
 };
