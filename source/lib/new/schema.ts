@@ -68,6 +68,10 @@ export const StoreSchema = bedrock.codecs.Object.of({
 
 export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
 
+export const StoresSchema = bedrock.codecs.Record.of(StoreSchema);
+
+export type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
+
 export const DecreasingOrderSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("DecreasingOrder")
 });
@@ -99,9 +103,13 @@ export const LinkSchema = bedrock.codecs.Object.of({
 
 export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
 
+export const LinksSchema = bedrock.codecs.Record.of(LinkSchema);
+
+export type LinksSchema = ReturnType<typeof LinksSchema["decode"]>;
+
 export const DatabaseSchema = bedrock.codecs.Object.of({
-	stores: bedrock.codecs.Record.of(StoreSchema),
-	links: bedrock.codecs.Record.of(LinkSchema)
+	stores: StoresSchema,
+	links: LinksSchema
 });
 
 export type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
