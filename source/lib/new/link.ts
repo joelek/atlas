@@ -8,16 +8,32 @@ export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C ext
 	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
-export type ReadableLinks<A> = {
+export type ReadableLinks = {
+	[key: string]: ReadableLink<any, any, any, any, any>;
+};
+
+export type ReadableLinksFromLinks<A extends Links> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : never;
+};
+
+export type LinksFromReadableLinks<A extends ReadableLinks> = {
+	[B in keyof A]: A[B] extends ReadableLink<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
 export interface WritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> extends ReadableLink<A, B, C, D, E> {
 
 };
 
-export type WritableLinks<A> = {
+export type WritableLinks = {
+	[key: string]: WritableLink<any, any, any, any, any>;
+};
+
+export type WritableLinksFromLinks<A extends Links> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
+};
+
+export type LinksFromWritableLinks<A extends WritableLinks> = {
+	[B in keyof A]: A[B] extends WritableLink<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
 export class WritableLinkManager<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
@@ -86,16 +102,16 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 	}
 };
 
-export type LinkManagers<A> = {
-	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
+export type LinkManagers = {
+	[key: string]: LinkManager<any, any, any, any, any>;
 };
 
 export class LinkReference<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	private LinkReference!: "LinkReference";
 };
 
-export type LinkReferences<A> = {
-	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? LinkReference<C, D, E, F, G> : never;
+export type LinkReferences = {
+	[key: string]: LinkReference<any, any, any, any, any>;
 };
 
 export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
@@ -112,6 +128,10 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 	}
 };
 
-export type Links<A> = {
+export type LinksFromLinkReferences<A extends LinkReferences> = {
 	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
+};
+
+export type Links = {
+	[key: string]: Link<any, any, any, any, any>;
 };

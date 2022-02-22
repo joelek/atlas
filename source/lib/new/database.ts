@@ -1,14 +1,24 @@
 import * as bedrock from "@joelek/bedrock";
-import { ConsistencyManager } from "./consistency";
+import { ConsistencyManager, WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
 import { File } from "./files";
 import { Table } from "./hash";
-import { LinkManager, LinkManagers, Links } from "./link";
+import { Link, LinkManager, LinkManagers, Links, LinksFromLinkReferences } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { BinaryField, BinaryFieldManager, BooleanField, BooleanFieldManager, Field, FieldManager, FieldManagers, Fields, Key, Keys, KeysRecordMap, NullableStringField, NullableStringFieldManager, RecordManager, StringField, StringFieldManager } from "./records";
 import { BinaryFieldSchema, BooleanFieldSchema, DatabaseSchema, DecreasingOrderSchema, FieldSchema, IncreasingOrderSchema, LinkSchema, NullableStringFieldSchema, StoreSchema, StringFieldSchema, OrderSchema, FieldsSchema, IndicesSchema, KeysSchema, IndexSchema, StoresSchema } from "./schema";
-import { Index, Store, StoreManager, StoreManagers, Stores } from "./store";
+import { Index, Store, StoreManager, StoreManagers, Stores, StoresFromStoreReferences } from "./store";
 import { TransactionManager } from "./transaction";
 import { BlockHandler } from "./vfs";
+
+class Database<A extends Stores, B extends Links> {
+	stores: A;
+	links: B;
+
+	constructor(stores: A, links: B) {
+		this.stores = stores;
+		this.links = links;
+	}
+};
 
 export function isCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject is V {
 	try {
@@ -42,18 +52,52 @@ export type StoreComparison = {
 	indices: IndicesComparison;
 };
 
+export type Action = "create" | "remove" | "update";
+
 export type StoresComparison = {
-	storesToCreate: Array<Key<any>>;
-	storesToRemove: Array<Key<any>>;
-	storesToUpdate: Array<Key<any>>;
+	stores: globalThis.Record<string, StoreComparison>;
+	status: Action;
 };
 
-export class DatabaseManager<A, B> {
+export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
 	private file: File;
-	private blockHandler: BlockHandler;
+	private storeManagers: A;
+	private linkManagers: B;
 
-	private createFieldManager(fieldSchema: FieldSchema): FieldManager<any> {
-		let blockHandler = this.blockHandler;
+	constructor(file: File, storeManagers: A, linkManagers: B) {
+		this.file = file;
+		this.storeManagers = storeManagers;
+		this.linkManagers = linkManagers;
+	}
+
+	createTransactionManager(): TransactionManager<WritableStoresFromStoreManagers<A>, WritableLinksFromLinkManagers<B>> {
+		let consistencyManager = new ConsistencyManager(this.storeManagers, this.linkManagers);
+		let writableStores = consistencyManager.createWritableStores();
+		let writableLinks = consistencyManager.createWritableLinks();
+		return new TransactionManager(this.file, writableStores, writableLinks);
+	}
+
+	getStoreManager<C extends Key<A>>(key: C): A[C] {
+		return this.storeManagers[key];
+	}
+
+	getLinkManager<D extends Key<B>>(key: D): B[D] {
+		return this.linkManagers[key];
+	}
+};
+
+export type StoreManagersFromStores<A extends Stores> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
+};
+
+export type LinkManagersFromLinks<A extends Links> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
+};
+
+export class SchemaManager {
+	constructor() {}
+
+	createFieldManager(blockHandler: BlockHandler, fieldSchema: FieldSchema): FieldManager<any> {
 		if (isCompatible(BinaryFieldSchema, fieldSchema)) {
 			return new BinaryFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
 		}
@@ -69,7 +113,7 @@ export class DatabaseManager<A, B> {
 		throw `Expected code to be unreachable!`;
 	}
 
-	private createOrderManager(orderSchema: OrderSchema): Order<any> {
+	createOrderManager(orderSchema: OrderSchema): Order<any> {
 		if (isCompatible(DecreasingOrderSchema, orderSchema)) {
 			return new DecreasingOrder();
 		}
@@ -79,11 +123,10 @@ export class DatabaseManager<A, B> {
 		throw `Expected code to be unreachable!`;
 	}
 
-	private createStoreManager(storeSchema: StoreSchema): StoreManager<any, any> {
-		let blockHandler = this.blockHandler;
+	createStoreManager(blockHandler: BlockHandler, storeSchema: StoreSchema): StoreManager<any, any> {
 		let fieldManagers = {} as FieldManagers<any>;
 		for (let key in storeSchema.fields) {
-			fieldManagers[key] = this.createFieldManager(storeSchema.fields[key]);
+			fieldManagers[key] = this.createFieldManager(blockHandler, storeSchema.fields[key]);
 		}
 		let keys = storeSchema.keys as any;
 		// TODO: Create index managers.
@@ -100,7 +143,7 @@ export class DatabaseManager<A, B> {
 		return new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
 	}
 
-	private createLinkManager(linkSchema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
+	createLinkManager(linkSchema: LinkSchema, storeManagers: StoreManagers): LinkManager<any, any, any, any, any> {
 		let parent = storeManagers[linkSchema.parent] as StoreManager<any, any> | undefined;
 		if (parent == null) {
 			throw `Expected store with name "${linkSchema.parent}"!`;
@@ -117,46 +160,48 @@ export class DatabaseManager<A, B> {
 		return new LinkManager(parent, child, recordKeysMap, orders);
 	}
 
-	constructor(file: File) {
-		this.file = file;
-		this.blockHandler = new BlockHandler(file);
-		if (this.blockHandler.getBlockCount() === 0) {
+	createDatabaseManager<A extends Stores, B extends Links>(file: File, stores: A, links: B): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
+		let blockHandler = new BlockHandler(file);
+		if (blockHandler.getBlockCount() === 0) {
 			let databaseSchema: DatabaseSchema = {
 				stores: {},
 				links: {}
 			};
 			let buffer = DatabaseSchema.encode(databaseSchema);
-			this.blockHandler.createBlock(buffer.length);
-			this.blockHandler.writeBlock(0, buffer);
+			blockHandler.createBlock(buffer.length);
+			blockHandler.writeBlock(0, buffer);
 		}
-	}
-
-	createTransactionManager(): TransactionManager<Stores<A>, Links<B>> {
-		let databaseSchema = DatabaseSchema.decode(this.blockHandler.readBlock(0));
-		let storeManagers = {} as StoreManagers<any>;
+		throw `Migration code`;
+		let databaseSchema = DatabaseSchema.decode(blockHandler.readBlock(0));
+		let storeManagers = {} as StoreManagersFromStores<A>;
 		for (let key in databaseSchema.stores) {
-			storeManagers[key] = this.createStoreManager(databaseSchema.stores[key]);
+			storeManagers[key as keyof A] = this.createStoreManager(blockHandler, databaseSchema.stores[key]) as StoreManagersFromStores<A>[keyof A];
 		}
-		let linkManagers = {} as LinkManagers<any>;
+		let linkManagers = {} as LinkManagersFromLinks<B>;
 		for (let key in databaseSchema.links) {
-			// TODO: Build parent and child lists here?
-			linkManagers[key] = this.createLinkManager(databaseSchema.links[key], storeManagers);
+			linkManagers[key as keyof B] = this.createLinkManager(databaseSchema.links[key], storeManagers) as  LinkManagersFromLinks<B>[keyof B];
 		}
-		let consistencyManager = new ConsistencyManager<any, any>(storeManagers, linkManagers);
-		let writableStores = consistencyManager.createWritableStores();
-		let writableLinks = consistencyManager.createWritableLinks();
-		return new TransactionManager<any, any>(this.file, writableStores, writableLinks);
+		return new DatabaseManager(file, storeManagers, linkManagers);
 	}
-
-	migrateSchema<C, D>(stores: Stores<C>, links: Links<D>): DatabaseManager<C, D> {
+/*
+a store is dirty when keys or fields change, requires full recreation and migration of data
+a link is dirty when the parent or child stores are dirty (keys or fields change) or when the link itself changes
+*/
+/* 	migrateSchema(): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
 		let databaseSchema = DatabaseSchema.decode(this.blockHandler.readBlock(0));
+		let database: Database<any, any> = {
+			stores,
+			links
+		};
+		let migratedStores = [] as Array<string>;
+
 		throw `TODO`;
 		let buffer = DatabaseSchema.encode(databaseSchema);
 		this.blockHandler.resizeBlock(0, buffer.length);
 		this.blockHandler.writeBlock(0, buffer);
-		return this as unknown as DatabaseManager<C, D>;
+		return this as unknown as SchemaManager<C, D>;
 	}
-
+ */
 	static compareField(fieldSchema: FieldSchema, field: Field<any>): FieldComparison {
 		if (isCompatible(BinaryFieldSchema, fieldSchema)) {
 			if (field instanceof BinaryField) {
@@ -201,7 +246,7 @@ export class DatabaseManager<A, B> {
 			if (fieldsSchema[key] == null) {
 				fieldsToCreate.push(key);
 			} else {
-				if (!DatabaseManager.compareField(fieldsSchema[key], fields[key])) {
+				if (!SchemaManager.compareField(fieldsSchema[key], fields[key])) {
 					fieldsToUpdate.push(key);
 				}
 			}
@@ -226,7 +271,7 @@ export class DatabaseManager<A, B> {
 	}
 
 	static compareIndex(indexSchema: IndexSchema, index: Index<any>): IndexComparison {
-		return DatabaseManager.compareKeys(indexSchema.keys, index.keys);
+		return SchemaManager.compareKeys(indexSchema.keys, index.keys);
 	}
 
 	static compareIndices(indicesSchema: IndicesSchema, indices: Array<Index<any>>): IndicesComparison {
@@ -234,7 +279,7 @@ export class DatabaseManager<A, B> {
 		let indicesToRemove = [] as Array<Keys<any>>;
 		newIndices: for (let index of indices) {
 			oldIndices: for (let indexSchema of indicesSchema) {
-				if (DatabaseManager.compareIndex(indexSchema, index)) {
+				if (SchemaManager.compareIndex(indexSchema, index)) {
 					continue newIndices;
 				}
 			}
@@ -242,7 +287,7 @@ export class DatabaseManager<A, B> {
 		}
 		oldIndices: for (let indexSchema of indicesSchema) {
 			newIndices: for (let index of indices) {
-				if (DatabaseManager.compareIndex(indexSchema, index)) {
+				if (SchemaManager.compareIndex(indexSchema, index)) {
 					continue oldIndices;
 				}
 			}
@@ -255,9 +300,9 @@ export class DatabaseManager<A, B> {
 	}
 
 	static compareStore(storeSchema: StoreSchema, store: Store<any, any>): StoreComparison {
-		let fields = DatabaseManager.compareFields(storeSchema.fields, store.fields);
-		let keys = DatabaseManager.compareKeys(storeSchema.keys, store.keys);
-		let indices = DatabaseManager.compareIndices(storeSchema.indices, store.indices);
+		let fields = SchemaManager.compareFields(storeSchema.fields, store.fields);
+		let keys = SchemaManager.compareKeys(storeSchema.keys, store.keys);
+		let indices = SchemaManager.compareIndices(storeSchema.indices, store.indices);
 		return {
 			fields,
 			keys,
@@ -265,7 +310,7 @@ export class DatabaseManager<A, B> {
 		};
 	}
 
-	static compareStores(storesSchema: StoresSchema, stores: Stores<any>): StoresComparison {
+	static compareStores(storesSchema: StoresSchema, stores: StoresFromStoreReferences<any>): StoresComparison {
 		let storesToCreate = [] as Array<Key<any>>;
 		let storesToRemove = [] as Array<Key<any>>;
 		let storesToUpdate = [] as Array<Key<any>>;
@@ -278,15 +323,11 @@ export class DatabaseManager<A, B> {
 			if (storesSchema[key] == null) {
 				storesToCreate.push(key);
 			} else {
-				if (!DatabaseManager.compareStore(storesSchema[key], stores[key])) {
+				if (!SchemaManager.compareStore(storesSchema[key], stores[key])) {
 					storesToUpdate.push(key);
 				}
 			}
 		}
-		return {
-			storesToCreate,
-			storesToRemove,
-			storesToUpdate
-		};
+		throw ``;
 	}
 };

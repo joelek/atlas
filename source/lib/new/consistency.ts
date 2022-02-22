@@ -54,15 +54,15 @@ export class OverridableWritableLink<A extends Record, B extends RequiredKeys<A>
 	}
 };
 
-export type WritableStoresFromStoreManagers<A extends StoreManagers<A>> = {
+export type WritableStoresFromStoreManagers<A extends StoreManagers> = {
 	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
-export type WritableLinksFromLinkManagers<A extends LinkManagers<A>> = {
+export type WritableLinksFromLinkManagers<A extends LinkManagers> = {
 	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
-export class ConsistencyManager<A extends StoreManagers<A>, B extends LinkManagers<B>> {
+export class ConsistencyManager<A extends StoreManagers, B extends LinkManagers> {
 	private storeManagers: A;
 	private linkManagers: B;
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;

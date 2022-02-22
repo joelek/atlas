@@ -121,7 +121,7 @@ test(`It should throw an error when using transaction objects outside of the tra
 		keys: ["key"],
 		indices: []
 	}));
-	let manager = new TransactionManager<any, any>(file, {
+	let manager = new TransactionManager(file, {
 		dummy
 	}, {});
 	let access = await manager.enqueueWritableTransaction(async (access) => {

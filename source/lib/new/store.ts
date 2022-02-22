@@ -26,8 +26,16 @@ export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 };
 
-export type ReadableStores<A> = {
+export type ReadableStores = {
+	[key: string]: ReadableStore<any, any>;
+};
+
+export type ReadableStoresFromStores<A extends Stores> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
+};
+
+export type StoresFromReadableStores<A extends ReadableStores> = {
+	[B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? Store<C, D> : never;
 };
 
 export interface WritableStore<A extends Record, B extends RequiredKeys<A>> extends ReadableStore<A, B> {
@@ -36,8 +44,16 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> exte
 	update(record: A): Promise<void>;
 };
 
-export type WritableStores<A> = {
+export type WritableStores = {
+	[key: string]: WritableStore<any, any>;
+};
+
+export type WritableStoresFromStores<A extends Stores> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
+};
+
+export type StoresFromWritableStores<A extends WritableStores> = {
+	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? Store<C, D> : never;
 };
 
 export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
@@ -383,16 +399,16 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 };
 
-export type StoreManagers<A> = {
-	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreManager<C, D> : never;
+export type StoreManagers = {
+	[key: string]: StoreManager<any, any>;
 };
 
 export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
 	private StoreReference!: "StoreReference";
 };
 
-export type StoreReferences<A> = {
-	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : never;
+export type StoreReferences = {
+	[key: string]: StoreReference<any, any>;
 };
 
 export class Index<A extends Record> {
@@ -423,6 +439,10 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 	}
 };
 
-export type Stores<A> = {
+export type StoresFromStoreReferences<A extends StoreReferences> = {
 	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;
+};
+
+export type Stores = {
+	[key: string]: Store<any, any>;
 };

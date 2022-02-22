@@ -1,10 +1,11 @@
-import { Link, LinkReference, LinkReferences, Links } from "./link";
-import { Store, StoreReference, StoreReferences, Stores } from "./store";
+import { Link, LinkReference, LinkReferences, LinksFromLinkReferences, WritableLinksFromLinks } from "./link";
+import { Store, StoreReference, StoreReferences, StoresFromStoreReferences, WritableStoresFromStores } from "./store";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
-import { DatabaseManager } from "./database";
+import { DatabaseManager, LinkManagersFromLinks, SchemaManager, StoreManagersFromStores } from "./database";
+import { WritableLinksFromLinkManagers, WritableStoresFromStoreManagers } from "./consistency";
 
 export class FileReference {
 	private FileReference!: "FileReference";
@@ -93,22 +94,23 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences<A>, B extends LinkReferences<B>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<Stores<A>, Links<B>> {
+	createTransactionManager<A extends StoreReferences, B extends LinkReferences>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>> {
 		if (this.databaseManagers.has(fileReference)) {
 			throw `Expected given storage to not be in use by another database!`;
 		}
 		storeReferences = storeReferences ?? {} as A;
 		linkReferences = linkReferences ?? {} as B;
 		let file = this.getFile(fileReference);
-		let stores = {} as Stores<any>;
+		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
-			stores[key] = this.getStore(storeReferences[key]);
+			stores[key] = this.getStore(storeReferences[key]) as any;
 		}
-		let links = {} as Links<any>;
+		let links = {} as LinksFromLinkReferences<B>;
 		for (let key in linkReferences) {
-			links[key] = this.getLink(linkReferences[key]);
+			links[key] = this.getLink(linkReferences[key]) as any;
 		}
-		let databaseManager = new DatabaseManager(file).migrateSchema(stores, links);
+		let schemaManager = new SchemaManager();
+		let databaseManager = schemaManager.createDatabaseManager(file, stores, links);
 		this.databaseManagers.set(fileReference, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager();
 		return transactionManager;
