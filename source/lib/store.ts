@@ -16,15 +16,15 @@ export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 };
 
-export type ReadableStores = {
-	[key: string]: ReadableStore<any, any>;
+export type ReadableStores<A> = {
+	[B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? ReadableStore<C, D> : A[B];
 };
 
-export type ReadableStoresFromStores<A extends Stores> = {
+export type ReadableStoresFromStores<A extends Stores<any>> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
 };
 
-export type StoresFromReadableStores<A extends ReadableStores> = {
+export type StoresFromReadableStores<A extends ReadableStores<any>> = {
 	[B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? Store<C, D> : never;
 };
 
@@ -34,15 +34,15 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> exte
 	update(record: A): Promise<void>;
 };
 
-export type WritableStores = {
-	[key: string]: WritableStore<any, any>;
+export type WritableStores<A> = {
+	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? WritableStore<C, D> : A[B];
 };
 
-export type WritableStoresFromStores<A extends Stores> = {
+export type WritableStoresFromStores<A extends Stores<any>> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
-export type StoresFromWritableStores<A extends WritableStores> = {
+export type StoresFromWritableStores<A extends WritableStores<any>> = {
 	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? Store<C, D> : never;
 };
 
@@ -225,15 +225,15 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 };
 
-export type StoreManagers = {
-	[key: string]: StoreManager<any, any>;
+export type StoreManagers<A> = {
+	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreManager<C, D> : A[B];
 };
 
-export type StoreManagersFromStores<A extends Stores> = {
+export type StoreManagersFromStores<A extends Stores<any>> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
 
-export type WritableStoresFromStoreManagers<A extends StoreManagers> = {
+export type WritableStoresFromStoreManagers<A extends StoreManagers<any>> = {
 	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
@@ -257,9 +257,8 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 	}
 };
 
-
-export type Stores = {
-	[key: string]: Store<any, any>;
+export type Stores<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];
 };
 
 export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {

@@ -15,11 +15,11 @@ export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
 	private StoreReference!: "StoreReference";
 };
 
-export type StoreReferences = {
-	[key: string]: StoreReference<any, any>;
+export type StoreReferences<A> = {
+	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? StoreReference<C, D> : A[B];
 };
 
-export type StoresFromStoreReferences<A extends StoreReferences> = {
+export type StoresFromStoreReferences<A extends StoreReferences<any>> = {
 	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;
 };
 
@@ -27,11 +27,11 @@ export class LinkReference<A extends Record, B extends RequiredKeys<A>, C extend
 	private LinkReference!: "LinkReference";
 };
 
-export type LinkReferences = {
-	[key: string]: LinkReference<any, any, any, any, any>;
+export type LinkReferences<A> = {
+	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? LinkReference<C, D, E, F, G> : A[B];
 };
 
-export type LinksFromLinkReferences<A extends LinkReferences> = {
+export type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
@@ -118,7 +118,7 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences, B extends LinkReferences>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>> {
+	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>> {
 		if (this.databaseManagers.has(fileReference)) {
 			throw `Expected given storage to not be in use by another database!`;
 		}

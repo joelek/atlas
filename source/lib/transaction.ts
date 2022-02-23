@@ -68,11 +68,11 @@ export class QueuedWritableLink<A extends Record, B extends RequiredKeys<A>, C e
 	}
 };
 
-export type ReadableTransaction<A extends Stores, B extends Links, C> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
+export type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
 
-export type WritableTransaction<A extends Stores, B extends Links, C> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
+export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
 
-export class TransactionManager<A extends WritableStores, B extends WritableLinks> {
+export class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;

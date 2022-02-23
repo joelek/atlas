@@ -8,15 +8,15 @@ export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C ext
 	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
-export type ReadableLinks = {
-	[key: string]: ReadableLink<any, any, any, any, any>;
+export type ReadableLinks<A> = {
+	[B in keyof A]: A[B] extends ReadableLink<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : A[B];
 };
 
-export type ReadableLinksFromLinks<A extends Links> = {
+export type ReadableLinksFromLinks<A extends Links<any>> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : never;
 };
 
-export type LinksFromReadableLinks<A extends ReadableLinks> = {
+export type LinksFromReadableLinks<A extends ReadableLinks<any>> = {
 	[B in keyof A]: A[B] extends ReadableLink<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
@@ -24,15 +24,15 @@ export interface WritableLink<A extends Record, B extends RequiredKeys<A>, C ext
 
 };
 
-export type WritableLinks = {
-	[key: string]: WritableLink<any, any, any, any, any>;
+export type WritableLinks<A> = {
+	[B in keyof A]: A[B] extends WritableLink<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : A[B];
 };
 
-export type WritableLinksFromLinks<A extends Links> = {
+export type WritableLinksFromLinks<A extends Links<any>> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
-export type LinksFromWritableLinks<A extends WritableLinks> = {
+export type LinksFromWritableLinks<A extends WritableLinks<any>> = {
 	[B in keyof A]: A[B] extends WritableLink<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
@@ -102,15 +102,15 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 	}
 };
 
-export type LinkManagers = {
-	[key: string]: LinkManager<any, any, any, any, any>;
+export type LinkManagers<A> = {
+	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : A[B];
 };
 
-export type LinkManagersFromLinks<A extends Links> = {
+export type LinkManagersFromLinks<A extends Links<any>> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? LinkManager<C, D, E, F, G> : never;
 };
 
-export type WritableLinksFromLinkManagers<A extends LinkManagers> = {
+export type WritableLinksFromLinkManagers<A extends LinkManagers<any>> = {
 	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
@@ -128,8 +128,8 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 	}
 };
 
-export type Links = {
-	[key: string]: Link<any, any, any, any, any>;
+export type Links<A> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : A[B];
 };
 
 export class OverridableWritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
