@@ -12,13 +12,13 @@ export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
     length(): Promise<number>;
     lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 }
-export declare type ReadableStores = {
-    [key: string]: ReadableStore<any, any>;
+export declare type ReadableStores<A> = {
+    [B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? ReadableStore<C, D> : A[B];
 };
-export declare type ReadableStoresFromStores<A extends Stores> = {
+export declare type ReadableStoresFromStores<A extends Stores<any>> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
 };
-export declare type StoresFromReadableStores<A extends ReadableStores> = {
+export declare type StoresFromReadableStores<A extends ReadableStores<any>> = {
     [B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? Store<C, D> : never;
 };
 export interface WritableStore<A extends Record, B extends RequiredKeys<A>> extends ReadableStore<A, B> {
@@ -26,13 +26,13 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> exte
     remove(keysRecord: KeysRecord<A, B>): Promise<void>;
     update(record: A): Promise<void>;
 }
-export declare type WritableStores = {
-    [key: string]: WritableStore<any, any>;
+export declare type WritableStores<A> = {
+    [B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? WritableStore<C, D> : A[B];
 };
-export declare type WritableStoresFromStores<A extends Stores> = {
+export declare type WritableStoresFromStores<A extends Stores<any>> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
 };
-export declare type StoresFromWritableStores<A extends WritableStores> = {
+export declare type StoresFromWritableStores<A extends WritableStores<any>> = {
     [B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? Store<C, D> : never;
 };
 export declare class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
@@ -66,13 +66,13 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
         keys: [...B];
     }): StoreManager<A, B>;
 }
-export declare type StoreManagers = {
-    [key: string]: StoreManager<any, any>;
+export declare type StoreManagers<A> = {
+    [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreManager<C, D> : A[B];
 };
-export declare type StoreManagersFromStores<A extends Stores> = {
+export declare type StoreManagersFromStores<A extends Stores<any>> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
-export declare type WritableStoresFromStoreManagers<A extends StoreManagers> = {
+export declare type WritableStoresFromStoreManagers<A extends StoreManagers<any>> = {
     [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
 };
 export declare class Index<A extends Record> {
@@ -85,8 +85,8 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     indices: Array<Index<A>>;
     constructor(fields: Fields<A>, keys: [...B]);
 }
-export declare type Stores = {
-    [key: string]: Store<any, any>;
+export declare type Stores<A> = {
+    [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];
 };
 export declare class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
     private storeManager;

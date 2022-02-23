@@ -1,9 +1,9 @@
 import { File } from "./files";
-import { Link, LinkManagers, WritableLinksFromLinkManagers } from "./link";
+import { LinkManagers, Links, WritableLinksFromLinkManagers } from "./link";
 import { Keys } from "./records";
-import { Store, StoreManagers, WritableStoresFromStoreManagers } from "./store";
+import { StoreManagers, Stores, WritableStoresFromStoreManagers } from "./store";
 import { TransactionManager } from "./transaction";
-export declare class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
+export declare class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>> {
     private storeManagers;
     private linkManagers;
     private linksWhereStoreIsParent;
@@ -20,13 +20,7 @@ export declare class DatabaseManager<A extends StoreManagers, B extends LinkMana
     enforceLinkConsistency<D extends Keys<B>>(linkNames: [...D]): void;
     enforceConsistency<C extends Keys<A>, D extends Keys<B>>(storeNames: [...C], linkNames: [...D]): void;
 }
-export declare type Stores2<A> = {
-    [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];
-};
-export declare type Links2<A> = {
-    [B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : A[B];
-};
-export declare class Database<A extends Stores2<any>, B extends Links2<any>> {
+export declare class Database<A extends Stores<any>, B extends Links<any>> {
     stores: A;
     links: B;
     constructor(stores?: A, links?: B);

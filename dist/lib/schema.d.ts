@@ -212,5 +212,5 @@ export declare class SchemaManager {
     private getDirtyStoreNames;
     private getDirtyLinkNames;
     constructor();
-    createDatabaseManager<A extends Stores, B extends Links>(file: File, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>>;
+    createDatabaseManager<A extends Stores<any>, B extends Links<any>>(file: File, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>>;
 }

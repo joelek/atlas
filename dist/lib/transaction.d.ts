@@ -27,9 +27,9 @@ export declare class QueuedReadableLink<A extends Record, B extends RequiredKeys
 export declare class QueuedWritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> extends QueuedReadableLink<A, B, C, D, E> implements WritableLink<A, B, C, D, E> {
     constructor(writableLink: WritableLink<A, B, C, D, E>, queue: PromiseQueue);
 }
-export declare type ReadableTransaction<A extends Stores, B extends Links, C> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
-export declare type WritableTransaction<A extends Stores, B extends Links, C> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
-export declare class TransactionManager<A extends WritableStores, B extends WritableLinks> {
+export declare type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
+export declare type WritableTransaction<A extends Stores<any>, B extends Links<any>, C> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
+export declare class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>> {
     private file;
     private readableTransactionLock;
     private writableTransactionLock;
