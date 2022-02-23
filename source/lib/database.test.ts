@@ -8,29 +8,26 @@ import { LinkManager } from "./link";
 
 function createUsersPostsAndComments() {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			user_id: new StringField("")
 		},
-		keys: ["user_id"],
-		indices: []
+		keys: ["user_id"]
 	});
-	let posts = StoreManager.construct(blockHandler, null, {
+	let posts = StoreManager.construct(blockHandler, {
 		fields: {
 			post_id: new StringField(""),
 			post_user_id: new StringField("")
 		},
-		keys: ["post_id"],
-		indices: []
+		keys: ["post_id"]
 	});
-	let comments = StoreManager.construct(blockHandler, null, {
+	let comments = StoreManager.construct(blockHandler, {
 		fields: {
 			comment_id: new StringField(""),
 			comment_user_id: new StringField(""),
 			comment_post_id: new StringField("")
 		},
-		keys: ["comment_id"],
-		indices: []
+		keys: ["comment_id"]
 	});
 	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
@@ -140,13 +137,12 @@ test(`It should not remove records with parents for referencing links.`, async (
 
 function createDirectories() {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let directories = StoreManager.construct(blockHandler, null, {
+	let directories = StoreManager.construct(blockHandler, {
 		fields: {
 			directory_id: new StringField(""),
 			parent_directory_id: new NullableStringField(null)
 		},
-		keys: ["directory_id"],
-		indices: []
+		keys: ["directory_id"]
 	});
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"

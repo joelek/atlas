@@ -208,7 +208,7 @@ export class SchemaManager {
 		}, {
 			bid: oldSchema.storageBid
 		});
-		return new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
+		return new StoreManager(blockHandler, fieldManagers, keys, storage);
 	}
 
 	private loadLinkManager(blockHandler: BlockHandler, linkSchema: LinkSchema, storeManagers: StoreManagers): LinkManager<any, any, any, any, any> {

@@ -8,20 +8,18 @@ import { BlockHandler } from "./vfs";
 
 function createUsersAndPosts() {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			user_id: new StringField("")
 		},
-		keys: ["user_id"],
-		indices: []
+		keys: ["user_id"]
 	});
-	let posts = StoreManager.construct(blockHandler, null, {
+	let posts = StoreManager.construct(blockHandler, {
 		fields: {
 			post_id: new StringField(""),
 			post_user_id: new StringField("")
 		},
-		keys: ["post_id"],
-		indices: []
+		keys: ["post_id"]
 	});
 	return {
 		users,
@@ -116,13 +114,12 @@ test(`It should support looking up the corresponding parent for a referencing li
 
 function createDirectories() {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let directories = StoreManager.construct(blockHandler, null, {
+	let directories = StoreManager.construct(blockHandler, {
 		fields: {
 			directory_id: new StringField(""),
 			parent_directory_id: new NullableStringField(null)
 		},
-		keys: ["directory_id"],
-		indices: []
+		keys: ["directory_id"]
 	});
 	return {
 		directories

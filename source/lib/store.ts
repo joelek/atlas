@@ -82,7 +82,6 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 // TODO: Implement interface WritableStore directly.
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockHandler: BlockHandler;
-	private bid: number;
 	private fieldManagers: FieldManagers<A>;
 	private keys: [...B];
 	private recordManager: RecordManager<A>;
@@ -126,9 +125,8 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			});
 	}
 
-	constructor(blockHandler: BlockHandler, bid: number, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
+	constructor(blockHandler: BlockHandler, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
 		this.blockHandler = blockHandler;
-		this.bid = bid;
 		this.fieldManagers = fieldManagers;
 		this.keys = keys;
 		this.recordManager = new RecordManager(fieldManagers);
@@ -205,38 +203,25 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return this.insert(record);
 	}
 
-	static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, bid: number | null, options?: {
+	static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, options: {
 		fields: Fields<A>,
-		keys: [...B],
-		indices: Array<Keys<A>>
+		keys: [...B]
 	}): StoreManager<A, B> {
-		if (bid == null) {
-			if (options == null) {
-				return StoreManager.construct<any, any>(blockHandler, null, {
-					fields: {},
-					keys: [],
-					indices: []
-				});
-			} else {
-				let fieldManagers = {} as FieldManagers<A>;
-				for (let key in options.fields) {
-					fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
-				}
-				let keys = options.keys;
-				let recordManager = new RecordManager(fieldManagers);
-				let storage = new Table(blockHandler, {
-					getKeyFromValue: (value) => {
-						let buffer = blockHandler.readBlock(value);
-						let record = recordManager.decode(buffer);
-						return recordManager.encodeKeys(keys, record);
-					}
-				});
-				let manager = new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
-				return manager;
-			}
-		} else {
-			throw `Store schema migration is handled by SchemaManager!`;
+		let fieldManagers = {} as FieldManagers<A>;
+		for (let key in options.fields) {
+			fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
 		}
+		let keys = options.keys;
+		let recordManager = new RecordManager(fieldManagers);
+		let storage = new Table(blockHandler, {
+			getKeyFromValue: (value) => {
+				let buffer = blockHandler.readBlock(value);
+				let record = recordManager.decode(buffer);
+				return recordManager.encodeKeys(keys, record);
+			}
+		});
+		let manager = new StoreManager(blockHandler, fieldManagers, keys, storage);
+		return manager;
 	}
 };
 

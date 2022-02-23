@@ -8,12 +8,11 @@ import { test } from "./test";
 
 test(`It should support iteration of the records stored.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A"
@@ -29,12 +28,11 @@ test(`It should support iteration of the records stored.`, async (assert) => {
 
 test(`It should support filtering of the records stored.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A"
@@ -52,12 +50,11 @@ test(`It should support filtering of the records stored.`, async (assert) => {
 
 test(`It should support ordering of the records stored in increasing order.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A"
@@ -75,12 +72,11 @@ test(`It should support ordering of the records stored in increasing order.`, as
 
 test(`It should support ordering of the records stored in decreasing order.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A"
@@ -98,13 +94,12 @@ test(`It should support ordering of the records stored in decreasing order.`, as
 
 test(`It should support inserting a record previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField(""),
 			name: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A",
@@ -120,13 +115,12 @@ test(`It should support inserting a record previously inserted.`, async (assert)
 
 test(`It should support inserting a record not previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField(""),
 			name: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A",
@@ -137,12 +131,11 @@ test(`It should support inserting a record not previously inserted.`, async (ass
 
 test(`It should keep track of the number of records stored.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	assert.true(users.length() === 0);
 	users.insert({
@@ -169,12 +162,11 @@ test(`It should keep track of the number of records stored.`, async (assert) => 
 
 test(`It should support looking up records previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A"
@@ -184,12 +176,11 @@ test(`It should support looking up records previously inserted.`, async (assert)
 
 test(`It should throw an error when looking up records not previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	await assert.throws(async () => {
 		users.lookup({
@@ -200,12 +191,11 @@ test(`It should throw an error when looking up records not previously inserted.`
 
 test(`It should support removing records previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.insert({
 		key: "A"
@@ -223,12 +213,11 @@ test(`It should support removing records previously inserted.`, async (assert) =
 
 test(`It should support removing records not previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.remove({
 		key: "A"
@@ -242,13 +231,12 @@ test(`It should support removing records not previously inserted.`, async (asser
 
 test(`It should support updating a record previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField(""),
 			name: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.update({
 		key: "A",
@@ -264,13 +252,12 @@ test(`It should support updating a record previously inserted.`, async (assert) 
 
 test(`It should support updating a record not previously inserted.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, null, {
+	let users = StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField(""),
 			name: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	});
 	users.update({
 		key: "A",

@@ -114,12 +114,11 @@ test(`It should recover from transactions that throw errors.`, async (assert) =>
 test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockHandler = new BlockHandler(file);
-	let dummy = new WritableStoreManager(StoreManager.construct(blockHandler, null, {
+	let dummy = new WritableStoreManager(StoreManager.construct(blockHandler, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"],
-		indices: []
+		keys: ["key"]
 	}));
 	let manager = new TransactionManager(file, {
 		dummy
