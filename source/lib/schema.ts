@@ -561,9 +561,6 @@ export class SchemaManager {
 
 	createDatabaseManager<A extends Stores, B extends Links>(file: File, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
 		let blockHandler = new BlockHandler(file);
-		for (let block of blockHandler) {
-			console.log(block);
-		}
 		if (blockHandler.getBlockCount() === 0) {
 			this.initializeDatabase(blockHandler);
 		}
