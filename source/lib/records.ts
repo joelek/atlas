@@ -54,9 +54,7 @@ export abstract class Field<A extends Value> {
 		this.defaultValue = defaultValue;
 	}
 
-	abstract convertValue(value: Value | undefined): A;
 	abstract createManager(): FieldManager<A>;
-	abstract isCompatibleWith(that: FieldManager<any>): boolean;
 };
 
 export type Fields<A extends Record> = {
@@ -102,22 +100,8 @@ export class BinaryField extends Field<Uint8Array> {
 		super(defaultValue);
 	}
 
-	convertValue(value: Value | undefined): Uint8Array {
-		if (value instanceof Uint8Array) {
-			return value;
-		}
-		return this.defaultValue;
-	}
-
 	createManager(): FieldManager<Uint8Array> {
 		return new BinaryFieldManager(this.defaultValue);
-	}
-
-	isCompatibleWith(that: FieldManager<any>): boolean {
-		if (that instanceof BinaryFieldManager) {
-			return true;
-		}
-		return false;
 	}
 };
 
@@ -162,22 +146,8 @@ export class StringField extends Field<string> {
 		super(defaultValue);
 	}
 
-	convertValue(value: Value | undefined): string {
-		if (typeof value === "string") {
-			return value;
-		}
-		return this.defaultValue;
-	}
-
 	createManager(): FieldManager<string> {
 		return new StringFieldManager(this.defaultValue);
-	}
-
-	isCompatibleWith(that: FieldManager<any>): boolean {
-		if (that instanceof StringFieldManager) {
-			return true;
-		}
-		return false;
 	}
 };
 
@@ -208,22 +178,8 @@ export class NullableStringField extends Field<string | null> {
 		super(defaultValue);
 	}
 
-	convertValue(value: Value | undefined): string | null {
-		if (typeof value === "string" || value === null) {
-			return value;
-		}
-		return this.defaultValue;
-	}
-
 	createManager(): FieldManager<string | null> {
 		return new NullableStringFieldManager(this.defaultValue);
-	}
-
-	isCompatibleWith(that: FieldManager<any>): boolean {
-		if (that instanceof StringFieldManager) {
-			return true;
-		}
-		return false;
 	}
 };
 
@@ -249,22 +205,8 @@ export class BooleanField extends Field<boolean> {
 		super(defaultValue);
 	}
 
-	convertValue(value: Value | undefined): boolean {
-		if (typeof value === "boolean") {
-			return value;
-		}
-		return this.defaultValue;
-	}
-
 	createManager(): FieldManager<boolean> {
 		return new BooleanFieldManager(this.defaultValue);
-	}
-
-	isCompatibleWith(that: FieldManager<any>): boolean {
-		if (that instanceof BooleanFieldManager) {
-			return true;
-		}
-		return false;
 	}
 };
 
