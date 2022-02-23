@@ -170,3 +170,23 @@ test(`It should support writing after a cached range (CachedFile).`, async (asse
 	assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 0, 1, 2, 2));
 	assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 2, 2));
 });
+
+test(`It should not store shallow copies when reading from the file (CachedFile).`, async (assert) => {
+	let file = new files.VirtualFile(3);
+	let cached = new files.CachedFile(file);
+	cached.read(new Uint8Array(1), 1);
+	let buffer = new Uint8Array(3);
+	cached.read(buffer, 0);
+	buffer.set(Uint8Array.of(1, 1, 1), 0);
+	assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
+});
+
+test(`It should not store shallow copies when writing to the file (CachedFile).`, async (assert) => {
+	let file = new files.VirtualFile(3);
+	let cached = new files.CachedFile(file);
+	cached.read(new Uint8Array(1), 1);
+	let buffer = new Uint8Array(3);
+	cached.write(buffer, 0);
+	buffer.set(Uint8Array.of(1, 1, 1), 0);
+	assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
+});
