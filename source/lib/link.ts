@@ -114,14 +114,6 @@ export type WritableLinksFromLinkManagers<A extends LinkManagers> = {
 	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
 
-export class LinkReference<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	private LinkReference!: "LinkReference";
-};
-
-export type LinkReferences = {
-	[key: string]: LinkReference<any, any, any, any, any>;
-};
-
 export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	parent: Store<A, B>;
 	child: Store<C, D>;
@@ -134,10 +126,6 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 		this.recordKeysMap = recordKeysMap;
 		this.orders = orders;
 	}
-};
-
-export type LinksFromLinkReferences<A extends LinkReferences> = {
-	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
 export type Links = {

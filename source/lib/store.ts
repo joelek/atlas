@@ -252,14 +252,6 @@ export type WritableStoresFromStoreManagers<A extends StoreManagers> = {
 	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
 };
 
-export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
-	private StoreReference!: "StoreReference";
-};
-
-export type StoreReferences = {
-	[key: string]: StoreReference<any, any>;
-};
-
 export class Index<A extends Record> {
 	keys: Keys<A>;
 
@@ -280,9 +272,6 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 	}
 };
 
-export type StoresFromStoreReferences<A extends StoreReferences> = {
-	[B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;
-};
 
 export type Stores = {
 	[key: string]: Store<any, any>;
