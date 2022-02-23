@@ -66,7 +66,7 @@ class CachedFile extends File {
                 if (distance > 0) {
                     this.file.read(value.subarray(0, distance), current);
                 }
-                this.cache.insert(current, value);
+                this.cache.insert(current, value.slice());
                 current += gap;
                 bytes += gap;
             }
@@ -82,7 +82,7 @@ class CachedFile extends File {
             if (distance > 0) {
                 this.file.read(value.subarray(0, distance), current);
             }
-            this.cache.insert(current, value);
+            this.cache.insert(current, value.slice());
             current += gap;
             bytes += gap;
         }
@@ -98,7 +98,7 @@ class CachedFile extends File {
             let overlap = entry.value.length - distance;
             if (overlap > 0) {
                 let value = entry.value.subarray(0, distance);
-                this.cache.insert(entry.key, value);
+                this.cache.insert(entry.key, value.slice());
             }
         }
         let entries = Array.from(this.tree.filter({ operator: ">=", key: size }));
@@ -133,8 +133,8 @@ class CachedFile extends File {
         for (let entry of entries) {
             let gap = entry.key - current;
             if (gap > 0) {
-                let value = buffer.slice(bytes, bytes + gap);
-                this.cache.insert(current, value);
+                let value = buffer.subarray(bytes, bytes + gap);
+                this.cache.insert(current, value.slice());
                 current += gap;
                 bytes += gap;
             }
@@ -145,8 +145,8 @@ class CachedFile extends File {
         }
         let gap = end - current;
         if (gap > 0) {
-            let value = buffer.slice(bytes, bytes + gap);
-            this.cache.insert(current, value);
+            let value = buffer.subarray(bytes, bytes + gap);
+            this.cache.insert(current, value.slice());
             current += gap;
             bytes += gap;
         }

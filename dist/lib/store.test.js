@@ -7,6 +7,28 @@ const files_1 = require("./files");
 const filters_1 = require("./filters");
 const orders_1 = require("./orders");
 const test_1 = require("./test");
+(0, test_1.test)(`It should support for-of iteration of the records stored.`, async (assert) => {
+    let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
+    let users = store_1.StoreManager.construct(blockHandler, {
+        fields: {
+            key: new records_1.StringField("")
+        },
+        keys: ["key"]
+    });
+    users.insert({
+        key: "A"
+    });
+    users.insert({
+        key: "B"
+    });
+    let observed = [];
+    for (let entry of users) {
+        observed.push(entry.record().key);
+    }
+    let expected = ["A", "B"];
+    observed.sort();
+    assert.array.equals(observed, expected);
+});
 (0, test_1.test)(`It should support iteration of the records stored.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
     let users = store_1.StoreManager.construct(blockHandler, {
