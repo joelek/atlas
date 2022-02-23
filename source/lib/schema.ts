@@ -420,7 +420,13 @@ export class SchemaManager {
 					let oldRecord = entry.record();
 					let newRecord = {} as A;
 					for (let key in store.fields) {
-						newRecord[key] = store.fields[key].convertValue(oldRecord[key]);
+						let fieldManager = store.fields[key].createManager();
+						let codec = fieldManager.getCodec();
+						if (isSchemaCompatible(codec, oldRecord[key])) {
+							newRecord[key] = oldRecord[key];
+						} else {
+							newRecord[key] = store.fields[key].defaultValue;
+						}
 					}
 					newManager.insert(newRecord);
 				} catch (error) {}
