@@ -272,7 +272,7 @@ export class SchemaManager {
 	}
 
 	private compareFields<A extends Record>(fields: Fields<A>, oldSchema: FieldsSchema): boolean {
-		for (let key in fields) {
+		for (let key in oldSchema) {
 			if (fields[key] == null) {
 				return false;
 			}
