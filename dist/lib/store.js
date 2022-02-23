@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreReference = exports.StoreManager = exports.WritableStoreManager = void 0;
+exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreManager = exports.WritableStoreManager = void 0;
 const streams_1 = require("./streams");
 const hash_1 = require("./hash");
 const records_1 = require("./records");
@@ -36,7 +36,6 @@ exports.WritableStoreManager = WritableStoreManager;
 // TODO: Implement interface WritableStore directly.
 class StoreManager {
     blockHandler;
-    bid;
     fieldManagers;
     keys;
     recordManager;
@@ -78,9 +77,8 @@ class StoreManager {
             return 0;
         });
     }
-    constructor(blockHandler, bid, fieldManagers, keys, table) {
+    constructor(blockHandler, fieldManagers, keys, table) {
         this.blockHandler = blockHandler;
-        this.bid = bid;
         this.fieldManagers = fieldManagers;
         this.keys = keys;
         this.recordManager = new records_1.RecordManager(fieldManagers);
@@ -149,44 +147,25 @@ class StoreManager {
     update(record) {
         return this.insert(record);
     }
-    static construct(blockHandler, bid, options) {
-        if (bid == null) {
-            if (options == null) {
-                return StoreManager.construct(blockHandler, null, {
-                    fields: {},
-                    keys: [],
-                    indices: []
-                });
-            }
-            else {
-                let fieldManagers = {};
-                for (let key in options.fields) {
-                    fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
-                }
-                let keys = options.keys;
-                let recordManager = new records_1.RecordManager(fieldManagers);
-                let storage = new hash_1.Table(blockHandler, {
-                    getKeyFromValue: (value) => {
-                        let buffer = blockHandler.readBlock(value);
-                        let record = recordManager.decode(buffer);
-                        return recordManager.encodeKeys(keys, record);
-                    }
-                });
-                let manager = new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
-                return manager;
-            }
+    static construct(blockHandler, options) {
+        let fieldManagers = {};
+        for (let key in options.fields) {
+            fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
         }
-        else {
-            throw `Store schema migration is handled by SchemaManager!`;
-        }
+        let keys = options.keys;
+        let recordManager = new records_1.RecordManager(fieldManagers);
+        let storage = new hash_1.Table(blockHandler, {
+            getKeyFromValue: (value) => {
+                let buffer = blockHandler.readBlock(value);
+                let record = recordManager.decode(buffer);
+                return recordManager.encodeKeys(keys, record);
+            }
+        });
+        let manager = new StoreManager(blockHandler, fieldManagers, keys, storage);
+        return manager;
     }
 }
 exports.StoreManager = StoreManager;
-;
-class StoreReference {
-    StoreReference;
-}
-exports.StoreReference = StoreReference;
 ;
 class Index {
     keys;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Context = exports.FileReference = void 0;
+exports.Context = exports.LinkReference = exports.StoreReference = exports.FileReference = void 0;
 const link_1 = require("./link");
 const store_1 = require("./store");
 const records_1 = require("./records");
@@ -11,6 +11,16 @@ class FileReference {
     FileReference;
 }
 exports.FileReference = FileReference;
+;
+class StoreReference {
+    StoreReference;
+}
+exports.StoreReference = StoreReference;
+;
+class LinkReference {
+    LinkReference;
+}
+exports.LinkReference = LinkReference;
 ;
 class Context {
     files;
@@ -57,13 +67,13 @@ class Context {
         return new records_1.NullableStringField(null);
     }
     createLink(parent, child, recordKeysMap, orders) {
-        let reference = new link_1.LinkReference();
+        let reference = new LinkReference();
         let link = new link_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders ?? {});
         this.links.set(reference, link);
         return reference;
     }
     createStore(fields, keys) {
-        let reference = new store_1.StoreReference();
+        let reference = new StoreReference();
         let store = new store_1.Store(fields, keys);
         this.stores.set(reference, store);
         return reference;

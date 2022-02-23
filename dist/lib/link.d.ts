@@ -52,12 +52,6 @@ export declare type LinkManagersFromLinks<A extends Links> = {
 export declare type WritableLinksFromLinkManagers<A extends LinkManagers> = {
     [B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? WritableLink<C, D, E, F, G> : never;
 };
-export declare class LinkReference<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-    private LinkReference;
-}
-export declare type LinkReferences = {
-    [key: string]: LinkReference<any, any, any, any, any>;
-};
 export declare class Link<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
     parent: Store<A, B>;
     child: Store<C, D>;
@@ -65,9 +59,6 @@ export declare class Link<A extends Record, B extends RequiredKeys<A>, C extends
     orders: OrderMap<C>;
     constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders: OrderMap<C>);
 }
-export declare type LinksFromLinkReferences<A extends LinkReferences> = {
-    [B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
-};
 export declare type Links = {
     [key: string]: Link<any, any, any, any, any>;
 };

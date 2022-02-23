@@ -135,7 +135,7 @@ class SchemaManager {
         }, {
             bid: oldSchema.storageBid
         });
-        return new store_1.StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
+        return new store_1.StoreManager(blockHandler, fieldManagers, keys, storage);
     }
     loadLinkManager(blockHandler, linkSchema, storeManagers) {
         let parent = storeManagers[linkSchema.parent];

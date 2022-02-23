@@ -9,20 +9,18 @@ const store_1 = require("./store");
 const vfs_1 = require("./vfs");
 function createUsersAndPosts() {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             user_id: new records_1.StringField("")
         },
-        keys: ["user_id"],
-        indices: []
+        keys: ["user_id"]
     });
-    let posts = store_1.StoreManager.construct(blockHandler, null, {
+    let posts = store_1.StoreManager.construct(blockHandler, {
         fields: {
             post_id: new records_1.StringField(""),
             post_user_id: new records_1.StringField("")
         },
-        keys: ["post_id"],
-        indices: []
+        keys: ["post_id"]
     });
     return {
         users,
@@ -114,13 +112,12 @@ function createUsersAndPosts() {
 });
 function createDirectories() {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let directories = store_1.StoreManager.construct(blockHandler, null, {
+    let directories = store_1.StoreManager.construct(blockHandler, {
         fields: {
             directory_id: new records_1.StringField(""),
             parent_directory_id: new records_1.NullableStringField(null)
         },
-        keys: ["directory_id"],
-        indices: []
+        keys: ["directory_id"]
     });
     return {
         directories

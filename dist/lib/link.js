@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableLink = exports.Link = exports.LinkReference = exports.LinkManager = exports.WritableLinkManager = void 0;
+exports.OverridableWritableLink = exports.Link = exports.LinkManager = exports.WritableLinkManager = void 0;
 const filters_1 = require("./filters");
 ;
 ;
@@ -62,11 +62,6 @@ class LinkManager {
     }
 }
 exports.LinkManager = LinkManager;
-;
-class LinkReference {
-    LinkReference;
-}
-exports.LinkReference = LinkReference;
 ;
 class Link {
     parent;

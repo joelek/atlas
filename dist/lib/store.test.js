@@ -9,12 +9,11 @@ const orders_1 = require("./orders");
 const test_1 = require("./test");
 (0, test_1.test)(`It should support iteration of the records stored.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A"
@@ -29,12 +28,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support filtering of the records stored.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A"
@@ -51,12 +49,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support ordering of the records stored in increasing order.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A"
@@ -73,12 +70,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support ordering of the records stored in decreasing order.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A"
@@ -95,13 +91,12 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support inserting a record previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A",
@@ -116,13 +111,12 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support inserting a record not previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A",
@@ -132,12 +126,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should keep track of the number of records stored.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     assert.true(users.length() === 0);
     users.insert({
@@ -163,12 +156,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support looking up records previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A"
@@ -177,12 +169,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should throw an error when looking up records not previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     await assert.throws(async () => {
         users.lookup({
@@ -192,12 +183,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support removing records previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.insert({
         key: "A"
@@ -214,12 +204,11 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support removing records not previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.remove({
         key: "A"
@@ -232,13 +221,12 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support updating a record previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.update({
         key: "A",
@@ -253,13 +241,12 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should support updating a record not previously inserted.`, async (assert) => {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         },
-        keys: ["key"],
-        indices: []
+        keys: ["key"]
     });
     users.update({
         key: "A",

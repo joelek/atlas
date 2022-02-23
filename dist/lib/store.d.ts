@@ -47,13 +47,12 @@ export declare class WritableStoreManager<A extends Record, B extends RequiredKe
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockHandler;
-    private bid;
     private fieldManagers;
     private keys;
     private recordManager;
     private table;
     private filterIterable;
-    constructor(blockHandler: BlockHandler, bid: number, fieldManagers: FieldManagers<A>, keys: [...B], table: Table);
+    constructor(blockHandler: BlockHandler, fieldManagers: FieldManagers<A>, keys: [...B], table: Table);
     [Symbol.iterator](): Iterator<Entry<A>>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>>;
@@ -62,10 +61,9 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(record: A): void;
-    static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, bid: number | null, options?: {
+    static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, options: {
         fields: Fields<A>;
         keys: [...B];
-        indices: Array<Keys<A>>;
     }): StoreManager<A, B>;
 }
 export declare type StoreManagers = {
@@ -77,12 +75,6 @@ export declare type StoreManagersFromStores<A extends Stores> = {
 export declare type WritableStoresFromStoreManagers<A extends StoreManagers> = {
     [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
 };
-export declare class StoreReference<A extends Record, B extends RequiredKeys<A>> {
-    private StoreReference;
-}
-export declare type StoreReferences = {
-    [key: string]: StoreReference<any, any>;
-};
 export declare class Index<A extends Record> {
     keys: Keys<A>;
     constructor(keys: Keys<A>);
@@ -93,9 +85,6 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     indices: Array<Index<A>>;
     constructor(fields: Fields<A>, keys: [...B]);
 }
-export declare type StoresFromStoreReferences<A extends StoreReferences> = {
-    [B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;
-};
 export declare type Stores = {
     [key: string]: Store<any, any>;
 };

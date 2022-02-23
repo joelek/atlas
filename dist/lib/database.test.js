@@ -9,29 +9,26 @@ const store_1 = require("./store");
 const link_1 = require("./link");
 function createUsersPostsAndComments() {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, null, {
+    let users = store_1.StoreManager.construct(blockHandler, {
         fields: {
             user_id: new records_1.StringField("")
         },
-        keys: ["user_id"],
-        indices: []
+        keys: ["user_id"]
     });
-    let posts = store_1.StoreManager.construct(blockHandler, null, {
+    let posts = store_1.StoreManager.construct(blockHandler, {
         fields: {
             post_id: new records_1.StringField(""),
             post_user_id: new records_1.StringField("")
         },
-        keys: ["post_id"],
-        indices: []
+        keys: ["post_id"]
     });
-    let comments = store_1.StoreManager.construct(blockHandler, null, {
+    let comments = store_1.StoreManager.construct(blockHandler, {
         fields: {
             comment_id: new records_1.StringField(""),
             comment_user_id: new records_1.StringField(""),
             comment_post_id: new records_1.StringField("")
         },
-        keys: ["comment_id"],
-        indices: []
+        keys: ["comment_id"]
     });
     let userPosts = link_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
@@ -136,13 +133,12 @@ function createUsersPostsAndComments() {
 });
 function createDirectories() {
     let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let directories = store_1.StoreManager.construct(blockHandler, null, {
+    let directories = store_1.StoreManager.construct(blockHandler, {
         fields: {
             directory_id: new records_1.StringField(""),
             parent_directory_id: new records_1.NullableStringField(null)
         },
-        keys: ["directory_id"],
-        indices: []
+        keys: ["directory_id"]
     });
     let childDirectories = link_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
