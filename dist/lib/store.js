@@ -150,7 +150,7 @@ class StoreManager {
     static construct(blockHandler, options) {
         let fieldManagers = {};
         for (let key in options.fields) {
-            fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
+            fieldManagers[key] = options.fields[key].createManager();
         }
         let keys = options.keys;
         let recordManager = new records_1.RecordManager(fieldManagers);

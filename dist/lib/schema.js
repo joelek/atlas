@@ -96,16 +96,16 @@ class SchemaManager {
     }
     loadFieldManager(blockHandler, fieldSchema) {
         if (isSchemaCompatible(exports.BinaryFieldSchema, fieldSchema)) {
-            return new records_1.BinaryFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+            return new records_1.BinaryFieldManager(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.BooleanFieldSchema, fieldSchema)) {
-            return new records_1.BooleanFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+            return new records_1.BooleanFieldManager(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.StringFieldSchema, fieldSchema)) {
-            return new records_1.StringFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+            return new records_1.StringFieldManager(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.NullableStringFieldSchema, fieldSchema)) {
-            return new records_1.NullableStringFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+            return new records_1.NullableStringFieldManager(fieldSchema.defaultValue);
         }
         throw `Expected code to be unreachable!`;
     }
@@ -337,7 +337,14 @@ class SchemaManager {
                     let oldRecord = entry.record();
                     let newRecord = {};
                     for (let key in store.fields) {
-                        newRecord[key] = store.fields[key].convertValue(oldRecord[key]);
+                        let fieldManager = store.fields[key].createManager();
+                        let codec = fieldManager.getCodec();
+                        if (isSchemaCompatible(codec, oldRecord[key])) {
+                            newRecord[key] = oldRecord[key];
+                        }
+                        else {
+                            newRecord[key] = store.fields[key].defaultValue;
+                        }
                     }
                     newManager.insert(newRecord);
                 }
