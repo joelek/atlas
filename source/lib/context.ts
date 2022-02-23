@@ -110,10 +110,7 @@ export class Context {
 			links[key as keyof B] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
 		}
 		let schemaManager = new SchemaManager();
-		let database: Database<StoresFromStoreReferences<A>, LinksFromLinkReferences<B>> = {
-			stores,
-			links
-		};
+		let database = new Database(stores, links);
 		let databaseManager = schemaManager.createDatabaseManager(file, database);
 		this.databaseManagers.set(fileReference, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager(file);
