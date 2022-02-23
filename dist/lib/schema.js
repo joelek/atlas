@@ -195,7 +195,7 @@ class SchemaManager {
         throw `Expected code to be unreachable!`;
     }
     compareFields(fields, oldSchema) {
-        for (let key in fields) {
+        for (let key in oldSchema) {
             if (fields[key] == null) {
                 return false;
             }
@@ -469,9 +469,6 @@ class SchemaManager {
     constructor() { }
     createDatabaseManager(file, database) {
         let blockHandler = new vfs_1.BlockHandler(file);
-        for (let block of blockHandler) {
-            console.log(block);
-        }
         if (blockHandler.getBlockCount() === 0) {
             this.initializeDatabase(blockHandler);
         }

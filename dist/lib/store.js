@@ -1,16 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreReference = exports.StoreManager = exports.WritableStoreManager = exports.StoreSchema = void 0;
-const bedrock = require("@joelek/bedrock");
+exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreReference = exports.StoreManager = exports.WritableStoreManager = void 0;
 const streams_1 = require("./streams");
 const hash_1 = require("./hash");
 const records_1 = require("./records");
-exports.StoreSchema = bedrock.codecs.Object.of({
-    fieldBids: bedrock.codecs.Record.of(bedrock.codecs.Integer),
-    keys: bedrock.codecs.Array.of(bedrock.codecs.String),
-    tableBid: bedrock.codecs.Integer,
-    indexBids: bedrock.codecs.Record.of(bedrock.codecs.Integer)
-});
 ;
 ;
 class WritableStoreManager {
@@ -85,24 +78,6 @@ class StoreManager {
             return 0;
         });
     }
-    saveSchema() {
-        let fieldBids = {};
-        for (let key in this.fieldManagers) {
-            fieldBids[key] = this.fieldManagers[key].getBid();
-        }
-        let keys = this.keys;
-        let tableBid = this.table.getBid();
-        let indexBids = {};
-        let schema = {
-            fieldBids,
-            keys,
-            tableBid,
-            indexBids
-        };
-        let buffer = exports.StoreSchema.encode(schema);
-        this.blockHandler.resizeBlock(this.bid, buffer.length);
-        this.blockHandler.writeBlock(this.bid, buffer);
-    }
     constructor(blockHandler, bid, fieldManagers, keys, table) {
         this.blockHandler = blockHandler;
         this.bid = bid;
@@ -113,9 +88,6 @@ class StoreManager {
     }
     *[Symbol.iterator]() {
         yield* this.filter();
-    }
-    getBid() {
-        return this.bid;
     }
     delete() {
         for (let entry of this) {
@@ -177,101 +149,6 @@ class StoreManager {
     update(record) {
         return this.insert(record);
     }
-    static compareFields(oldFields, newFields) {
-        let create = [];
-        let remove = [];
-        let update = [];
-        for (let key in newFields) {
-            if (oldFields[key] == null) {
-                create.push(key);
-            }
-        }
-        for (let key in oldFields) {
-            if (newFields[key] == null) {
-                remove.push(key);
-            }
-        }
-        for (let key in newFields) {
-            if (oldFields[key] != null) {
-                if (!newFields[key].isCompatibleWith(oldFields[key])) {
-                    update.push(key);
-                }
-            }
-        }
-        let equal = create.length === 0 && remove.length === 0 && update.length === 0;
-        return {
-            create,
-            remove,
-            update,
-            equal
-        };
-    }
-    static compareIndices(oldIndices, newIndices) {
-        let create = [];
-        let remove = [];
-        newIndices: for (let newIndex of newIndices) {
-            oldIndices: for (let oldIndex of oldIndices) {
-                if (this.compareKeys(oldIndex, newIndex)) {
-                    continue newIndices;
-                }
-            }
-            create.push(newIndex);
-        }
-        oldIndices: for (let oldIndex of oldIndices) {
-            newIndices: for (let newIndex of newIndices) {
-                if (this.compareKeys(oldIndex, newIndex)) {
-                    continue oldIndices;
-                }
-            }
-            remove.push(oldIndex);
-        }
-        let equal = create.length === 0 && remove.length === 0;
-        return {
-            create,
-            remove,
-            equal
-        };
-    }
-    static compareKeys(oldKeys, newKeys) {
-        if (oldKeys.length !== newKeys.length) {
-            return { equal: false };
-        }
-        for (let i = 0; i < oldKeys.length; i++) {
-            if (oldKeys[i] !== newKeys[i]) {
-                return { equal: false };
-            }
-        }
-        return { equal: true };
-    }
-    static migrate(oldManager, options) {
-        let keyComparison = StoreManager.compareKeys(oldManager.keys, options.keys);
-        let fieldComparison = StoreManager.compareFields(oldManager.fieldManagers, options.fields);
-        if (keyComparison.equal && fieldComparison.equal) {
-            let indexComparison = StoreManager.compareIndices([], options.indices);
-            // TODO: Handle migration of indices.
-            return oldManager;
-        }
-        else {
-            let newManager = StoreManager.construct(oldManager.blockHandler, null, options);
-            for (let entry of oldManager) {
-                try {
-                    let oldRecord = entry.record();
-                    let newRecord = {};
-                    for (let key in options.fields) {
-                        newRecord[key] = options.fields[key].convertValue(oldRecord[key]);
-                    }
-                    newManager.insert(newRecord);
-                }
-                catch (error) { }
-            }
-            let bid = oldManager.bid;
-            oldManager.bid = newManager.bid;
-            newManager.bid = bid;
-            oldManager.delete();
-            newManager.saveSchema();
-            return newManager;
-        }
-    }
     static construct(blockHandler, bid, options) {
         if (bid == null) {
             if (options == null) {
@@ -295,36 +172,12 @@ class StoreManager {
                         return recordManager.encodeKeys(keys, record);
                     }
                 });
-                bid = blockHandler.createBlock(64);
-                let manager = new StoreManager(blockHandler, bid, fieldManagers, keys, storage);
-                manager.saveSchema();
+                let manager = new StoreManager(blockHandler, 1337, fieldManagers, keys, storage);
                 return manager;
             }
         }
         else {
-            if (options == null) {
-                let schema = exports.StoreSchema.decode(blockHandler.readBlock(bid));
-                let fieldManagers = {};
-                for (let key in schema.fieldBids) {
-                    fieldManagers[key] = records_1.FieldManager.construct(blockHandler, schema.fieldBids[key]);
-                }
-                let keys = schema.keys;
-                let recordManager = new records_1.RecordManager(fieldManagers);
-                let storage = new hash_1.Table(blockHandler, {
-                    getKeyFromValue: (value) => {
-                        let buffer = blockHandler.readBlock(value);
-                        let record = recordManager.decode(buffer);
-                        return recordManager.encodeKeys(keys, record);
-                    }
-                }, {
-                    bid: schema.tableBid
-                });
-                let manager = new StoreManager(blockHandler, bid, fieldManagers, keys, storage);
-                return manager;
-            }
-            else {
-                return StoreManager.migrate(StoreManager.construct(blockHandler, bid), options);
-            }
+            throw `Store schema migration is handled by SchemaManager!`;
         }
     }
 }
@@ -351,13 +204,6 @@ class Store {
         this.fields = fields;
         this.keys = keys;
         this.indices = [];
-    }
-    createManager(blockHandler, bid) {
-        return StoreManager.construct(blockHandler, bid, {
-            fields: this.fields,
-            keys: this.keys,
-            indices: this.indices.map((index) => index.keys)
-        });
     }
 }
 exports.Store = Store;

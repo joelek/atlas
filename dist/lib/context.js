@@ -5,6 +5,7 @@ const link_1 = require("./link");
 const store_1 = require("./store");
 const records_1 = require("./records");
 const files_1 = require("./files");
+const database_1 = require("./database");
 const schema_1 = require("./schema");
 class FileReference {
     FileReference;
@@ -97,10 +98,7 @@ class Context {
             links[key] = this.getLink(linkReferences[key]);
         }
         let schemaManager = new schema_1.SchemaManager();
-        let database = {
-            stores,
-            links
-        };
+        let database = new database_1.Database(stores, links);
         let databaseManager = schemaManager.createDatabaseManager(file, database);
         this.databaseManagers.set(fileReference, databaseManager);
         let transactionManager = databaseManager.createTransactionManager(file);

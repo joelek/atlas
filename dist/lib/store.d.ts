@@ -1,16 +1,8 @@
-import * as bedrock from "@joelek/bedrock";
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
-import { Fields, Record, Keys, KeysRecord, FieldManagers, Key, RequiredKeys } from "./records";
+import { Fields, Record, Keys, KeysRecord, FieldManagers, RequiredKeys } from "./records";
 import { BlockHandler } from "./vfs";
-export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
-    fieldBids: globalThis.Record<string, number>;
-    keys: string[];
-    tableBid: number;
-    indexBids: globalThis.Record<string, number>;
-}>;
-export declare type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
 export declare type Entry<A extends Record> = {
     bid(): number;
     record(): A;
@@ -61,10 +53,8 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private recordManager;
     private table;
     private filterIterable;
-    private saveSchema;
     constructor(blockHandler: BlockHandler, bid: number, fieldManagers: FieldManagers<A>, keys: [...B], table: Table);
     [Symbol.iterator](): Iterator<Entry<A>>;
-    getBid(): number;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>>;
     insert(record: A): void;
@@ -72,25 +62,6 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(record: A): void;
-    static compareFields(oldFields: FieldManagers<any>, newFields: Fields<any>): {
-        create: Array<Key<any>>;
-        remove: Array<Key<any>>;
-        update: Array<Key<any>>;
-        equal: boolean;
-    };
-    static compareIndices(oldIndices: Array<Keys<any>>, newIndices: Array<Keys<any>>): {
-        create: Array<Keys<any>>;
-        remove: Array<Keys<any>>;
-        equal: boolean;
-    };
-    static compareKeys(oldKeys: Keys<any>, newKeys: Keys<any>): {
-        equal: boolean;
-    };
-    static migrate<A extends Record, B extends RequiredKeys<A>>(oldManager: StoreManager<any, any>, options: {
-        fields: Fields<A>;
-        keys: [...B];
-        indices: Array<Keys<A>>;
-    }): StoreManager<A, B>;
     static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, bid: number | null, options?: {
         fields: Fields<A>;
         keys: [...B];
@@ -121,7 +92,6 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     keys: [...B];
     indices: Array<Index<A>>;
     constructor(fields: Fields<A>, keys: [...B]);
-    createManager(blockHandler: BlockHandler, bid: number | null): StoreManager<A, B>;
 }
 export declare type StoresFromStoreReferences<A extends StoreReferences> = {
     [B in keyof A]: A[B] extends StoreReference<infer C, infer D> ? Store<C, D> : never;

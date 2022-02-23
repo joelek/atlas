@@ -173,8 +173,8 @@ class Database {
     stores;
     links;
     constructor(stores, links) {
-        this.stores = stores;
-        this.links = links;
+        this.stores = stores ?? {};
+        this.links = links ?? {};
     }
 }
 exports.Database = Database;
