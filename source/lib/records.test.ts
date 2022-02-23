@@ -1,13 +1,10 @@
 import * as records from "./records";
 import { test } from "./test";
-import { BlockHandler } from "./vfs";
-import { VirtualFile } from "./files";
 
 test(`It should encode records.`, async (assert) => {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
 	let rh = new records.RecordManager({
-		firstname: records.StringFieldManager.construct(blockHandler, null),
-		lastname: records.StringFieldManager.construct(blockHandler, null)
+		firstname: new records.StringFieldManager(""),
+		lastname: new records.StringFieldManager("")
 	});
 	let record = {
 		firstname: "Joel",
@@ -19,10 +16,9 @@ test(`It should encode records.`, async (assert) => {
 });
 
 test(`It should encode keys.`, async (assert) => {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
 	let rh = new records.RecordManager({
-		firstname: records.StringFieldManager.construct(blockHandler, null),
-		lastname: records.StringFieldManager.construct(blockHandler, null)
+		firstname: new records.StringFieldManager(""),
+		lastname: new records.StringFieldManager("")
 	});
 	let record = {
 		firstname: "Joel",

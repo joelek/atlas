@@ -209,7 +209,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}): StoreManager<A, B> {
 		let fieldManagers = {} as FieldManagers<A>;
 		for (let key in options.fields) {
-			fieldManagers[key] = options.fields[key].createManager(blockHandler, null);
+			fieldManagers[key] = options.fields[key].createManager();
 		}
 		let keys = options.keys;
 		let recordManager = new RecordManager(fieldManagers);

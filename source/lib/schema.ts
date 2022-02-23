@@ -167,16 +167,16 @@ export class SchemaManager {
 
 	private loadFieldManager(blockHandler: BlockHandler, fieldSchema: FieldSchema): FieldManager<any> {
 		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
-			return new BinaryFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+			return new BinaryFieldManager(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
-			return new BooleanFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+			return new BooleanFieldManager(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
-			return new StringFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+			return new StringFieldManager(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
-			return new NullableStringFieldManager(blockHandler, 1337, fieldSchema.defaultValue);
+			return new NullableStringFieldManager(fieldSchema.defaultValue);
 		}
 		throw `Expected code to be unreachable!`;
 	}
