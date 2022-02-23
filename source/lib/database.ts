@@ -1,7 +1,7 @@
 import { File } from "./files";
-import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./link";
+import { Link, LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./link";
 import { Record, Keys, RequiredKeys } from "./records";
-import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./store";
+import { OverridableWritableStore, Store, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./store";
 import { TransactionManager } from "./transaction";
 
 export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
@@ -176,12 +176,22 @@ export class DatabaseManager<A extends StoreManagers, B extends LinkManagers> {
 	}
 };
 
-export class Database<A extends Stores, B extends Links> {
+// TODO: Replace old Stores because of better type-inferrence.
+export type Stores2<A> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];
+};
+
+// TODO: Replace old Links because of better type-inferrence.
+export type Links2<A> = {
+	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : A[B];
+};
+
+export class Database<A extends Stores2<any>, B extends Links2<any>> {
 	stores: A;
 	links: B;
 
-	constructor(stores: A, links: B) {
-		this.stores = stores;
-		this.links = links;
+	constructor(stores?: A, links?: B) {
+		this.stores = stores ?? {} as A;
+		this.links = links ?? {} as B;
 	}
 };
