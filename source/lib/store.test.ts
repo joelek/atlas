@@ -6,6 +6,29 @@ import { EqualityFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder } from "./orders";
 import { test } from "./test";
 
+test(`It should support for-of iteration of the records stored.`, async (assert) => {
+	let blockHandler = new BlockHandler(new VirtualFile(0));
+	let users = StoreManager.construct(blockHandler, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	let observed = [] as Array<string>;
+	for (let entry of users) {
+		observed.push(entry.record().key);
+	}
+	let expected = ["A", "B"];
+	observed.sort();
+	assert.array.equals(observed, expected);
+});
+
 test(`It should support iteration of the records stored.`, async (assert) => {
 	let blockHandler = new BlockHandler(new VirtualFile(0));
 	let users = StoreManager.construct(blockHandler, {
