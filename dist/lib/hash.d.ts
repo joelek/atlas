@@ -38,7 +38,6 @@ export declare class Table {
     private propagateBackwards;
     private resizeIfNecessary;
     [Symbol.iterator](): Iterator<Entry>;
-    getBid(): number;
     clear(): void;
     delete(): void;
     insert(key: keys.Chunks, value: number): boolean;

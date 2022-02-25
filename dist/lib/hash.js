@@ -206,9 +206,6 @@ class Table {
             }
         }
     }
-    getBid() {
-        return this.bid;
-    }
     clear() {
         this.blockHandler.clearBlock(this.header.table.value());
         this.header.count.value(0);
