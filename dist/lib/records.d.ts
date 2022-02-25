@@ -47,10 +47,24 @@ export declare class BinaryField extends Field<Uint8Array> {
     constructor(defaultValue: Uint8Array);
     createManager(): FieldManager<Uint8Array>;
 }
+export declare class BooleanFieldManager extends FieldManager<boolean> {
+    constructor(defaultValue: boolean);
+}
+export declare class BooleanField extends Field<boolean> {
+    constructor(defaultValue: boolean);
+    createManager(): FieldManager<boolean>;
+}
 export declare class IntegerFieldManager extends FieldManager<number> {
     constructor(defaultValue: number);
 }
 export declare class IntegerField extends Field<number> {
+    constructor(defaultValue: number);
+    createManager(): FieldManager<number>;
+}
+export declare class NumberFieldManager extends FieldManager<number> {
+    constructor(defaultValue: number);
+}
+export declare class NumberField extends Field<number> {
     constructor(defaultValue: number);
     createManager(): FieldManager<number>;
 }
@@ -67,20 +81,6 @@ export declare class NullableStringFieldManager extends FieldManager<string | nu
 export declare class NullableStringField extends Field<string | null> {
     constructor(defaultValue: string | null);
     createManager(): FieldManager<string | null>;
-}
-export declare class NumberFieldManager extends FieldManager<number> {
-    constructor(defaultValue: number);
-}
-export declare class NumberField extends Field<number> {
-    constructor(defaultValue: number);
-    createManager(): FieldManager<number>;
-}
-export declare class BooleanFieldManager extends FieldManager<boolean> {
-    constructor(defaultValue: boolean);
-}
-export declare class BooleanField extends Field<boolean> {
-    constructor(defaultValue: boolean);
-    createManager(): FieldManager<boolean>;
 }
 export declare class RecordManager<A extends Record> {
     private fieldManagers;
