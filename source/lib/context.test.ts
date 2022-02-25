@@ -1,4 +1,4 @@
-import { benchmark } from "./benchmark";
+import { benchmark } from "./test";
 import { test } from "./test";
 import { Context } from "./context";
 
