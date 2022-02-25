@@ -87,3 +87,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Move field-related functionality to Field classes.
 * Give modules better names.
 * Consider adding secondary jump table to BlockHandler.
+* Decide on StoreManager.filter() being internal or external.
