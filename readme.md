@@ -85,3 +85,5 @@ NB: This project targets TypeScript 4 in strict mode.
 * Add filters to Context.
 * Provide more descriptive errors for badly typed records.
 * Move field-related functionality to Field classes.
+* Give modules better names.
+* Consider adding secondary jump table to BlockHandler.
