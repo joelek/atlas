@@ -2,7 +2,7 @@ import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./li
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField } from "./records";
 import { TransactionManager } from "./transaction";
-import { OrderMap } from "./orders";
+import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
 import { Database, DatabaseManager } from "./database";
 import { SchemaManager } from "./schema";
@@ -43,11 +43,20 @@ export type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
+export class OrderReference<A extends Value> {
+	private OrderReference!: "OrderReference";
+};
+
+export type OrderReferences<A extends Record> = {
+	[B in keyof A]: OrderReference<A[B]>;
+};
+
 export class Context {
 	private files: Map<FileReference, File>;
 	private fields: Map<FieldReference<any>, Field<any>>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
+	private orders: Map<OrderReference<any>, Order<any>>;
 	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
 
 	private getFile(reference: FileReference): File {
@@ -82,11 +91,20 @@ export class Context {
 		return store;
 	}
 
+	private getOrder<A extends Value>(reference: OrderReference<A>): Order<A> {
+		let order = this.orders.get(reference);
+		if (order == null) {
+			throw `Expected order to be defined in context!`;
+		}
+		return order;
+	}
+
 	constructor() {
 		this.files = new Map();
 		this.fields = new Map();
 		this.links = new Map();
 		this.stores = new Map();
+		this.orders = new Map();
 		this.databaseManagers = new Map();
 	}
 
@@ -139,9 +157,17 @@ export class Context {
 		return reference;
 	}
 
-	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
+	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E> {
 		let reference = new LinkReference<A, B, C, D, E>();
-		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders ?? {});
+		let orders = {} as OrderMap<C>;
+		for (let key in orderReferences) {
+			let orderReference = orderReferences[key];
+			if (orderReference == null) {
+				continue;
+			}
+			orders[key] = this.getOrder(orderReference);
+		}
+		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
 		this.links.set(reference, link);
 		return reference;
 	}
@@ -154,6 +180,20 @@ export class Context {
 		}
 		let store = new Store(fields, keys);
 		this.stores.set(reference, store);
+		return reference;
+	}
+
+	createDecreasingOrder<A extends Value>(): OrderReference<A> {
+		let reference = new OrderReference<A>();
+		let order = new DecreasingOrder();
+		this.orders.set(reference, order);
+		return reference;
+	}
+
+	createIncreasingOrder<A extends Value>(): OrderReference<A> {
+		let reference = new OrderReference<A>();
+		let order = new IncreasingOrder();
+		this.orders.set(reference, order);
 		return reference;
 	}
 
