@@ -16,6 +16,8 @@ const context_1 = require("./context");
     }, ["post_id"]);
     let userPosts = context.createLink(users, posts, {
         user_id: "user_id"
+    }, {
+        name: context.createIncreasingOrder()
     });
     let storage = context.createMemoryStorage();
     let manager = context.createTransactionManager(storage, {

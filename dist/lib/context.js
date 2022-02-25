@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Context = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
+exports.Context = exports.OrderReference = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
 const link_1 = require("./link");
 const store_1 = require("./store");
 const records_1 = require("./records");
+const orders_1 = require("./orders");
 const files_1 = require("./files");
 const database_1 = require("./database");
 const schema_1 = require("./schema");
@@ -27,11 +28,17 @@ class LinkReference {
 }
 exports.LinkReference = LinkReference;
 ;
+class OrderReference {
+    OrderReference;
+}
+exports.OrderReference = OrderReference;
+;
 class Context {
     files;
     fields;
     links;
     stores;
+    orders;
     databaseManagers;
     getFile(reference) {
         let file = this.files.get(reference);
@@ -61,11 +68,19 @@ class Context {
         }
         return store;
     }
+    getOrder(reference) {
+        let order = this.orders.get(reference);
+        if (order == null) {
+            throw `Expected order to be defined in context!`;
+        }
+        return order;
+    }
     constructor() {
         this.files = new Map();
         this.fields = new Map();
         this.links = new Map();
         this.stores = new Map();
+        this.orders = new Map();
         this.databaseManagers = new Map();
     }
     createBigIntField() {
@@ -110,9 +125,17 @@ class Context {
         this.fields.set(reference, field);
         return reference;
     }
-    createLink(parent, child, recordKeysMap, orders) {
+    createLink(parent, child, recordKeysMap, orderReferences) {
         let reference = new LinkReference();
-        let link = new link_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders ?? {});
+        let orders = {};
+        for (let key in orderReferences) {
+            let orderReference = orderReferences[key];
+            if (orderReference == null) {
+                continue;
+            }
+            orders[key] = this.getOrder(orderReference);
+        }
+        let link = new link_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
         this.links.set(reference, link);
         return reference;
     }
@@ -124,6 +147,18 @@ class Context {
         }
         let store = new store_1.Store(fields, keys);
         this.stores.set(reference, store);
+        return reference;
+    }
+    createDecreasingOrder() {
+        let reference = new OrderReference();
+        let order = new orders_1.DecreasingOrder();
+        this.orders.set(reference, order);
+        return reference;
+    }
+    createIncreasingOrder() {
+        let reference = new OrderReference();
+        let order = new orders_1.IncreasingOrder();
+        this.orders.set(reference, order);
         return reference;
     }
     createDiskStorage(path) {

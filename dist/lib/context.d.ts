@@ -2,7 +2,6 @@ import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./li
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
 import { Record, KeysRecordMap, RequiredKeys, Value } from "./records";
 import { TransactionManager } from "./transaction";
-import { OrderMap } from "./orders";
 export declare class FileReference {
     private FileReference;
 }
@@ -30,16 +29,24 @@ export declare type LinkReferences<A> = {
 export declare type LinksFromLinkReferences<A extends LinkReferences<any>> = {
     [B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
+export declare class OrderReference<A extends Value> {
+    private OrderReference;
+}
+export declare type OrderReferences<A extends Record> = {
+    [B in keyof A]: OrderReference<A[B]>;
+};
 export declare class Context {
     private files;
     private fields;
     private links;
     private stores;
+    private orders;
     private databaseManagers;
     private getFile;
     private getField;
     private getLink;
     private getStore;
+    private getOrder;
     constructor();
     createBigIntField(): FieldReference<bigint>;
     createBinaryField(): FieldReference<Uint8Array>;
@@ -48,8 +55,10 @@ export declare class Context {
     createNumberField(): FieldReference<number>;
     createStringField(): FieldReference<string>;
     createNullableStringField(): FieldReference<string | null>;
-    createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E>;
+    createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E>;
     createStore<A extends Record, B extends RequiredKeys<A>>(fieldReferences: FieldReferences<A>, keys: [...B]): StoreReference<A, B>;
+    createDecreasingOrder<A extends Value>(): OrderReference<A>;
+    createIncreasingOrder<A extends Value>(): OrderReference<A>;
     createDiskStorage(path: string): FileReference;
     createMemoryStorage(): FileReference;
     createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>>;
