@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Context = exports.LinkReference = exports.StoreReference = exports.FileReference = void 0;
+exports.Context = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
 const link_1 = require("./link");
 const store_1 = require("./store");
 const records_1 = require("./records");
@@ -11,6 +11,11 @@ class FileReference {
     FileReference;
 }
 exports.FileReference = FileReference;
+;
+class FieldReference {
+    FieldReference;
+}
+exports.FieldReference = FieldReference;
 ;
 class StoreReference {
     StoreReference;
@@ -24,6 +29,7 @@ exports.LinkReference = LinkReference;
 ;
 class Context {
     files;
+    fields;
     links;
     stores;
     databaseManagers;
@@ -33,6 +39,13 @@ class Context {
             throw `Expected file to be defined in context!`;
         }
         return file;
+    }
+    getField(reference) {
+        let field = this.fields.get(reference);
+        if (field == null) {
+            throw `Expected field to be defined in context!`;
+        }
+        return field;
     }
     getLink(reference) {
         let link = this.links.get(reference);
@@ -50,21 +63,34 @@ class Context {
     }
     constructor() {
         this.files = new Map();
+        this.fields = new Map();
         this.links = new Map();
         this.stores = new Map();
         this.databaseManagers = new Map();
     }
     createBinaryField() {
-        return new records_1.BinaryField(Uint8Array.of());
+        let reference = new FieldReference();
+        let field = new records_1.BinaryField(Uint8Array.of());
+        this.fields.set(reference, field);
+        return reference;
     }
     createBooleanField() {
-        return new records_1.BooleanField(false);
+        let reference = new FieldReference();
+        let field = new records_1.BooleanField(false);
+        this.fields.set(reference, field);
+        return reference;
     }
     createStringField() {
-        return new records_1.StringField("");
+        let reference = new FieldReference();
+        let field = new records_1.StringField("");
+        this.fields.set(reference, field);
+        return reference;
     }
     createNullableStringField() {
-        return new records_1.NullableStringField(null);
+        let reference = new FieldReference();
+        let field = new records_1.NullableStringField(null);
+        this.fields.set(reference, field);
+        return reference;
     }
     createLink(parent, child, recordKeysMap, orders) {
         let reference = new LinkReference();
@@ -72,8 +98,12 @@ class Context {
         this.links.set(reference, link);
         return reference;
     }
-    createStore(fields, keys) {
+    createStore(fieldReferences, keys) {
         let reference = new StoreReference();
+        let fields = {};
+        for (let key in fieldReferences) {
+            fields[key] = this.getField(fieldReferences[key]);
+        }
         let store = new store_1.Store(fields, keys);
         this.stores.set(reference, store);
         return reference;

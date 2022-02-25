@@ -1,11 +1,17 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
+import { Record, KeysRecordMap, RequiredKeys, Value } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 export declare class FileReference {
     private FileReference;
 }
+export declare class FieldReference<A extends Value> {
+    private FieldReference;
+}
+export declare type FieldReferences<A extends Record> = {
+    [B in keyof A]: FieldReference<A[B]>;
+};
 export declare class StoreReference<A extends Record, B extends RequiredKeys<A>> {
     private StoreReference;
 }
@@ -26,19 +32,21 @@ export declare type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 };
 export declare class Context {
     private files;
+    private fields;
     private links;
     private stores;
     private databaseManagers;
     private getFile;
+    private getField;
     private getLink;
     private getStore;
     constructor();
-    createBinaryField(): BinaryField;
-    createBooleanField(): BooleanField;
-    createStringField(): StringField;
-    createNullableStringField(): NullableStringField;
+    createBinaryField(): FieldReference<Uint8Array>;
+    createBooleanField(): FieldReference<boolean>;
+    createStringField(): FieldReference<string>;
+    createNullableStringField(): FieldReference<string | null>;
     createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E>;
-    createStore<A extends Record, B extends RequiredKeys<A>>(fields: Fields<A>, keys: [...B]): StoreReference<A, B>;
+    createStore<A extends Record, B extends RequiredKeys<A>>(fieldReferences: FieldReferences<A>, keys: [...B]): StoreReference<A, B>;
     createDiskStorage(path: string): FileReference;
     createMemoryStorage(): FileReference;
     createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>>;
