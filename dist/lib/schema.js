@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.StoresSchema = exports.StoreSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.BooleanFieldSchema = exports.BinaryFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.StoresSchema = exports.StoreSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NumberFieldSchema = exports.IntegerFieldSchema = exports.BooleanFieldSchema = exports.BinaryFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const database_1 = require("./database");
 const hash_1 = require("./hash");
@@ -9,6 +9,10 @@ const orders_1 = require("./orders");
 const records_1 = require("./records");
 const store_1 = require("./store");
 const vfs_1 = require("./vfs");
+exports.BigIntFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("BigIntField"),
+    defaultValue: bedrock.codecs.BigInt
+});
 exports.BinaryFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BinaryField"),
     defaultValue: bedrock.codecs.Binary
@@ -16,6 +20,14 @@ exports.BinaryFieldSchema = bedrock.codecs.Object.of({
 exports.BooleanFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BooleanField"),
     defaultValue: bedrock.codecs.Boolean
+});
+exports.IntegerFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("IntegerField"),
+    defaultValue: bedrock.codecs.Integer
+});
+exports.NumberFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("NumberField"),
+    defaultValue: bedrock.codecs.Number
 });
 exports.StringFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("StringField"),
@@ -25,7 +37,7 @@ exports.NullableStringFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("NullableStringField"),
     defaultValue: bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null)
 });
-exports.FieldSchema = bedrock.codecs.Union.of(exports.BinaryFieldSchema, exports.BooleanFieldSchema, exports.StringFieldSchema, exports.NullableStringFieldSchema);
+exports.FieldSchema = bedrock.codecs.Union.of(exports.BigIntFieldSchema, exports.BinaryFieldSchema, exports.BooleanFieldSchema, exports.IntegerFieldSchema, exports.NumberFieldSchema, exports.StringFieldSchema, exports.NullableStringFieldSchema);
 exports.FieldsSchema = bedrock.codecs.Record.of(exports.FieldSchema);
 exports.KeysSchema = bedrock.codecs.Array.of(bedrock.codecs.String);
 exports.IndexSchema = bedrock.codecs.Object.of({
@@ -95,11 +107,20 @@ class SchemaManager {
         blockHandler.writeBlock(0, buffer);
     }
     loadFieldManager(blockHandler, fieldSchema) {
+        if (isSchemaCompatible(exports.BigIntFieldSchema, fieldSchema)) {
+            return new records_1.BigIntFieldManager(fieldSchema.defaultValue);
+        }
         if (isSchemaCompatible(exports.BinaryFieldSchema, fieldSchema)) {
             return new records_1.BinaryFieldManager(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.BooleanFieldSchema, fieldSchema)) {
             return new records_1.BooleanFieldManager(fieldSchema.defaultValue);
+        }
+        if (isSchemaCompatible(exports.IntegerFieldSchema, fieldSchema)) {
+            return new records_1.IntegerFieldManager(fieldSchema.defaultValue);
+        }
+        if (isSchemaCompatible(exports.NumberFieldSchema, fieldSchema)) {
+            return new records_1.NumberFieldManager(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.StringFieldSchema, fieldSchema)) {
             return new records_1.StringFieldManager(fieldSchema.defaultValue);
@@ -165,6 +186,12 @@ class SchemaManager {
         return new database_1.DatabaseManager(storeManagers, linkManagers);
     }
     compareField(field, schema) {
+        if (isSchemaCompatible(exports.BigIntFieldSchema, schema)) {
+            if (field instanceof records_1.BigIntField) {
+                return true;
+            }
+            return false;
+        }
         if (isSchemaCompatible(exports.BinaryFieldSchema, schema)) {
             if (field instanceof records_1.BinaryField) {
                 return true;
@@ -173,6 +200,18 @@ class SchemaManager {
         }
         if (isSchemaCompatible(exports.BooleanFieldSchema, schema)) {
             if (field instanceof records_1.BooleanField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.IntegerFieldSchema, schema)) {
+            if (field instanceof records_1.IntegerField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.NumberFieldSchema, schema)) {
+            if (field instanceof records_1.NumberField) {
                 return true;
             }
             return false;
@@ -255,6 +294,12 @@ class SchemaManager {
         return true;
     }
     createField(field) {
+        if (field instanceof records_1.BigIntField) {
+            return {
+                type: "BigIntField",
+                defaultValue: field.defaultValue
+            };
+        }
         if (field instanceof records_1.BinaryField) {
             return {
                 type: "BinaryField",
@@ -264,6 +309,18 @@ class SchemaManager {
         if (field instanceof records_1.BooleanField) {
             return {
                 type: "BooleanField",
+                defaultValue: field.defaultValue
+            };
+        }
+        if (field instanceof records_1.IntegerField) {
+            return {
+                type: "IntegerField",
+                defaultValue: field.defaultValue
+            };
+        }
+        if (field instanceof records_1.NumberField) {
+            return {
+                type: "NumberField",
                 defaultValue: field.defaultValue
             };
         }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RecordManager = exports.BooleanField = exports.BooleanFieldManager = exports.NullableStringField = exports.NullableStringFieldManager = exports.StringField = exports.StringFieldManager = exports.BinaryField = exports.BinaryFieldManager = exports.Field = exports.FieldManager = void 0;
+exports.RecordManager = exports.BooleanField = exports.BooleanFieldManager = exports.NumberField = exports.NumberFieldManager = exports.NullableStringField = exports.NullableStringFieldManager = exports.StringField = exports.StringFieldManager = exports.IntegerField = exports.IntegerFieldManager = exports.BinaryField = exports.BinaryFieldManager = exports.BigIntField = exports.BigIntFieldManager = exports.Field = exports.FieldManager = void 0;
 const bedrock = require("@joelek/bedrock");
 class FieldManager {
     codec;
@@ -23,6 +23,23 @@ class Field {
 }
 exports.Field = Field;
 ;
+class BigIntFieldManager extends FieldManager {
+    constructor(defaultValue) {
+        super(bedrock.codecs.BigInt, defaultValue);
+    }
+}
+exports.BigIntFieldManager = BigIntFieldManager;
+;
+class BigIntField extends Field {
+    constructor(defaultValue) {
+        super(defaultValue);
+    }
+    createManager() {
+        return new BigIntFieldManager(this.defaultValue);
+    }
+}
+exports.BigIntField = BigIntField;
+;
 class BinaryFieldManager extends FieldManager {
     constructor(defaultValue) {
         super(bedrock.codecs.Binary, defaultValue);
@@ -39,6 +56,23 @@ class BinaryField extends Field {
     }
 }
 exports.BinaryField = BinaryField;
+;
+class IntegerFieldManager extends FieldManager {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Number, defaultValue);
+    }
+}
+exports.IntegerFieldManager = IntegerFieldManager;
+;
+class IntegerField extends Field {
+    constructor(defaultValue) {
+        super(defaultValue);
+    }
+    createManager() {
+        return new IntegerFieldManager(this.defaultValue);
+    }
+}
+exports.IntegerField = IntegerField;
 ;
 class StringFieldManager extends FieldManager {
     constructor(defaultValue) {
@@ -73,6 +107,23 @@ class NullableStringField extends Field {
     }
 }
 exports.NullableStringField = NullableStringField;
+;
+class NumberFieldManager extends FieldManager {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Number, defaultValue);
+    }
+}
+exports.NumberFieldManager = NumberFieldManager;
+;
+class NumberField extends Field {
+    constructor(defaultValue) {
+        super(defaultValue);
+    }
+    createManager() {
+        return new NumberFieldManager(this.defaultValue);
+    }
+}
+exports.NumberField = NumberField;
 ;
 class BooleanFieldManager extends FieldManager {
     constructor(defaultValue) {

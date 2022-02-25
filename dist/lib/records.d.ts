@@ -33,12 +33,26 @@ export declare abstract class Field<A extends Value> {
 export declare type Fields<A extends Record> = {
     [B in keyof A]: Field<A[B]>;
 };
+export declare class BigIntFieldManager extends FieldManager<bigint> {
+    constructor(defaultValue: bigint);
+}
+export declare class BigIntField extends Field<bigint> {
+    constructor(defaultValue: bigint);
+    createManager(): FieldManager<bigint>;
+}
 export declare class BinaryFieldManager extends FieldManager<Uint8Array> {
     constructor(defaultValue: Uint8Array);
 }
 export declare class BinaryField extends Field<Uint8Array> {
     constructor(defaultValue: Uint8Array);
     createManager(): FieldManager<Uint8Array>;
+}
+export declare class IntegerFieldManager extends FieldManager<number> {
+    constructor(defaultValue: number);
+}
+export declare class IntegerField extends Field<number> {
+    constructor(defaultValue: number);
+    createManager(): FieldManager<number>;
 }
 export declare class StringFieldManager extends FieldManager<string> {
     constructor(defaultValue: string);
@@ -53,6 +67,13 @@ export declare class NullableStringFieldManager extends FieldManager<string | nu
 export declare class NullableStringField extends Field<string | null> {
     constructor(defaultValue: string | null);
     createManager(): FieldManager<string | null>;
+}
+export declare class NumberFieldManager extends FieldManager<number> {
+    constructor(defaultValue: number);
+}
+export declare class NumberField extends Field<number> {
+    constructor(defaultValue: number);
+    createManager(): FieldManager<number>;
 }
 export declare class BooleanFieldManager extends FieldManager<boolean> {
     constructor(defaultValue: boolean);

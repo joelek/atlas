@@ -41,8 +41,11 @@ export declare class Context {
     private getLink;
     private getStore;
     constructor();
+    createBigIntField(): FieldReference<bigint>;
     createBinaryField(): FieldReference<Uint8Array>;
     createBooleanField(): FieldReference<boolean>;
+    createIntegerField(): FieldReference<number>;
+    createNumberField(): FieldReference<number>;
     createStringField(): FieldReference<string>;
     createNullableStringField(): FieldReference<string | null>;
     createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E>;

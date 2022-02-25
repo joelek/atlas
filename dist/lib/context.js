@@ -68,6 +68,12 @@ class Context {
         this.stores = new Map();
         this.databaseManagers = new Map();
     }
+    createBigIntField() {
+        let reference = new FieldReference();
+        let field = new records_1.BigIntField(0n);
+        this.fields.set(reference, field);
+        return reference;
+    }
     createBinaryField() {
         let reference = new FieldReference();
         let field = new records_1.BinaryField(Uint8Array.of());
@@ -77,6 +83,18 @@ class Context {
     createBooleanField() {
         let reference = new FieldReference();
         let field = new records_1.BooleanField(false);
+        this.fields.set(reference, field);
+        return reference;
+    }
+    createIntegerField() {
+        let reference = new FieldReference();
+        let field = new records_1.IntegerField(0);
+        this.fields.set(reference, field);
+        return reference;
+    }
+    createNumberField() {
+        let reference = new FieldReference();
+        let field = new records_1.NumberField(0);
         this.fields.set(reference, field);
         return reference;
     }

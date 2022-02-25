@@ -3,6 +3,11 @@ import { Database, DatabaseManager } from "./database";
 import { File } from "./files";
 import { Links, LinkManagersFromLinks } from "./link";
 import { Stores, StoreManagersFromStores } from "./store";
+export declare const BigIntFieldSchema: bedrock.codecs.ObjectCodec<{
+    type: "BigIntField";
+    defaultValue: bigint;
+}>;
+export declare type BigIntFieldSchema = ReturnType<typeof BigIntFieldSchema["decode"]>;
 export declare const BinaryFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BinaryField";
     defaultValue: Uint8Array;
@@ -13,6 +18,16 @@ export declare const BooleanFieldSchema: bedrock.codecs.ObjectCodec<{
     defaultValue: boolean;
 }>;
 export declare type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
+export declare const IntegerFieldSchema: bedrock.codecs.ObjectCodec<{
+    type: "IntegerField";
+    defaultValue: number;
+}>;
+export declare type IntegerFieldSchema = ReturnType<typeof IntegerFieldSchema["decode"]>;
+export declare const NumberFieldSchema: bedrock.codecs.ObjectCodec<{
+    type: "NumberField";
+    defaultValue: number;
+}>;
+export declare type NumberFieldSchema = ReturnType<typeof NumberFieldSchema["decode"]>;
 export declare const StringFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "StringField";
     defaultValue: string;
@@ -24,11 +39,20 @@ export declare const NullableStringFieldSchema: bedrock.codecs.ObjectCodec<{
 }>;
 export declare type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
 export declare const FieldSchema: bedrock.codecs.UnionCodec<[{
+    type: "BigIntField";
+    defaultValue: bigint;
+}, {
     type: "BinaryField";
     defaultValue: Uint8Array;
 }, {
     type: "BooleanField";
     defaultValue: boolean;
+}, {
+    type: "IntegerField";
+    defaultValue: number;
+}, {
+    type: "NumberField";
+    defaultValue: number;
 }, {
     type: "StringField";
     defaultValue: string;
@@ -38,11 +62,20 @@ export declare const FieldSchema: bedrock.codecs.UnionCodec<[{
 }]>;
 export declare type FieldSchema = ReturnType<typeof FieldSchema["decode"]>;
 export declare const FieldsSchema: bedrock.codecs.RecordCodec<{
+    type: "BigIntField";
+    defaultValue: bigint;
+} | {
     type: "BinaryField";
     defaultValue: Uint8Array;
 } | {
     type: "BooleanField";
     defaultValue: boolean;
+} | {
+    type: "IntegerField";
+    defaultValue: number;
+} | {
+    type: "NumberField";
+    defaultValue: number;
 } | {
     type: "StringField";
     defaultValue: string;
@@ -77,6 +110,15 @@ export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
     } | {
         type: any;
         defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
     }>;
     keys: string[];
     indices: {
@@ -89,6 +131,15 @@ export declare type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
 export declare const StoresSchema: bedrock.codecs.RecordCodec<{
     version: number;
     fields: globalThis.Record<string, {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
         type: any;
         defaultValue: any;
     } | {
