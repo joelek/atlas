@@ -1,6 +1,6 @@
 # @joelek/atlas
 
-Embedded database for NodeJS with automatic schema migration and type-inferrence written completely in TypeScript.
+Embedded database for NodeJS with advanced type inference and compile-time type checking. Written completely in TypeScript.
 
 ```ts
 import * as atlas from "@joelek/atlas";
