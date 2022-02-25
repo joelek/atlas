@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
@@ -107,6 +107,13 @@ export class Context {
 	createBooleanField(): FieldReference<boolean> {
 		let reference = new FieldReference<boolean>();
 		let field = new BooleanField(false);
+		this.fields.set(reference, field);
+		return reference;
+	}
+
+	createNumberField(): FieldReference<number> {
+		let reference = new FieldReference<number>();
+		let field = new NumberField(0);
 		this.fields.set(reference, field);
 		return reference;
 	}

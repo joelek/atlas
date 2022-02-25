@@ -205,6 +205,31 @@ export class NullableStringField extends Field<string | null> {
 
 
 
+export class NumberFieldManager extends FieldManager<number> {
+	constructor(defaultValue: number) {
+		super(bedrock.codecs.Number, defaultValue);
+	}
+};
+
+export class NumberField extends Field<number> {
+	constructor(defaultValue: number) {
+		super(defaultValue);
+	}
+
+	createManager(): FieldManager<number> {
+		return new NumberFieldManager(this.defaultValue);
+	}
+};
+
+
+
+
+
+
+
+
+
+
 
 
 
