@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const benchmark_1 = require("./benchmark");
 const test_1 = require("./test");
+const test_2 = require("./test");
 const context_1 = require("./context");
-(0, test_1.test)(`It should work.`, async (assert) => {
+(0, test_2.test)(`It should work.`, async (assert) => {
     let context = new context_1.Context();
     let users = context.createStore({
         user_id: context.createStringField(),
@@ -26,7 +26,7 @@ const context_1 = require("./context");
     }, {
         userPosts
     });
-    let observed = await (0, benchmark_1.benchmark)(async () => {
+    let observed = await (0, test_1.benchmark)(async () => {
         return await manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
             users.insert({
                 user_id: "User 1",
