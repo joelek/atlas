@@ -4,7 +4,7 @@ import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { RequiredKeys, FieldManager, BinaryFieldManager, BooleanFieldManager, StringFieldManager, NullableStringFieldManager, FieldManagers, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, BigIntFieldManager, NumberFieldManager, NumberField } from "./records";
+import { RequiredKeys, FieldManager, BinaryFieldManager, BooleanFieldManager, StringFieldManager, NullableStringFieldManager, FieldManagers, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, BigIntFieldManager, NumberFieldManager, NumberField, IntegerFieldManager, IntegerField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./store";
 import { BlockHandler } from "./vfs";
 
@@ -28,6 +28,13 @@ export const BooleanFieldSchema = bedrock.codecs.Object.of({
 });
 
 export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
+
+export const IntegerFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("IntegerField"),
+	defaultValue: bedrock.codecs.Integer
+});
+
+export type IntegerFieldSchema = ReturnType<typeof IntegerFieldSchema["decode"]>;
 
 export const NumberFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("NumberField"),
@@ -57,6 +64,7 @@ export const FieldSchema = bedrock.codecs.Union.of(
 	BigIntFieldSchema,
 	BinaryFieldSchema,
 	BooleanFieldSchema,
+	IntegerFieldSchema,
 	NumberFieldSchema,
 	StringFieldSchema,
 	NullableStringFieldSchema
@@ -191,6 +199,9 @@ export class SchemaManager {
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
 			return new BooleanFieldManager(fieldSchema.defaultValue);
 		}
+		if (isSchemaCompatible(IntegerFieldSchema, fieldSchema)) {
+			return new IntegerFieldManager(fieldSchema.defaultValue);
+		}
 		if (isSchemaCompatible(NumberFieldSchema, fieldSchema)) {
 			return new NumberFieldManager(fieldSchema.defaultValue);
 		}
@@ -277,6 +288,12 @@ export class SchemaManager {
 		}
 		if (isSchemaCompatible(BooleanFieldSchema, schema)) {
 			if (field instanceof BooleanField) {
+				return true;
+			}
+			return false;
+		}
+		if (isSchemaCompatible(IntegerFieldSchema, schema)) {
+			if (field instanceof IntegerField) {
 				return true;
 			}
 			return false;
@@ -385,6 +402,12 @@ export class SchemaManager {
 		if (field instanceof BooleanField) {
 			return {
 				type: "BooleanField",
+				defaultValue: field.defaultValue
+			};
+		}
+		if (field instanceof IntegerField) {
+			return {
+				type: "IntegerField",
 				defaultValue: field.defaultValue
 			};
 		}

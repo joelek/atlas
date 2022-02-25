@@ -130,6 +130,21 @@ export class BinaryField extends Field<Uint8Array> {
 
 
 
+export class IntegerFieldManager extends FieldManager<number> {
+	constructor(defaultValue: number) {
+		super(bedrock.codecs.Number, defaultValue);
+	}
+};
+
+export class IntegerField extends Field<number> {
+	constructor(defaultValue: number) {
+		super(defaultValue);
+	}
+
+	createManager(): FieldManager<number> {
+		return new IntegerFieldManager(this.defaultValue);
+	}
+};
 
 
 
