@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
@@ -88,6 +88,13 @@ export class Context {
 		this.links = new Map();
 		this.stores = new Map();
 		this.databaseManagers = new Map();
+	}
+
+	createBigIntField(): FieldReference<bigint> {
+		let reference = new FieldReference<bigint>();
+		let field = new BigIntField(0n);
+		this.fields.set(reference, field);
+		return reference;
 	}
 
 	createBinaryField(): FieldReference<Uint8Array> {

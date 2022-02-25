@@ -4,9 +4,16 @@ import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { RequiredKeys, FieldManager, BinaryFieldManager, BooleanFieldManager, StringFieldManager, NullableStringFieldManager, FieldManagers, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys } from "./records";
+import { RequiredKeys, FieldManager, BinaryFieldManager, BooleanFieldManager, StringFieldManager, NullableStringFieldManager, FieldManagers, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, BigIntFieldManager } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./store";
 import { BlockHandler } from "./vfs";
+
+export const BigIntFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("BigIntField"),
+	defaultValue: bedrock.codecs.BigInt
+});
+
+export type BigIntFieldSchema = ReturnType<typeof BigIntFieldSchema["decode"]>;
 
 export const BinaryFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BinaryField"),
@@ -40,6 +47,7 @@ export const NullableStringFieldSchema = bedrock.codecs.Object.of({
 export type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
 
 export const FieldSchema = bedrock.codecs.Union.of(
+	BigIntFieldSchema,
 	BinaryFieldSchema,
 	BooleanFieldSchema,
 	StringFieldSchema,
@@ -166,6 +174,9 @@ export class SchemaManager {
 	}
 
 	private loadFieldManager(blockHandler: BlockHandler, fieldSchema: FieldSchema): FieldManager<any> {
+		if (isSchemaCompatible(BigIntFieldSchema, fieldSchema)) {
+			return new BigIntFieldManager(fieldSchema.defaultValue);
+		}
 		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
 			return new BinaryFieldManager(fieldSchema.defaultValue);
 		}
@@ -241,6 +252,12 @@ export class SchemaManager {
 	}
 
 	private compareField<A extends Value>(field: Field<A>, schema: FieldSchema): boolean {
+		if (isSchemaCompatible(BigIntFieldSchema, schema)) {
+			if (field instanceof BigIntField) {
+				return true;
+			}
+			return false;
+		}
 		if (isSchemaCompatible(BinaryFieldSchema, schema)) {
 			if (field instanceof BinaryField) {
 				return true;
@@ -336,6 +353,12 @@ export class SchemaManager {
 	}
 
 	private createField<A extends Value>(field: Field<A>): FieldSchema {
+		if (field instanceof BigIntField) {
+			return {
+				type: "BigIntField",
+				defaultValue: field.defaultValue
+			};
+		}
 		if (field instanceof BinaryField) {
 			return {
 				type: "BinaryField",

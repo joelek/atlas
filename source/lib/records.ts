@@ -77,6 +77,21 @@ export type Fields<A extends Record> = {
 
 
 
+export class BigIntFieldManager extends FieldManager<bigint> {
+	constructor(defaultValue: bigint) {
+		super(bedrock.codecs.BigInt, defaultValue);
+	}
+};
+
+export class BigIntField extends Field<bigint> {
+	constructor(defaultValue: bigint) {
+		super(defaultValue);
+	}
+
+	createManager(): FieldManager<bigint> {
+		return new BigIntFieldManager(this.defaultValue);
+	}
+};
 
 
 
