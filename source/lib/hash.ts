@@ -231,10 +231,6 @@ export class Table {
 		}
 	}
 
-	getBid(): number {
-		return this.bid;
-	}
-
 	clear(): void {
 		this.blockHandler.clearBlock(this.header.table.value());
 		this.header.count.value(0);
