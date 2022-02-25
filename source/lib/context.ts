@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field } from "./records";
 import { TransactionManager } from "./transaction";
 import { OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
@@ -9,6 +9,14 @@ import { SchemaManager } from "./schema";
 
 export class FileReference {
 	private FileReference!: "FileReference";
+};
+
+export class FieldReference<A extends Value> {
+	private FieldReference!: "FieldReference";
+};
+
+export type FieldReferences<A extends Record> = {
+	[B in keyof A]: FieldReference<A[B]>;
 };
 
 export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
@@ -37,6 +45,7 @@ export type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 
 export class Context {
 	private files: Map<FileReference, File>;
+	private fields: Map<FieldReference<any>, Field<any>>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
 	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
@@ -47,6 +56,14 @@ export class Context {
 			throw `Expected file to be defined in context!`;
 		}
 		return file;
+	}
+
+	private getField<A extends Value>(reference: FieldReference<A>): Field<A> {
+		let field = this.fields.get(reference);
+		if (field == null) {
+			throw `Expected field to be defined in context!`;
+		}
+		return field;
 	}
 
 	private getLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(reference: LinkReference<A, B, C, D, E>): Link<A, B, C, D, E> {
@@ -67,25 +84,38 @@ export class Context {
 
 	constructor() {
 		this.files = new Map();
+		this.fields = new Map();
 		this.links = new Map();
 		this.stores = new Map();
 		this.databaseManagers = new Map();
 	}
 
-	createBinaryField(): BinaryField {
-		return new BinaryField(Uint8Array.of());
+	createBinaryField(): FieldReference<Uint8Array> {
+		let reference = new FieldReference<Uint8Array>();
+		let field = new BinaryField(Uint8Array.of());
+		this.fields.set(reference, field);
+		return reference;
 	}
 
-	createBooleanField(): BooleanField {
-		return new BooleanField(false);
+	createBooleanField(): FieldReference<boolean> {
+		let reference = new FieldReference<boolean>();
+		let field = new BooleanField(false);
+		this.fields.set(reference, field);
+		return reference;
 	}
 
-	createStringField(): StringField {
-		return new StringField("");
+	createStringField(): FieldReference<string> {
+		let reference = new FieldReference<string>();
+		let field = new StringField("");
+		this.fields.set(reference, field);
+		return reference;
 	}
 
-	createNullableStringField(): NullableStringField {
-		return new NullableStringField(null);
+	createNullableStringField(): FieldReference<string | null> {
+		let reference = new FieldReference<string | null>();
+		let field = new NullableStringField(null);
+		this.fields.set(reference, field);
+		return reference;
 	}
 
 	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orders?: OrderMap<C>): LinkReference<A, B, C, D, E> {
@@ -95,8 +125,12 @@ export class Context {
 		return reference;
 	}
 
-	createStore<A extends Record, B extends RequiredKeys<A>>(fields: Fields<A>, keys: [...B]): StoreReference<A, B> {
+	createStore<A extends Record, B extends RequiredKeys<A>>(fieldReferences: FieldReferences<A>, keys: [...B]): StoreReference<A, B> {
 		let reference = new StoreReference<A, B>();
+		let fields = {} as Fields<A>;
+		for (let key in fieldReferences) {
+			fields[key] = this.getField(fieldReferences[key]);
+		}
 		let store = new Store(fields, keys);
 		this.stores.set(reference, store);
 		return reference;
