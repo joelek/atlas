@@ -175,7 +175,7 @@ export class RecordManager<A extends Record> {
 	}
 
 	decode(buffer: Uint8Array): A {
-		let values = this.tupleCodec.decode(buffer);
+		let values = this.tupleCodec.decode(buffer, "record");
 		let record = {} as A;
 		for (let [index, key] of this.tupleKeys.entries()) {
 			record[key] = values[index];
@@ -185,7 +185,7 @@ export class RecordManager<A extends Record> {
 
 	encode(record: A): Uint8Array {
 		let values = this.tupleKeys.map((key) => record[key]);
-		let buffer = this.tupleCodec.encode(values);
+		let buffer = this.tupleCodec.encode(values, "record");
 		return buffer;
 	}
 
