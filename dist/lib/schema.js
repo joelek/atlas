@@ -97,16 +97,16 @@ class SchemaManager {
         }
         throw `Expected store!`;
     }
-    initializeDatabase(blockHandler) {
+    initializeDatabase(blockManager) {
         let databaseSchema = {
             stores: {},
             links: {}
         };
         let buffer = exports.DatabaseSchema.encode(databaseSchema, "schema");
-        blockHandler.createBlock(buffer.length);
-        blockHandler.writeBlock(0, buffer);
+        blockManager.createBlock(buffer.length);
+        blockManager.writeBlock(0, buffer);
     }
-    loadFieldManager(blockHandler, fieldSchema) {
+    loadFieldManager(blockManager, fieldSchema) {
         if (isSchemaCompatible(exports.BigIntFieldSchema, fieldSchema)) {
             return new records_1.BigIntFieldManager(fieldSchema.defaultValue);
         }
@@ -139,26 +139,26 @@ class SchemaManager {
         }
         throw `Expected code to be unreachable!`;
     }
-    loadStoreManager(blockHandler, oldSchema) {
+    loadStoreManager(blockManager, oldSchema) {
         let fieldManagers = {};
         for (let key in oldSchema.fields) {
-            fieldManagers[key] = this.loadFieldManager(blockHandler, oldSchema.fields[key]);
+            fieldManagers[key] = this.loadFieldManager(blockManager, oldSchema.fields[key]);
         }
         let keys = oldSchema.keys;
         // TODO: Create index managers.
         let recordManager = new records_1.RecordManager(fieldManagers);
-        let storage = new hash_1.Table(blockHandler, {
+        let storage = new hash_1.Table(blockManager, {
             getKeyFromValue: (value) => {
-                let buffer = blockHandler.readBlock(value);
+                let buffer = blockManager.readBlock(value);
                 let record = recordManager.decode(buffer);
                 return recordManager.encodeKeys(keys, record);
             }
         }, {
             bid: oldSchema.storageBid
         });
-        return new store_1.StoreManager(blockHandler, fieldManagers, keys, storage);
+        return new store_1.StoreManager(blockManager, fieldManagers, keys, storage);
     }
-    loadLinkManager(blockHandler, linkSchema, storeManagers) {
+    loadLinkManager(blockManager, linkSchema, storeManagers) {
         let parent = storeManagers[linkSchema.parent];
         if (parent == null) {
             throw `Expected store with name "${linkSchema.parent}"!`;
@@ -174,14 +174,14 @@ class SchemaManager {
         }
         return new link_1.LinkManager(parent, child, recordKeysMap, orders);
     }
-    loadDatabaseManager(databaseSchema, blockHandler) {
+    loadDatabaseManager(databaseSchema, blockManager) {
         let storeManagers = {};
         for (let key in databaseSchema.stores) {
-            storeManagers[key] = this.loadStoreManager(blockHandler, databaseSchema.stores[key]);
+            storeManagers[key] = this.loadStoreManager(blockManager, databaseSchema.stores[key]);
         }
         let linkManagers = {};
         for (let key in databaseSchema.links) {
-            linkManagers[key] = this.loadLinkManager(blockHandler, databaseSchema.links[key], storeManagers);
+            linkManagers[key] = this.loadLinkManager(blockManager, databaseSchema.links[key], storeManagers);
         }
         return new database_1.DatabaseManager(storeManagers, linkManagers);
     }
@@ -338,7 +338,7 @@ class SchemaManager {
         }
         throw `Expected code to be unreachable!`;
     }
-    createStore(blockHandler, store) {
+    createStore(blockManager, store) {
         let version = 0;
         let fields = {};
         for (let key in store.fields) {
@@ -354,14 +354,14 @@ class SchemaManager {
             fields,
             keys,
             indices,
-            storageBid: blockHandler.createBlock(hash_1.Table.LENGTH)
+            storageBid: blockManager.createBlock(hash_1.Table.LENGTH)
         };
         return schema;
     }
-    deleteStore(blockHandler, oldSchema) {
-        this.loadStoreManager(blockHandler, oldSchema).delete();
+    deleteStore(blockManager, oldSchema) {
+        this.loadStoreManager(blockManager, oldSchema).delete();
     }
-    updateStore(blockHandler, store, oldSchema) {
+    updateStore(blockManager, store, oldSchema) {
         if (this.compareStore(store, oldSchema)) {
             let indices = [];
             newIndices: for (let index of store.indices) {
@@ -386,9 +386,9 @@ class SchemaManager {
             };
         }
         else {
-            let newSchema = this.createStore(blockHandler, store);
-            let oldManager = this.loadStoreManager(blockHandler, oldSchema);
-            let newManager = this.loadStoreManager(blockHandler, newSchema);
+            let newSchema = this.createStore(blockManager, store);
+            let oldManager = this.loadStoreManager(blockManager, oldSchema);
+            let newManager = this.loadStoreManager(blockManager, newSchema);
             for (let entry of oldManager) {
                 try {
                     let oldRecord = entry.record();
@@ -412,19 +412,19 @@ class SchemaManager {
             return newSchema;
         }
     }
-    updateStores(blockHandler, stores, oldSchema) {
+    updateStores(blockManager, stores, oldSchema) {
         let newSchema = {};
         for (let key in oldSchema) {
             if (stores[key] == null) {
-                this.deleteStore(blockHandler, oldSchema[key]);
+                this.deleteStore(blockManager, oldSchema[key]);
             }
         }
         for (let key in stores) {
             if (oldSchema[key] == null) {
-                newSchema[key] = this.createStore(blockHandler, stores[key]);
+                newSchema[key] = this.createStore(blockManager, stores[key]);
             }
             else {
-                newSchema[key] = this.updateStore(blockHandler, stores[key], oldSchema[key]);
+                newSchema[key] = this.updateStore(blockManager, stores[key], oldSchema[key]);
             }
         }
         return newSchema;
@@ -442,7 +442,7 @@ class SchemaManager {
         }
         throw `Expected code to be unreachable!`;
     }
-    createKeyOrders(blockHandler, link) {
+    createKeyOrders(blockManager, link) {
         let orders = [];
         for (let key in link.orders) {
             let order = link.orders[key];
@@ -456,12 +456,12 @@ class SchemaManager {
         }
         return orders;
     }
-    createLink(blockHandler, stores, link) {
+    createLink(blockManager, stores, link) {
         let version = 0;
         let parent = this.getStoreName(link.parent, stores);
         let child = this.getStoreName(link.child, stores);
         let keysMap = link.recordKeysMap;
-        let orders = this.createKeyOrders(blockHandler, link);
+        let orders = this.createKeyOrders(blockManager, link);
         return {
             version,
             parent,
@@ -470,42 +470,42 @@ class SchemaManager {
             orders
         };
     }
-    deleteLink(blockHandler, oldSchema) {
+    deleteLink(blockManager, oldSchema) {
     }
-    updateLink(blockHandler, stores, link, oldSchema) {
+    updateLink(blockManager, stores, link, oldSchema) {
         if (this.compareLink(stores, link, oldSchema)) {
-            let orders = this.createKeyOrders(blockHandler, link);
+            let orders = this.createKeyOrders(blockManager, link);
             return {
                 ...oldSchema,
                 orders
             };
         }
         else {
-            let newSchema = this.createLink(blockHandler, stores, link);
+            let newSchema = this.createLink(blockManager, stores, link);
             newSchema.version = oldSchema.version + 1;
             return newSchema;
         }
     }
-    updateLinks(blockHandler, stores, links, oldSchema) {
+    updateLinks(blockManager, stores, links, oldSchema) {
         let newSchema = {};
         for (let key in oldSchema) {
             if (links[key] == null) {
-                this.deleteLink(blockHandler, oldSchema[key]);
+                this.deleteLink(blockManager, oldSchema[key]);
             }
         }
         for (let key in links) {
             if (oldSchema[key] == null) {
-                newSchema[key] = this.createLink(blockHandler, stores, links[key]);
+                newSchema[key] = this.createLink(blockManager, stores, links[key]);
             }
             else {
-                newSchema[key] = this.updateLink(blockHandler, stores, links[key], oldSchema[key]);
+                newSchema[key] = this.updateLink(blockManager, stores, links[key], oldSchema[key]);
             }
         }
         return newSchema;
     }
-    updateDatabase(blockHandler, database, oldSchema) {
-        let stores = this.updateStores(blockHandler, database.stores, oldSchema.stores);
-        let links = this.updateLinks(blockHandler, database.stores, database.links, oldSchema.links);
+    updateDatabase(blockManager, database, oldSchema) {
+        let stores = this.updateStores(blockManager, database.stores, oldSchema.stores);
+        let links = this.updateLinks(blockManager, database.stores, database.links, oldSchema.links);
         let newSchema = {
             stores,
             links
@@ -532,16 +532,16 @@ class SchemaManager {
     }
     constructor() { }
     createDatabaseManager(file, database) {
-        let blockHandler = new vfs_1.BlockHandler(file);
-        if (blockHandler.getBlockCount() === 0) {
-            this.initializeDatabase(blockHandler);
+        let blockManager = new vfs_1.BlockManager(file);
+        if (blockManager.getBlockCount() === 0) {
+            this.initializeDatabase(blockManager);
         }
-        let oldSchema = exports.DatabaseSchema.decode(blockHandler.readBlock(0), "schema");
-        let newSchema = this.updateDatabase(blockHandler, database, oldSchema);
+        let oldSchema = exports.DatabaseSchema.decode(blockManager.readBlock(0), "schema");
+        let newSchema = this.updateDatabase(blockManager, database, oldSchema);
         let buffer = exports.DatabaseSchema.encode(newSchema, "schema");
-        blockHandler.resizeBlock(0, buffer.length);
-        blockHandler.writeBlock(0, buffer);
-        let databaseManager = this.loadDatabaseManager(newSchema, blockHandler);
+        blockManager.resizeBlock(0, buffer.length);
+        blockManager.writeBlock(0, buffer);
+        let databaseManager = this.loadDatabaseManager(newSchema, blockManager);
         let dirtyLinkNames = this.getDirtyLinkNames(oldSchema.links, newSchema.links);
         let dirtyStoreNames = this.getDirtyStoreNames(oldSchema.stores, newSchema.stores);
         databaseManager.enforceConsistency(dirtyStoreNames, dirtyLinkNames);

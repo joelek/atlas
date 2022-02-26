@@ -111,8 +111,8 @@ async function delay(ms) {
 });
 (0, test_1.test)(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let blockHandler = new vfs_1.BlockHandler(file);
-    let dummy = new store_1.WritableStoreManager(store_1.StoreManager.construct(blockHandler, {
+    let blockManager = new vfs_1.BlockManager(file);
+    let dummy = new store_1.WritableStoreManager(store_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },

@@ -2,7 +2,7 @@ import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, FieldManagers, RequiredKeys } from "./records";
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 export declare type Entry<A extends Record> = {
     bid(): number;
     record(): A;
@@ -46,13 +46,13 @@ export declare class WritableStoreManager<A extends Record, B extends RequiredKe
     update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]>;
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
-    private blockHandler;
+    private blockManager;
     private fieldManagers;
     private keys;
     private recordManager;
     private table;
     private filterIterable;
-    constructor(blockHandler: BlockHandler, fieldManagers: FieldManagers<A>, keys: [...B], table: Table);
+    constructor(blockManager: BlockManager, fieldManagers: FieldManagers<A>, keys: [...B], table: Table);
     [Symbol.iterator](): Iterator<Entry<A>>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>>;
@@ -61,7 +61,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(record: A): void;
-    static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, options: {
+    static construct<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, options: {
         fields: Fields<A>;
         keys: [...B];
     }): StoreManager<A, B>;

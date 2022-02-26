@@ -34,33 +34,33 @@ exports.HashTableSlot = HashTableSlot;
 ;
 ;
 class Table {
-    blockHandler;
+    blockManager;
     bid;
     detail;
     header;
     minimumCapacity;
-    constructor(blockHandler, detail, options) {
+    constructor(blockManager, detail, options) {
         let blockId = options?.bid;
-        this.blockHandler = blockHandler;
-        this.bid = blockId ?? blockHandler.createBlock(HashTableHeader.LENGTH);
+        this.blockManager = blockManager;
+        this.bid = blockId ?? blockManager.createBlock(HashTableHeader.LENGTH);
         this.detail = detail;
         this.header = new HashTableHeader();
         this.minimumCapacity = asserts.IntegerAssert.atLeast(1, options?.minimumCapacity ?? 64);
         if (blockId != null) {
-            this.header.read(blockHandler.makeReadable(blockId), 0);
+            this.header.read(blockManager.makeReadable(blockId), 0);
         }
         if (this.header.table.value() === 0) {
-            let table = blockHandler.createBlock(this.minimumCapacity * HashTableSlot.LENGTH);
+            let table = blockManager.createBlock(this.minimumCapacity * HashTableSlot.LENGTH);
             this.header.table.value(table);
         }
-        this.header.write(blockHandler.makeWritable(this.bid), 0);
+        this.header.write(blockManager.makeWritable(this.bid), 0);
     }
     readSlot(index, slot) {
-        slot.read(this.blockHandler.makeReadable(this.header.table.value()), index * HashTableSlot.LENGTH);
+        slot.read(this.blockManager.makeReadable(this.header.table.value()), index * HashTableSlot.LENGTH);
         return slot;
     }
     writeSlot(index, slot) {
-        slot.write(this.blockHandler.makeWritable(this.header.table.value()), index * HashTableSlot.LENGTH);
+        slot.write(this.blockManager.makeWritable(this.header.table.value()), index * HashTableSlot.LENGTH);
         return slot;
     }
     computeOptimalSlot(key) {
@@ -143,7 +143,7 @@ class Table {
         }
     }
     getSlotCount() {
-        let blockSize = this.blockHandler.getBlockSize(this.header.table.value());
+        let blockSize = this.blockManager.getBlockSize(this.header.table.value());
         return Math.floor(blockSize / chunks_1.BlockReference.LENGTH);
     }
     propagateBackwards(slotIndex) {
@@ -184,13 +184,13 @@ class Table {
             }
         }
         let minLength = desiredSlotCount * chunks_1.BlockReference.LENGTH;
-        this.blockHandler.resizeBlock(this.header.table.value(), minLength);
-        this.blockHandler.clearBlock(this.header.table.value());
+        this.blockManager.resizeBlock(this.header.table.value(), minLength);
+        this.blockManager.clearBlock(this.header.table.value());
         for (let value of values) {
             let key = this.detail.getKeyFromValue(value);
             this.doInsert(key, value);
         }
-        this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+        this.header.write(this.blockManager.makeWritable(this.bid), 0);
     }
     *[Symbol.iterator]() {
         let slotCount = this.getSlotCount();
@@ -207,13 +207,13 @@ class Table {
         }
     }
     clear() {
-        this.blockHandler.clearBlock(this.header.table.value());
+        this.blockManager.clearBlock(this.header.table.value());
         this.header.count.value(0);
-        this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+        this.header.write(this.blockManager.makeWritable(this.bid), 0);
     }
     delete() {
-        this.blockHandler.deleteBlock(this.header.table.value());
-        this.blockHandler.deleteBlock(this.bid);
+        this.blockManager.deleteBlock(this.header.table.value());
+        this.blockManager.deleteBlock(this.bid);
         this.header.count.value(0);
     }
     insert(key, value) {
@@ -224,7 +224,7 @@ class Table {
             return false;
         }
         this.header.count.value(this.header.count.value() + 1);
-        this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+        this.header.write(this.blockManager.makeWritable(this.bid), 0);
         this.resizeIfNecessary();
         return true;
     }
@@ -246,7 +246,7 @@ class Table {
             return false;
         }
         this.header.count.value(this.header.count.value() - 1);
-        this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+        this.header.write(this.blockManager.makeWritable(this.bid), 0);
         this.propagateBackwards(slotIndex);
         this.resizeIfNecessary();
         return true;

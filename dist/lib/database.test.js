@@ -8,21 +8,21 @@ const files_1 = require("./files");
 const store_1 = require("./store");
 const link_1 = require("./link");
 function createUsersPostsAndComments() {
-    let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockHandler, {
+    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
+    let users = store_1.StoreManager.construct(blockManager, {
         fields: {
             user_id: new records_1.StringField("")
         },
         keys: ["user_id"]
     });
-    let posts = store_1.StoreManager.construct(blockHandler, {
+    let posts = store_1.StoreManager.construct(blockManager, {
         fields: {
             post_id: new records_1.StringField(""),
             post_user_id: new records_1.StringField("")
         },
         keys: ["post_id"]
     });
-    let comments = store_1.StoreManager.construct(blockHandler, {
+    let comments = store_1.StoreManager.construct(blockManager, {
         fields: {
             comment_id: new records_1.StringField(""),
             comment_user_id: new records_1.StringField(""),
@@ -132,8 +132,8 @@ function createUsersPostsAndComments() {
     assert.array.equals(Array.from(await writableStores.comments.filter()).map((record) => record.record().comment_id).sort(), []);
 });
 function createDirectories() {
-    let blockHandler = new vfs_1.BlockHandler(new files_1.VirtualFile(0));
-    let directories = store_1.StoreManager.construct(blockHandler, {
+    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
+    let directories = store_1.StoreManager.construct(blockManager, {
         fields: {
             directory_id: new records_1.StringField(""),
             parent_directory_id: new records_1.NullableStringField(null)

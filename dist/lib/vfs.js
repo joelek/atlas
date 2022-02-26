@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BlockHandler = void 0;
+exports.BlockManager = void 0;
 const asserts = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const env_1 = require("./env");
-class BlockHandler {
+class BlockManager {
     file;
     header;
     constructor(file, options) {
@@ -287,5 +287,5 @@ class BlockHandler {
         return data;
     }
 }
-exports.BlockHandler = BlockHandler;
+exports.BlockManager = BlockManager;
 ;

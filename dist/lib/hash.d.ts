@@ -1,4 +1,4 @@
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 import { BlockReference, Chunk } from "./chunks";
 import * as keys from "./keys";
 export declare class HashTableHeader extends Chunk {
@@ -19,12 +19,12 @@ export interface TableDetail {
     getKeyFromValue(value: number): keys.Chunks;
 }
 export declare class Table {
-    private blockHandler;
+    private blockManager;
     private bid;
     private detail;
     private header;
     private minimumCapacity;
-    constructor(blockHandler: BlockHandler, detail: TableDetail, options?: {
+    constructor(blockManager: BlockManager, detail: TableDetail, options?: {
         bid?: number;
         minimumCapacity?: number;
     });

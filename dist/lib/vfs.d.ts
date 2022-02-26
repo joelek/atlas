@@ -1,6 +1,6 @@
 import { Readable, Writable } from "./chunks";
 import { File } from "./files";
-export declare class BlockHandler {
+export declare class BlockManager {
     private file;
     private header;
     constructor(file: File, options?: {
