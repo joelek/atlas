@@ -3,7 +3,7 @@ import { BinHeader, BlockReference, BlockHeader, BlockFlags, Readable, Writable 
 import { File } from "./files";
 import { DEBUG } from "./env";
 
-export class BlockHandler {
+export class BlockManager {
 	private file: File;
 	private header: BinHeader;
 

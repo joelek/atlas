@@ -3,7 +3,7 @@ import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, FieldManagers, RequiredKeys } from "./records";
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 
 export type Entry<A extends Record> = {
 	bid(): number;
@@ -81,7 +81,7 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 // TODO: Handle indices.
 // TODO: Implement interface WritableStore directly.
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
-	private blockHandler: BlockHandler;
+	private blockManager: BlockManager;
 	private fieldManagers: FieldManagers<A>;
 	private keys: [...B];
 	private recordManager: RecordManager<A>;
@@ -90,7 +90,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private filterIterable(bids: Iterable<number>, filters: FilterMap<A>, orders: OrderMap<A>): Iterable<Entry<A>> {
 		return StreamIterable.of(bids)
 			.map((bid) => {
-				let buffer = this.blockHandler.readBlock(bid);
+				let buffer = this.blockManager.readBlock(bid);
 				let record = this.recordManager.decode(buffer);
 				return {
 					bid: () => bid,
@@ -125,8 +125,8 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			});
 	}
 
-	constructor(blockHandler: BlockHandler, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
-		this.blockHandler = blockHandler;
+	constructor(blockManager: BlockManager, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
+		this.blockManager = blockManager;
 		this.fieldManagers = fieldManagers;
 		this.keys = keys;
 		this.recordManager = new RecordManager(fieldManagers);
@@ -139,7 +139,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 
 	delete(): void {
 		for (let entry of this) {
-			this.blockHandler.deleteBlock(entry.bid());
+			this.blockManager.deleteBlock(entry.bid());
 		}
 		this.table.delete();
 	}
@@ -158,14 +158,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		let encoded = this.recordManager.encode(record);
 		let index = this.table.lookup(key);
 		if (index == null) {
-			index = this.blockHandler.createBlock(encoded.length);
-			this.blockHandler.writeBlock(index, encoded);
+			index = this.blockManager.createBlock(encoded.length);
+			this.blockManager.writeBlock(index, encoded);
 			this.table.insert(key, index);
 		} else {
-			let buffer = this.blockHandler.readBlock(index);
+			let buffer = this.blockManager.readBlock(index);
 			let oldRecord = this.recordManager.decode(buffer);
-			this.blockHandler.resizeBlock(index, encoded.length);
-			this.blockHandler.writeBlock(index, encoded);
+			this.blockManager.resizeBlock(index, encoded.length);
+			this.blockManager.writeBlock(index, encoded);
 			// TODO: Remove old record from indices.
 		}
 		// TODO: Insert record into indices.
@@ -182,7 +182,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			let key = this.keys.map((key) => keysRecord[key]).join(", ");
 			throw `Expected a matching record for key ${key}!`;
 		}
-		let buffer = this.blockHandler.readBlock(index);
+		let buffer = this.blockManager.readBlock(index);
 		let record = this.recordManager.decode(buffer);
 		return record;
 	}
@@ -191,10 +191,10 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
 		let index = this.table.lookup(key);
 		if (index != null) {
-			let buffer = this.blockHandler.readBlock(index);
+			let buffer = this.blockManager.readBlock(index);
 			let oldRecord = this.recordManager.decode(buffer);
 			this.table.remove(key);
-			this.blockHandler.deleteBlock(index);
+			this.blockManager.deleteBlock(index);
 			// TODO: Remove old record from indices.
 		}
 	}
@@ -203,7 +203,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return this.insert(record);
 	}
 
-	static construct<A extends Record, B extends RequiredKeys<A>>(blockHandler: BlockHandler, options: {
+	static construct<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, options: {
 		fields: Fields<A>,
 		keys: [...B]
 	}): StoreManager<A, B> {
@@ -213,14 +213,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 		let keys = options.keys;
 		let recordManager = new RecordManager(fieldManagers);
-		let storage = new Table(blockHandler, {
+		let storage = new Table(blockManager, {
 			getKeyFromValue: (value) => {
-				let buffer = blockHandler.readBlock(value);
+				let buffer = blockManager.readBlock(value);
 				let record = recordManager.decode(buffer);
 				return recordManager.encodeKeys(keys, record);
 			}
 		});
-		let manager = new StoreManager(blockHandler, fieldManagers, keys, storage);
+		let manager = new StoreManager(blockManager, fieldManagers, keys, storage);
 		return manager;
 	}
 };

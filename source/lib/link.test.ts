@@ -4,17 +4,17 @@ import { LinkManager } from "./link";
 import { IncreasingOrder } from "./orders";
 import { NullableStringField, StringField } from "./records";
 import { StoreManager } from "./store";
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 
 function createUsersAndPosts() {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
 		fields: {
 			user_id: new StringField("")
 		},
 		keys: ["user_id"]
 	});
-	let posts = StoreManager.construct(blockHandler, {
+	let posts = StoreManager.construct(blockManager, {
 		fields: {
 			post_id: new StringField(""),
 			post_user_id: new StringField("")
@@ -113,8 +113,8 @@ test(`It should support looking up the corresponding parent for a referencing li
 });
 
 function createDirectories() {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let directories = StoreManager.construct(blockHandler, {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let directories = StoreManager.construct(blockManager, {
 		fields: {
 			directory_id: new StringField(""),
 			parent_directory_id: new NullableStringField(null)

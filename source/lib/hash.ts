@@ -1,5 +1,5 @@
 import * as libcrypto from "crypto";
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 import { BlockReference, Chunk } from "./chunks";
 import { DEBUG } from "./env";
 import * as asserts from "../mod/asserts";
@@ -40,14 +40,14 @@ export interface TableDetail {
 };
 
 export class Table {
-	private blockHandler: BlockHandler;
+	private blockManager: BlockManager;
 	private bid: number;
 	private detail: TableDetail;
 	private header: HashTableHeader;
 	private minimumCapacity: number;
 
 	constructor(
-		blockHandler: BlockHandler,
+		blockManager: BlockManager,
 		detail: TableDetail,
 		options?: {
 			bid?: number,
@@ -55,28 +55,28 @@ export class Table {
 		}
 	) {
 		let blockId = options?.bid;
-		this.blockHandler = blockHandler;
-		this.bid = blockId ?? blockHandler.createBlock(HashTableHeader.LENGTH);
+		this.blockManager = blockManager;
+		this.bid = blockId ?? blockManager.createBlock(HashTableHeader.LENGTH);
 		this.detail = detail;
 		this.header = new HashTableHeader();
 		this.minimumCapacity = asserts.IntegerAssert.atLeast(1, options?.minimumCapacity ?? 64);
 		if (blockId != null) {
-			this.header.read(blockHandler.makeReadable(blockId), 0);
+			this.header.read(blockManager.makeReadable(blockId), 0);
 		}
 		if (this.header.table.value() === 0) {
-			let table = blockHandler.createBlock(this.minimumCapacity * HashTableSlot.LENGTH);
+			let table = blockManager.createBlock(this.minimumCapacity * HashTableSlot.LENGTH);
 			this.header.table.value(table);
 		}
-		this.header.write(blockHandler.makeWritable(this.bid), 0);
+		this.header.write(blockManager.makeWritable(this.bid), 0);
 	}
 
 	private readSlot(index: number, slot: HashTableSlot): HashTableSlot {
-		slot.read(this.blockHandler.makeReadable(this.header.table.value()), index * HashTableSlot.LENGTH);
+		slot.read(this.blockManager.makeReadable(this.header.table.value()), index * HashTableSlot.LENGTH);
 		return slot;
 	}
 
 	private writeSlot(index: number, slot: HashTableSlot): HashTableSlot {
-		slot.write(this.blockHandler.makeWritable(this.header.table.value()), index * HashTableSlot.LENGTH);
+		slot.write(this.blockManager.makeWritable(this.header.table.value()), index * HashTableSlot.LENGTH);
 		return slot;
 	}
 
@@ -164,7 +164,7 @@ export class Table {
 	}
 
 	private getSlotCount(): number {
-		let blockSize = this.blockHandler.getBlockSize(this.header.table.value());
+		let blockSize = this.blockManager.getBlockSize(this.header.table.value());
 		return Math.floor(blockSize / BlockReference.LENGTH);
 	}
 
@@ -207,13 +207,13 @@ export class Table {
 			}
 		}
 		let minLength = desiredSlotCount * BlockReference.LENGTH;
-		this.blockHandler.resizeBlock(this.header.table.value(), minLength);
-		this.blockHandler.clearBlock(this.header.table.value());
+		this.blockManager.resizeBlock(this.header.table.value(), minLength);
+		this.blockManager.clearBlock(this.header.table.value());
 		for (let value of values) {
 			let key = this.detail.getKeyFromValue(value);
 			this.doInsert(key, value);
 		}
-		this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+		this.header.write(this.blockManager.makeWritable(this.bid), 0);
 	}
 
 	* [Symbol.iterator](): Iterator<Entry> {
@@ -232,14 +232,14 @@ export class Table {
 	}
 
 	clear(): void {
-		this.blockHandler.clearBlock(this.header.table.value());
+		this.blockManager.clearBlock(this.header.table.value());
 		this.header.count.value(0);
-		this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+		this.header.write(this.blockManager.makeWritable(this.bid), 0);
 	}
 
 	delete(): void {
-		this.blockHandler.deleteBlock(this.header.table.value());
-		this.blockHandler.deleteBlock(this.bid);
+		this.blockManager.deleteBlock(this.header.table.value());
+		this.blockManager.deleteBlock(this.bid);
 		this.header.count.value(0);
 	}
 
@@ -250,7 +250,7 @@ export class Table {
 			return false;
 		}
 		this.header.count.value(this.header.count.value() + 1);
-		this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+		this.header.write(this.blockManager.makeWritable(this.bid), 0);
 		this.resizeIfNecessary();
 		return true;
 	}
@@ -275,7 +275,7 @@ export class Table {
 			return false;
 		}
 		this.header.count.value(this.header.count.value() - 1);
-		this.header.write(this.blockHandler.makeWritable(this.bid), 0);
+		this.header.write(this.blockManager.makeWritable(this.bid), 0);
 		this.propagateBackwards(slotIndex);
 		this.resizeIfNecessary();
 		return true;

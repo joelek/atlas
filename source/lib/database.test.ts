@@ -1,27 +1,27 @@
 import { test } from "./test";
 import { StringField, NullableStringField } from "./records";
 import { DatabaseManager } from "./database";
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./store";
 import { LinkManager } from "./link";
 
 function createUsersPostsAndComments() {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let users = StoreManager.construct(blockHandler, {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
 		fields: {
 			user_id: new StringField("")
 		},
 		keys: ["user_id"]
 	});
-	let posts = StoreManager.construct(blockHandler, {
+	let posts = StoreManager.construct(blockManager, {
 		fields: {
 			post_id: new StringField(""),
 			post_user_id: new StringField("")
 		},
 		keys: ["post_id"]
 	});
-	let comments = StoreManager.construct(blockHandler, {
+	let comments = StoreManager.construct(blockManager, {
 		fields: {
 			comment_id: new StringField(""),
 			comment_user_id: new StringField(""),
@@ -136,8 +136,8 @@ test(`It should not remove records with parents for referencing links.`, async (
 });
 
 function createDirectories() {
-	let blockHandler = new BlockHandler(new VirtualFile(0));
-	let directories = StoreManager.construct(blockHandler, {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let directories = StoreManager.construct(blockManager, {
 		fields: {
 			directory_id: new StringField(""),
 			parent_directory_id: new NullableStringField(null)

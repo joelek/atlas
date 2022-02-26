@@ -2,7 +2,7 @@ import { test } from "./test";
 import { TransactionManager } from "./transaction";
 import { VirtualFile } from "./files";
 import { WritableStoreManager, StoreManager } from "./store";
-import { BlockHandler } from "./vfs";
+import { BlockManager } from "./vfs";
 import { StringField } from "./records";
 
 async function delay(ms: number): Promise<void> {
@@ -113,8 +113,8 @@ test(`It should recover from transactions that throw errors.`, async (assert) =>
 
 test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let blockHandler = new BlockHandler(file);
-	let dummy = new WritableStoreManager(StoreManager.construct(blockHandler, {
+	let blockManager = new BlockManager(file);
+	let dummy = new WritableStoreManager(StoreManager.construct(blockManager, {
 		fields: {
 			key: new StringField("")
 		},
