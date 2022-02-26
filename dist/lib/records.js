@@ -152,7 +152,7 @@ class RecordManager {
         this.tupleCodec = bedrock.codecs.Tuple.of(...this.tupleKeys.map((key) => fieldManagers[key].getCodec()));
     }
     decode(buffer) {
-        let values = this.tupleCodec.decode(buffer);
+        let values = this.tupleCodec.decode(buffer, "record");
         let record = {};
         for (let [index, key] of this.tupleKeys.entries()) {
             record[key] = values[index];
@@ -161,7 +161,7 @@ class RecordManager {
     }
     encode(record) {
         let values = this.tupleKeys.map((key) => record[key]);
-        let buffer = this.tupleCodec.encode(values);
+        let buffer = this.tupleCodec.encode(values, "record");
         return buffer;
     }
     decodeKeys(keys, buffers) {

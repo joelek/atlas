@@ -102,7 +102,7 @@ class SchemaManager {
             stores: {},
             links: {}
         };
-        let buffer = exports.DatabaseSchema.encode(databaseSchema);
+        let buffer = exports.DatabaseSchema.encode(databaseSchema, "schema");
         blockHandler.createBlock(buffer.length);
         blockHandler.writeBlock(0, buffer);
     }
@@ -536,9 +536,9 @@ class SchemaManager {
         if (blockHandler.getBlockCount() === 0) {
             this.initializeDatabase(blockHandler);
         }
-        let oldSchema = exports.DatabaseSchema.decode(blockHandler.readBlock(0));
+        let oldSchema = exports.DatabaseSchema.decode(blockHandler.readBlock(0), "schema");
         let newSchema = this.updateDatabase(blockHandler, database, oldSchema);
-        let buffer = exports.DatabaseSchema.encode(newSchema);
+        let buffer = exports.DatabaseSchema.encode(newSchema, "schema");
         blockHandler.resizeBlock(0, buffer.length);
         blockHandler.writeBlock(0, buffer);
         let databaseManager = this.loadDatabaseManager(newSchema, blockHandler);
