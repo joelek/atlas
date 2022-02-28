@@ -9,10 +9,6 @@ import { LogDeltaHeader, LogHeader } from "./chunks";
 export abstract class File {
 	constructor() {}
 
-	clear(): void {
-		this.resize(0);
-	}
-
 	abstract discard(): void;
 	abstract persist(): void;
 	abstract read(buffer: Uint8Array, offset: number): Uint8Array;
@@ -279,7 +275,7 @@ export class DurableFile extends File {
 
 	discard(): void {
 		if (this.tree.length() > 0) {
-			this.log.clear();
+			this.log.resize(0);
 			this.header.redoSize(this.bin.size());
 			this.header.undoSize(this.bin.size());
 			this.header.write(this.log, 0);
@@ -425,7 +421,7 @@ export class PhysicalFile extends File {
 		libfs.mkdirSync(libpath.dirname(filename), { recursive: true });
 		this.fd = libfs.openSync(filename, libfs.existsSync(filename) ? "r+" : "w+");
 		if (clear) {
-			this.clear();
+			this.resize(0);
 		}
 	}
 
