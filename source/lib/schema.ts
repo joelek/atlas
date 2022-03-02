@@ -4,7 +4,7 @@ import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { RequiredKeys, FieldManager, BinaryFieldManager, BooleanFieldManager, StringFieldManager, NullableStringFieldManager, FieldManagers, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, BigIntFieldManager, NumberFieldManager, NumberField, IntegerFieldManager, IntegerField } from "./records";
+import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./store";
 import { BlockManager } from "./vfs";
 
@@ -189,27 +189,27 @@ export class SchemaManager {
 		blockManager.writeBlock(0, buffer);
 	}
 
-	private loadFieldManager(blockManager: BlockManager, fieldSchema: FieldSchema): FieldManager<any> {
+	private loadFieldManager(blockManager: BlockManager, fieldSchema: FieldSchema): Field<any> {
 		if (isSchemaCompatible(BigIntFieldSchema, fieldSchema)) {
-			return new BigIntFieldManager(fieldSchema.defaultValue);
+			return new BigIntField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
-			return new BinaryFieldManager(fieldSchema.defaultValue);
+			return new BinaryField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
-			return new BooleanFieldManager(fieldSchema.defaultValue);
+			return new BooleanField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(IntegerFieldSchema, fieldSchema)) {
-			return new IntegerFieldManager(fieldSchema.defaultValue);
+			return new IntegerField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NumberFieldSchema, fieldSchema)) {
-			return new NumberFieldManager(fieldSchema.defaultValue);
+			return new NumberField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
-			return new StringFieldManager(fieldSchema.defaultValue);
+			return new StringField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
-			return new NullableStringFieldManager(fieldSchema.defaultValue);
+			return new NullableStringField(fieldSchema.defaultValue);
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -225,13 +225,13 @@ export class SchemaManager {
 	}
 
 	private loadStoreManager(blockManager: BlockManager, oldSchema: StoreSchema): StoreManager<any, any> {
-		let fieldManagers = {} as FieldManagers<any>;
+		let fields = {} as Fields<any>;
 		for (let key in oldSchema.fields) {
-			fieldManagers[key] = this.loadFieldManager(blockManager, oldSchema.fields[key]);
+			fields[key] = this.loadFieldManager(blockManager, oldSchema.fields[key]);
 		}
 		let keys = oldSchema.keys as any;
 		// TODO: Create index managers.
-		let recordManager = new RecordManager(fieldManagers);
+		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
 			getKeyFromValue: (value) => {
 				let buffer = blockManager.readBlock(value);
@@ -241,7 +241,7 @@ export class SchemaManager {
 		}, {
 			bid: oldSchema.storageBid
 		});
-		return new StoreManager(blockManager, fieldManagers, keys, storage);
+		return new StoreManager(blockManager, fields, keys, storage);
 	}
 
 	private loadLinkManager(blockManager: BlockManager, linkSchema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
@@ -390,43 +390,43 @@ export class SchemaManager {
 		if (field instanceof BigIntField) {
 			return {
 				type: "BigIntField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as BigIntField).getDefaultValue()
 			};
 		}
 		if (field instanceof BinaryField) {
 			return {
 				type: "BinaryField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as BinaryField).getDefaultValue()
 			};
 		}
 		if (field instanceof BooleanField) {
 			return {
 				type: "BooleanField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as BooleanField).getDefaultValue()
 			};
 		}
 		if (field instanceof IntegerField) {
 			return {
 				type: "IntegerField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as IntegerField).getDefaultValue()
 			};
 		}
 		if (field instanceof NumberField) {
 			return {
 				type: "NumberField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as NumberField).getDefaultValue()
 			};
 		}
 		if (field instanceof StringField) {
 			return {
 				type: "StringField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as StringField).getDefaultValue()
 			};
 		}
 		if (field instanceof NullableStringField) {
 			return {
 				type: "NullableStringField",
-				defaultValue: field.defaultValue
+				defaultValue: (field as NullableStringField).getDefaultValue()
 			};
 		}
 		throw `Expected code to be unreachable!`;
@@ -489,12 +489,12 @@ export class SchemaManager {
 					let oldRecord = entry.record();
 					let newRecord = {} as A;
 					for (let key in store.fields) {
-						let fieldManager = store.fields[key].createManager();
-						let codec = fieldManager.getCodec();
+						let field = store.fields[key];
+						let codec = field.getCodec();
 						if (isSchemaCompatible(codec, oldRecord[key])) {
 							newRecord[key] = oldRecord[key];
 						} else {
-							newRecord[key] = store.fields[key].defaultValue;
+							newRecord[key] = field.getDefaultValue();
 						}
 					}
 					newManager.insert(newRecord);

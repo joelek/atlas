@@ -3,8 +3,8 @@ import { test } from "./test";
 
 test(`It should encode records.`, async (assert) => {
 	let rh = new records.RecordManager({
-		firstname: new records.StringFieldManager(""),
-		lastname: new records.StringFieldManager("")
+		firstname: new records.StringField(""),
+		lastname: new records.StringField("")
 	});
 	let record = {
 		firstname: "Joel",
@@ -17,8 +17,8 @@ test(`It should encode records.`, async (assert) => {
 
 test(`It should encode keys.`, async (assert) => {
 	let rh = new records.RecordManager({
-		firstname: new records.StringFieldManager(""),
-		lastname: new records.StringFieldManager("")
+		firstname: new records.StringField(""),
+		lastname: new records.StringField("")
 	});
 	let record = {
 		firstname: "Joel",

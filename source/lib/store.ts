@@ -2,7 +2,7 @@ import { StreamIterable } from "./streams";
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
-import { Fields, Record, Keys, KeysRecord, RecordManager, FieldManagers, RequiredKeys } from "./records";
+import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./vfs";
 
 export type Entry<A extends Record> = {
@@ -82,7 +82,7 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 // TODO: Implement interface WritableStore directly.
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockManager: BlockManager;
-	private fieldManagers: FieldManagers<A>;
+	private fields: Fields<A>;
 	private keys: [...B];
 	private recordManager: RecordManager<A>;
 	private table: Table;
@@ -125,11 +125,11 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			});
 	}
 
-	constructor(blockManager: BlockManager, fieldManagers: FieldManagers<A>, keys: [...B], table: Table) {
+	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], table: Table) {
 		this.blockManager = blockManager;
-		this.fieldManagers = fieldManagers;
+		this.fields = fields;
 		this.keys = keys;
-		this.recordManager = new RecordManager(fieldManagers);
+		this.recordManager = new RecordManager(fields);
 		this.table = table;
 	}
 
@@ -207,12 +207,9 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		fields: Fields<A>,
 		keys: [...B]
 	}): StoreManager<A, B> {
-		let fieldManagers = {} as FieldManagers<A>;
-		for (let key in options.fields) {
-			fieldManagers[key] = options.fields[key].createManager();
-		}
+		let fields = options.fields;
 		let keys = options.keys;
-		let recordManager = new RecordManager(fieldManagers);
+		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
 			getKeyFromValue: (value) => {
 				let buffer = blockManager.readBlock(value);
@@ -220,7 +217,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 				return recordManager.encodeKeys(keys, record);
 			}
 		});
-		let manager = new StoreManager(blockManager, fieldManagers, keys, storage);
+		let manager = new StoreManager(blockManager, fields, keys, storage);
 		return manager;
 	}
 };

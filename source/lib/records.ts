@@ -16,7 +16,7 @@ export type KeysRecordMap<A extends Record, B extends RequiredKeys<A>, C extends
 	}[keyof C];
 };
 
-export abstract class FieldManager<A extends Value> {
+export abstract class Field<A extends Value> {
 	protected codec: bedrock.codecs.Codec<A>;
 	protected defaultValue: A;
 
@@ -28,91 +28,35 @@ export abstract class FieldManager<A extends Value> {
 	getCodec(): bedrock.codecs.Codec<A> {
 		return this.codec;
 	}
-};
 
-export type FieldManagers<A extends Record> = {
-	[B in keyof A]: FieldManager<A[B]>;
-};
-
-export abstract class Field<A extends Value> {
-	defaultValue: A;
-
-	constructor(defaultValue: A) {
-		this.defaultValue = defaultValue;
+	getDefaultValue(): A {
+		return this.defaultValue;
 	}
-
-	abstract createManager(): FieldManager<A>;
 };
 
 export type Fields<A extends Record> = {
 	[B in keyof A]: Field<A[B]>;
 };
 
-export class BigIntFieldManager extends FieldManager<bigint> {
+export class BigIntField extends Field<bigint> {
 	constructor(defaultValue: bigint) {
 		super(bedrock.codecs.BigInt, defaultValue);
 	}
 };
 
-export class BigIntField extends Field<bigint> {
-	constructor(defaultValue: bigint) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<bigint> {
-		return new BigIntFieldManager(this.defaultValue);
-	}
-};
-
-export class BinaryFieldManager extends FieldManager<Uint8Array> {
+export class BinaryField extends Field<Uint8Array> {
 	constructor(defaultValue: Uint8Array) {
 		super(bedrock.codecs.Binary, defaultValue);
 	}
 };
 
-export class BinaryField extends Field<Uint8Array> {
-	constructor(defaultValue: Uint8Array) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<Uint8Array> {
-		return new BinaryFieldManager(this.defaultValue);
-	}
-};
-
-export class BooleanFieldManager extends FieldManager<boolean> {
+export class BooleanField extends Field<boolean> {
 	constructor(defaultValue: boolean) {
 		super(bedrock.codecs.Boolean, defaultValue);
 	}
 };
 
-export class BooleanField extends Field<boolean> {
-	constructor(defaultValue: boolean) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<boolean> {
-		return new BooleanFieldManager(this.defaultValue);
-	}
-};
-
-export class IntegerFieldManager extends FieldManager<number> {
-	constructor(defaultValue: number) {
-		super(bedrock.codecs.Number, defaultValue);
-	}
-};
-
 export class IntegerField extends Field<number> {
-	constructor(defaultValue: number) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<number> {
-		return new IntegerFieldManager(this.defaultValue);
-	}
-};
-
-export class NumberFieldManager extends FieldManager<number> {
 	constructor(defaultValue: number) {
 		super(bedrock.codecs.Number, defaultValue);
 	}
@@ -120,31 +64,17 @@ export class NumberFieldManager extends FieldManager<number> {
 
 export class NumberField extends Field<number> {
 	constructor(defaultValue: number) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<number> {
-		return new NumberFieldManager(this.defaultValue);
-	}
-};
-
-export class StringFieldManager extends FieldManager<string> {
-	constructor(defaultValue: string) {
-		super(bedrock.codecs.String, defaultValue);
+		super(bedrock.codecs.Number, defaultValue);
 	}
 };
 
 export class StringField extends Field<string> {
 	constructor(defaultValue: string) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<string> {
-		return new StringFieldManager(this.defaultValue);
+		super(bedrock.codecs.String, defaultValue);
 	}
 };
 
-export class NullableStringFieldManager extends FieldManager<string | null> {
+export class NullableStringField extends Field<string | null> {
 	constructor(defaultValue: string | null) {
 		super(bedrock.codecs.Union.of(
 			bedrock.codecs.String,
@@ -153,25 +83,15 @@ export class NullableStringFieldManager extends FieldManager<string | null> {
 	}
 };
 
-export class NullableStringField extends Field<string | null> {
-	constructor(defaultValue: string | null) {
-		super(defaultValue);
-	}
-
-	createManager(): FieldManager<string | null> {
-		return new NullableStringFieldManager(this.defaultValue);
-	}
-};
-
 export class RecordManager<A extends Record> {
-	private fieldManagers: FieldManagers<A>;
+	private fields: Fields<A>;
 	private tupleKeys: Keys<A>;
 	private tupleCodec: bedrock.codecs.TupleCodec<Array<A[Key<A>]>>;
 
-	constructor(fieldManagers: FieldManagers<A>) {
-		this.fieldManagers = fieldManagers;
-		this.tupleKeys = Object.keys(fieldManagers).sort();
-		this.tupleCodec = bedrock.codecs.Tuple.of(...this.tupleKeys.map((key) => fieldManagers[key].getCodec()));
+	constructor(fields: Fields<A>) {
+		this.fields = fields;
+		this.tupleKeys = Object.keys(fields).sort();
+		this.tupleCodec = bedrock.codecs.Tuple.of(...this.tupleKeys.map((key) => fields[key].getCodec()));
 	}
 
 	decode(buffer: Uint8Array): A {
@@ -192,13 +112,13 @@ export class RecordManager<A extends Record> {
 	decodeKeys<B extends Keys<A>>(keys: [...B], buffers: keys.Chunks): Pick<A, B[number]> {
 		let record = {} as Pick<A, B[number]>;
 		for (let [index, key] of keys.entries()) {
-			record[key] = this.fieldManagers[key].getCodec().decodePayload(buffers[index]);
+			record[key] = this.fields[key].getCodec().decodePayload(buffers[index]);
 		}
 		return record;
 	}
 
 	encodeKeys<B extends Keys<A>>(keys: [...B], record: Pick<A, B[number]>): keys.Chunks {
-		let buffers = keys.map((key) => this.fieldManagers[key].getCodec().encodePayload(record[key]));
+		let buffers = keys.map((key) => this.fields[key].getCodec().encodePayload(record[key]));
 		return buffers;
 	}
 };
