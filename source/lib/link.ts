@@ -52,7 +52,6 @@ export class WritableLinkManager<A extends Record, B extends RequiredKeys<A>, C 
 	}
 };
 
-// TODO: Implement interface WritableLink directly.
 export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	private parent: StoreManager<A, B>;
 	private child: StoreManager<C, D>;

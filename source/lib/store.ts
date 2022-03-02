@@ -79,7 +79,6 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 };
 
 // TODO: Handle indices.
-// TODO: Implement interface WritableStore directly.
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockManager: BlockManager;
 	private fields: Fields<A>;
