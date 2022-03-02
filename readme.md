@@ -87,3 +87,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Give modules better names.
 * Consider adding secondary jump table to BlockHandler.
 * Decide on StoreManager.filter() being internal or external.
+* Defer decoding of records until record is filtered and ordered.
