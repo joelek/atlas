@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.StoresSchema = exports.StoreSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NumberFieldSchema = exports.IntegerFieldSchema = exports.BooleanFieldSchema = exports.BinaryFieldSchema = exports.BigIntFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NumberFieldSchema = exports.IntegerFieldSchema = exports.BooleanFieldSchema = exports.BinaryFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const database_1 = require("./database");
 const hash_1 = require("./hash");
@@ -45,14 +45,6 @@ exports.IndexSchema = bedrock.codecs.Object.of({
     bid: bedrock.codecs.Integer
 });
 exports.IndicesSchema = bedrock.codecs.Array.of(exports.IndexSchema);
-exports.StoreSchema = bedrock.codecs.Object.of({
-    version: bedrock.codecs.Integer,
-    fields: exports.FieldsSchema,
-    keys: exports.KeysSchema,
-    indices: exports.IndicesSchema,
-    storageBid: bedrock.codecs.Integer
-});
-exports.StoresSchema = bedrock.codecs.Record.of(exports.StoreSchema);
 exports.DecreasingOrderSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("DecreasingOrder")
 });
@@ -66,6 +58,15 @@ exports.KeyOrderSchema = bedrock.codecs.Object.of({
 });
 exports.KeyOrdersSchema = bedrock.codecs.Array.of(exports.KeyOrderSchema);
 exports.KeysMapSchema = bedrock.codecs.Record.of(bedrock.codecs.String);
+exports.StoreSchema = bedrock.codecs.Object.of({
+    version: bedrock.codecs.Integer,
+    fields: exports.FieldsSchema,
+    keys: exports.KeysSchema,
+    orders: exports.KeyOrdersSchema,
+    indices: exports.IndicesSchema,
+    storageBid: bedrock.codecs.Integer
+});
+exports.StoresSchema = bedrock.codecs.Record.of(exports.StoreSchema);
 exports.LinkSchema = bedrock.codecs.Object.of({
     version: bedrock.codecs.Integer,
     parent: bedrock.codecs.String,
@@ -108,25 +109,25 @@ class SchemaManager {
     }
     loadFieldManager(blockManager, fieldSchema) {
         if (isSchemaCompatible(exports.BigIntFieldSchema, fieldSchema)) {
-            return new records_1.BigIntFieldManager(fieldSchema.defaultValue);
+            return new records_1.BigIntField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.BinaryFieldSchema, fieldSchema)) {
-            return new records_1.BinaryFieldManager(fieldSchema.defaultValue);
+            return new records_1.BinaryField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.BooleanFieldSchema, fieldSchema)) {
-            return new records_1.BooleanFieldManager(fieldSchema.defaultValue);
+            return new records_1.BooleanField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.IntegerFieldSchema, fieldSchema)) {
-            return new records_1.IntegerFieldManager(fieldSchema.defaultValue);
+            return new records_1.IntegerField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.NumberFieldSchema, fieldSchema)) {
-            return new records_1.NumberFieldManager(fieldSchema.defaultValue);
+            return new records_1.NumberField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.StringFieldSchema, fieldSchema)) {
-            return new records_1.StringFieldManager(fieldSchema.defaultValue);
+            return new records_1.StringField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.NullableStringFieldSchema, fieldSchema)) {
-            return new records_1.NullableStringFieldManager(fieldSchema.defaultValue);
+            return new records_1.NullableStringField(fieldSchema.defaultValue);
         }
         throw `Expected code to be unreachable!`;
     }
@@ -140,13 +141,17 @@ class SchemaManager {
         throw `Expected code to be unreachable!`;
     }
     loadStoreManager(blockManager, oldSchema) {
-        let fieldManagers = {};
+        let fields = {};
         for (let key in oldSchema.fields) {
-            fieldManagers[key] = this.loadFieldManager(blockManager, oldSchema.fields[key]);
+            fields[key] = this.loadFieldManager(blockManager, oldSchema.fields[key]);
         }
         let keys = oldSchema.keys;
+        let orders = {};
+        for (let order of oldSchema.orders) {
+            orders[order.key] = this.loadOrderManager(order.order);
+        }
         // TODO: Create index managers.
-        let recordManager = new records_1.RecordManager(fieldManagers);
+        let recordManager = new records_1.RecordManager(fields);
         let storage = new hash_1.Table(blockManager, {
             getKeyFromValue: (value) => {
                 let buffer = blockManager.readBlock(value);
@@ -156,7 +161,7 @@ class SchemaManager {
         }, {
             bid: oldSchema.storageBid
         });
-        return new store_1.StoreManager(blockManager, fieldManagers, keys, storage);
+        return new store_1.StoreManager(blockManager, fields, keys, orders, storage);
     }
     loadLinkManager(blockManager, linkSchema, storeManagers) {
         let parent = storeManagers[linkSchema.parent];
@@ -297,43 +302,43 @@ class SchemaManager {
         if (field instanceof records_1.BigIntField) {
             return {
                 type: "BigIntField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         if (field instanceof records_1.BinaryField) {
             return {
                 type: "BinaryField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         if (field instanceof records_1.BooleanField) {
             return {
                 type: "BooleanField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         if (field instanceof records_1.IntegerField) {
             return {
                 type: "IntegerField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         if (field instanceof records_1.NumberField) {
             return {
                 type: "NumberField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         if (field instanceof records_1.StringField) {
             return {
                 type: "StringField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         if (field instanceof records_1.NullableStringField) {
             return {
                 type: "NullableStringField",
-                defaultValue: field.defaultValue
+                defaultValue: field.getDefaultValue()
             };
         }
         throw `Expected code to be unreachable!`;
@@ -345,6 +350,7 @@ class SchemaManager {
             fields[key] = this.createField(store.fields[key]);
         }
         let keys = store.keys;
+        let orders = this.createKeyOrders(blockManager, store.orders);
         let indices = [];
         for (let i = 0; i < store.indices.length; i++) {
             // TODO: Handle indices.
@@ -353,6 +359,7 @@ class SchemaManager {
             version,
             fields,
             keys,
+            orders,
             indices,
             storageBid: blockManager.createBlock(hash_1.Table.LENGTH)
         };
@@ -394,13 +401,13 @@ class SchemaManager {
                     let oldRecord = entry.record();
                     let newRecord = {};
                     for (let key in store.fields) {
-                        let fieldManager = store.fields[key].createManager();
-                        let codec = fieldManager.getCodec();
+                        let field = store.fields[key];
+                        let codec = field.getCodec();
                         if (isSchemaCompatible(codec, oldRecord[key])) {
                             newRecord[key] = oldRecord[key];
                         }
                         else {
-                            newRecord[key] = store.fields[key].defaultValue;
+                            newRecord[key] = field.getDefaultValue();
                         }
                     }
                     newManager.insert(newRecord);
@@ -442,10 +449,10 @@ class SchemaManager {
         }
         throw `Expected code to be unreachable!`;
     }
-    createKeyOrders(blockManager, link) {
+    createKeyOrders(blockManager, orderMap) {
         let orders = [];
-        for (let key in link.orders) {
-            let order = link.orders[key];
+        for (let key in orderMap) {
+            let order = orderMap[key];
             if (order == null) {
                 continue;
             }
@@ -461,7 +468,7 @@ class SchemaManager {
         let parent = this.getStoreName(link.parent, stores);
         let child = this.getStoreName(link.child, stores);
         let keysMap = link.recordKeysMap;
-        let orders = this.createKeyOrders(blockManager, link);
+        let orders = this.createKeyOrders(blockManager, link.orders);
         return {
             version,
             parent,
@@ -474,7 +481,7 @@ class SchemaManager {
     }
     updateLink(blockManager, stores, link, oldSchema) {
         if (this.compareLink(stores, link, oldSchema)) {
-            let orders = this.createKeyOrders(blockManager, link);
+            let orders = this.createKeyOrders(blockManager, link.orders);
             return {
                 ...oldSchema,
                 orders

@@ -96,70 +96,6 @@ export declare const IndicesSchema: bedrock.codecs.ArrayCodec<{
     bid: number;
 }>;
 export declare type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
-export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
-    version: number;
-    fields: globalThis.Record<string, {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    }>;
-    keys: string[];
-    indices: {
-        keys: any;
-        bid: any;
-    }[];
-    storageBid: number;
-}>;
-export declare type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
-export declare const StoresSchema: bedrock.codecs.RecordCodec<{
-    version: number;
-    fields: globalThis.Record<string, {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    } | {
-        type: any;
-        defaultValue: any;
-    }>;
-    keys: string[];
-    indices: {
-        keys: any;
-        bid: any;
-    }[];
-    storageBid: number;
-}>;
-export declare type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
 export declare const DecreasingOrderSchema: bedrock.codecs.ObjectCodec<{
     type: "DecreasingOrder";
 }>;
@@ -194,6 +130,78 @@ export declare const KeyOrdersSchema: bedrock.codecs.ArrayCodec<{
 export declare type KeyOrdersSchema = ReturnType<typeof KeyOrdersSchema["decode"]>;
 export declare const KeysMapSchema: bedrock.codecs.RecordCodec<string>;
 export declare type KeyMapSchema = ReturnType<typeof KeysMapSchema["decode"]>;
+export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
+    version: number;
+    fields: globalThis.Record<string, {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    }>;
+    keys: string[];
+    orders: {
+        key: any;
+        order: any;
+    }[];
+    indices: {
+        keys: any;
+        bid: any;
+    }[];
+    storageBid: number;
+}>;
+export declare type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
+export declare const StoresSchema: bedrock.codecs.RecordCodec<{
+    version: number;
+    fields: globalThis.Record<string, {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    } | {
+        type: any;
+        defaultValue: any;
+    }>;
+    keys: string[];
+    orders: {
+        key: any;
+        order: any;
+    }[];
+    indices: {
+        keys: any;
+        bid: any;
+    }[];
+    storageBid: number;
+}>;
+export declare type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
 export declare const LinkSchema: bedrock.codecs.ObjectCodec<{
     version: number;
     parent: string;
@@ -221,6 +229,7 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
         version: any;
         fields: any;
         keys: any;
+        orders: any;
         indices: any;
         storageBid: any;
     }>;

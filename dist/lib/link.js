@@ -18,7 +18,6 @@ class WritableLinkManager {
 }
 exports.WritableLinkManager = WritableLinkManager;
 ;
-// TODO: Implement interface WritableLink directly.
 class LinkManager {
     parent;
     child;

@@ -1,6 +1,5 @@
 export declare abstract class File {
     constructor();
-    clear(): void;
     abstract discard(): void;
     abstract persist(): void;
     abstract read(buffer: Uint8Array, offset: number): Uint8Array;

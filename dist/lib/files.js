@@ -10,9 +10,6 @@ const env_1 = require("./env");
 const chunks_1 = require("./chunks");
 class File {
     constructor() { }
-    clear() {
-        this.resize(0);
-    }
 }
 exports.File = File;
 ;
@@ -260,7 +257,7 @@ class DurableFile extends File {
     }
     discard() {
         if (this.tree.length() > 0) {
-            this.log.clear();
+            this.log.resize(0);
             this.header.redoSize(this.bin.size());
             this.header.undoSize(this.bin.size());
             this.header.write(this.log, 0);
@@ -404,7 +401,7 @@ class PhysicalFile extends File {
         libfs.mkdirSync(libpath.dirname(filename), { recursive: true });
         this.fd = libfs.openSync(filename, libfs.existsSync(filename) ? "r+" : "w+");
         if (clear) {
-            this.clear();
+            this.resize(0);
         }
     }
     discard() {

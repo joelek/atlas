@@ -1,7 +1,7 @@
 import { FilterMap } from "./filters";
 import { Table } from "./hash";
 import { OrderMap } from "./orders";
-import { Fields, Record, Keys, KeysRecord, FieldManagers, RequiredKeys } from "./records";
+import { Fields, Record, Keys, KeysRecord, RequiredKeys } from "./records";
 import { BlockManager } from "./vfs";
 export declare type Entry<A extends Record> = {
     bid(): number;
@@ -47,12 +47,13 @@ export declare class WritableStoreManager<A extends Record, B extends RequiredKe
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
-    private fieldManagers;
+    private fields;
     private keys;
+    private orders;
     private recordManager;
     private table;
     private filterIterable;
-    constructor(blockManager: BlockManager, fieldManagers: FieldManagers<A>, keys: [...B], table: Table);
+    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table);
     [Symbol.iterator](): Iterator<Entry<A>>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>>;
@@ -83,7 +84,8 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     fields: Fields<A>;
     keys: [...B];
     indices: Array<Index<A>>;
-    constructor(fields: Fields<A>, keys: [...B]);
+    orders: OrderMap<A>;
+    constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>);
 }
 export declare type Stores<A> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];

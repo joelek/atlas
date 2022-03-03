@@ -33,11 +33,11 @@ class WritableStoreManager {
 exports.WritableStoreManager = WritableStoreManager;
 ;
 // TODO: Handle indices.
-// TODO: Implement interface WritableStore directly.
 class StoreManager {
     blockManager;
-    fieldManagers;
+    fields;
     keys;
+    orders;
     recordManager;
     table;
     filterIterable(bids, filters, orders) {
@@ -77,11 +77,12 @@ class StoreManager {
             return 0;
         });
     }
-    constructor(blockManager, fieldManagers, keys, table) {
+    constructor(blockManager, fields, keys, orders, table) {
         this.blockManager = blockManager;
-        this.fieldManagers = fieldManagers;
+        this.fields = fields;
         this.keys = keys;
-        this.recordManager = new records_1.RecordManager(fieldManagers);
+        this.orders = orders;
+        this.recordManager = new records_1.RecordManager(fields);
         this.table = table;
     }
     *[Symbol.iterator]() {
@@ -94,6 +95,7 @@ class StoreManager {
         this.table.delete();
     }
     filter(filters, orders) {
+        orders = orders ?? this.orders;
         // TODO: Use indices.
         let filtersRemaining = { ...filters };
         let ordersRemaining = { ...orders };
@@ -148,12 +150,9 @@ class StoreManager {
         return this.insert(record);
     }
     static construct(blockManager, options) {
-        let fieldManagers = {};
-        for (let key in options.fields) {
-            fieldManagers[key] = options.fields[key].createManager();
-        }
+        let fields = options.fields;
         let keys = options.keys;
-        let recordManager = new records_1.RecordManager(fieldManagers);
+        let recordManager = new records_1.RecordManager(fields);
         let storage = new hash_1.Table(blockManager, {
             getKeyFromValue: (value) => {
                 let buffer = blockManager.readBlock(value);
@@ -161,7 +160,7 @@ class StoreManager {
                 return recordManager.encodeKeys(keys, record);
             }
         });
-        let manager = new StoreManager(blockManager, fieldManagers, keys, storage);
+        let manager = new StoreManager(blockManager, fields, keys, {}, storage);
         return manager;
     }
 }
@@ -179,9 +178,11 @@ class Store {
     fields;
     keys;
     indices;
-    constructor(fields, keys) {
+    orders;
+    constructor(fields, keys, orders) {
         this.fields = fields;
         this.keys = keys;
+        this.orders = orders ?? {};
         this.indices = [];
     }
 }

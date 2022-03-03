@@ -12,3 +12,6 @@ export declare class EqualityFilter<A extends Value> extends Filter<A> {
 export declare type FilterMap<A extends Record> = {
     [C in keyof A]?: Filter<A[C]>;
 };
+export declare type Filters<A extends Record> = {
+    [C in keyof A]: Filter<A[C]>;
+};

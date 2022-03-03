@@ -1,13 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Context = exports.OrderReference = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
+exports.Context = exports.OperatorReference = exports.OrderReference = exports.QueryReference = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
 const link_1 = require("./link");
 const store_1 = require("./store");
 const records_1 = require("./records");
 const orders_1 = require("./orders");
 const files_1 = require("./files");
 const database_1 = require("./database");
+const operators_1 = require("./operators");
 const schema_1 = require("./schema");
+const queries_1 = require("./queries");
 class FileReference {
     FileReference;
 }
@@ -28,16 +30,28 @@ class LinkReference {
 }
 exports.LinkReference = LinkReference;
 ;
+class QueryReference {
+    QueryReference;
+}
+exports.QueryReference = QueryReference;
+;
 class OrderReference {
     OrderReference;
 }
 exports.OrderReference = OrderReference;
+;
+class OperatorReference {
+    OperatorReference;
+}
+exports.OperatorReference = OperatorReference;
 ;
 class Context {
     files;
     fields;
     links;
     stores;
+    queries;
+    operators;
     orders;
     databaseManagers;
     getFile(reference) {
@@ -68,6 +82,20 @@ class Context {
         }
         return store;
     }
+    getQuery(reference) {
+        let query = this.queries.get(reference);
+        if (query == null) {
+            throw `Expected query to be defined in context!`;
+        }
+        return query;
+    }
+    getOperator(reference) {
+        let operator = this.operators.get(reference);
+        if (operator == null) {
+            throw `Expected operator to be defined in context!`;
+        }
+        return operator;
+    }
     getOrder(reference) {
         let order = this.orders.get(reference);
         if (order == null) {
@@ -80,6 +108,8 @@ class Context {
         this.fields = new Map();
         this.links = new Map();
         this.stores = new Map();
+        this.queries = new Map();
+        this.operators = new Map();
         this.orders = new Map();
         this.databaseManagers = new Map();
     }
@@ -135,18 +165,42 @@ class Context {
             }
             orders[key] = this.getOrder(orderReference);
         }
+        // TODO: Create indices.
         let link = new link_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
         this.links.set(reference, link);
         return reference;
     }
-    createStore(fieldReferences, keys) {
-        let reference = new StoreReference();
+    createStore(fieldReferences, keys, orderReferences) {
+        orderReferences = orderReferences ?? {};
         let fields = {};
         for (let key in fieldReferences) {
             fields[key] = this.getField(fieldReferences[key]);
         }
-        let store = new store_1.Store(fields, keys);
+        let orders = {};
+        for (let key in orderReferences) {
+            orders[key] = this.getOrder(orderReferences[key]);
+        }
+        let reference = new StoreReference();
+        let store = new store_1.Store(fields, keys, orders);
         this.stores.set(reference, store);
+        return reference;
+    }
+    createQuery(storeReference, operatorReferences) {
+        let store = this.getStore(storeReference);
+        let operators = {};
+        for (let key in operatorReferences) {
+            operators[key] = this.getOperator(operatorReferences[key]);
+        }
+        // TODO: Create indices.
+        let reference = new QueryReference();
+        let query = new queries_1.Query(store, operators);
+        this.queries.set(reference, query);
+        return reference;
+    }
+    createEqualityOperator() {
+        let reference = new OperatorReference();
+        let operator = new operators_1.EqualityOperator();
+        this.operators.set(reference, operator);
         return reference;
     }
     createDecreasingOrder() {

@@ -4,8 +4,8 @@ const records = require("./records");
 const test_1 = require("./test");
 (0, test_1.test)(`It should encode records.`, async (assert) => {
     let rh = new records.RecordManager({
-        firstname: new records.StringFieldManager(""),
-        lastname: new records.StringFieldManager("")
+        firstname: new records.StringField(""),
+        lastname: new records.StringField("")
     });
     let record = {
         firstname: "Joel",
@@ -17,8 +17,8 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should encode keys.`, async (assert) => {
     let rh = new records.RecordManager({
-        firstname: new records.StringFieldManager(""),
-        lastname: new records.StringFieldManager("")
+        firstname: new records.StringField(""),
+        lastname: new records.StringField("")
     });
     let record = {
         firstname: "Joel",

@@ -7,8 +7,11 @@ const context_1 = require("./context");
     let context = new context_1.Context();
     let users = context.createStore({
         user_id: context.createStringField(),
-        name: context.createStringField()
-    }, ["user_id"]);
+        name: context.createStringField(),
+        age: context.createNumberField()
+    }, ["user_id"], {
+        name: context.createIncreasingOrder()
+    });
     let posts = context.createStore({
         post_id: context.createStringField(),
         user_id: context.createStringField(),
@@ -19,6 +22,10 @@ const context_1 = require("./context");
     }, {
         name: context.createIncreasingOrder()
     });
+    let query = context.createQuery(users, {
+        name: context.createEqualityOperator(),
+        age: context.createEqualityOperator()
+    });
     let storage = context.createMemoryStorage();
     let manager = context.createTransactionManager(storage, {
         users,
@@ -26,12 +33,17 @@ const context_1 = require("./context");
     }, {
         userPosts
     });
-    let observed = await (0, test_1.benchmark)(async () => {
-        return await manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
+    await (0, test_1.benchmark)(async () => {
+        return manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
             users.insert({
                 user_id: "User 1",
-                name: "Joel Ek"
+                name: "Joel Ek",
+                age: 38
             });
+        });
+    }, 1);
+    let observed = await (0, test_1.benchmark)(async () => {
+        return await manager.enqueueReadableTransaction(async ({ users }, { userPosts }) => {
             return users.lookup({
                 user_id: "User 1"
             });
@@ -39,7 +51,8 @@ const context_1 = require("./context");
     }, 10000);
     let expected = {
         user_id: "User 1",
-        name: "Joel Ek"
+        name: "Joel Ek",
+        age: 38
     };
     assert.record.equals(observed, expected);
 });
