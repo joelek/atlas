@@ -157,7 +157,7 @@ export class Context {
 		return reference;
 	}
 
-	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: KeysRecordMap<A, B, C>, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E> {
+	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E> {
 		let reference = new LinkReference<A, B, C, D, E>();
 		let orders = {} as OrderMap<C>;
 		for (let key in orderReferences) {
