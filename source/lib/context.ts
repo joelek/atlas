@@ -5,6 +5,7 @@ import { TransactionManager } from "./transaction";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
 import { Database, DatabaseManager } from "./database";
+import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schema";
 import { SubsetOf } from "./inference";
 
@@ -52,11 +53,20 @@ export type OrderReferences<A extends Record> = {
 	[B in keyof A]: OrderReference<A[B]>;
 };
 
+export class OperatorReference<A extends Operator<any>> {
+	private OperatorReference!: "OperatorReference";
+};
+
+export type OperatorReferences<A extends Record> = {
+	[B in keyof A]: OperatorReference<Operator<A[B]>>;
+};
+
 export class Context {
 	private files: Map<FileReference, File>;
 	private fields: Map<FieldReference<any>, Field<any>>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
+	private operators: Map<OperatorReference<any>, Operator<any>>;
 	private orders: Map<OrderReference<any>, Order<any>>;
 	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
 
@@ -92,6 +102,14 @@ export class Context {
 		return store;
 	}
 
+	private getOperator<A extends Operator<any>>(reference: OperatorReference<A>): A {
+		let operator = this.operators.get(reference);
+		if (operator == null) {
+			throw `Expected operator to be defined in context!`;
+		}
+		return operator as A;
+	}
+
 	private getOrder<A extends Value>(reference: OrderReference<A>): Order<A> {
 		let order = this.orders.get(reference);
 		if (order == null) {
@@ -105,6 +123,7 @@ export class Context {
 		this.fields = new Map();
 		this.links = new Map();
 		this.stores = new Map();
+		this.operators = new Map();
 		this.orders = new Map();
 		this.databaseManagers = new Map();
 	}
@@ -186,6 +205,13 @@ export class Context {
 		let reference = new StoreReference();
 		let store = new Store(fields, keys, orders);
 		this.stores.set(reference, store);
+		return reference;
+	}
+
+	createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>> {
+		let reference = new OperatorReference();
+		let operator = new EqualityOperator();
+		this.operators.set(reference, operator);
 		return reference;
 	}
 

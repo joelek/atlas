@@ -34,3 +34,7 @@ export class DecreasingOrder<A extends Value> extends Order<A> {
 export type OrderMap<A extends Record> = {
 	[C in keyof A]?: Order<A[C]>;
 };
+
+export type Orders<A extends Record> = {
+	[C in keyof A]: Order<A[C]>;
+};

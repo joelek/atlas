@@ -1,17 +1,13 @@
-import { EqualityFilter, Filter, RangeFilter } from "./filters";
+import { EqualityFilter, Filter } from "./filters";
 import { Record, Value } from "./records";
 
-export abstract class Operator<A extends Value, B extends A | A[]> {
+export abstract class Operator<A extends Value> {
 	constructor() {}
 
-	abstract createFilter(value: B): Filter<A>;
+	abstract createFilter(value: A): Filter<A>;
 };
 
-export type Operators<A extends Record> = {
-	[B in keyof A]?: A[B] extends Operator<infer C, infer D> ? Operator<C, D> : never;
-};
-
-export class EqualityOperator<A extends Value> extends Operator<A, A> {
+export class EqualityOperator<A extends Value> extends Operator<A> {
 	constructor() {
 		super();
 	}
@@ -21,12 +17,10 @@ export class EqualityOperator<A extends Value> extends Operator<A, A> {
 	}
 };
 
-export class RangeOperator<A extends Value> extends Operator<A, [A, A]> {
-	constructor() {
-		super();
-	}
+export type OperatorMap<A extends Record> = {
+	[B in keyof A]?: Operator<A[B]>;
+};
 
-	createFilter(value: [A, A]): RangeFilter<A> {
-		return new RangeFilter(value[0], value[1]);
-	}
+export type Operators<A extends Record> = {
+	[B in keyof A]: Operator<A[B]>;
 };
