@@ -45,12 +45,12 @@ export type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
-export class OrderReference<A extends Value> {
+export class OrderReference<A extends Order<any>> {
 	private OrderReference!: "OrderReference";
 };
 
 export type OrderReferences<A extends Record> = {
-	[B in keyof A]: OrderReference<A[B]>;
+	[B in keyof A]: OrderReference<Order<A[B]>>;
 };
 
 export class OperatorReference<A extends Operator<any>> {
@@ -110,12 +110,12 @@ export class Context {
 		return operator as A;
 	}
 
-	private getOrder<A extends Value>(reference: OrderReference<A>): Order<A> {
+	private getOrder<A extends Order<any>>(reference: OrderReference<A>): A {
 		let order = this.orders.get(reference);
 		if (order == null) {
 			throw `Expected order to be defined in context!`;
 		}
-		return order;
+		return order as A;
 	}
 
 	constructor() {
@@ -200,7 +200,7 @@ export class Context {
 		}
 		let orders = {} as OrderMap<A>;
 		for (let key in orderReferences) {
-			orders[key] = this.getOrder(orderReferences[key]);
+			orders[key] = this.getOrder(orderReferences[key]) as any;
 		}
 		let reference = new StoreReference();
 		let store = new Store(fields, keys, orders);
@@ -215,15 +215,15 @@ export class Context {
 		return reference;
 	}
 
-	createDecreasingOrder<A extends Value>(): OrderReference<A> {
-		let reference = new OrderReference<A>();
+	createDecreasingOrder<A extends Value>(): OrderReference<DecreasingOrder<A>> {
+		let reference = new OrderReference();
 		let order = new DecreasingOrder();
 		this.orders.set(reference, order);
 		return reference;
 	}
 
-	createIncreasingOrder<A extends Value>(): OrderReference<A> {
-		let reference = new OrderReference<A>();
+	createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>> {
+		let reference = new OrderReference();
 		let order = new IncreasingOrder();
 		this.orders.set(reference, order);
 		return reference;
