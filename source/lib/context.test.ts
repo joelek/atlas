@@ -6,8 +6,11 @@ test(`It should work.`, async (assert) => {
 	let context = new Context();
 	let users = context.createStore({
 		user_id: context.createStringField(),
-		name: context.createStringField()
-	}, ["user_id"]);
+		name: context.createStringField(),
+		age: context.createNumberField()
+	}, ["user_id"], {
+		name: context.createIncreasingOrder()
+	});
 	let posts = context.createStore({
 		post_id: context.createStringField(),
 		user_id: context.createStringField(),
@@ -29,7 +32,8 @@ test(`It should work.`, async (assert) => {
 		return manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
 			users.insert({
 				user_id: "User 1",
-				name: "Joel Ek"
+				name: "Joel Ek",
+				age: 38
 			});
 		});
 	}, 1);
@@ -42,7 +46,8 @@ test(`It should work.`, async (assert) => {
 	}, 10000);
 	let expected = {
 		user_id: "User 1",
-		name: "Joel Ek"
+		name: "Joel Ek",
+		age: 38
 	};
 	assert.record.equals(observed, expected);
 });
