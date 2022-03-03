@@ -8,6 +8,7 @@ import { Database, DatabaseManager } from "./database";
 import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schema";
 import { SubsetOf } from "./inference";
+import { Query } from "./queries";
 
 export class FileReference {
 	private FileReference!: "FileReference";
@@ -45,6 +46,14 @@ export type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
+export class QueryReference<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>> {
+	private QueryReference!: "QueryReference";
+};
+
+export type QueryReferences<A> = {
+	[B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E> ? QueryReference<C, D, E> : A[B];
+};
+
 export class OrderReference<A extends Order<any>> {
 	private OrderReference!: "OrderReference";
 };
@@ -66,6 +75,7 @@ export class Context {
 	private fields: Map<FieldReference<any>, Field<any>>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
+	private queries: Map<QueryReference<any, any, any>, Query<any, any, any>>;
 	private operators: Map<OperatorReference<any>, Operator<any>>;
 	private orders: Map<OrderReference<any>, Order<any>>;
 	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
@@ -102,6 +112,14 @@ export class Context {
 		return store;
 	}
 
+	private getQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(reference: QueryReference<A, B, C>): Query<A, B, C> {
+		let query = this.queries.get(reference);
+		if (query == null) {
+			throw `Expected query to be defined in context!`;
+		}
+		return query;
+	}
+
 	private getOperator<A extends Operator<any>>(reference: OperatorReference<A>): A {
 		let operator = this.operators.get(reference);
 		if (operator == null) {
@@ -123,6 +141,7 @@ export class Context {
 		this.fields = new Map();
 		this.links = new Map();
 		this.stores = new Map();
+		this.queries = new Map();
 		this.operators = new Map();
 		this.orders = new Map();
 		this.databaseManagers = new Map();
@@ -187,6 +206,7 @@ export class Context {
 			}
 			orders[key] = this.getOrder(orderReference);
 		}
+		// TODO: Create indices.
 		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
 		this.links.set(reference, link);
 		return reference;
@@ -205,6 +225,19 @@ export class Context {
 		let reference = new StoreReference();
 		let store = new Store(fields, keys, orders);
 		this.stores.set(reference, store);
+		return reference;
+	}
+
+	createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>): QueryReference<A, B, C> {
+		let store = this.getStore(storeReference);
+		let operators = {} as Operators<C>;
+		for (let key in operatorReferences) {
+			operators[key] = this.getOperator(operatorReferences[key]);
+		}
+		// TODO: Create indices.
+		let reference = new QueryReference();
+		let query = new Query(store, operators);
+		this.queries.set(reference, query);
 		return reference;
 	}
 

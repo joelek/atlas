@@ -21,6 +21,10 @@ test(`It should work.`, async (assert) => {
 	}, {
 		name: context.createIncreasingOrder()
 	});
+	let query = context.createQuery(users, {
+		name: context.createEqualityOperator(),
+		age: context.createEqualityOperator()
+	});
 	let storage = context.createMemoryStorage();
 	let manager = context.createTransactionManager(storage, {
 		users,
