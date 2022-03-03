@@ -4,7 +4,6 @@ import { Table } from "./hash";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./vfs";
-import { SubsetOf } from "./inference";
 
 export type Entry<A extends Record> = {
 	bid(): number;
@@ -84,7 +83,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockManager: BlockManager;
 	private fields: Fields<A>;
 	private keys: [...B];
-	private orders: OrderMap<SubsetOf<A>>;
+	private orders: OrderMap<A>;
 	private recordManager: RecordManager<A>;
 	private table: Table;
 
@@ -126,7 +125,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			});
 	}
 
-	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<SubsetOf<A>>, table: Table) {
+	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table) {
 		this.blockManager = blockManager;
 		this.fields = fields;
 		this.keys = keys;
@@ -249,9 +248,9 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 	fields: Fields<A>;
 	keys: [...B];
 	indices: Array<Index<A>>;
-	orders: OrderMap<SubsetOf<A>>;
+	orders: OrderMap<A>;
 
-	constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<SubsetOf<A>>) {
+	constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>) {
 		this.fields = fields;
 		this.keys = keys;
 		this.orders = orders ?? {};

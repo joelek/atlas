@@ -6,7 +6,7 @@ import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
 import { Database, DatabaseManager } from "./database";
 import { SchemaManager } from "./schema";
-import { ExpansionOf, SubsetOf } from "./inference";
+import { SubsetOf } from "./inference";
 
 export class FileReference {
 	private FileReference!: "FileReference";
@@ -173,13 +173,13 @@ export class Context {
 		return reference;
 	}
 
-	createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B> {
+	createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B> {
 		orderReferences = orderReferences ?? {} as OrderReferences<C>;
 		let fields = {} as Fields<A>;
 		for (let key in fieldReferences) {
 			fields[key] = this.getField(fieldReferences[key]);
 		}
-		let orders = {} as OrderMap<C>;
+		let orders = {} as OrderMap<A>;
 		for (let key in orderReferences) {
 			orders[key] = this.getOrder(orderReferences[key]);
 		}
