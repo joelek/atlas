@@ -91,20 +91,6 @@ export const IndicesSchema = bedrock.codecs.Array.of(IndexSchema);
 
 export type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
 
-export const StoreSchema = bedrock.codecs.Object.of({
-	version: bedrock.codecs.Integer,
-	fields: FieldsSchema,
-	keys: KeysSchema,
-	indices: IndicesSchema,
-	storageBid: bedrock.codecs.Integer
-});
-
-export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
-
-export const StoresSchema = bedrock.codecs.Record.of(StoreSchema);
-
-export type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
-
 export const DecreasingOrderSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("DecreasingOrder")
 });
@@ -138,6 +124,21 @@ export type KeyOrdersSchema = ReturnType<typeof KeyOrdersSchema["decode"]>;
 export const KeysMapSchema = bedrock.codecs.Record.of(bedrock.codecs.String);
 
 export type KeyMapSchema = ReturnType<typeof KeysMapSchema["decode"]>;
+
+export const StoreSchema = bedrock.codecs.Object.of({
+	version: bedrock.codecs.Integer,
+	fields: FieldsSchema,
+	keys: KeysSchema,
+	orders: KeyOrdersSchema,
+	indices: IndicesSchema,
+	storageBid: bedrock.codecs.Integer
+});
+
+export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
+
+export const StoresSchema = bedrock.codecs.Record.of(StoreSchema);
+
+export type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
 
 export const LinkSchema = bedrock.codecs.Object.of({
 	version: bedrock.codecs.Integer,
@@ -230,6 +231,10 @@ export class SchemaManager {
 			fields[key] = this.loadFieldManager(blockManager, oldSchema.fields[key]);
 		}
 		let keys = oldSchema.keys as any;
+		let orders = {} as OrderMap<any>;
+		for (let order of oldSchema.orders) {
+			orders[order.key] = this.loadOrderManager(order.order);
+		}
 		// TODO: Create index managers.
 		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
@@ -241,7 +246,7 @@ export class SchemaManager {
 		}, {
 			bid: oldSchema.storageBid
 		});
-		return new StoreManager(blockManager, fields, keys, storage);
+		return new StoreManager(blockManager, fields, keys, orders, storage);
 	}
 
 	private loadLinkManager(blockManager: BlockManager, linkSchema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
@@ -439,6 +444,7 @@ export class SchemaManager {
 			fields[key] = this.createField(store.fields[key]);
 		}
 		let keys: KeysSchema = store.keys;
+		let orders = this.createKeyOrders(blockManager, store.orders);
 		let indices: IndicesSchema = [];
 		for (let i = 0; i < store.indices.length; i++) {
 			// TODO: Handle indices.
@@ -447,6 +453,7 @@ export class SchemaManager {
 			version,
 			fields,
 			keys,
+			orders,
 			indices,
 			storageBid: blockManager.createBlock(Table.LENGTH)
 		};
@@ -537,10 +544,10 @@ export class SchemaManager {
 		throw `Expected code to be unreachable!`;
 	}
 
-	private createKeyOrders<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(blockManager: BlockManager, link: Link<A, B, C, D, E>): KeyOrdersSchema {
+	private createKeyOrders<A extends Record>(blockManager: BlockManager, orderMap: OrderMap<A>): KeyOrdersSchema {
 		let orders: KeyOrdersSchema = [];
-		for (let key in link.orders) {
-			let order = link.orders[key];
+		for (let key in orderMap) {
+			let order = orderMap[key];
 			if (order == null) {
 				continue;
 			}
@@ -557,7 +564,7 @@ export class SchemaManager {
 		let parent = this.getStoreName(link.parent, stores);
 		let child = this.getStoreName(link.child, stores);
 		let keysMap = link.recordKeysMap as KeyMapSchema;
-		let orders = this.createKeyOrders(blockManager, link);
+		let orders = this.createKeyOrders(blockManager, link.orders);
 		return {
 			version,
 			parent,
@@ -573,7 +580,7 @@ export class SchemaManager {
 
 	private updateLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(blockManager: BlockManager, stores: Stores<any>, link: Link<A, B, C, D, E>, oldSchema: LinkSchema): LinkSchema {
 		if (this.compareLink(stores, link, oldSchema)) {
-			let orders = this.createKeyOrders(blockManager, link);
+			let orders = this.createKeyOrders(blockManager, link.orders);
 			return {
 				...oldSchema,
 				orders

@@ -4,6 +4,7 @@ import { Table } from "./hash";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./vfs";
+import { SubsetOf } from "./inference";
 
 export type Entry<A extends Record> = {
 	bid(): number;
@@ -83,6 +84,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockManager: BlockManager;
 	private fields: Fields<A>;
 	private keys: [...B];
+	private orders: OrderMap<SubsetOf<A>>;
 	private recordManager: RecordManager<A>;
 	private table: Table;
 
@@ -124,10 +126,11 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			});
 	}
 
-	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], table: Table) {
+	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<SubsetOf<A>>, table: Table) {
 		this.blockManager = blockManager;
 		this.fields = fields;
 		this.keys = keys;
+		this.orders = orders;
 		this.recordManager = new RecordManager(fields);
 		this.table = table;
 	}
@@ -144,6 +147,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>> {
+		orders = orders ?? this.orders;
 		// TODO: Use indices.
 		let filtersRemaining = { ...filters } as FilterMap<A>;
 		let ordersRemaining = { ...orders } as OrderMap<A>;
@@ -216,7 +220,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 				return recordManager.encodeKeys(keys, record);
 			}
 		});
-		let manager = new StoreManager(blockManager, fields, keys, storage);
+		let manager = new StoreManager(blockManager, fields, keys, {}, storage);
 		return manager;
 	}
 };
@@ -245,10 +249,12 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 	fields: Fields<A>;
 	keys: [...B];
 	indices: Array<Index<A>>;
+	orders: OrderMap<SubsetOf<A>>;
 
-	constructor(fields: Fields<A>, keys: [...B]) {
+	constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<SubsetOf<A>>) {
 		this.fields = fields;
 		this.keys = keys;
+		this.orders = orders ?? {};
 		this.indices = [];
 	}
 };
