@@ -13,12 +13,12 @@ export class FileReference {
 	private FileReference!: "FileReference";
 };
 
-export class FieldReference<A extends Value> {
+export class FieldReference<A extends Field<any>> {
 	private FieldReference!: "FieldReference";
 };
 
 export type FieldReferences<A extends Record> = {
-	[B in keyof A]: FieldReference<A[B]>;
+	[B in keyof A]: FieldReference<Field<A[B]>>;
 };
 
 export class StoreReference<A extends Record, B extends RequiredKeys<A>> {
@@ -78,12 +78,12 @@ export class Context {
 		return file;
 	}
 
-	private getField<A extends Value>(reference: FieldReference<A>): Field<A> {
+	private getField<A extends Field<any>>(reference: FieldReference<A>): A {
 		let field = this.fields.get(reference);
 		if (field == null) {
 			throw `Expected field to be defined in context!`;
 		}
-		return field;
+		return field as A;
 	}
 
 	private getLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(reference: LinkReference<A, B, C, D, E>): Link<A, B, C, D, E> {
@@ -128,50 +128,50 @@ export class Context {
 		this.databaseManagers = new Map();
 	}
 
-	createBigIntField(): FieldReference<bigint> {
-		let reference = new FieldReference<bigint>();
+	createBigIntField(): FieldReference<BigIntField> {
+		let reference = new FieldReference();
 		let field = new BigIntField(0n);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createBinaryField(): FieldReference<Uint8Array> {
-		let reference = new FieldReference<Uint8Array>();
+	createBinaryField(): FieldReference<BinaryField> {
+		let reference = new FieldReference();
 		let field = new BinaryField(Uint8Array.of());
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createBooleanField(): FieldReference<boolean> {
-		let reference = new FieldReference<boolean>();
+	createBooleanField(): FieldReference<BooleanField> {
+		let reference = new FieldReference();
 		let field = new BooleanField(false);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createIntegerField(): FieldReference<number> {
-		let reference = new FieldReference<number>();
+	createIntegerField(): FieldReference<IntegerField> {
+		let reference = new FieldReference();
 		let field = new IntegerField(0);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNumberField(): FieldReference<number> {
-		let reference = new FieldReference<number>();
+	createNumberField(): FieldReference<NumberField> {
+		let reference = new FieldReference();
 		let field = new NumberField(0);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createStringField(): FieldReference<string> {
-		let reference = new FieldReference<string>();
+	createStringField(): FieldReference<StringField> {
+		let reference = new FieldReference();
 		let field = new StringField("");
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableStringField(): FieldReference<string | null> {
-		let reference = new FieldReference<string | null>();
+	createNullableStringField(): FieldReference<NullableStringField> {
+		let reference = new FieldReference();
 		let field = new NullableStringField(null);
 		this.fields.set(reference, field);
 		return reference;
