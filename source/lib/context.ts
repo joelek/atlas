@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField } from "./records";
 import { TransactionManager } from "./transaction";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
@@ -192,6 +192,13 @@ export class Context {
 	createIntegerField(): FieldReference<IntegerField> {
 		let reference = new FieldReference();
 		let field = new IntegerField(0);
+		this.fields.set(reference, field);
+		return reference;
+	}
+
+	createNullableIntegerField(): FieldReference<NullableIntegerField> {
+		let reference = new FieldReference();
+		let field = new NullableIntegerField(null);
 		this.fields.set(reference, field);
 		return reference;
 	}
