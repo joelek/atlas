@@ -44,6 +44,15 @@ export class BigIntField extends Field<bigint> {
 	}
 };
 
+export class NullableBigIntField extends Field<bigint | null> {
+	constructor(defaultValue: bigint | null) {
+		super(bedrock.codecs.Union.of(
+			bedrock.codecs.BigInt,
+			bedrock.codecs.Null
+		), defaultValue);
+	}
+};
+
 export class BinaryField extends Field<Uint8Array> {
 	constructor(defaultValue: Uint8Array) {
 		super(bedrock.codecs.Binary, defaultValue);
