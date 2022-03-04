@@ -74,6 +74,15 @@ export class BooleanField extends Field<boolean> {
 	}
 };
 
+export class NullableBooleanField extends Field<boolean | null> {
+	constructor(defaultValue: boolean | null) {
+		super(bedrock.codecs.Union.of(
+			bedrock.codecs.Boolean,
+			bedrock.codecs.Null
+		), defaultValue);
+	}
+};
+
 export class IntegerField extends Field<number> {
 	constructor(defaultValue: number) {
 		super(bedrock.codecs.Number, defaultValue);

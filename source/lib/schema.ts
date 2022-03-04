@@ -4,7 +4,7 @@ import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField } from "./records";
+import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./store";
 import { BlockManager } from "./vfs";
 
@@ -49,6 +49,16 @@ export const BooleanFieldSchema = bedrock.codecs.Object.of({
 
 export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
 
+export const NullableBooleanFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("NullableBooleanField"),
+	defaultValue: bedrock.codecs.Union.of(
+		bedrock.codecs.Boolean,
+		bedrock.codecs.Null
+	)
+});
+
+export type NullableBooleanFieldSchema = ReturnType<typeof NullableBooleanFieldSchema["decode"]>;
+
 export const IntegerFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("IntegerField"),
 	defaultValue: bedrock.codecs.Integer
@@ -86,6 +96,7 @@ export const FieldSchema = bedrock.codecs.Union.of(
 	BinaryFieldSchema,
 	NullableBinaryFieldSchema,
 	BooleanFieldSchema,
+	NullableBooleanFieldSchema,
 	IntegerFieldSchema,
 	NumberFieldSchema,
 	StringFieldSchema,
@@ -228,6 +239,9 @@ export class SchemaManager {
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
 			return new BooleanField(fieldSchema.defaultValue);
 		}
+		if (isSchemaCompatible(NullableBooleanFieldSchema, fieldSchema)) {
+			return new NullableBooleanField(fieldSchema.defaultValue);
+		}
 		if (isSchemaCompatible(IntegerFieldSchema, fieldSchema)) {
 			return new IntegerField(fieldSchema.defaultValue);
 		}
@@ -339,6 +353,15 @@ export class SchemaManager {
 		}
 		if (isSchemaCompatible(BooleanFieldSchema, schema)) {
 			if (field instanceof BooleanField) {
+				return true;
+			}
+			if (field instanceof NullableBooleanField) {
+				return true;
+			}
+			return false;
+		}
+		if (isSchemaCompatible(NullableBooleanFieldSchema, schema)) {
+			if (field instanceof NullableBooleanField) {
 				return true;
 			}
 			return false;
@@ -466,6 +489,12 @@ export class SchemaManager {
 			return {
 				type: "BooleanField",
 				defaultValue: (field as BooleanField).getDefaultValue()
+			};
+		}
+		if (field instanceof NullableBooleanField) {
+			return {
+				type: "NullableBooleanField",
+				defaultValue: (field as NullableBooleanField).getDefaultValue()
 			};
 		}
 		if (field instanceof IntegerField) {
