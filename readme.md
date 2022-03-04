@@ -79,5 +79,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Add type-safety checks for keys during schema deserialization.
 * Implement index support using legacy RadixTree.
 * Implement search support using legacy RadixTree.
-* Add orders and filters to index module.
 * Defer decoding of records until record is filtered and ordered.
