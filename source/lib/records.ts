@@ -59,6 +59,15 @@ export class BinaryField extends Field<Uint8Array> {
 	}
 };
 
+export class NullableBinaryField extends Field<Uint8Array | null> {
+	constructor(defaultValue: Uint8Array | null) {
+		super(bedrock.codecs.Union.of(
+			bedrock.codecs.Binary,
+			bedrock.codecs.Null
+		), defaultValue);
+	}
+};
+
 export class BooleanField extends Field<boolean> {
 	constructor(defaultValue: boolean) {
 		super(bedrock.codecs.Boolean, defaultValue);

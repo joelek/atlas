@@ -4,7 +4,7 @@ import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField } from "./records";
+import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./store";
 import { BlockManager } from "./vfs";
 
@@ -31,6 +31,16 @@ export const BinaryFieldSchema = bedrock.codecs.Object.of({
 });
 
 export type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
+
+export const NullableBinaryFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("NullableBinaryField"),
+	defaultValue: bedrock.codecs.Union.of(
+		bedrock.codecs.Binary,
+		bedrock.codecs.Null
+	)
+});
+
+export type NullableBinaryFieldSchema = ReturnType<typeof NullableBinaryFieldSchema["decode"]>;
 
 export const BooleanFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BooleanField"),
@@ -74,6 +84,7 @@ export const FieldSchema = bedrock.codecs.Union.of(
 	BigIntFieldSchema,
 	NullableBigIntFieldSchema,
 	BinaryFieldSchema,
+	NullableBinaryFieldSchema,
 	BooleanFieldSchema,
 	IntegerFieldSchema,
 	NumberFieldSchema,
@@ -211,6 +222,9 @@ export class SchemaManager {
 		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
 			return new BinaryField(fieldSchema.defaultValue);
 		}
+		if (isSchemaCompatible(NullableBinaryFieldSchema, fieldSchema)) {
+			return new NullableBinaryField(fieldSchema.defaultValue);
+		}
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
 			return new BooleanField(fieldSchema.defaultValue);
 		}
@@ -310,6 +324,15 @@ export class SchemaManager {
 		}
 		if (isSchemaCompatible(BinaryFieldSchema, schema)) {
 			if (field instanceof BinaryField) {
+				return true;
+			}
+			if (field instanceof NullableBinaryField) {
+				return true;
+			}
+			return false;
+		}
+		if (isSchemaCompatible(NullableBinaryFieldSchema, schema)) {
+			if (field instanceof NullableBinaryField) {
 				return true;
 			}
 			return false;
@@ -431,6 +454,12 @@ export class SchemaManager {
 			return {
 				type: "BinaryField",
 				defaultValue: (field as BinaryField).getDefaultValue()
+			};
+		}
+		if (field instanceof NullableBinaryField) {
+			return {
+				type: "NullableBinaryField",
+				defaultValue: (field as NullableBinaryField).getDefaultValue()
 			};
 		}
 		if (field instanceof BooleanField) {

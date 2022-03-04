@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField } from "./records";
 import { TransactionManager } from "./transaction";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
@@ -164,6 +164,13 @@ export class Context {
 	createBinaryField(): FieldReference<BinaryField> {
 		let reference = new FieldReference();
 		let field = new BinaryField(Uint8Array.of());
+		this.fields.set(reference, field);
+		return reference;
+	}
+
+	createNullableBinaryField(): FieldReference<NullableBinaryField> {
+		let reference = new FieldReference();
+		let field = new NullableBinaryField(null);
 		this.fields.set(reference, field);
 		return reference;
 	}
