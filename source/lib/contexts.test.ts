@@ -1,6 +1,6 @@
 import { benchmark } from "./test";
 import { test } from "./test";
-import { Context } from "./context";
+import { Context } from "./contexts";
 
 test(`It should work.`, async (assert) => {
 	let context = new Context();
