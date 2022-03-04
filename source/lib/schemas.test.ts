@@ -1,4 +1,4 @@
-import { Database } from "./database";
+import { Database } from "./databases";
 import { VirtualFile } from "./files";
 import { StringField, BooleanField } from "./records";
 import { SchemaManager } from "./schemas";

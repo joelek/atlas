@@ -1,5 +1,5 @@
 import * as bedrock from "@joelek/bedrock";
-import { Database, DatabaseManager } from "./database";
+import { Database, DatabaseManager } from "./databases";
 import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";

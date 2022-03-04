@@ -1,6 +1,6 @@
 import { test } from "./test";
 import { StringField, NullableStringField } from "./records";
-import { DatabaseManager } from "./database";
+import { DatabaseManager } from "./databases";
 import { BlockManager } from "./vfs";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./stores";
