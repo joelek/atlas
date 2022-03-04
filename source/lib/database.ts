@@ -1,7 +1,7 @@
 import { File } from "./files";
 import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./link";
 import { Record, Keys, RequiredKeys } from "./records";
-import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./store";
+import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./stores";
 import { TransactionManager } from "./transaction";
 
 export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>> {

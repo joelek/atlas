@@ -1,5 +1,5 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
-import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
+import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./stores";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transaction";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";

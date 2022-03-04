@@ -1,7 +1,7 @@
 import { test } from "./test";
 import { TransactionManager } from "./transaction";
 import { VirtualFile } from "./files";
-import { WritableStoreManager, StoreManager } from "./store";
+import { WritableStoreManager, StoreManager } from "./stores";
 import { BlockManager } from "./vfs";
 import { StringField } from "./records";
 

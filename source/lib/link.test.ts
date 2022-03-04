@@ -3,7 +3,7 @@ import { VirtualFile } from "./files";
 import { LinkManager } from "./link";
 import { IncreasingOrder } from "./orders";
 import { NullableStringField, StringField } from "./records";
-import { StoreManager } from "./store";
+import { StoreManager } from "./stores";
 import { BlockManager } from "./vfs";
 
 function createUsersAndPosts() {

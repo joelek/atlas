@@ -2,7 +2,7 @@ import { Database } from "./database";
 import { VirtualFile } from "./files";
 import { StringField, BooleanField } from "./records";
 import { SchemaManager } from "./schema";
-import { Store } from "./store";
+import { Store } from "./stores";
 import { test } from "./test";
 
 test(`It should be able to construct a new database manager.`, async (assert) => {

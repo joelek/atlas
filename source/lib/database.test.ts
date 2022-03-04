@@ -3,7 +3,7 @@ import { StringField, NullableStringField } from "./records";
 import { DatabaseManager } from "./database";
 import { BlockManager } from "./vfs";
 import { VirtualFile } from "./files";
-import { StoreManager } from "./store";
+import { StoreManager } from "./stores";
 import { LinkManager } from "./link";
 
 function createUsersPostsAndComments() {

@@ -1,4 +1,4 @@
-import { StoreManager } from "./store";
+import { StoreManager } from "./stores";
 import { StringField } from "./records";
 import { BlockManager } from "./vfs";
 import { VirtualFile } from "./files";

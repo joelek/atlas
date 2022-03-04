@@ -2,7 +2,7 @@ import { FilterMap } from "./filters";
 import { SubsetOf } from "./inference";
 import { Operators } from "./operators";
 import { RequiredKeys, Record } from "./records";
-import { Entry, Store, StoreManager } from "./store";
+import { Entry, Store, StoreManager } from "./stores";
 
 export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>> {
 	private storeManager: StoreManager<A, B>;
