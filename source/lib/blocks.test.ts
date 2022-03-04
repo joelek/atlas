@@ -1,5 +1,5 @@
 import * as files from "./files";
-import * as vfs from "./vfs";
+import * as vfs from "./blocks";
 import { test } from "./test";
 import { BlockFlags } from "./chunks";
 

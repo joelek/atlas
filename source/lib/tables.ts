@@ -1,5 +1,5 @@
 import * as libcrypto from "crypto";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 import { BlockReference, Chunk } from "./chunks";
 import { DEBUG } from "./variables";
 import * as asserts from "../mod/asserts";

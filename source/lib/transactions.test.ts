@@ -2,7 +2,7 @@ import { test } from "./test";
 import { TransactionManager } from "./transactions";
 import { VirtualFile } from "./files";
 import { WritableStoreManager, StoreManager } from "./stores";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 import { StringField } from "./records";
 
 async function delay(ms: number): Promise<void> {

@@ -1,6 +1,6 @@
 import { StoreManager } from "./stores";
 import { StringField } from "./records";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder } from "./orders";

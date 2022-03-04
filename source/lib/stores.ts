@@ -3,7 +3,7 @@ import { FilterMap } from "./filters";
 import { Table } from "./tables";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 
 export type Entry<A extends Record> = {
 	bid(): number;

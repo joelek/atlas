@@ -1,7 +1,7 @@
 import { test } from "./test";
 import { StringField, NullableStringField } from "./records";
 import { DatabaseManager } from "./databases";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./stores";
 import { LinkManager } from "./links";

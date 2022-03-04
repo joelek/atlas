@@ -4,7 +4,7 @@ import { LinkManager } from "./links";
 import { IncreasingOrder } from "./orders";
 import { NullableStringField, StringField } from "./records";
 import { StoreManager } from "./stores";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 
 function createUsersAndPosts() {
 	let blockManager = new BlockManager(new VirtualFile(0));

@@ -1,7 +1,7 @@
 import * as hash from "./tables";
 import * as files from "./files";
 import * as utils from "./utils";
-import * as vfs from "./vfs";
+import * as vfs from "./blocks";
 import { test } from "./test";
 
 const DETAIL: hash.TableDetail = {
