@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./store";
-import { Record, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField } from "./records";
+import { Record, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transaction";
 import { DecreasingOrder, IncreasingOrder, Order } from "./orders";
 import { EqualityOperator, Operator } from "./operators";
@@ -68,10 +68,15 @@ export declare class Context {
     private getOrder;
     constructor();
     createBigIntField(): FieldReference<BigIntField>;
+    createNullableBigIntField(): FieldReference<NullableBigIntField>;
     createBinaryField(): FieldReference<BinaryField>;
+    createNullableBinaryField(): FieldReference<NullableBinaryField>;
     createBooleanField(): FieldReference<BooleanField>;
+    createNullableBooleanField(): FieldReference<NullableBooleanField>;
     createIntegerField(): FieldReference<IntegerField>;
+    createNullableIntegerField(): FieldReference<NullableIntegerField>;
     createNumberField(): FieldReference<NumberField>;
+    createNullableNumberField(): FieldReference<NullableNumberField>;
     createStringField(): FieldReference<StringField>;
     createNullableStringField(): FieldReference<NullableStringField>;
     createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E>;

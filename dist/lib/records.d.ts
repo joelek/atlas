@@ -29,17 +29,32 @@ export declare type Fields<A extends Record> = {
 export declare class BigIntField extends Field<bigint> {
     constructor(defaultValue: bigint);
 }
+export declare class NullableBigIntField extends Field<bigint | null> {
+    constructor(defaultValue: bigint | null);
+}
 export declare class BinaryField extends Field<Uint8Array> {
     constructor(defaultValue: Uint8Array);
+}
+export declare class NullableBinaryField extends Field<Uint8Array | null> {
+    constructor(defaultValue: Uint8Array | null);
 }
 export declare class BooleanField extends Field<boolean> {
     constructor(defaultValue: boolean);
 }
+export declare class NullableBooleanField extends Field<boolean | null> {
+    constructor(defaultValue: boolean | null);
+}
 export declare class IntegerField extends Field<number> {
     constructor(defaultValue: number);
 }
+export declare class NullableIntegerField extends Field<number | null> {
+    constructor(defaultValue: number | null);
+}
 export declare class NumberField extends Field<number> {
     constructor(defaultValue: number);
+}
+export declare class NullableNumberField extends Field<number | null> {
+    constructor(defaultValue: number | null);
 }
 export declare class StringField extends Field<string> {
     constructor(defaultValue: string);

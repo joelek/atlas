@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NumberFieldSchema = exports.IntegerFieldSchema = exports.BooleanFieldSchema = exports.BinaryFieldSchema = exports.BigIntFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const database_1 = require("./database");
 const hash_1 = require("./hash");
@@ -13,21 +13,41 @@ exports.BigIntFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BigIntField"),
     defaultValue: bedrock.codecs.BigInt
 });
+exports.NullableBigIntFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("NullableBigIntField"),
+    defaultValue: bedrock.codecs.Union.of(bedrock.codecs.BigInt, bedrock.codecs.Null)
+});
 exports.BinaryFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BinaryField"),
     defaultValue: bedrock.codecs.Binary
+});
+exports.NullableBinaryFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("NullableBinaryField"),
+    defaultValue: bedrock.codecs.Union.of(bedrock.codecs.Binary, bedrock.codecs.Null)
 });
 exports.BooleanFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BooleanField"),
     defaultValue: bedrock.codecs.Boolean
 });
+exports.NullableBooleanFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("NullableBooleanField"),
+    defaultValue: bedrock.codecs.Union.of(bedrock.codecs.Boolean, bedrock.codecs.Null)
+});
 exports.IntegerFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("IntegerField"),
     defaultValue: bedrock.codecs.Integer
 });
+exports.NullableIntegerFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("NullableIntegerField"),
+    defaultValue: bedrock.codecs.Union.of(bedrock.codecs.Integer, bedrock.codecs.Null)
+});
 exports.NumberFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("NumberField"),
     defaultValue: bedrock.codecs.Number
+});
+exports.NullableNumberFieldSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("NullableNumberField"),
+    defaultValue: bedrock.codecs.Union.of(bedrock.codecs.Number, bedrock.codecs.Null)
 });
 exports.StringFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("StringField"),
@@ -37,7 +57,7 @@ exports.NullableStringFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("NullableStringField"),
     defaultValue: bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null)
 });
-exports.FieldSchema = bedrock.codecs.Union.of(exports.BigIntFieldSchema, exports.BinaryFieldSchema, exports.BooleanFieldSchema, exports.IntegerFieldSchema, exports.NumberFieldSchema, exports.StringFieldSchema, exports.NullableStringFieldSchema);
+exports.FieldSchema = bedrock.codecs.Union.of(exports.BigIntFieldSchema, exports.NullableBigIntFieldSchema, exports.BinaryFieldSchema, exports.NullableBinaryFieldSchema, exports.BooleanFieldSchema, exports.NullableBooleanFieldSchema, exports.IntegerFieldSchema, exports.NullableIntegerFieldSchema, exports.NumberFieldSchema, exports.NullableNumberFieldSchema, exports.StringFieldSchema, exports.NullableStringFieldSchema);
 exports.FieldsSchema = bedrock.codecs.Record.of(exports.FieldSchema);
 exports.KeysSchema = bedrock.codecs.Array.of(bedrock.codecs.String);
 exports.IndexSchema = bedrock.codecs.Object.of({
@@ -111,17 +131,32 @@ class SchemaManager {
         if (isSchemaCompatible(exports.BigIntFieldSchema, fieldSchema)) {
             return new records_1.BigIntField(fieldSchema.defaultValue);
         }
+        if (isSchemaCompatible(exports.NullableBigIntFieldSchema, fieldSchema)) {
+            return new records_1.NullableBigIntField(fieldSchema.defaultValue);
+        }
         if (isSchemaCompatible(exports.BinaryFieldSchema, fieldSchema)) {
             return new records_1.BinaryField(fieldSchema.defaultValue);
+        }
+        if (isSchemaCompatible(exports.NullableBinaryFieldSchema, fieldSchema)) {
+            return new records_1.NullableBinaryField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.BooleanFieldSchema, fieldSchema)) {
             return new records_1.BooleanField(fieldSchema.defaultValue);
         }
+        if (isSchemaCompatible(exports.NullableBooleanFieldSchema, fieldSchema)) {
+            return new records_1.NullableBooleanField(fieldSchema.defaultValue);
+        }
         if (isSchemaCompatible(exports.IntegerFieldSchema, fieldSchema)) {
             return new records_1.IntegerField(fieldSchema.defaultValue);
         }
+        if (isSchemaCompatible(exports.NullableIntegerFieldSchema, fieldSchema)) {
+            return new records_1.NullableIntegerField(fieldSchema.defaultValue);
+        }
         if (isSchemaCompatible(exports.NumberFieldSchema, fieldSchema)) {
             return new records_1.NumberField(fieldSchema.defaultValue);
+        }
+        if (isSchemaCompatible(exports.NullableNumberFieldSchema, fieldSchema)) {
+            return new records_1.NullableNumberField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.StringFieldSchema, fieldSchema)) {
             return new records_1.StringField(fieldSchema.defaultValue);
@@ -195,10 +230,28 @@ class SchemaManager {
             if (field instanceof records_1.BigIntField) {
                 return true;
             }
+            if (field instanceof records_1.NullableBigIntField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.NullableBigIntFieldSchema, schema)) {
+            if (field instanceof records_1.NullableBigIntField) {
+                return true;
+            }
             return false;
         }
         if (isSchemaCompatible(exports.BinaryFieldSchema, schema)) {
             if (field instanceof records_1.BinaryField) {
+                return true;
+            }
+            if (field instanceof records_1.NullableBinaryField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.NullableBinaryFieldSchema, schema)) {
+            if (field instanceof records_1.NullableBinaryField) {
                 return true;
             }
             return false;
@@ -207,16 +260,43 @@ class SchemaManager {
             if (field instanceof records_1.BooleanField) {
                 return true;
             }
+            if (field instanceof records_1.NullableBooleanField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.NullableBooleanFieldSchema, schema)) {
+            if (field instanceof records_1.NullableBooleanField) {
+                return true;
+            }
             return false;
         }
         if (isSchemaCompatible(exports.IntegerFieldSchema, schema)) {
             if (field instanceof records_1.IntegerField) {
                 return true;
             }
+            if (field instanceof records_1.NullableIntegerField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.NullableIntegerFieldSchema, schema)) {
+            if (field instanceof records_1.NullableIntegerField) {
+                return true;
+            }
             return false;
         }
         if (isSchemaCompatible(exports.NumberFieldSchema, schema)) {
             if (field instanceof records_1.NumberField) {
+                return true;
+            }
+            if (field instanceof records_1.NullableNumberField) {
+                return true;
+            }
+            return false;
+        }
+        if (isSchemaCompatible(exports.NullableNumberFieldSchema, schema)) {
+            if (field instanceof records_1.NullableNumberField) {
                 return true;
             }
             return false;
@@ -305,9 +385,21 @@ class SchemaManager {
                 defaultValue: field.getDefaultValue()
             };
         }
+        if (field instanceof records_1.NullableBigIntField) {
+            return {
+                type: "NullableBigIntField",
+                defaultValue: field.getDefaultValue()
+            };
+        }
         if (field instanceof records_1.BinaryField) {
             return {
                 type: "BinaryField",
+                defaultValue: field.getDefaultValue()
+            };
+        }
+        if (field instanceof records_1.NullableBinaryField) {
+            return {
+                type: "NullableBinaryField",
                 defaultValue: field.getDefaultValue()
             };
         }
@@ -317,15 +409,33 @@ class SchemaManager {
                 defaultValue: field.getDefaultValue()
             };
         }
+        if (field instanceof records_1.NullableBooleanField) {
+            return {
+                type: "NullableBooleanField",
+                defaultValue: field.getDefaultValue()
+            };
+        }
         if (field instanceof records_1.IntegerField) {
             return {
                 type: "IntegerField",
                 defaultValue: field.getDefaultValue()
             };
         }
+        if (field instanceof records_1.NullableIntegerField) {
+            return {
+                type: "NullableIntegerField",
+                defaultValue: field.getDefaultValue()
+            };
+        }
         if (field instanceof records_1.NumberField) {
             return {
                 type: "NumberField",
+                defaultValue: field.getDefaultValue()
+            };
+        }
+        if (field instanceof records_1.NullableNumberField) {
+            return {
+                type: "NullableNumberField",
                 defaultValue: field.getDefaultValue()
             };
         }

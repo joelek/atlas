@@ -119,9 +119,21 @@ class Context {
         this.fields.set(reference, field);
         return reference;
     }
+    createNullableBigIntField() {
+        let reference = new FieldReference();
+        let field = new records_1.NullableBigIntField(null);
+        this.fields.set(reference, field);
+        return reference;
+    }
     createBinaryField() {
         let reference = new FieldReference();
         let field = new records_1.BinaryField(Uint8Array.of());
+        this.fields.set(reference, field);
+        return reference;
+    }
+    createNullableBinaryField() {
+        let reference = new FieldReference();
+        let field = new records_1.NullableBinaryField(null);
         this.fields.set(reference, field);
         return reference;
     }
@@ -131,15 +143,33 @@ class Context {
         this.fields.set(reference, field);
         return reference;
     }
+    createNullableBooleanField() {
+        let reference = new FieldReference();
+        let field = new records_1.NullableBooleanField(null);
+        this.fields.set(reference, field);
+        return reference;
+    }
     createIntegerField() {
         let reference = new FieldReference();
         let field = new records_1.IntegerField(0);
         this.fields.set(reference, field);
         return reference;
     }
+    createNullableIntegerField() {
+        let reference = new FieldReference();
+        let field = new records_1.NullableIntegerField(null);
+        this.fields.set(reference, field);
+        return reference;
+    }
     createNumberField() {
         let reference = new FieldReference();
         let field = new records_1.NumberField(0);
+        this.fields.set(reference, field);
+        return reference;
+    }
+    createNullableNumberField() {
+        let reference = new FieldReference();
+        let field = new records_1.NullableNumberField(null);
         this.fields.set(reference, field);
         return reference;
     }

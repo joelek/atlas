@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RecordManager = exports.NullableStringField = exports.StringField = exports.NumberField = exports.IntegerField = exports.BooleanField = exports.BinaryField = exports.BigIntField = exports.Field = void 0;
+exports.RecordManager = exports.NullableStringField = exports.StringField = exports.NullableNumberField = exports.NumberField = exports.NullableIntegerField = exports.IntegerField = exports.NullableBooleanField = exports.BooleanField = exports.NullableBinaryField = exports.BinaryField = exports.NullableBigIntField = exports.BigIntField = exports.Field = void 0;
 const bedrock = require("@joelek/bedrock");
 class Field {
     codec;
@@ -25,12 +25,26 @@ class BigIntField extends Field {
 }
 exports.BigIntField = BigIntField;
 ;
+class NullableBigIntField extends Field {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.BigInt, bedrock.codecs.Null), defaultValue);
+    }
+}
+exports.NullableBigIntField = NullableBigIntField;
+;
 class BinaryField extends Field {
     constructor(defaultValue) {
         super(bedrock.codecs.Binary, defaultValue);
     }
 }
 exports.BinaryField = BinaryField;
+;
+class NullableBinaryField extends Field {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Binary, bedrock.codecs.Null), defaultValue);
+    }
+}
+exports.NullableBinaryField = NullableBinaryField;
 ;
 class BooleanField extends Field {
     constructor(defaultValue) {
@@ -39,12 +53,26 @@ class BooleanField extends Field {
 }
 exports.BooleanField = BooleanField;
 ;
+class NullableBooleanField extends Field {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Boolean, bedrock.codecs.Null), defaultValue);
+    }
+}
+exports.NullableBooleanField = NullableBooleanField;
+;
 class IntegerField extends Field {
     constructor(defaultValue) {
-        super(bedrock.codecs.Number, defaultValue);
+        super(bedrock.codecs.Integer, defaultValue);
     }
 }
 exports.IntegerField = IntegerField;
+;
+class NullableIntegerField extends Field {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Integer, bedrock.codecs.Null), defaultValue);
+    }
+}
+exports.NullableIntegerField = NullableIntegerField;
 ;
 class NumberField extends Field {
     constructor(defaultValue) {
@@ -52,6 +80,13 @@ class NumberField extends Field {
     }
 }
 exports.NumberField = NumberField;
+;
+class NullableNumberField extends Field {
+    constructor(defaultValue) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Number, bedrock.codecs.Null), defaultValue);
+    }
+}
+exports.NullableNumberField = NullableNumberField;
 ;
 class StringField extends Field {
     constructor(defaultValue) {
