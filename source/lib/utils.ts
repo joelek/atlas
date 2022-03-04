@@ -1,6 +1,6 @@
 import * as bedrock from "@joelek/bedrock";
 import * as asserts from "../mod/asserts";
-import { DEBUG } from "./env";
+import { DEBUG } from "./variables";
 
 export type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";
 

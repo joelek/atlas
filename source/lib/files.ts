@@ -3,7 +3,7 @@ import * as libfs from "fs";
 import * as libpath from "path";
 import * as asserts from "../mod/asserts";
 import { Cache } from "./caches";
-import { DEBUG } from "./env";
+import { DEBUG } from "./variables";
 import { LogDeltaHeader, LogHeader } from "./chunks";
 
 export abstract class File {

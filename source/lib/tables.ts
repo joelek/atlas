@@ -1,7 +1,7 @@
 import * as libcrypto from "crypto";
 import { BlockManager } from "./vfs";
 import { BlockReference, Chunk } from "./chunks";
-import { DEBUG } from "./env";
+import { DEBUG } from "./variables";
 import * as asserts from "../mod/asserts";
 import * as keys from "./keys";
 import { IntegerAssert } from "../mod/asserts";
