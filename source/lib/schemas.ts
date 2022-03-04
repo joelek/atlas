@@ -1,7 +1,7 @@
 import * as bedrock from "@joelek/bedrock";
 import { Database, DatabaseManager } from "./databases";
 import { File } from "./files";
-import { Table } from "./hash";
+import { Table } from "./tables";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";

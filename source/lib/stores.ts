@@ -1,6 +1,6 @@
 import { StreamIterable } from "./streams";
 import { FilterMap } from "./filters";
-import { Table } from "./hash";
+import { Table } from "./tables";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./vfs";
