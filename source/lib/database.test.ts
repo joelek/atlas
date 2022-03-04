@@ -4,7 +4,7 @@ import { DatabaseManager } from "./database";
 import { BlockManager } from "./vfs";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./stores";
-import { LinkManager } from "./link";
+import { LinkManager } from "./links";
 
 function createUsersPostsAndComments() {
 	let blockManager = new BlockManager(new VirtualFile(0));

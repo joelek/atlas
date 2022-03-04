@@ -1,6 +1,6 @@
 import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
-import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks, WritableLinksFromLinks } from "./link";
+import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks, WritableLinksFromLinks } from "./links";
 import { ReadableStore, ReadableStoresFromStores, Stores, StoresFromWritableStores, WritableStore, WritableStores, WritableStoresFromStores } from "./stores";
 import { PromiseQueue } from "./utils";
 

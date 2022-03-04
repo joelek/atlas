@@ -1,5 +1,5 @@
 import { File } from "./files";
-import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./link";
+import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./links";
 import { Record, Keys, RequiredKeys } from "./records";
 import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./stores";
 import { TransactionManager } from "./transactions";

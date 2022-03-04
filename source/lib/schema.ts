@@ -2,7 +2,7 @@ import * as bedrock from "@joelek/bedrock";
 import { Database, DatabaseManager } from "./database";
 import { File } from "./files";
 import { Table } from "./hash";
-import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
+import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./stores";

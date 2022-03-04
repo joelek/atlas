@@ -1,4 +1,4 @@
-import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./link";
+import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./links";
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./stores";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transactions";

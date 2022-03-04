@@ -1,6 +1,6 @@
 import { test } from "./test";
 import { VirtualFile } from "./files";
-import { LinkManager } from "./link";
+import { LinkManager } from "./links";
 import { IncreasingOrder } from "./orders";
 import { NullableStringField, StringField } from "./records";
 import { StoreManager } from "./stores";
