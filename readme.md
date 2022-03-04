@@ -72,19 +72,13 @@ NB: This project targets TypeScript 4 in strict mode.
 
 ## Roadmap
 
-* Decide on how to migrate records when the primary key changes.
 * Consider implementing file locks.
 * Make memory limit configurable for Cache.
-* Allow BlockHandler to keep track of contained buffer size.
+* Allow BlockManager to keep track of the exact stored size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
-* Tokenize based on capitalization OneTwo => ["one", "two"].
-* Improve type-safety checks for serialized keys.
-* Implement index support.
-* Implement search support.
-* Implement nullable fields.
-* Add filters to Context.
-* Move field-related functionality to Field classes.
+* Add type-safety checks for keys during schema deserialization.
+* Implement index support using legacy RadixTree.
+* Implement search support using legacy RadixTree.
+* Add orders and filters to index module.
 * Give modules better names.
-* Consider adding secondary jump table to BlockHandler.
-* Decide on StoreManager.filter() being internal or external.
 * Defer decoding of records until record is filtered and ordered.
