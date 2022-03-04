@@ -1,5 +1,5 @@
 import { test } from "./test";
-import { TransactionManager } from "./transaction";
+import { TransactionManager } from "./transactions";
 import { VirtualFile } from "./files";
 import { WritableStoreManager, StoreManager } from "./stores";
 import { BlockManager } from "./vfs";
