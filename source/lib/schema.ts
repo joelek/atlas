@@ -4,7 +4,7 @@ import { File } from "./files";
 import { Table } from "./hash";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./link";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
-import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField } from "./records";
+import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./store";
 import { BlockManager } from "./vfs";
 
@@ -83,6 +83,16 @@ export const NumberFieldSchema = bedrock.codecs.Object.of({
 
 export type NumberFieldSchema = ReturnType<typeof NumberFieldSchema["decode"]>;
 
+export const NullableNumberFieldSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("NullableNumberField"),
+	defaultValue: bedrock.codecs.Union.of(
+		bedrock.codecs.Number,
+		bedrock.codecs.Null
+	)
+});
+
+export type NullableNumberFieldSchema = ReturnType<typeof NullableNumberFieldSchema["decode"]>;
+
 export const StringFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("StringField"),
 	defaultValue: bedrock.codecs.String
@@ -110,6 +120,7 @@ export const FieldSchema = bedrock.codecs.Union.of(
 	IntegerFieldSchema,
 	NullableIntegerFieldSchema,
 	NumberFieldSchema,
+	NullableNumberFieldSchema,
 	StringFieldSchema,
 	NullableStringFieldSchema
 );
@@ -262,6 +273,9 @@ export class SchemaManager {
 		if (isSchemaCompatible(NumberFieldSchema, fieldSchema)) {
 			return new NumberField(fieldSchema.defaultValue);
 		}
+		if (isSchemaCompatible(NullableNumberFieldSchema, fieldSchema)) {
+			return new NullableNumberField(fieldSchema.defaultValue);
+		}
 		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
 			return new StringField(fieldSchema.defaultValue);
 		}
@@ -397,6 +411,15 @@ export class SchemaManager {
 		}
 		if (isSchemaCompatible(NumberFieldSchema, schema)) {
 			if (field instanceof NumberField) {
+				return true;
+			}
+			if (field instanceof NullableNumberField) {
+				return true;
+			}
+			return false;
+		}
+		if (isSchemaCompatible(NullableNumberFieldSchema, schema)) {
+			if (field instanceof NullableNumberField) {
 				return true;
 			}
 			return false;
@@ -536,6 +559,12 @@ export class SchemaManager {
 			return {
 				type: "NumberField",
 				defaultValue: (field as NumberField).getDefaultValue()
+			};
+		}
+		if (field instanceof NullableNumberField) {
+			return {
+				type: "NullableNumberField",
+				defaultValue: (field as NullableNumberField).getDefaultValue()
 			};
 		}
 		if (field instanceof StringField) {

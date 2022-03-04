@@ -104,6 +104,15 @@ export class NumberField extends Field<number> {
 	}
 };
 
+export class NullableNumberField extends Field<number | null> {
+	constructor(defaultValue: number | null) {
+		super(bedrock.codecs.Union.of(
+			bedrock.codecs.Number,
+			bedrock.codecs.Null
+		), defaultValue);
+	}
+};
+
 export class StringField extends Field<string> {
 	constructor(defaultValue: string) {
 		super(bedrock.codecs.String, defaultValue);
