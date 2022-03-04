@@ -85,7 +85,7 @@ export class NullableBooleanField extends Field<boolean | null> {
 
 export class IntegerField extends Field<number> {
 	constructor(defaultValue: number) {
-		super(bedrock.codecs.Number, defaultValue);
+		super(bedrock.codecs.Integer, defaultValue);
 	}
 };
 
