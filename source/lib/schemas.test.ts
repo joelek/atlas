@@ -1,7 +1,7 @@
 import { Database } from "./database";
 import { VirtualFile } from "./files";
 import { StringField, BooleanField } from "./records";
-import { SchemaManager } from "./schema";
+import { SchemaManager } from "./schemas";
 import { Store } from "./stores";
 import { test } from "./test";
 

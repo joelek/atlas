@@ -6,7 +6,7 @@ import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
 import { Database, DatabaseManager } from "./database";
 import { EqualityOperator, Operator, Operators } from "./operators";
-import { SchemaManager } from "./schema";
+import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
 import { Query } from "./queries";
 
