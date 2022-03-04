@@ -1,0 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const orders_1 = require("./orders");
+const test_1 = require("./test");
+const IN_ORDER = -1;
+const EQUAL = 0;
+const OUT_OF_ORDER = 1;
+(0, test_1.test)(`It should determine order (DecreasingOrder).`, async (assert) => {
+    let filter = new orders_1.DecreasingOrder();
+    assert.true(filter.compare(-1, -1) === EQUAL);
+    assert.true(filter.compare(0, -1) === IN_ORDER);
+    assert.true(filter.compare(1, -1) === IN_ORDER);
+    assert.true(filter.compare(-1, 0) === OUT_OF_ORDER);
+    assert.true(filter.compare(0, 0) === EQUAL);
+    assert.true(filter.compare(1, 0) === IN_ORDER);
+    assert.true(filter.compare(-1, 1) === OUT_OF_ORDER);
+    assert.true(filter.compare(0, 1) === OUT_OF_ORDER);
+    assert.true(filter.compare(1, 1) === EQUAL);
+});
+(0, test_1.test)(`It should determine order (IncreasingOrder).`, async (assert) => {
+    let filter = new orders_1.IncreasingOrder();
+    assert.true(filter.compare(-1, -1) === EQUAL);
+    assert.true(filter.compare(0, -1) === OUT_OF_ORDER);
+    assert.true(filter.compare(1, -1) === OUT_OF_ORDER);
+    assert.true(filter.compare(-1, 0) === IN_ORDER);
+    assert.true(filter.compare(0, 0) === EQUAL);
+    assert.true(filter.compare(1, 0) === OUT_OF_ORDER);
+    assert.true(filter.compare(-1, 1) === IN_ORDER);
+    assert.true(filter.compare(0, 1) === IN_ORDER);
+    assert.true(filter.compare(1, 1) === EQUAL);
+});

@@ -1,4 +1,4 @@
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 import { BlockReference, Chunk } from "./chunks";
 import * as keys from "./keys";
 export declare class HashTableHeader extends Chunk {

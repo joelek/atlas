@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Context = exports.OperatorReference = exports.OrderReference = exports.QueryReference = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
-const link_1 = require("./link");
-const store_1 = require("./store");
+const links_1 = require("./links");
+const stores_1 = require("./stores");
 const records_1 = require("./records");
 const orders_1 = require("./orders");
 const files_1 = require("./files");
-const database_1 = require("./database");
+const databases_1 = require("./databases");
 const operators_1 = require("./operators");
-const schema_1 = require("./schema");
+const schemas_1 = require("./schemas");
 const queries_1 = require("./queries");
 class FileReference {
     FileReference;
@@ -196,7 +196,7 @@ class Context {
             orders[key] = this.getOrder(orderReference);
         }
         // TODO: Create indices.
-        let link = new link_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
+        let link = new links_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
         this.links.set(reference, link);
         return reference;
     }
@@ -211,7 +211,7 @@ class Context {
             orders[key] = this.getOrder(orderReferences[key]);
         }
         let reference = new StoreReference();
-        let store = new store_1.Store(fields, keys, orders);
+        let store = new stores_1.Store(fields, keys, orders);
         this.stores.set(reference, store);
         return reference;
     }
@@ -274,8 +274,8 @@ class Context {
         for (let key in linkReferences) {
             links[key] = this.getLink(linkReferences[key]);
         }
-        let schemaManager = new schema_1.SchemaManager();
-        let database = new database_1.Database(stores, links);
+        let schemaManager = new schemas_1.SchemaManager();
+        let database = new databases_1.Database(stores, links);
         let databaseManager = schemaManager.createDatabaseManager(file, database);
         this.databaseManagers.set(fileReference, databaseManager);
         let transactionManager = databaseManager.createTransactionManager(file);

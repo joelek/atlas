@@ -1,8 +1,8 @@
 import { File } from "./files";
-import { LinkManagers, Links, WritableLinksFromLinkManagers } from "./link";
+import { LinkManagers, Links, WritableLinksFromLinkManagers } from "./links";
 import { Keys } from "./records";
-import { StoreManagers, Stores, WritableStoresFromStoreManagers } from "./store";
-import { TransactionManager } from "./transaction";
+import { StoreManagers, Stores, WritableStoresFromStoreManagers } from "./stores";
+import { TransactionManager } from "./transactions";
 export declare class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>> {
     private storeManagers;
     private linkManagers;

@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
 const test_2 = require("./test");
-const context_1 = require("./context");
+const contexts_1 = require("./contexts");
 (0, test_2.test)(`It should work.`, async (assert) => {
-    let context = new context_1.Context();
+    let context = new contexts_1.Context();
     let users = context.createStore({
         user_id: context.createStringField(),
         name: context.createStringField(),

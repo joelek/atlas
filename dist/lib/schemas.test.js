@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = require("./database");
+const databases_1 = require("./databases");
 const files_1 = require("./files");
 const records_1 = require("./records");
-const schema_1 = require("./schema");
-const store_1 = require("./store");
+const schemas_1 = require("./schemas");
+const stores_1 = require("./stores");
 const test_1 = require("./test");
 (0, test_1.test)(`It should be able to construct a new database manager.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let schemaManager = new schema_1.SchemaManager();
-    let databaseManager = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let schemaManager = new schemas_1.SchemaManager();
+    let databaseManager = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -31,9 +31,9 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should be able to construct an existing database manager with an identical schema.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let schemaManager = new schema_1.SchemaManager();
-    let databaseManager1 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let schemaManager = new schemas_1.SchemaManager();
+    let databaseManager1 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -43,8 +43,8 @@ const test_1 = require("./test");
         key: "0",
         name: "A"
     });
-    let databaseManager2 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let databaseManager2 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -61,9 +61,9 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should be able to construct an existing database manager when one field is added to the schema.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let schemaManager = new schema_1.SchemaManager();
-    let databaseManager1 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let schemaManager = new schemas_1.SchemaManager();
+    let databaseManager1 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -73,8 +73,8 @@ const test_1 = require("./test");
         key: "0",
         name: "A"
     });
-    let databaseManager2 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let databaseManager2 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField(""),
             lastname: new records_1.StringField("")
@@ -93,9 +93,9 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should be able to construct an existing database manager when one field is removed from the schema.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let schemaManager = new schema_1.SchemaManager();
-    let databaseManager1 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let schemaManager = new schemas_1.SchemaManager();
+    let databaseManager1 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField(""),
             lastname: new records_1.StringField("")
@@ -107,8 +107,8 @@ const test_1 = require("./test");
         name: "A",
         lastname: "B"
     });
-    let databaseManager2 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let databaseManager2 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -125,9 +125,9 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should be able to construct an existing database manager when one field is changed in the schema.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let schemaManager = new schema_1.SchemaManager();
-    let databaseManager1 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let schemaManager = new schemas_1.SchemaManager();
+    let databaseManager1 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -137,8 +137,8 @@ const test_1 = require("./test");
         key: "0",
         name: "A"
     });
-    let databaseManager2 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let databaseManager2 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.BooleanField(false)
         }, ["key"])
@@ -155,9 +155,9 @@ const test_1 = require("./test");
 });
 (0, test_1.test)(`It should be able to construct an existing database manager when the keys have changed in the schema.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let schemaManager = new schema_1.SchemaManager();
-    let databaseManager1 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let schemaManager = new schemas_1.SchemaManager();
+    let databaseManager1 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["key"])
@@ -167,8 +167,8 @@ const test_1 = require("./test");
         key: "0",
         name: "A"
     });
-    let databaseManager2 = schemaManager.createDatabaseManager(file, new database_1.Database({
-        users: new store_1.Store({
+    let databaseManager2 = schemaManager.createDatabaseManager(file, new databases_1.Database({
+        users: new stores_1.Store({
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
         }, ["name"])

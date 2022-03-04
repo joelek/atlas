@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const files = require("./files");
-const vfs = require("./vfs");
+const vfs = require("./blocks");
 const test_1 = require("./test");
 const chunks_1 = require("./chunks");
 (0, test_1.test)(`It should not support creating blocks with a size of 0.`, async (assert) => {

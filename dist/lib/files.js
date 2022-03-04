@@ -5,8 +5,8 @@ const stdlib = require("@joelek/ts-stdlib");
 const libfs = require("fs");
 const libpath = require("path");
 const asserts = require("../mod/asserts");
-const cache_1 = require("./cache");
-const env_1 = require("./env");
+const caches_1 = require("./caches");
+const variables_1 = require("./variables");
 const chunks_1 = require("./chunks");
 class File {
     constructor() { }
@@ -21,7 +21,7 @@ class CachedFile extends File {
         super();
         this.file = file;
         this.tree = new stdlib.collections.avl.Tree();
-        this.cache = new cache_1.Cache({
+        this.cache = new caches_1.Cache({
             getWeightForValue: (value) => 64 + value.length,
             onInsert: (key, value) => this.tree.insert(key, value),
             onRemove: (key) => this.tree.remove(key)
@@ -36,7 +36,7 @@ class CachedFile extends File {
         this.file.persist();
     }
     read(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let current = offset;
         let bytes = 0;
@@ -86,7 +86,7 @@ class CachedFile extends File {
         return buffer;
     }
     resize(size) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, size);
         this.file.resize(size);
         let entry = this.tree.locate({ operator: "<", key: size });
@@ -107,7 +107,7 @@ class CachedFile extends File {
         return this.file.size();
     }
     write(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         this.file.write(buffer, offset);
         let current = offset;
@@ -272,7 +272,7 @@ class DurableFile extends File {
         }
     }
     read(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let current = offset;
         let bytes = 0;
@@ -322,7 +322,7 @@ class DurableFile extends File {
         return buffer;
     }
     resize(size) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, size);
         let entry = this.tree.locate({ operator: "<", key: size });
         if (entry != null) {
@@ -346,7 +346,7 @@ class DurableFile extends File {
         return this.header.redoSize();
     }
     write(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let current = offset;
         let bytes = 0;
@@ -411,7 +411,7 @@ class PhysicalFile extends File {
         return libfs.fsyncSync(this.fd);
     }
     read(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let bytesRead = libfs.readSync(this.fd, buffer, {
             position: offset
@@ -422,7 +422,7 @@ class PhysicalFile extends File {
         return buffer;
     }
     resize(size) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, size);
         return libfs.ftruncateSync(this.fd, size);
     }
@@ -430,7 +430,7 @@ class PhysicalFile extends File {
         return libfs.fstatSync(this.fd).size;
     }
     write(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let bytesWritten = libfs.writeSync(this.fd, buffer, 0, buffer.length, offset);
         if (bytesWritten !== buffer.length) {
@@ -446,7 +446,7 @@ class VirtualFile extends File {
     buffer;
     constructor(size) {
         super();
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, size);
         this.backup = new Uint8Array(size);
         this.buffer = new Uint8Array(size);
@@ -460,7 +460,7 @@ class VirtualFile extends File {
         this.backup.set(this.buffer, 0);
     }
     read(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let minSize = offset + buffer.length;
         let size = this.size();
@@ -471,7 +471,7 @@ class VirtualFile extends File {
         return buffer;
     }
     resize(size) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, size);
         let buffer = new Uint8Array(size);
         buffer.set(this.buffer.subarray(0, Math.min(size, this.size())), 0);
@@ -481,7 +481,7 @@ class VirtualFile extends File {
         return this.buffer.length;
     }
     write(buffer, offset) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
         let minSize = offset + buffer.length;
         let size = this.size();

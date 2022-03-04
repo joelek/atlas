@@ -1,7 +1,7 @@
 import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
-import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks } from "./link";
-import { ReadableStore, ReadableStoresFromStores, Stores, StoresFromWritableStores, WritableStore, WritableStores, WritableStoresFromStores } from "./store";
+import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks } from "./links";
+import { ReadableStore, ReadableStoresFromStores, Stores, StoresFromWritableStores, WritableStore, WritableStores, WritableStoresFromStores } from "./stores";
 import { PromiseQueue } from "./utils";
 export declare class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
     protected writableStore: WritableStore<A, B>;

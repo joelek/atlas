@@ -2,20 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
 const files_1 = require("./files");
-const link_1 = require("./link");
+const links_1 = require("./links");
 const orders_1 = require("./orders");
 const records_1 = require("./records");
-const store_1 = require("./store");
-const vfs_1 = require("./vfs");
+const stores_1 = require("./stores");
+const blocks_1 = require("./blocks");
 function createUsersAndPosts() {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             user_id: new records_1.StringField("")
         },
         keys: ["user_id"]
     });
-    let posts = store_1.StoreManager.construct(blockManager, {
+    let posts = stores_1.StoreManager.construct(blockManager, {
         fields: {
             post_id: new records_1.StringField(""),
             post_user_id: new records_1.StringField("")
@@ -30,7 +30,7 @@ function createUsersAndPosts() {
 ;
 (0, test_1.test)(`It should support filtering without explicit ordering for a referencing link.`, async (assert) => {
     let { users, posts } = { ...createUsersAndPosts() };
-    let userPosts = link_1.LinkManager.construct(users, posts, {
+    let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     });
     users.insert({
@@ -60,7 +60,7 @@ function createUsersAndPosts() {
 });
 (0, test_1.test)(`It should support filtering with explicit ordering for a referencing link.`, async (assert) => {
     let { users, posts } = { ...createUsersAndPosts() };
-    let userPosts = link_1.LinkManager.construct(users, posts, {
+    let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     }, {
         post_id: new orders_1.IncreasingOrder()
@@ -92,7 +92,7 @@ function createUsersAndPosts() {
 });
 (0, test_1.test)(`It should support looking up the corresponding parent for a referencing link.`, async (assert) => {
     let { users, posts } = { ...createUsersAndPosts() };
-    let userPosts = link_1.LinkManager.construct(users, posts, {
+    let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     });
     users.insert({
@@ -111,8 +111,8 @@ function createUsersAndPosts() {
     assert.record.equals(observed, expected);
 });
 function createDirectories() {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let directories = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let directories = stores_1.StoreManager.construct(blockManager, {
         fields: {
             directory_id: new records_1.StringField(""),
             parent_directory_id: new records_1.NullableStringField(null)
@@ -126,7 +126,7 @@ function createDirectories() {
 ;
 (0, test_1.test)(`It should support filtering without explicit ordering for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
-    let childDirectories = link_1.LinkManager.construct(directories, directories, {
+    let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
     directories.insert({
@@ -150,7 +150,7 @@ function createDirectories() {
 });
 (0, test_1.test)(`It should support filtering with explicit ordering for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
-    let childDirectories = link_1.LinkManager.construct(directories, directories, {
+    let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     }, {
         directory_id: new orders_1.IncreasingOrder()
@@ -176,7 +176,7 @@ function createDirectories() {
 });
 (0, test_1.test)(`It should support looking up the corresponding parent for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
-    let childDirectories = link_1.LinkManager.construct(directories, directories, {
+    let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
     directories.insert({
@@ -198,7 +198,7 @@ function createDirectories() {
 });
 (0, test_1.test)(`It should support looking up absent parents for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
-    let childDirectories = link_1.LinkManager.construct(directories, directories, {
+    let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
     directories.insert({

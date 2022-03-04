@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BlockManager = void 0;
 const asserts = require("../mod/asserts");
 const chunks_1 = require("./chunks");
-const env_1 = require("./env");
+const variables_1 = require("./variables");
 class BlockManager {
     file;
     header;
@@ -18,9 +18,9 @@ class BlockManager {
         }
         let initialTableCapacity = options?.initialTableCapacity ?? 256;
         let initialPoolCapacity = options?.initialPoolCapacity ?? 16;
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(1, initialTableCapacity);
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(1, initialPoolCapacity);
         if (this.header.table.offset() === 0) {
             this.allocateBlock(this.header.table, initialTableCapacity * chunks_1.BlockHeader.LENGTH);
@@ -98,7 +98,7 @@ class BlockManager {
     }
     readBlockHeader(id, header, deleted) {
         let count = this.getBlockCount();
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(0, id, count - 1);
         let offset = this.header.table.offset();
         header.read(this.file, offset + id * chunks_1.BlockHeader.LENGTH);
@@ -117,7 +117,7 @@ class BlockManager {
     }
     writeBlockHeader(id, header) {
         let count = this.getBlockCount();
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(0, id, count - 1);
         let offset = this.header.table.offset();
         header.write(this.file, offset + id * chunks_1.BlockHeader.LENGTH);
@@ -194,7 +194,7 @@ class BlockManager {
     getBlockFlag(id, bit) {
         let header = new chunks_1.BlockHeader();
         this.readBlockHeader(id, header, false);
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(chunks_1.BlockFlags.APPLICATION_0, bit, chunks_1.BlockFlags.APPLICATION_3);
         return header.flag(bit);
     }
@@ -220,9 +220,9 @@ class BlockManager {
         let length = header.length();
         data = data ?? new Uint8Array(length);
         let activeBlockOffset = blockOffset ?? 0;
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(0, activeBlockOffset, length);
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(0, data.length, length - activeBlockOffset);
         if (blockOffset == null) {
             let buffer = new Uint8Array(length);
@@ -253,7 +253,7 @@ class BlockManager {
     setBlockFlag(id, bit, value) {
         let header = new chunks_1.BlockHeader();
         this.readBlockHeader(id, header, false);
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(chunks_1.BlockFlags.APPLICATION_0, bit, chunks_1.BlockFlags.APPLICATION_3);
         header.flag(bit, value);
         this.writeBlockHeader(id, header);
@@ -272,9 +272,9 @@ class BlockManager {
         let offset = header.offset();
         let length = header.length();
         let activeBlockOffset = blockOffset ?? 0;
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(0, activeBlockOffset, length);
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.between(0, data.length, length - activeBlockOffset);
         if (blockOffset == null) {
             let buffer = new Uint8Array(length);

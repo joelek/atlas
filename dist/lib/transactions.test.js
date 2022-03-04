@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
-const transaction_1 = require("./transaction");
+const transactions_1 = require("./transactions");
 const files_1 = require("./files");
-const store_1 = require("./store");
-const vfs_1 = require("./vfs");
+const stores_1 = require("./stores");
+const blocks_1 = require("./blocks");
 const records_1 = require("./records");
 async function delay(ms) {
     await new Promise((resolve, reject) => {
@@ -14,7 +14,7 @@ async function delay(ms) {
 ;
 (0, test_1.test)(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let manager = new transaction_1.TransactionManager(file, {}, {});
+    let manager = new transactions_1.TransactionManager(file, {}, {});
     let events = new Array();
     let transactionOne = manager.enqueueReadableTransaction(async (access) => {
         events.push("1S");
@@ -50,7 +50,7 @@ async function delay(ms) {
 });
 (0, test_1.test)(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let manager = new transaction_1.TransactionManager(file, {}, {});
+    let manager = new transactions_1.TransactionManager(file, {}, {});
     let events = new Array();
     let transactionOne = manager.enqueueWritableTransaction(async (access) => {
         events.push("1S");
@@ -86,7 +86,7 @@ async function delay(ms) {
 });
 (0, test_1.test)(`It should recover from transactions that throw errors.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let manager = new transaction_1.TransactionManager(file, {}, {});
+    let manager = new transactions_1.TransactionManager(file, {}, {});
     let events = new Array();
     let transactionOne = manager.enqueueWritableTransaction(async (access) => {
         events.push("1S");
@@ -111,14 +111,14 @@ async function delay(ms) {
 });
 (0, test_1.test)(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let blockManager = new vfs_1.BlockManager(file);
-    let dummy = new store_1.WritableStoreManager(store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(file);
+    let dummy = new stores_1.WritableStoreManager(stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
         keys: ["key"]
     }));
-    let manager = new transaction_1.TransactionManager(file, {
+    let manager = new transactions_1.TransactionManager(file, {
         dummy
     }, {});
     let access = await manager.enqueueWritableTransaction(async (access) => {

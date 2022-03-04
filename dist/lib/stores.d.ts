@@ -1,8 +1,8 @@
 import { FilterMap } from "./filters";
-import { Table } from "./hash";
+import { Table } from "./tables";
 import { OrderMap } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RequiredKeys } from "./records";
-import { BlockManager } from "./vfs";
+import { BlockManager } from "./blocks";
 export declare type Entry<A extends Record> = {
     bid(): number;
     record(): A;

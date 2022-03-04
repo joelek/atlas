@@ -1,6 +1,6 @@
 import { OrderMap } from "./orders";
 import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
-import { Entry, Store, StoreManager } from "./store";
+import { Entry, Store, StoreManager } from "./stores";
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
     filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<Entry<C>>>;
     lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;

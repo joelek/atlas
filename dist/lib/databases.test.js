@@ -2,27 +2,27 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
 const records_1 = require("./records");
-const database_1 = require("./database");
-const vfs_1 = require("./vfs");
+const databases_1 = require("./databases");
+const blocks_1 = require("./blocks");
 const files_1 = require("./files");
-const store_1 = require("./store");
-const link_1 = require("./link");
+const stores_1 = require("./stores");
+const links_1 = require("./links");
 function createUsersPostsAndComments() {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             user_id: new records_1.StringField("")
         },
         keys: ["user_id"]
     });
-    let posts = store_1.StoreManager.construct(blockManager, {
+    let posts = stores_1.StoreManager.construct(blockManager, {
         fields: {
             post_id: new records_1.StringField(""),
             post_user_id: new records_1.StringField("")
         },
         keys: ["post_id"]
     });
-    let comments = store_1.StoreManager.construct(blockManager, {
+    let comments = stores_1.StoreManager.construct(blockManager, {
         fields: {
             comment_id: new records_1.StringField(""),
             comment_user_id: new records_1.StringField(""),
@@ -30,16 +30,16 @@ function createUsersPostsAndComments() {
         },
         keys: ["comment_id"]
     });
-    let userPosts = link_1.LinkManager.construct(users, posts, {
+    let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     });
-    let postComments = link_1.LinkManager.construct(posts, comments, {
+    let postComments = links_1.LinkManager.construct(posts, comments, {
         post_id: "comment_post_id"
     });
-    let userComments = link_1.LinkManager.construct(users, comments, {
+    let userComments = links_1.LinkManager.construct(users, comments, {
         user_id: "comment_user_id"
     });
-    let consistencyManager = new database_1.DatabaseManager({
+    let consistencyManager = new databases_1.DatabaseManager({
         users,
         posts,
         comments
@@ -132,18 +132,18 @@ function createUsersPostsAndComments() {
     assert.array.equals(Array.from(storeManagers.comments).map((record) => record.record().comment_id).sort(), []);
 });
 function createDirectories() {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let directories = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let directories = stores_1.StoreManager.construct(blockManager, {
         fields: {
             directory_id: new records_1.StringField(""),
             parent_directory_id: new records_1.NullableStringField(null)
         },
         keys: ["directory_id"]
     });
-    let childDirectories = link_1.LinkManager.construct(directories, directories, {
+    let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
-    let consistencyManager = new database_1.DatabaseManager({
+    let consistencyManager = new databases_1.DatabaseManager({
         directories
     }, {
         childDirectories

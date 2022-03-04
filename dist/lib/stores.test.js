@@ -1,15 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const store_1 = require("./store");
+const stores_1 = require("./stores");
 const records_1 = require("./records");
-const vfs_1 = require("./vfs");
+const blocks_1 = require("./blocks");
 const files_1 = require("./files");
 const filters_1 = require("./filters");
 const orders_1 = require("./orders");
 const test_1 = require("./test");
 (0, test_1.test)(`It should support for-of iteration of the records stored.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -30,8 +30,8 @@ const test_1 = require("./test");
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support iteration of the records stored.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -49,8 +49,8 @@ const test_1 = require("./test");
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support filtering of the records stored.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -70,8 +70,8 @@ const test_1 = require("./test");
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support ordering of the records stored in increasing order.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -91,8 +91,8 @@ const test_1 = require("./test");
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support ordering of the records stored in decreasing order.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -112,8 +112,8 @@ const test_1 = require("./test");
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support inserting a record previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
@@ -132,8 +132,8 @@ const test_1 = require("./test");
     assert.true(users.lookup({ key: "A" }).name === "Two");
 });
 (0, test_1.test)(`It should support inserting a record not previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
@@ -147,8 +147,8 @@ const test_1 = require("./test");
     assert.true(users.lookup({ key: "A" }).name === "One");
 });
 (0, test_1.test)(`It should keep track of the number of records stored.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -177,8 +177,8 @@ const test_1 = require("./test");
     assert.true(users.length() === 0);
 });
 (0, test_1.test)(`It should support looking up records previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -190,8 +190,8 @@ const test_1 = require("./test");
     assert.true(users.lookup({ key: "A" }).key === "A");
 });
 (0, test_1.test)(`It should throw an error when looking up records not previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -204,8 +204,8 @@ const test_1 = require("./test");
     });
 });
 (0, test_1.test)(`It should support removing records previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -225,8 +225,8 @@ const test_1 = require("./test");
     });
 });
 (0, test_1.test)(`It should support removing records not previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
@@ -242,8 +242,8 @@ const test_1 = require("./test");
     });
 });
 (0, test_1.test)(`It should support updating a record previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")
@@ -262,8 +262,8 @@ const test_1 = require("./test");
     assert.true(users.lookup({ key: "A" }).name === "Two");
 });
 (0, test_1.test)(`It should support updating a record not previously inserted.`, async (assert) => {
-    let blockManager = new vfs_1.BlockManager(new files_1.VirtualFile(0));
-    let users = store_1.StoreManager.construct(blockManager, {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField(""),
             name: new records_1.StringField("")

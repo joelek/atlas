@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = exports.DatabaseManager = void 0;
-const link_1 = require("./link");
-const store_1 = require("./store");
-const transaction_1 = require("./transaction");
+const links_1 = require("./links");
+const stores_1 = require("./stores");
+const transactions_1 = require("./transactions");
 class DatabaseManager {
     storeManagers;
     linkManagers;
@@ -84,13 +84,13 @@ class DatabaseManager {
     createTransactionManager(file) {
         let writableStores = this.createWritableStores();
         let writableLinks = this.createWritableLinks();
-        return new transaction_1.TransactionManager(file, writableStores, writableLinks);
+        return new transactions_1.TransactionManager(file, writableStores, writableLinks);
     }
     createWritableStores() {
         let writableStores = {};
         for (let key in this.storeManagers) {
             let storeManager = this.storeManagers[key];
-            writableStores[key] = new store_1.OverridableWritableStore(storeManager, {
+            writableStores[key] = new stores_1.OverridableWritableStore(storeManager, {
                 insert: async (record) => this.doInsert(storeManager, [record]),
                 remove: async (record) => this.doRemove(storeManager, [record])
             });
@@ -100,7 +100,7 @@ class DatabaseManager {
     createWritableLinks() {
         let writableLinks = {};
         for (let key in this.linkManagers) {
-            writableLinks[key] = new link_1.OverridableWritableLink(this.linkManagers[key], {});
+            writableLinks[key] = new links_1.OverridableWritableLink(this.linkManagers[key], {});
         }
         return writableLinks;
     }

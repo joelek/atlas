@@ -1,2 +1,2 @@
-import { Context } from "./context";
+import { Context } from "./contexts";
 export declare function createContext(): Context;

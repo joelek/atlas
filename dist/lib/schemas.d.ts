@@ -1,8 +1,8 @@
 import * as bedrock from "@joelek/bedrock";
-import { Database, DatabaseManager } from "./database";
+import { Database, DatabaseManager } from "./databases";
 import { File } from "./files";
-import { Links, LinkManagersFromLinks } from "./link";
-import { Stores, StoreManagersFromStores } from "./store";
+import { Links, LinkManagersFromLinks } from "./links";
+import { Stores, StoreManagersFromStores } from "./stores";
 export declare const BigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BigIntField";
     defaultValue: bigint;

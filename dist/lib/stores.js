@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreManager = exports.WritableStoreManager = void 0;
 const streams_1 = require("./streams");
-const hash_1 = require("./hash");
+const tables_1 = require("./tables");
 const records_1 = require("./records");
 ;
 ;
@@ -153,7 +153,7 @@ class StoreManager {
         let fields = options.fields;
         let keys = options.keys;
         let recordManager = new records_1.RecordManager(fields);
-        let storage = new hash_1.Table(blockManager, {
+        let storage = new tables_1.Table(blockManager, {
             getKeyFromValue: (value) => {
                 let buffer = blockManager.readBlock(value);
                 let record = recordManager.decode(buffer);

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Table = exports.HashTableSlot = exports.HashTableHeader = void 0;
 const libcrypto = require("crypto");
 const chunks_1 = require("./chunks");
-const env_1 = require("./env");
+const variables_1 = require("./variables");
 const asserts = require("../mod/asserts");
 const keys = require("./keys");
 const asserts_1 = require("../mod/asserts");
@@ -12,7 +12,7 @@ class HashTableHeader extends chunks_1.Chunk {
     table;
     constructor(buffer) {
         super(buffer ?? new Uint8Array(HashTableHeader.LENGTH));
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, HashTableHeader.LENGTH);
         this.count = new chunks_1.BlockReference(this.buffer.subarray(16, 16 + chunks_1.BlockReference.LENGTH));
         this.table = new chunks_1.BlockReference(this.buffer.subarray(24, 24 + chunks_1.BlockReference.LENGTH));
@@ -217,7 +217,7 @@ class Table {
         this.header.count.value(0);
     }
     insert(key, value) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts_1.IntegerAssert.atLeast(1, value);
         let slotIndex = this.doInsert(key, value);
         if (slotIndex == null) {

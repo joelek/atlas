@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BinHeader = exports.BlockReference = exports.BlockHeader = exports.BlockFlags = exports.LogDeltaHeader = exports.LogHeader = exports.Chunk = void 0;
 const utils = require("./utils");
 const asserts = require("../mod/asserts");
-const env_1 = require("./env");
+const variables_1 = require("./variables");
 ;
 ;
 class Chunk {
@@ -23,7 +23,7 @@ exports.Chunk = Chunk;
 class LogHeader extends Chunk {
     constructor(buffer) {
         super(buffer ?? new Uint8Array(LogHeader.LENGTH));
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, LogHeader.LENGTH);
         this.identifier(LogHeader.IDENTIFIER);
     }
@@ -50,7 +50,7 @@ exports.LogHeader = LogHeader;
 class LogDeltaHeader extends Chunk {
     constructor(buffer) {
         super(buffer ?? new Uint8Array(LogDeltaHeader.LENGTH));
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, LogDeltaHeader.LENGTH);
     }
     offset(value) {
@@ -78,7 +78,7 @@ var BlockFlags;
 class BlockHeader extends Chunk {
     constructor(buffer) {
         super(buffer ?? new Uint8Array(BlockHeader.LENGTH));
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, BlockHeader.LENGTH);
     }
     flag(bit, value) {
@@ -98,13 +98,13 @@ class BlockHeader extends Chunk {
         return BlockHeader.getLength(category);
     }
     static getCategory(minLength) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(1, minLength);
         let category = Math.ceil(Math.log2(minLength));
         return category;
     }
     static getLength(cateogry) {
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, cateogry);
         let length = Math.pow(2, cateogry);
         return length;
@@ -116,7 +116,7 @@ exports.BlockHeader = BlockHeader;
 class BlockReference extends Chunk {
     constructor(buffer) {
         super(buffer ?? new Uint8Array(BlockReference.LENGTH));
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, BlockReference.LENGTH);
     }
     metadata(value) {
@@ -135,7 +135,7 @@ class BinHeader extends Chunk {
     pools;
     constructor(buffer) {
         super(buffer ?? new Uint8Array(BinHeader.LENGTH));
-        if (env_1.DEBUG)
+        if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, BinHeader.LENGTH);
         this.identifier(BinHeader.IDENTIFIER);
         this.table = new BlockHeader(this.buffer.subarray(16, 16 + BlockHeader.LENGTH));

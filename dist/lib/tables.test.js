@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const hash = require("./hash");
+const hash = require("./tables");
 const files = require("./files");
 const utils = require("./utils");
-const vfs = require("./vfs");
+const vfs = require("./blocks");
 const test_1 = require("./test");
 const DETAIL = {
     getKeyFromValue: (value) => {

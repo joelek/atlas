@@ -2,13 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
-const database_1 = require("./database");
-const hash_1 = require("./hash");
-const link_1 = require("./link");
+const databases_1 = require("./databases");
+const tables_1 = require("./tables");
+const links_1 = require("./links");
 const orders_1 = require("./orders");
 const records_1 = require("./records");
-const store_1 = require("./store");
-const vfs_1 = require("./vfs");
+const stores_1 = require("./stores");
+const blocks_1 = require("./blocks");
 exports.BigIntFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BigIntField"),
     defaultValue: bedrock.codecs.BigInt
@@ -187,7 +187,7 @@ class SchemaManager {
         }
         // TODO: Create index managers.
         let recordManager = new records_1.RecordManager(fields);
-        let storage = new hash_1.Table(blockManager, {
+        let storage = new tables_1.Table(blockManager, {
             getKeyFromValue: (value) => {
                 let buffer = blockManager.readBlock(value);
                 let record = recordManager.decode(buffer);
@@ -196,7 +196,7 @@ class SchemaManager {
         }, {
             bid: oldSchema.storageBid
         });
-        return new store_1.StoreManager(blockManager, fields, keys, orders, storage);
+        return new stores_1.StoreManager(blockManager, fields, keys, orders, storage);
     }
     loadLinkManager(blockManager, linkSchema, storeManagers) {
         let parent = storeManagers[linkSchema.parent];
@@ -212,7 +212,7 @@ class SchemaManager {
         for (let order of linkSchema.orders) {
             orders[order.key] = this.loadOrderManager(order.order);
         }
-        return new link_1.LinkManager(parent, child, recordKeysMap, orders);
+        return new links_1.LinkManager(parent, child, recordKeysMap, orders);
     }
     loadDatabaseManager(databaseSchema, blockManager) {
         let storeManagers = {};
@@ -223,7 +223,7 @@ class SchemaManager {
         for (let key in databaseSchema.links) {
             linkManagers[key] = this.loadLinkManager(blockManager, databaseSchema.links[key], storeManagers);
         }
-        return new database_1.DatabaseManager(storeManagers, linkManagers);
+        return new databases_1.DatabaseManager(storeManagers, linkManagers);
     }
     compareField(field, schema) {
         if (isSchemaCompatible(exports.BigIntFieldSchema, schema)) {
@@ -471,7 +471,7 @@ class SchemaManager {
             keys,
             orders,
             indices,
-            storageBid: blockManager.createBlock(hash_1.Table.LENGTH)
+            storageBid: blockManager.createBlock(tables_1.Table.LENGTH)
         };
         return schema;
     }
@@ -649,7 +649,7 @@ class SchemaManager {
     }
     constructor() { }
     createDatabaseManager(file, database) {
-        let blockManager = new vfs_1.BlockManager(file);
+        let blockManager = new blocks_1.BlockManager(file);
         if (blockManager.getBlockCount() === 0) {
             this.initializeDatabase(blockManager);
         }
