@@ -303,7 +303,7 @@ export class Context {
 		return reference;
 	}
 
-	createDiskStorage(path: string): FileReference {
+	createDurableFile(path: string): FileReference {
 		let reference = new FileReference();
 		let bin = new CachedFile(new PhysicalFile(`${path}.bin`), 64 * 1024 * 1024);
 		let log = new CachedFile(new PhysicalFile(`${path}.log`), 64 * 1024 * 1024);
@@ -312,7 +312,7 @@ export class Context {
 		return reference;
 	}
 
-	createMemoryStorage(): FileReference {
+	createVirtualFile(): FileReference {
 		let reference = new FileReference();
 		let file = new VirtualFile(0);
 		this.files.set(reference, file);

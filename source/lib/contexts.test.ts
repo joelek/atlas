@@ -25,8 +25,8 @@ test(`It should work.`, async (assert) => {
 		name: context.createEqualityOperator(),
 		age: context.createEqualityOperator()
 	});
-	let storage = context.createMemoryStorage();
-	let manager = context.createTransactionManager(storage, {
+	let file = context.createVirtualFile();
+	let manager = context.createTransactionManager(file, {
 		users,
 		posts
 	}, {
