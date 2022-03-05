@@ -92,7 +92,7 @@ export class QueuedWritableQuery<A extends Record, B extends RequiredKeys<A>, C 
 
 export type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
 
-export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
+export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: WritableLinksFromLinks<B>, queries: WritableQueriesFromQueries<C>) => Promise<D>;
 
 export class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>, C extends WritableQueries<any>> {
 	private file: File;
