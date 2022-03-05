@@ -1,7 +1,7 @@
 import * as hash from "./tables";
 import * as files from "./files";
 import * as utils from "./utils";
-import * as vfs from "./blocks";
+import * as blocks from "./blocks";
 import { test } from "./test";
 
 const DETAIL: hash.TableDetail = {
@@ -14,7 +14,7 @@ const DETAIL: hash.TableDetail = {
 
 test(`It should support iteration with no values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -25,7 +25,7 @@ test(`It should support iteration with no values inserted.`, async (assert) => {
 
 test(`It should support iteration with value one inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -37,7 +37,7 @@ test(`It should support iteration with value one inserted.`, async (assert) => {
 
 test(`It should support iteration with value two inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -49,7 +49,7 @@ test(`It should support iteration with value two inserted.`, async (assert) => {
 
 test(`It should support iteration with both values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -62,7 +62,7 @@ test(`It should support iteration with both values inserted.`, async (assert) =>
 
 test(`It should support clearing.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -76,7 +76,7 @@ test(`It should support clearing.`, async (assert) => {
 
 test(`It should throw an error when attempting to insert after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -88,7 +88,7 @@ test(`It should throw an error when attempting to insert after deletion.`, async
 
 test(`It should throw an error when attempting to lookup after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -100,7 +100,7 @@ test(`It should throw an error when attempting to lookup after deletion.`, async
 
 test(`It should throw an error when attempting to remove after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -112,7 +112,7 @@ test(`It should throw an error when attempting to remove after deletion.`, async
 
 test(`It should support inserting value one.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -123,7 +123,7 @@ test(`It should support inserting value one.`, async (assert) => {
 
 test(`It should support inserting value two.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -134,7 +134,7 @@ test(`It should support inserting value two.`, async (assert) => {
 
 test(`It should support inserting both values.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -148,7 +148,7 @@ test(`It should support inserting both values.`, async (assert) => {
 
 test(`It should support keeping track of the total number of values.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -167,7 +167,7 @@ test(`It should support keeping track of the total number of values.`, async (as
 
 test(`It should support looking up values with no values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -179,7 +179,7 @@ test(`It should support looking up values with no values inserted.`, async (asse
 
 test(`It should support looking up values with value one inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -192,7 +192,7 @@ test(`It should support looking up values with value one inserted.`, async (asse
 
 test(`It should support looking up values with value two inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -205,7 +205,7 @@ test(`It should support looking up values with value two inserted.`, async (asse
 
 test(`It should support looking up values with both values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -219,7 +219,7 @@ test(`It should support looking up values with both values inserted.`, async (as
 
 test(`It should support removing values with no values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -231,7 +231,7 @@ test(`It should support removing values with no values inserted.`, async (assert
 
 test(`It should support removing values with value one inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -244,7 +244,7 @@ test(`It should support removing values with value one inserted.`, async (assert
 
 test(`It should support removing values with value two inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
@@ -257,7 +257,7 @@ test(`It should support removing values with value two inserted.`, async (assert
 
 test(`It should support removing values with both values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
-	let blockManager = new vfs.BlockManager(file);
+	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
