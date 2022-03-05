@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const files = require("./files");
 const vfs = require("./blocks");
 const test_1 = require("./test");
-const chunks_1 = require("./chunks");
+const blocks_1 = require("./blocks");
 (0, test_1.test)(`It should not support creating blocks with a size of 0.`, async (assert) => {
     let file = new files.VirtualFile(0);
     let blockManager = new vfs.BlockManager(file);
@@ -329,8 +329,8 @@ const chunks_1 = require("./chunks");
     let file = new files.VirtualFile(0);
     let blockManager = new vfs.BlockManager(file);
     let id = blockManager.createBlock(1);
-    blockManager.setBlockFlag(id, chunks_1.BlockFlags.APPLICATION_0, true);
-    assert.true(blockManager.getBlockFlag(id, chunks_1.BlockFlags.APPLICATION_0) === true);
+    blockManager.setBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0, true);
+    assert.true(blockManager.getBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0) === true);
 });
 (0, test_1.test)(`It should prevent setting flags for deleted blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
@@ -338,16 +338,16 @@ const chunks_1 = require("./chunks");
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
-        blockManager.setBlockFlag(id, chunks_1.BlockFlags.APPLICATION_0, true);
+        blockManager.setBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0, true);
     });
 });
 (0, test_1.test)(`It should clear block flags when deleting blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
     let blockManager = new vfs.BlockManager(file);
     let idOne = blockManager.createBlock(1);
-    blockManager.setBlockFlag(idOne, chunks_1.BlockFlags.APPLICATION_0, true);
+    blockManager.setBlockFlag(idOne, blocks_1.BlockFlags.APPLICATION_0, true);
     blockManager.deleteBlock(idOne);
     let idTwo = blockManager.createBlock(1);
     assert.true(idOne === idTwo);
-    assert.true(blockManager.getBlockFlag(idTwo, chunks_1.BlockFlags.APPLICATION_0) === false);
+    assert.true(blockManager.getBlockFlag(idTwo, blocks_1.BlockFlags.APPLICATION_0) === false);
 });

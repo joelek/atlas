@@ -251,7 +251,7 @@ class Context {
         this.orders.set(reference, order);
         return reference;
     }
-    createDiskStorage(path) {
+    createDurableFile(path) {
         let reference = new FileReference();
         let bin = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.bin`), 64 * 1024 * 1024);
         let log = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.log`), 64 * 1024 * 1024);
@@ -259,7 +259,7 @@ class Context {
         this.files.set(reference, file);
         return reference;
     }
-    createMemoryStorage() {
+    createVirtualFile() {
         let reference = new FileReference();
         let file = new files_1.VirtualFile(0);
         this.files.set(reference, file);

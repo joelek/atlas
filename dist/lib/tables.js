@@ -1,12 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Table = exports.HashTableSlot = exports.HashTableHeader = void 0;
+exports.Table = exports.HashTableSlot = exports.HashTableHeader = exports.compareBuffers = void 0;
+const bedrock = require("@joelek/bedrock");
 const libcrypto = require("crypto");
+const blocks_1 = require("./blocks");
 const chunks_1 = require("./chunks");
 const variables_1 = require("./variables");
 const asserts = require("../mod/asserts");
-const keys = require("./keys");
 const asserts_1 = require("../mod/asserts");
+function compareBuffers(one, two) {
+    if (one.length < two.length) {
+        return -1;
+    }
+    if (one.length > two.length) {
+        return 1;
+    }
+    for (let i = 0; i < one.length; i++) {
+        let comparison = bedrock.utils.Chunk.comparePrefixes(one[i], two[i]);
+        if (comparison !== 0) {
+            return comparison;
+        }
+    }
+    return 0;
+}
+exports.compareBuffers = compareBuffers;
+;
 class HashTableHeader extends chunks_1.Chunk {
     count;
     table;
@@ -14,14 +32,14 @@ class HashTableHeader extends chunks_1.Chunk {
         super(buffer ?? new Uint8Array(HashTableHeader.LENGTH));
         if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, HashTableHeader.LENGTH);
-        this.count = new chunks_1.BlockReference(this.buffer.subarray(16, 16 + chunks_1.BlockReference.LENGTH));
-        this.table = new chunks_1.BlockReference(this.buffer.subarray(24, 24 + chunks_1.BlockReference.LENGTH));
+        this.count = new blocks_1.BlockReference(this.buffer.subarray(16, 16 + blocks_1.BlockReference.LENGTH));
+        this.table = new blocks_1.BlockReference(this.buffer.subarray(24, 24 + blocks_1.BlockReference.LENGTH));
     }
     static LENGTH = 32;
 }
 exports.HashTableHeader = HashTableHeader;
 ;
-class HashTableSlot extends chunks_1.BlockReference {
+class HashTableSlot extends blocks_1.BlockReference {
     constructor(buffer) {
         super(buffer ?? new Uint8Array(HashTableSlot.LENGTH));
     }
@@ -88,7 +106,7 @@ class Table {
                 this.writeSlot(slotIndex, slot);
                 return slotIndex;
             }
-            if (keys.compareChunks(this.detail.getKeyFromValue(slot.value()), key) === 0) {
+            if (compareBuffers(this.detail.getKeyFromValue(slot.value()), key) === 0) {
                 return;
             }
             if (probeDistance > slot.probeDistance()) {
@@ -115,7 +133,7 @@ class Table {
             if (value === 0 || probeDistance > slot.probeDistance()) {
                 return;
             }
-            if (keys.compareChunks(this.detail.getKeyFromValue(value), key) === 0) {
+            if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
                 return slotIndex;
             }
             slotIndex = (slotIndex + 1) % slotCount;
@@ -134,7 +152,7 @@ class Table {
             if (value === 0 || probeDistance > slot.probeDistance()) {
                 return;
             }
-            if (keys.compareChunks(this.detail.getKeyFromValue(value), key) === 0) {
+            if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
                 this.writeSlot(slotIndex, new HashTableSlot());
                 return slotIndex;
             }
@@ -144,7 +162,7 @@ class Table {
     }
     getSlotCount() {
         let blockSize = this.blockManager.getBlockSize(this.header.table.value());
-        return Math.floor(blockSize / chunks_1.BlockReference.LENGTH);
+        return Math.floor(blockSize / blocks_1.BlockReference.LENGTH);
     }
     propagateBackwards(slotIndex) {
         let slotCount = this.getSlotCount();
@@ -183,7 +201,7 @@ class Table {
                 values.push(value);
             }
         }
-        let minLength = desiredSlotCount * chunks_1.BlockReference.LENGTH;
+        let minLength = desiredSlotCount * blocks_1.BlockReference.LENGTH;
         this.blockManager.resizeBlock(this.header.table.value(), minLength);
         this.blockManager.clearBlock(this.header.table.value());
         for (let value of values) {

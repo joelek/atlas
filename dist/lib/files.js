@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VirtualFile = exports.PhysicalFile = exports.DurableFile = exports.CachedFile = exports.File = void 0;
+exports.VirtualFile = exports.PhysicalFile = exports.DurableFile = exports.LogDeltaHeader = exports.LogHeader = exports.CachedFile = exports.File = void 0;
 const stdlib = require("@joelek/ts-stdlib");
 const libfs = require("fs");
 const libpath = require("path");
 const asserts = require("../mod/asserts");
 const caches_1 = require("./caches");
-const variables_1 = require("./variables");
 const chunks_1 = require("./chunks");
+const variables_1 = require("./variables");
+const utils = require("./utils");
 class File {
     constructor() { }
 }
@@ -152,15 +153,58 @@ class CachedFile extends File {
 }
 exports.CachedFile = CachedFile;
 ;
+class LogHeader extends chunks_1.Chunk {
+    constructor(buffer) {
+        super(buffer ?? new Uint8Array(LogHeader.LENGTH));
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.exactly(this.buffer.length, LogHeader.LENGTH);
+        this.identifier(LogHeader.IDENTIFIER);
+    }
+    identifier(value) {
+        return utils.Binary.string(this.buffer, 0, 8, "binary", value);
+    }
+    redoSize(value) {
+        return utils.Binary.unsigned(this.buffer, 18, 6, value);
+    }
+    undoSize(value) {
+        return utils.Binary.unsigned(this.buffer, 26, 6, value);
+    }
+    read(readable, offset) {
+        super.read(readable, offset);
+        if (this.identifier() !== LogHeader.IDENTIFIER) {
+            throw `Expected identifier to be ${LogHeader.IDENTIFIER}!`;
+        }
+    }
+    static IDENTIFIER = "atlaslog";
+    static LENGTH = 32;
+}
+exports.LogHeader = LogHeader;
+;
+class LogDeltaHeader extends chunks_1.Chunk {
+    constructor(buffer) {
+        super(buffer ?? new Uint8Array(LogDeltaHeader.LENGTH));
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.exactly(this.buffer.length, LogDeltaHeader.LENGTH);
+    }
+    offset(value) {
+        return utils.Binary.unsigned(this.buffer, 2, 6, value);
+    }
+    length(value) {
+        return utils.Binary.unsigned(this.buffer, 10, 6, value);
+    }
+    static LENGTH = 16;
+}
+exports.LogDeltaHeader = LogDeltaHeader;
+;
 class DurableFile extends File {
     bin;
     log;
     header;
     tree;
     readDelta(offset) {
-        let header = new chunks_1.LogDeltaHeader();
+        let header = new LogDeltaHeader();
         header.read(this.log, offset);
-        offset += chunks_1.LogDeltaHeader.LENGTH;
+        offset += LogDeltaHeader.LENGTH;
         let length = header.length();
         let redo = new Uint8Array(length);
         this.log.read(redo, offset);
@@ -177,14 +221,14 @@ class DurableFile extends File {
     }
     writeDelta(delta, offset) {
         delta.header.write(this.log, offset);
-        offset += chunks_1.LogDeltaHeader.LENGTH;
+        offset += LogDeltaHeader.LENGTH;
         this.log.write(delta.redo, offset);
         offset += delta.redo.length;
         this.log.write(delta.undo, offset);
         offset += delta.undo.length;
     }
     appendRedo(redo, offset) {
-        let header = new chunks_1.LogDeltaHeader();
+        let header = new LogDeltaHeader();
         header.offset(offset);
         header.length(redo.length);
         let undo = new Uint8Array(redo.length);
@@ -228,7 +272,7 @@ class DurableFile extends File {
         super();
         this.bin = bin;
         this.log = log;
-        this.header = new chunks_1.LogHeader();
+        this.header = new LogHeader();
         this.header.redoSize(this.bin.size());
         this.header.undoSize(this.bin.size());
         this.tree = new stdlib.collections.avl.Tree();
@@ -238,15 +282,15 @@ class DurableFile extends File {
         else {
             let offset = 0;
             this.header.read(this.log, offset);
-            offset += chunks_1.LogHeader.LENGTH;
+            offset += LogHeader.LENGTH;
             // A corrupted log should be discarded since it is persisted before and after bin is persisted.
             try {
                 while (offset < this.log.size()) {
-                    let header = new chunks_1.LogDeltaHeader();
+                    let header = new LogDeltaHeader();
                     header.read(this.log, offset);
                     this.tree.insert(header.offset(), offset);
                     let length = header.length();
-                    offset += chunks_1.LogDeltaHeader.LENGTH + length + length;
+                    offset += LogDeltaHeader.LENGTH + length + length;
                 }
                 this.undo();
             }

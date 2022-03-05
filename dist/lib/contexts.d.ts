@@ -85,7 +85,7 @@ export declare class Context {
     createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>>;
     createDecreasingOrder<A extends Value>(): OrderReference<DecreasingOrder<A>>;
     createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>>;
-    createDiskStorage(path: string): FileReference;
-    createMemoryStorage(): FileReference;
+    createDurableFile(path: string): FileReference;
+    createVirtualFile(): FileReference;
     createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>>;
 }

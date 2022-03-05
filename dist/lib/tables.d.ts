@@ -1,6 +1,6 @@
-import { BlockManager } from "./blocks";
-import { BlockReference, Chunk } from "./chunks";
-import * as keys from "./keys";
+import { BlockManager, BlockReference } from "./blocks";
+import { Chunk } from "./chunks";
+export declare function compareBuffers(one: Array<Uint8Array>, two: Array<Uint8Array>): number;
 export declare class HashTableHeader extends Chunk {
     readonly count: BlockReference;
     readonly table: BlockReference;
@@ -12,11 +12,11 @@ export declare class HashTableSlot extends BlockReference {
     probeDistance(value?: number): number;
 }
 export interface Entry {
-    key(): keys.Chunks;
+    key(): Array<Uint8Array>;
     value(): number;
 }
 export interface TableDetail {
-    getKeyFromValue(value: number): keys.Chunks;
+    getKeyFromValue(value: number): Array<Uint8Array>;
 }
 export declare class Table {
     private blockManager;
@@ -40,9 +40,9 @@ export declare class Table {
     [Symbol.iterator](): Iterator<Entry>;
     clear(): void;
     delete(): void;
-    insert(key: keys.Chunks, value: number): boolean;
+    insert(key: Array<Uint8Array>, value: number): boolean;
     length(): number;
-    lookup(key: keys.Chunks): number | undefined;
-    remove(key: keys.Chunks): boolean;
+    lookup(key: Array<Uint8Array>): number | undefined;
+    remove(key: Array<Uint8Array>): boolean;
     static LENGTH: number;
 }

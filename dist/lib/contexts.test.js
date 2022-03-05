@@ -26,8 +26,8 @@ const contexts_1 = require("./contexts");
         name: context.createEqualityOperator(),
         age: context.createEqualityOperator()
     });
-    let storage = context.createMemoryStorage();
-    let manager = context.createTransactionManager(storage, {
+    let file = context.createVirtualFile();
+    let manager = context.createTransactionManager(file, {
         users,
         posts
     }, {

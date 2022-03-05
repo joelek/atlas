@@ -1,3 +1,4 @@
+import { Chunk, Readable } from "./chunks";
 export declare abstract class File {
     constructor();
     abstract discard(): void;
@@ -19,6 +20,26 @@ export declare class CachedFile extends File {
     size(): number;
     write(buffer: Uint8Array, offset: number): Uint8Array;
 }
+export declare class LogHeader extends Chunk {
+    constructor(buffer?: Uint8Array);
+    identifier(value?: string): string;
+    redoSize(value?: number): number;
+    undoSize(value?: number): number;
+    read(readable: Readable, offset: number): void;
+    static readonly IDENTIFIER = "atlaslog";
+    static readonly LENGTH = 32;
+}
+export declare class LogDeltaHeader extends Chunk {
+    constructor(buffer?: Uint8Array);
+    offset(value?: number): number;
+    length(value?: number): number;
+    static readonly LENGTH = 16;
+}
+export declare type LogDelta = {
+    header: LogDeltaHeader;
+    redo: Uint8Array;
+    undo: Uint8Array;
+};
 export declare class DurableFile extends File {
     private bin;
     private log;

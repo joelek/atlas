@@ -1,5 +1,4 @@
 import * as bedrock from "@joelek/bedrock";
-import * as keys from "./keys";
 export declare type Value = Uint8Array | bigint | boolean | null | number | string;
 export declare type Record = {
     [key: string]: Value;
@@ -69,6 +68,6 @@ export declare class RecordManager<A extends Record> {
     constructor(fields: Fields<A>);
     decode(buffer: Uint8Array): A;
     encode(record: A): Uint8Array;
-    decodeKeys<B extends Keys<A>>(keys: [...B], buffers: keys.Chunks): Pick<A, B[number]>;
-    encodeKeys<B extends Keys<A>>(keys: [...B], record: Pick<A, B[number]>): keys.Chunks;
+    decodeKeys<B extends Keys<A>>(keys: [...B], buffers: Array<Uint8Array>): Pick<A, B[number]>;
+    encodeKeys<B extends Keys<A>>(keys: [...B], record: Pick<A, B[number]>): Array<Uint8Array>;
 }
