@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const files = require("./files");
-const vfs = require("./blocks");
+const blocks = require("./blocks");
 const test_1 = require("./test");
 const blocks_1 = require("./blocks");
 (0, test_1.test)(`It should not support creating blocks with a size of 0.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     await assert.throws(async () => {
         blockManager.createBlock(0);
     });
@@ -14,21 +14,21 @@ const blocks_1 = require("./blocks");
 (0, test_1.test)(`It should allocate blocks in a logarithmic fashion.`, async (assert) => {
     for (let i = 1; i <= 16; i++) {
         let file = new files.VirtualFile(0);
-        let blockManager = new vfs.BlockManager(file);
+        let blockManager = new blocks.BlockManager(file);
         let id = blockManager.createBlock(i);
         assert.true(blockManager.getBlockSize(id) === Math.pow(2, Math.ceil(Math.log2(i))));
     }
 });
 (0, test_1.test)(`It should generate block ids starting at 0.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     assert.true(blockManager.createBlock(1) === 0);
     assert.true(blockManager.createBlock(1) === 1);
     assert.true(blockManager.createBlock(1) === 2);
 });
 (0, test_1.test)(`It should keep track of the number of blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     assert.true(blockManager.getBlockCount() === 0);
     blockManager.createBlock(1);
     assert.true(blockManager.getBlockCount() === 1);
@@ -37,7 +37,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent operations from before a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -47,7 +47,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent operations from just before a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -57,7 +57,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent operations overlapping the beginning of a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -67,7 +67,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support operations at the beginning of a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -76,7 +76,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support operations in the middle of a block`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -85,7 +85,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support operations at the end of a block`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -94,7 +94,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent operations overlapping the end of a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -104,7 +104,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent operations from just after a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -114,7 +114,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent operations from after a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     let buffer = new Uint8Array(2);
@@ -124,7 +124,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support swapping two blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     let idTwo = blockManager.createBlock(4);
     blockManager.writeBlock(idOne, Uint8Array.of(0, 1), 0);
@@ -137,7 +137,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent swapping two blocks when block one is deleted.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     let idTwo = blockManager.createBlock(4);
     blockManager.deleteBlock(idOne);
@@ -147,7 +147,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent swapping two blocks when block two is deleted.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     let idTwo = blockManager.createBlock(4);
     blockManager.deleteBlock(idTwo);
@@ -157,7 +157,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent swapping two blocks when both blocks are deleted.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     let idTwo = blockManager.createBlock(4);
     blockManager.deleteBlock(idOne);
@@ -168,7 +168,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support increasing the size of a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(2);
     blockManager.writeBlock(id, Uint8Array.of(0, 1), 0);
     blockManager.resizeBlock(id, 4);
@@ -177,7 +177,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support decreasing the size of a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     blockManager.resizeBlock(id, 2);
@@ -186,7 +186,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent resizing deleted blocks`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -195,7 +195,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support clearing a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(4);
     blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
     blockManager.clearBlock(id);
@@ -203,7 +203,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent clearing a deleted block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -212,7 +212,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support cloning a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     let idTwo = blockManager.cloneBlock(idOne);
     assert.true(idOne !== idTwo);
@@ -220,7 +220,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support cloning the contents of a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     blockManager.writeBlock(idOne, Uint8Array.of(0, 1), 0);
     let idTwo = blockManager.cloneBlock(idOne);
@@ -229,7 +229,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should use separate storage for two cloned blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(2);
     blockManager.writeBlock(idOne, Uint8Array.of(0, 1), 0);
     let idTwo = blockManager.cloneBlock(idOne);
@@ -239,7 +239,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent cloning a deleted block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -248,13 +248,13 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support deleting a block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
 });
 (0, test_1.test)(`It should support deleting multiple blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(1);
     let idTwo = blockManager.createBlock(1);
     blockManager.deleteBlock(idOne);
@@ -262,14 +262,14 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should re-use deleted blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(1);
     blockManager.deleteBlock(idOne);
     assert.true(blockManager.createBlock(1) === idOne);
 });
 (0, test_1.test)(`It should re-use multiple deleted blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(1);
     let idTwo = blockManager.createBlock(1);
     blockManager.deleteBlock(idOne);
@@ -279,7 +279,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should clear re-used blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(1);
     blockManager.writeBlock(idOne, Uint8Array.of(1), 0);
     blockManager.deleteBlock(idOne);
@@ -288,7 +288,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent deleting a deleted block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -297,7 +297,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent writing to deleted blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -306,7 +306,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should prevent reading from deleted blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -315,7 +315,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should recycle system blocks that get deleted during the deletion of an application block.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file, {
+    let blockManager = new blocks.BlockManager(file, {
         initialPoolCapacity: 1
     });
     let idOne = blockManager.createBlock(8);
@@ -327,14 +327,14 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should support storing block flags.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.setBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0, true);
     assert.true(blockManager.getBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0) === true);
 });
 (0, test_1.test)(`It should prevent setting flags for deleted blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let id = blockManager.createBlock(1);
     blockManager.deleteBlock(id);
     await assert.throws(async () => {
@@ -343,7 +343,7 @@ const blocks_1 = require("./blocks");
 });
 (0, test_1.test)(`It should clear block flags when deleting blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
-    let blockManager = new vfs.BlockManager(file);
+    let blockManager = new blocks.BlockManager(file);
     let idOne = blockManager.createBlock(1);
     blockManager.setBlockFlag(idOne, blocks_1.BlockFlags.APPLICATION_0, true);
     blockManager.deleteBlock(idOne);
