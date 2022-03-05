@@ -3,6 +3,7 @@ import { Database, DatabaseManager } from "./databases";
 import { File } from "./files";
 import { Links, LinkManagersFromLinks } from "./links";
 import { Stores, StoreManagersFromStores } from "./stores";
+import { Queries, QueryManagersFromQueries } from "./queries";
 export declare const BigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BigIntField";
     defaultValue: bigint;
@@ -151,6 +152,28 @@ export declare const IndicesSchema: bedrock.codecs.ArrayCodec<{
     bid: number;
 }>;
 export declare type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
+export declare const EqualityOperatorSchema: bedrock.codecs.ObjectCodec<{
+    type: "EqualityOperator";
+}>;
+export declare type EqualityOperatorSchema = ReturnType<typeof EqualityOperatorSchema["decode"]>;
+export declare const OperatorSchema: bedrock.codecs.UnionCodec<[{
+    type: "EqualityOperator";
+}]>;
+export declare type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
+export declare const KeyOperatorSchema: bedrock.codecs.ObjectCodec<{
+    key: string;
+    operator: {
+        type: any;
+    };
+}>;
+export declare type KeyOperatorSchema = ReturnType<typeof KeyOperatorSchema["decode"]>;
+export declare const KeyOperatorsSchema: bedrock.codecs.ArrayCodec<{
+    key: string;
+    operator: {
+        type: any;
+    };
+}>;
+export declare type KeyOperatorsSchema = ReturnType<typeof KeyOperatorsSchema["decode"]>;
 export declare const DecreasingOrderSchema: bedrock.codecs.ObjectCodec<{
     type: "DecreasingOrder";
 }>;
@@ -309,6 +332,32 @@ export declare const LinksSchema: bedrock.codecs.RecordCodec<{
     }[];
 }>;
 export declare type LinksSchema = ReturnType<typeof LinksSchema["decode"]>;
+export declare const QuerySchema: bedrock.codecs.ObjectCodec<{
+    version: number;
+    store: string;
+    operators: {
+        key: any;
+        operator: any;
+    }[];
+    orders: {
+        key: any;
+        order: any;
+    }[];
+}>;
+export declare type QuerySchema = ReturnType<typeof QuerySchema["decode"]>;
+export declare const QueriesSchema: bedrock.codecs.RecordCodec<{
+    version: number;
+    store: string;
+    operators: {
+        key: any;
+        operator: any;
+    }[];
+    orders: {
+        key: any;
+        order: any;
+    }[];
+}>;
+export declare type QueriesSchema = ReturnType<typeof QueriesSchema["decode"]>;
 export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
     stores: globalThis.Record<string, {
         version: any;
@@ -325,6 +374,12 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
         keysMap: any;
         orders: any;
     }>;
+    queries: globalThis.Record<string, {
+        version: any;
+        store: any;
+        operators: any;
+        orders: any;
+    }>;
 }>;
 export declare type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
 export declare function isSchemaCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject is V;
@@ -332,9 +387,11 @@ export declare class SchemaManager {
     private getStoreName;
     private initializeDatabase;
     private loadFieldManager;
+    private loadOperatorManager;
     private loadOrderManager;
     private loadStoreManager;
     private loadLinkManager;
+    private loadQueryManager;
     private loadDatabaseManager;
     private compareField;
     private compareFields;
@@ -347,15 +404,22 @@ export declare class SchemaManager {
     private deleteStore;
     private updateStore;
     private updateStores;
+    private createOperator;
+    private createKeyOperators;
     private createOrder;
     private createKeyOrders;
     private createLink;
     private deleteLink;
     private updateLink;
     private updateLinks;
+    private compareQuery;
+    private createQuery;
+    private deleteQuery;
+    private updateQuery;
+    private updateQueries;
     private updateDatabase;
     private getDirtyStoreNames;
     private getDirtyLinkNames;
     constructor();
-    createDatabaseManager<A extends Stores<any>, B extends Links<any>>(file: File, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>>;
+    createDatabaseManager<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(file: File, database: Database<A, B, C>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>>;
 }

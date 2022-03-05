@@ -5,6 +5,7 @@ import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order } from "./orders";
 import { EqualityOperator, Operator } from "./operators";
 import { SubsetOf } from "./inference";
+import { Query, QueryManagersFromQueries, WritableQueriesFromQueryManagers } from "./queries";
 export declare class FileReference {
     private FileReference;
 }
@@ -37,6 +38,9 @@ export declare class QueryReference<A extends Record, B extends RequiredKeys<A>,
 }
 export declare type QueryReferences<A> = {
     [B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E, infer F> ? QueryReference<C, D, E, F> : A[B];
+};
+export declare type QueriesFromQueryReferences<A extends QueryReferences<any>> = {
+    [B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
 };
 export declare class OrderReference<A extends Order<any>> {
     private OrderReference;
@@ -87,5 +91,5 @@ export declare class Context {
     createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>>;
     createDurableFile(path: string): FileReference;
     createVirtualFile(): FileReference;
-    createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>>;
+    createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;
 }

@@ -265,7 +265,7 @@ class Context {
         this.files.set(reference, file);
         return reference;
     }
-    createTransactionManager(fileReference, storeReferences, linkReferences) {
+    createTransactionManager(fileReference, storeReferences, linkReferences, queryReferences) {
         if (this.databaseManagers.has(fileReference)) {
             throw `Expected given storage to not be in use by another database!`;
         }
@@ -280,8 +280,12 @@ class Context {
         for (let key in linkReferences) {
             links[key] = this.getLink(linkReferences[key]);
         }
+        let queries = {};
+        for (let key in queryReferences) {
+            queries[key] = this.getQuery(queryReferences[key]);
+        }
         let schemaManager = new schemas_1.SchemaManager();
-        let database = new databases_1.Database(stores, links);
+        let database = new databases_1.Database(stores, links, queries);
         let databaseManager = schemaManager.createDatabaseManager(file, database);
         this.databaseManagers.set(fileReference, databaseManager);
         let transactionManager = databaseManager.createTransactionManager(file);

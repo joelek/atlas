@@ -14,7 +14,7 @@ async function delay(ms) {
 ;
 (0, test_1.test)(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let manager = new transactions_1.TransactionManager(file, {}, {});
+    let manager = new transactions_1.TransactionManager(file, {}, {}, {});
     let events = new Array();
     let transactionOne = manager.enqueueReadableTransaction(async (access) => {
         events.push("1S");
@@ -50,7 +50,7 @@ async function delay(ms) {
 });
 (0, test_1.test)(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let manager = new transactions_1.TransactionManager(file, {}, {});
+    let manager = new transactions_1.TransactionManager(file, {}, {}, {});
     let events = new Array();
     let transactionOne = manager.enqueueWritableTransaction(async (access) => {
         events.push("1S");
@@ -86,7 +86,7 @@ async function delay(ms) {
 });
 (0, test_1.test)(`It should recover from transactions that throw errors.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
-    let manager = new transactions_1.TransactionManager(file, {}, {});
+    let manager = new transactions_1.TransactionManager(file, {}, {}, {});
     let events = new Array();
     let transactionOne = manager.enqueueWritableTransaction(async (access) => {
         events.push("1S");
@@ -120,7 +120,7 @@ async function delay(ms) {
     }));
     let manager = new transactions_1.TransactionManager(file, {
         dummy
-    }, {});
+    }, {}, {});
     let access = await manager.enqueueWritableTransaction(async (access) => {
         return access;
     });

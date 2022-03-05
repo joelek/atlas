@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransactionManager = exports.QueuedWritableLink = exports.QueuedReadableLink = exports.QueuedWritableStore = exports.QueuedReadableStore = void 0;
+exports.TransactionManager = exports.QueuedWritableQuery = exports.QueuedReadableQuery = exports.QueuedWritableLink = exports.QueuedReadableLink = exports.QueuedWritableStore = exports.QueuedReadableStore = void 0;
 const utils_1 = require("./utils");
 class QueuedReadableStore {
     writableStore;
@@ -60,12 +60,33 @@ class QueuedWritableLink extends QueuedReadableLink {
 }
 exports.QueuedWritableLink = QueuedWritableLink;
 ;
+class QueuedReadableQuery {
+    writableQuery;
+    queue;
+    constructor(writableQuery, queue) {
+        this.writableQuery = writableQuery;
+        this.queue = queue;
+    }
+    filter(...parameters) {
+        return this.queue.enqueue(() => this.writableQuery.filter(...parameters));
+    }
+}
+exports.QueuedReadableQuery = QueuedReadableQuery;
+;
+class QueuedWritableQuery extends QueuedReadableQuery {
+    constructor(writableQuery, queue) {
+        super(writableQuery, queue);
+    }
+}
+exports.QueuedWritableQuery = QueuedWritableQuery;
+;
 class TransactionManager {
     file;
     readableTransactionLock;
     writableTransactionLock;
     writableStores;
     writableLinks;
+    writableQueries;
     createReadableLinks(queue) {
         let readableLinks = {};
         for (let key in this.writableLinks) {
@@ -79,6 +100,13 @@ class TransactionManager {
             readableStores[key] = new QueuedReadableStore(this.writableStores[key], queue);
         }
         return readableStores;
+    }
+    createReadableQueries(queue) {
+        let readableQueries = {};
+        for (let key in this.writableQueries) {
+            readableQueries[key] = new QueuedReadableQuery(this.writableQueries[key], queue);
+        }
+        return readableQueries;
     }
     createWritableLinks(queue) {
         let writableLinks = {};
@@ -94,19 +122,28 @@ class TransactionManager {
         }
         return writableStores;
     }
-    constructor(file, writableStores, writableLinks) {
+    createWritableQueries(queue) {
+        let writableQueries = {};
+        for (let key in this.writableQueries) {
+            writableQueries[key] = new QueuedWritableQuery(this.writableQueries[key], queue);
+        }
+        return writableQueries;
+    }
+    constructor(file, writableStores, writableLinks, writableQueries) {
         this.file = file;
         this.readableTransactionLock = Promise.resolve();
         this.writableTransactionLock = Promise.resolve();
         this.writableStores = writableStores;
         this.writableLinks = writableLinks;
+        this.writableQueries = writableQueries;
     }
     async enqueueReadableTransaction(transaction) {
         let queue = new utils_1.PromiseQueue();
         let stores = this.createReadableStores(queue);
         let links = this.createReadableLinks(queue);
+        let queries = this.createReadableQueries(queue);
         let promise = this.readableTransactionLock
-            .then(() => transaction(stores, links))
+            .then(() => transaction(stores, links, queries))
             .then((value) => queue.enqueue(() => value));
         this.writableTransactionLock = this.writableTransactionLock
             .then(() => promise)
@@ -126,8 +163,9 @@ class TransactionManager {
         let queue = new utils_1.PromiseQueue();
         let stores = this.createWritableStores(queue);
         let links = this.createWritableLinks(queue);
+        let queries = this.createWritableQueries(queue);
         let promise = this.writableTransactionLock
-            .then(() => transaction(stores, links))
+            .then(() => transaction(stores, links, queries))
             .then((value) => queue.enqueue(() => value));
         this.writableTransactionLock = this.readableTransactionLock = this.writableTransactionLock
             .then(() => promise)

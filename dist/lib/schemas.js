@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const databases_1 = require("./databases");
 const tables_1 = require("./tables");
@@ -9,6 +9,8 @@ const orders_1 = require("./orders");
 const records_1 = require("./records");
 const stores_1 = require("./stores");
 const blocks_1 = require("./blocks");
+const queries_1 = require("./queries");
+const operators_1 = require("./operators");
 exports.BigIntFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BigIntField"),
     defaultValue: bedrock.codecs.BigInt
@@ -65,6 +67,15 @@ exports.IndexSchema = bedrock.codecs.Object.of({
     bid: bedrock.codecs.Integer
 });
 exports.IndicesSchema = bedrock.codecs.Array.of(exports.IndexSchema);
+exports.EqualityOperatorSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("EqualityOperator")
+});
+exports.OperatorSchema = bedrock.codecs.Union.of(exports.EqualityOperatorSchema);
+exports.KeyOperatorSchema = bedrock.codecs.Object.of({
+    key: bedrock.codecs.String,
+    operator: exports.OperatorSchema
+});
+exports.KeyOperatorsSchema = bedrock.codecs.Array.of(exports.KeyOperatorSchema);
 exports.DecreasingOrderSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("DecreasingOrder")
 });
@@ -95,9 +106,17 @@ exports.LinkSchema = bedrock.codecs.Object.of({
     orders: exports.KeyOrdersSchema
 });
 exports.LinksSchema = bedrock.codecs.Record.of(exports.LinkSchema);
+exports.QuerySchema = bedrock.codecs.Object.of({
+    version: bedrock.codecs.Integer,
+    store: bedrock.codecs.String,
+    operators: exports.KeyOperatorsSchema,
+    orders: exports.KeyOrdersSchema
+});
+exports.QueriesSchema = bedrock.codecs.Record.of(exports.QuerySchema);
 exports.DatabaseSchema = bedrock.codecs.Object.of({
     stores: exports.StoresSchema,
-    links: exports.LinksSchema
+    links: exports.LinksSchema,
+    queries: exports.QueriesSchema
 });
 function isSchemaCompatible(codec, subject) {
     try {
@@ -121,7 +140,8 @@ class SchemaManager {
     initializeDatabase(blockManager) {
         let databaseSchema = {
             stores: {},
-            links: {}
+            links: {},
+            queries: {}
         };
         let buffer = exports.DatabaseSchema.encode(databaseSchema, "schema");
         blockManager.createBlock(buffer.length);
@@ -163,6 +183,12 @@ class SchemaManager {
         }
         if (isSchemaCompatible(exports.NullableStringFieldSchema, fieldSchema)) {
             return new records_1.NullableStringField(fieldSchema.defaultValue);
+        }
+        throw `Expected code to be unreachable!`;
+    }
+    loadOperatorManager(operatorSchema) {
+        if (isSchemaCompatible(exports.EqualityOperatorSchema, operatorSchema)) {
+            return new operators_1.EqualityOperator();
         }
         throw `Expected code to be unreachable!`;
     }
@@ -214,6 +240,21 @@ class SchemaManager {
         }
         return new links_1.LinkManager(parent, child, recordKeysMap, orders);
     }
+    loadQueryManager(blockManager, querySchema, storeManagers) {
+        let store = storeManagers[querySchema.store];
+        if (store == null) {
+            throw `Expected store with name "${querySchema.store}"!`;
+        }
+        let operators = {};
+        for (let operator of querySchema.operators) {
+            operators[operator.key] = this.loadOperatorManager(operator.operator);
+        }
+        let orders = {};
+        for (let order of querySchema.orders) {
+            orders[order.key] = this.loadOrderManager(order.order);
+        }
+        return new queries_1.QueryManager(store, operators, orders);
+    }
     loadDatabaseManager(databaseSchema, blockManager) {
         let storeManagers = {};
         for (let key in databaseSchema.stores) {
@@ -223,7 +264,11 @@ class SchemaManager {
         for (let key in databaseSchema.links) {
             linkManagers[key] = this.loadLinkManager(blockManager, databaseSchema.links[key], storeManagers);
         }
-        return new databases_1.DatabaseManager(storeManagers, linkManagers);
+        let queryManagers = {};
+        for (let key in databaseSchema.queries) {
+            queryManagers[key] = this.loadQueryManager(blockManager, databaseSchema.queries[key], storeManagers);
+        }
+        return new databases_1.DatabaseManager(storeManagers, linkManagers, queryManagers);
     }
     compareField(field, schema) {
         if (isSchemaCompatible(exports.BigIntFieldSchema, schema)) {
@@ -546,6 +591,28 @@ class SchemaManager {
         }
         return newSchema;
     }
+    createOperator(operator) {
+        if (operator instanceof operators_1.EqualityOperator) {
+            return {
+                type: "EqualityOperator"
+            };
+        }
+        throw `Expected code to be unreachable!`;
+    }
+    createKeyOperators(blockManager, operatorMap) {
+        let operators = [];
+        for (let key in operatorMap) {
+            let operator = operatorMap[key];
+            if (operator == null) {
+                continue;
+            }
+            operators.push({
+                key,
+                operator: this.createOperator(operator)
+            });
+        }
+        return operators;
+    }
     createOrder(order) {
         if (order instanceof orders_1.DecreasingOrder) {
             return {
@@ -620,12 +687,65 @@ class SchemaManager {
         }
         return newSchema;
     }
+    compareQuery(stores, query, oldSchema) {
+        if (this.getStoreName(query.store, stores) !== oldSchema.store) {
+            return false;
+        }
+        return true;
+    }
+    createQuery(blockManager, stores, query) {
+        let version = 0;
+        let store = this.getStoreName(query.store, stores);
+        let operators = this.createKeyOperators(blockManager, query.operators);
+        let orders = this.createKeyOrders(blockManager, query.orders);
+        return {
+            version,
+            store,
+            operators,
+            orders
+        };
+    }
+    deleteQuery(blockManager, oldSchema) {
+    }
+    updateQuery(blockManager, stores, query, oldSchema) {
+        if (this.compareQuery(stores, query, oldSchema)) {
+            let orders = this.createKeyOrders(blockManager, query.orders);
+            return {
+                ...oldSchema,
+                orders
+            };
+        }
+        else {
+            let newSchema = this.createQuery(blockManager, stores, query);
+            newSchema.version = oldSchema.version + 1;
+            return newSchema;
+        }
+    }
+    updateQueries(blockManager, stores, queries, oldSchema) {
+        let newSchema = {};
+        for (let key in oldSchema) {
+            if (queries[key] == null) {
+                this.deleteQuery(blockManager, oldSchema[key]);
+            }
+        }
+        for (let key in queries) {
+            if (oldSchema[key] == null) {
+                newSchema[key] = this.createQuery(blockManager, stores, queries[key]);
+            }
+            else {
+                newSchema[key] = this.updateQuery(blockManager, stores, queries[key], oldSchema[key]);
+            }
+        }
+        return newSchema;
+    }
     updateDatabase(blockManager, database, oldSchema) {
         let stores = this.updateStores(blockManager, database.stores, oldSchema.stores);
         let links = this.updateLinks(blockManager, database.stores, database.links, oldSchema.links);
+        let queries = this.updateQueries(blockManager, database.stores, database.queries, oldSchema.queries);
         let newSchema = {
             stores,
-            links
+            links,
+            queries
         };
         return newSchema;
     }

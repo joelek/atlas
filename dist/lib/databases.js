@@ -2,11 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = exports.DatabaseManager = void 0;
 const links_1 = require("./links");
+const queries_1 = require("./queries");
 const stores_1 = require("./stores");
 const transactions_1 = require("./transactions");
 class DatabaseManager {
     storeManagers;
     linkManagers;
+    queryManagers;
     linksWhereStoreIsParent;
     linksWhereStoreIsChild;
     doInsert(storeManager, records) {
@@ -59,9 +61,10 @@ class DatabaseManager {
         }
         return set;
     }
-    constructor(storeManagers, linkManagers) {
+    constructor(storeManagers, linkManagers, queryManagers) {
         this.storeManagers = storeManagers;
         this.linkManagers = linkManagers;
+        this.queryManagers = queryManagers;
         this.linksWhereStoreIsParent = new Map();
         this.linksWhereStoreIsChild = new Map();
         for (let key in storeManagers) {
@@ -84,7 +87,8 @@ class DatabaseManager {
     createTransactionManager(file) {
         let writableStores = this.createWritableStores();
         let writableLinks = this.createWritableLinks();
-        return new transactions_1.TransactionManager(file, writableStores, writableLinks);
+        let writableQueries = this.createWritableQueries();
+        return new transactions_1.TransactionManager(file, writableStores, writableLinks, writableQueries);
     }
     createWritableStores() {
         let writableStores = {};
@@ -103,6 +107,13 @@ class DatabaseManager {
             writableLinks[key] = new links_1.OverridableWritableLink(this.linkManagers[key], {});
         }
         return writableLinks;
+    }
+    createWritableQueries() {
+        let writableQueries = {};
+        for (let key in this.queryManagers) {
+            writableQueries[key] = new queries_1.OverridableWritableQuery(this.queryManagers[key], {});
+        }
+        return writableQueries;
     }
     enforceStoreConsistency(storeNames) {
         for (let key of storeNames) {
@@ -172,9 +183,11 @@ exports.DatabaseManager = DatabaseManager;
 class Database {
     stores;
     links;
-    constructor(stores, links) {
+    queries;
+    constructor(stores, links, queries) {
         this.stores = stores ?? {};
         this.links = links ?? {};
+        this.queries = queries ?? {};
     }
 }
 exports.Database = Database;
