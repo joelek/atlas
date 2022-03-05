@@ -2,7 +2,7 @@ import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./li
 import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./stores";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transactions";
-import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
+import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { CachedFile, DurableFile, File, PhysicalFile, VirtualFile } from "./files";
 import { Database, DatabaseManager } from "./databases";
 import { EqualityOperator, Operator, Operators } from "./operators";
@@ -46,12 +46,12 @@ export type LinksFromLinkReferences<A extends LinkReferences<any>> = {
 	[B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
 
-export class QueryReference<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>> {
+export class QueryReference<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
 	private QueryReference!: "QueryReference";
 };
 
 export type QueryReferences<A> = {
-	[B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E> ? QueryReference<C, D, E> : A[B];
+	[B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E, infer F> ? QueryReference<C, D, E, F> : A[B];
 };
 
 export class OrderReference<A extends Order<any>> {
@@ -75,7 +75,7 @@ export class Context {
 	private fields: Map<FieldReference<any>, Field<any>>;
 	private links: Map<LinkReference<any, any, any, any, any>, Link<any, any, any, any, any>>;
 	private stores: Map<StoreReference<any, any>, Store<any, any>>;
-	private queries: Map<QueryReference<any, any, any>, Query<any, any, any>>;
+	private queries: Map<QueryReference<any, any, any, any>, Query<any, any, any, any>>;
 	private operators: Map<OperatorReference<any>, Operator<any>>;
 	private orders: Map<OrderReference<any>, Order<any>>;
 	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
@@ -112,7 +112,7 @@ export class Context {
 		return store;
 	}
 
-	private getQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(reference: QueryReference<A, B, C>): Query<A, B, C> {
+	private getQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(reference: QueryReference<A, B, C, D>): Query<A, B, C, D> {
 		let query = this.queries.get(reference);
 		if (query == null) {
 			throw `Expected query to be defined in context!`;
@@ -263,15 +263,20 @@ export class Context {
 		return reference;
 	}
 
-	createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>): QueryReference<A, B, C> {
+	createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>, orderReferences?: OrderReferences<D>): QueryReference<A, B, C, D> {
+		orderReferences = orderReferences ?? {} as OrderReferences<D>;
 		let store = this.getStore(storeReference);
 		let operators = {} as Operators<C>;
 		for (let key in operatorReferences) {
 			operators[key] = this.getOperator(operatorReferences[key]);
 		}
+		let orders = {} as Orders<D>;
+		for (let key in orderReferences) {
+			orders[key] = this.getOrder(orderReferences[key]);
+		}
 		// TODO: Create indices.
 		let reference = new QueryReference();
-		let query = new Query(store, operators);
+		let query = new Query(store, operators, orders);
 		this.queries.set(reference, query);
 		return reference;
 	}
