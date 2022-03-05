@@ -338,7 +338,7 @@ export class Context {
 		for (let key in linkReferences) {
 			links[key as keyof B] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
 		}
-		let queries = {} as QueriesFromQueryReferences<B>;
+		let queries = {} as QueriesFromQueryReferences<C>;
 		for (let key in queryReferences) {
 			queries[key as keyof C] = this.getQuery(queryReferences[key]) as QueriesFromQueryReferences<C>[keyof C];
 		}
