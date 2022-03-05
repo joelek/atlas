@@ -82,3 +82,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement search support using legacy RadixTree.
 * Defer decoding of records until record is filtered and ordered.
 * Write unit tests for caches module.
+* Implement ReadableQuery and WritableQuery.
