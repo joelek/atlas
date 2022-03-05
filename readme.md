@@ -30,15 +30,16 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ## Overview
 
-* Contexts
-* Stores
-* Fields
-* Keys
-* Links
-* Orders
-* Storage
-* TransactionManagers
-* Transactions
+* Context
+* Store
+* Field
+* Link
+* Operator
+* Order
+* Index
+* File
+* TransactionManager
+* Transaction
 
 ## Sponsorship
 
