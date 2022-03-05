@@ -250,10 +250,10 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 	indices: Array<Index<A>>;
 	orders: OrderMap<A>;
 
-	constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>) {
+	constructor(fields: Fields<A>, keys: [...B], orders: OrderMap<A>) {
 		this.fields = fields;
 		this.keys = keys;
-		this.orders = orders ?? {};
+		this.orders = orders;
 		this.indices = [];
 	}
 };

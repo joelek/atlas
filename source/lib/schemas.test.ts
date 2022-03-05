@@ -12,7 +12,7 @@ test(`It should be able to construct a new database manager.`, async (assert) =>
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores = databaseManager.createWritableStores();
 	await stores.users.insert({
@@ -36,7 +36,7 @@ test(`It should be able to construct an existing database manager with an identi
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createWritableStores();
 	await stores1.users.insert({
@@ -47,7 +47,7 @@ test(`It should be able to construct an existing database manager with an identi
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createWritableStores();
 	let observed = await stores2.users.lookup({
@@ -67,7 +67,7 @@ test(`It should be able to construct an existing database manager when one field
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createWritableStores();
 	await stores1.users.insert({
@@ -79,7 +79,7 @@ test(`It should be able to construct an existing database manager when one field
 			key: new StringField(""),
 			name: new StringField(""),
 			lastname: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createWritableStores();
 	let observed = await stores2.users.lookup({
@@ -101,7 +101,7 @@ test(`It should be able to construct an existing database manager when one field
 			key: new StringField(""),
 			name: new StringField(""),
 			lastname: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createWritableStores();
 	await stores1.users.insert({
@@ -113,7 +113,7 @@ test(`It should be able to construct an existing database manager when one field
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createWritableStores();
 	let observed = await stores2.users.lookup({
@@ -133,7 +133,7 @@ test(`It should be able to construct an existing database manager when one field
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createWritableStores();
 	await stores1.users.insert({
@@ -144,7 +144,7 @@ test(`It should be able to construct an existing database manager when one field
 		users: new Store({
 			key: new StringField(""),
 			name: new BooleanField(false)
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createWritableStores();
 	let observed = await stores2.users.lookup({
@@ -164,7 +164,7 @@ test(`It should be able to construct an existing database manager when the keys 
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["key"])
+		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createWritableStores();
 	await stores1.users.insert({
@@ -175,7 +175,7 @@ test(`It should be able to construct an existing database manager when the keys 
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
-		}, ["name"])
+		}, ["name"], {})
 	}));
 	let stores2 = databaseManager2.createWritableStores();
 	let observed = await stores2.users.lookup({
