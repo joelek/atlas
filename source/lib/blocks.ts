@@ -1,7 +1,113 @@
 import * as asserts from "../mod/asserts";
-import { BinHeader, BlockReference, BlockHeader, BlockFlags, Readable, Writable } from "./chunks";
+import { Chunk, Readable, Writable } from "./chunks";
 import { File } from "./files";
 import { DEBUG } from "./variables";
+import * as utils from "./utils";
+
+export enum BlockFlags {
+	APPLICATION_0 = 0,
+	APPLICATION_1 = 1,
+	APPLICATION_2 = 2,
+	APPLICATION_3 = 3,
+	RESERVED_4 = 4,
+	RESERVED_5 = 5,
+	RESERVED_6 = 6,
+	DELETED = 7,
+};
+
+export class BlockHeader extends Chunk {
+	constructor(buffer?: Uint8Array) {
+		super(buffer ?? new Uint8Array(BlockHeader.LENGTH));
+		if (DEBUG) asserts.IntegerAssert.exactly(this.buffer.length, BlockHeader.LENGTH);
+	}
+
+	flag(bit: number, value?: boolean): boolean {
+		return utils.Binary.boolean(this.buffer, 0, bit, value);
+	}
+
+	flags(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 0, 1, value);
+	}
+
+	category(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 1, 1, value);
+	}
+
+	offset(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 2, 6, value);
+	}
+
+	length(value?: number): number {
+		let category = this.category(value != null ? BlockHeader.getCategory(value) : undefined);
+		return BlockHeader.getLength(category);
+	}
+
+	static getCategory(minLength: number): number {
+		if (DEBUG) asserts.IntegerAssert.atLeast(1, minLength);
+		let category = Math.ceil(Math.log2(minLength));
+		return category;
+	}
+
+	static getLength(cateogry: number): number {
+		if (DEBUG) asserts.IntegerAssert.atLeast(0, cateogry);
+		let length = Math.pow(2, cateogry);
+		return length;
+	}
+
+	static readonly LENGTH = 8;
+};
+
+export class BlockReference extends Chunk {
+	constructor(buffer?: Uint8Array) {
+		super(buffer ?? new Uint8Array(BlockReference.LENGTH));
+		if (DEBUG) asserts.IntegerAssert.exactly(this.buffer.length, BlockReference.LENGTH);
+	}
+
+	metadata(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 0, 2, value);
+	}
+
+	value(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 2, 6, value);
+	}
+
+	static readonly LENGTH = 8;
+};
+
+export class BinHeader extends Chunk {
+	readonly table: BlockHeader;
+	readonly count: BlockReference;
+	readonly pools: Array<BlockHeader>;
+
+	constructor(buffer?: Uint8Array) {
+		super(buffer ?? new Uint8Array(BinHeader.LENGTH));
+		if (DEBUG) asserts.IntegerAssert.exactly(this.buffer.length, BinHeader.LENGTH);
+		this.identifier(BinHeader.IDENTIFIER);
+		this.table = new BlockHeader(this.buffer.subarray(16, 16 + BlockHeader.LENGTH));
+		this.count = new BlockReference(this.buffer.subarray(24, 24 + BlockReference.LENGTH));
+		this.pools = new Array<BlockHeader>();
+		let offset = 32;
+		for (let i = 0; i < 64; i++) {
+			let pool = new BlockHeader(this.buffer.subarray(offset, offset + BlockHeader.LENGTH));
+			this.pools.push(pool);
+			offset += BlockHeader.LENGTH;
+		}
+	}
+
+	identifier(value?: string): string {
+		return utils.Binary.string(this.buffer, 0, 8, "binary", value);
+	}
+
+	read(readable: Readable, offset: number): void {
+		super.read(readable, offset);
+		if (this.identifier() !== BinHeader.IDENTIFIER) {
+			throw `Expected identifier to be ${BinHeader.IDENTIFIER}!`;
+		}
+	}
+
+	static readonly IDENTIFIER = "atlasbin";
+	static readonly LENGTH = 32 + 64 * BlockHeader.LENGTH;
+};
 
 export class BlockManager {
 	private file: File;

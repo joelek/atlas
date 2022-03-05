@@ -3,8 +3,9 @@ import * as libfs from "fs";
 import * as libpath from "path";
 import * as asserts from "../mod/asserts";
 import { Cache } from "./caches";
+import { Chunk, Readable } from "./chunks";
 import { DEBUG } from "./variables";
-import { LogDeltaHeader, LogHeader } from "./chunks";
+import * as utils from "./utils";
 
 export abstract class File {
 	constructor() {}
@@ -159,7 +160,54 @@ export class CachedFile extends File {
 	}
 };
 
-type LogDelta = {
+export class LogHeader extends Chunk {
+	constructor(buffer?: Uint8Array) {
+		super(buffer ?? new Uint8Array(LogHeader.LENGTH));
+		if (DEBUG) asserts.IntegerAssert.exactly(this.buffer.length, LogHeader.LENGTH);
+		this.identifier(LogHeader.IDENTIFIER);
+	}
+
+	identifier(value?: string): string {
+		return utils.Binary.string(this.buffer, 0, 8, "binary", value);
+	}
+
+	redoSize(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 18, 6, value);
+	}
+
+	undoSize(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 26, 6, value);
+	}
+
+	read(readable: Readable, offset: number): void {
+		super.read(readable, offset);
+		if (this.identifier() !== LogHeader.IDENTIFIER) {
+			throw `Expected identifier to be ${LogHeader.IDENTIFIER}!`;
+		}
+	}
+
+	static readonly IDENTIFIER = "atlaslog";
+	static readonly LENGTH = 32;
+};
+
+export class LogDeltaHeader extends Chunk {
+	constructor(buffer?: Uint8Array) {
+		super(buffer ?? new Uint8Array(LogDeltaHeader.LENGTH));
+		if (DEBUG) asserts.IntegerAssert.exactly(this.buffer.length, LogDeltaHeader.LENGTH);
+	}
+
+	offset(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 2, 6, value);
+	}
+
+	length(value?: number): number {
+		return utils.Binary.unsigned(this.buffer, 10, 6, value);
+	}
+
+	static readonly LENGTH = 16;
+};
+
+export type LogDelta = {
 	header: LogDeltaHeader;
 	redo: Uint8Array;
 	undo: Uint8Array;

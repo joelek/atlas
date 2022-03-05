@@ -1,7 +1,7 @@
 import * as files from "./files";
 import * as vfs from "./blocks";
 import { test } from "./test";
-import { BlockFlags } from "./chunks";
+import { BlockFlags } from "./blocks";
 
 test(`It should not support creating blocks with a size of 0.`, async (assert) => {
 	let file = new files.VirtualFile(0);
