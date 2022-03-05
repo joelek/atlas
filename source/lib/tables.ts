@@ -1,10 +1,26 @@
+import * as bedrock from "@joelek/bedrock";
 import * as libcrypto from "crypto";
 import { BlockManager, BlockReference } from "./blocks";
 import { Chunk } from "./chunks";
 import { DEBUG } from "./variables";
 import * as asserts from "../mod/asserts";
-import * as keys from "./keys";
 import { IntegerAssert } from "../mod/asserts";
+
+export function compareBuffers(one: Array<Uint8Array>, two: Array<Uint8Array>): number {
+	if (one.length < two.length) {
+		return -1;
+	}
+	if (one.length > two.length) {
+		return 1;
+	}
+	for (let i = 0; i < one.length; i++) {
+		let comparison = bedrock.utils.Chunk.comparePrefixes(one[i], two[i]);
+		if (comparison !== 0) {
+			return comparison;
+		}
+	}
+	return 0;
+};
 
 export class HashTableHeader extends Chunk {
 	readonly count: BlockReference;
@@ -31,12 +47,12 @@ export class HashTableSlot extends BlockReference {
 };
 
 export interface Entry {
-	key(): keys.Chunks;
+	key(): Array<Uint8Array>;
 	value(): number;
 };
 
 export interface TableDetail {
-	getKeyFromValue(value: number): keys.Chunks;
+	getKeyFromValue(value: number): Array<Uint8Array>;
 };
 
 export class Table {
@@ -80,7 +96,7 @@ export class Table {
 		return slot;
 	}
 
-	private computeOptimalSlot(key: keys.Chunks): number {
+	private computeOptimalSlot(key: Array<Uint8Array>): number {
 		let slotCount = this.getSlotCount();
 		let hash = Buffer.alloc(6);
 		for (let keyPart of key) {
@@ -92,7 +108,7 @@ export class Table {
 		return hash.readUIntBE(0, 6) % slotCount;
 	}
 
-	private doInsert(key: keys.Chunks, value: number): number | undefined {
+	private doInsert(key: Array<Uint8Array>, value: number): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
 		let slotCount = this.getSlotCount();
 		let probeDistance = 0;
@@ -106,7 +122,7 @@ export class Table {
 				this.writeSlot(slotIndex, slot);
 				return slotIndex;
 			}
-			if (keys.compareChunks(this.detail.getKeyFromValue(slot.value()), key) === 0) {
+			if (compareBuffers(this.detail.getKeyFromValue(slot.value()), key) === 0) {
 				return;
 			}
 			if (probeDistance > slot.probeDistance()) {
@@ -122,7 +138,7 @@ export class Table {
 		}
 	}
 
-	private doLookup(key: keys.Chunks): number | undefined {
+	private doLookup(key: Array<Uint8Array>): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
 		let slotCount = this.getSlotCount();
 		let probeDistance = 0;
@@ -134,7 +150,7 @@ export class Table {
 			if (value === 0 || probeDistance > slot.probeDistance()) {
 				return;
 			}
-			if (keys.compareChunks(this.detail.getKeyFromValue(value), key) === 0) {
+			if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
 				return slotIndex;
 			}
 			slotIndex = (slotIndex + 1) % slotCount;
@@ -142,7 +158,7 @@ export class Table {
 		}
 	}
 
-	private doRemove(key: keys.Chunks): number | undefined {
+	private doRemove(key: Array<Uint8Array>): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
 		let slotCount = this.getSlotCount();
 		let probeDistance = 0;
@@ -154,7 +170,7 @@ export class Table {
 			if (value === 0 || probeDistance > slot.probeDistance()) {
 				return;
 			}
-			if (keys.compareChunks(this.detail.getKeyFromValue(value), key) === 0) {
+			if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
 				this.writeSlot(slotIndex, new HashTableSlot());
 				return slotIndex;
 			}
@@ -243,7 +259,7 @@ export class Table {
 		this.header.count.value(0);
 	}
 
-	insert(key: keys.Chunks, value: number): boolean {
+	insert(key: Array<Uint8Array>, value: number): boolean {
 		if (DEBUG) IntegerAssert.atLeast(1, value);
 		let slotIndex = this.doInsert(key, value);
 		if (slotIndex == null) {
@@ -259,7 +275,7 @@ export class Table {
 		return this.header.count.value();
 	}
 
-	lookup(key: keys.Chunks): number | undefined {
+	lookup(key: Array<Uint8Array>): number | undefined {
 		let slotIndex = this.doLookup(key);
 		if (slotIndex == null) {
 			return;
@@ -269,7 +285,7 @@ export class Table {
 		return slot.value();
 	}
 
-	remove(key: keys.Chunks): boolean {
+	remove(key: Array<Uint8Array>): boolean {
 		let slotIndex = this.doRemove(key);
 		if (slotIndex == null) {
 			return false;

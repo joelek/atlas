@@ -1,5 +1,4 @@
 import * as bedrock from "@joelek/bedrock";
-import * as keys from "./keys";
 
 export type Value = Uint8Array | bigint | boolean | null | number | string;
 export type Record = { [key: string]: Value; };
@@ -154,7 +153,7 @@ export class RecordManager<A extends Record> {
 		return buffer;
 	}
 
-	decodeKeys<B extends Keys<A>>(keys: [...B], buffers: keys.Chunks): Pick<A, B[number]> {
+	decodeKeys<B extends Keys<A>>(keys: [...B], buffers: Array<Uint8Array>): Pick<A, B[number]> {
 		let record = {} as Pick<A, B[number]>;
 		for (let [index, key] of keys.entries()) {
 			record[key] = this.fields[key].getCodec().decodePayload(buffers[index]);
@@ -162,7 +161,7 @@ export class RecordManager<A extends Record> {
 		return record;
 	}
 
-	encodeKeys<B extends Keys<A>>(keys: [...B], record: Pick<A, B[number]>): keys.Chunks {
+	encodeKeys<B extends Keys<A>>(keys: [...B], record: Pick<A, B[number]>): Array<Uint8Array> {
 		let buffers = keys.map((key) => this.fields[key].getCodec().encodePayload(record[key]));
 		return buffers;
 	}
