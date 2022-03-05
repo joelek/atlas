@@ -1,9 +1,9 @@
 import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
-import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks } from "./links";
+import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks, WritableLinksFromLinks } from "./links";
 import { ReadableStore, ReadableStoresFromStores, Stores, StoresFromWritableStores, WritableStore, WritableStores, WritableStoresFromStores } from "./stores";
 import { PromiseQueue } from "./utils";
-import { Queries, QueriesFromWritableQueries, ReadableQueriesFromQueries, ReadableQuery, WritableQueries, WritableQuery } from "./queries";
+import { Queries, QueriesFromWritableQueries, ReadableQueriesFromQueries, ReadableQuery, WritableQueries, WritableQueriesFromQueries, WritableQuery } from "./queries";
 import { SubsetOf } from "./inference";
 export declare class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
     protected writableStore: WritableStore<A, B>;
@@ -39,7 +39,7 @@ export declare class QueuedWritableQuery<A extends Record, B extends RequiredKey
     constructor(writableQuery: WritableQuery<A, B, C, D>, queue: PromiseQueue);
 }
 export declare type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
-export declare type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
+export declare type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: WritableLinksFromLinks<B>, queries: WritableQueriesFromQueries<C>) => Promise<D>;
 export declare class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>, C extends WritableQueries<any>> {
     private file;
     private readableTransactionLock;

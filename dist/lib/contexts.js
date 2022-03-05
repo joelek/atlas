@@ -269,8 +269,6 @@ class Context {
         if (this.databaseManagers.has(fileReference)) {
             throw `Expected given storage to not be in use by another database!`;
         }
-        storeReferences = storeReferences ?? {};
-        linkReferences = linkReferences ?? {};
         let file = this.getFile(fileReference);
         let stores = {};
         for (let key in storeReferences) {

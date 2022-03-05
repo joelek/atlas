@@ -709,9 +709,11 @@ class SchemaManager {
     }
     updateQuery(blockManager, stores, query, oldSchema) {
         if (this.compareQuery(stores, query, oldSchema)) {
+            let operators = this.createKeyOperators(blockManager, query.operators);
             let orders = this.createKeyOrders(blockManager, query.orders);
             return {
                 ...oldSchema,
+                operators,
                 orders
             };
         }
