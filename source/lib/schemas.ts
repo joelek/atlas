@@ -873,9 +873,11 @@ export class SchemaManager {
 
 	private updateQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(blockManager: BlockManager, stores: Stores<any>, query: Query<A, B, C, D>, oldSchema: QuerySchema): QuerySchema {
 		if (this.compareQuery(stores, query, oldSchema)) {
+			let operators = this.createKeyOperators(blockManager, query.operators);
 			let orders = this.createKeyOrders(blockManager, query.orders);
 			return {
 				...oldSchema,
+				operators,
 				orders
 			};
 		} else {
