@@ -34,8 +34,9 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 * Store
 * Field
 * Link
-* Operator
 * Order
+* Query
+* Operator
 * Index
 * File
 * TransactionManager
