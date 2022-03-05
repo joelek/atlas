@@ -85,7 +85,7 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     keys: [...B];
     indices: Array<Index<A>>;
     orders: OrderMap<A>;
-    constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>);
+    constructor(fields: Fields<A>, keys: [...B], orders: OrderMap<A>);
 }
 export declare type Stores<A> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];

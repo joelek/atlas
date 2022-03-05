@@ -32,11 +32,11 @@ export declare type LinkReferences<A> = {
 export declare type LinksFromLinkReferences<A extends LinkReferences<any>> = {
     [B in keyof A]: A[B] extends LinkReference<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
 };
-export declare class QueryReference<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>> {
+export declare class QueryReference<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
     private QueryReference;
 }
 export declare type QueryReferences<A> = {
-    [B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E> ? QueryReference<C, D, E> : A[B];
+    [B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E, infer F> ? QueryReference<C, D, E, F> : A[B];
 };
 export declare class OrderReference<A extends Order<any>> {
     private OrderReference;
@@ -81,7 +81,7 @@ export declare class Context {
     createNullableStringField(): FieldReference<NullableStringField>;
     createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E>;
     createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B>;
-    createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>): QueryReference<A, B, C>;
+    createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>, orderReferences?: OrderReferences<D>): QueryReference<A, B, C, D>;
     createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>>;
     createDecreasingOrder<A extends Value>(): OrderReference<DecreasingOrder<A>>;
     createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>>;

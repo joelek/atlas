@@ -182,7 +182,7 @@ class Store {
     constructor(fields, keys, orders) {
         this.fields = fields;
         this.keys = keys;
-        this.orders = orders ?? {};
+        this.orders = orders;
         this.indices = [];
     }
 }

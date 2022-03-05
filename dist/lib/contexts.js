@@ -210,20 +210,26 @@ class Context {
         for (let key in orderReferences) {
             orders[key] = this.getOrder(orderReferences[key]);
         }
+        // TODO: Create indices.
         let reference = new StoreReference();
         let store = new stores_1.Store(fields, keys, orders);
         this.stores.set(reference, store);
         return reference;
     }
-    createQuery(storeReference, operatorReferences) {
+    createQuery(storeReference, operatorReferences, orderReferences) {
+        orderReferences = orderReferences ?? {};
         let store = this.getStore(storeReference);
         let operators = {};
         for (let key in operatorReferences) {
             operators[key] = this.getOperator(operatorReferences[key]);
         }
+        let orders = {};
+        for (let key in orderReferences) {
+            orders[key] = this.getOrder(orderReferences[key]);
+        }
         // TODO: Create indices.
         let reference = new QueryReference();
-        let query = new queries_1.Query(store, operators);
+        let query = new queries_1.Query(store, operators, orders);
         this.queries.set(reference, query);
         return reference;
     }
