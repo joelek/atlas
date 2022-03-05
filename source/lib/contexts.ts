@@ -257,6 +257,7 @@ export class Context {
 		for (let key in orderReferences) {
 			orders[key] = this.getOrder(orderReferences[key]) as any;
 		}
+		// TODO: Create indices.
 		let reference = new StoreReference();
 		let store = new Store(fields, keys, orders);
 		this.stores.set(reference, store);
