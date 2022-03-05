@@ -327,20 +327,18 @@ export class Context {
 		if (this.databaseManagers.has(fileReference)) {
 			throw `Expected given storage to not be in use by another database!`;
 		}
-		storeReferences = storeReferences ?? {} as A;
-		linkReferences = linkReferences ?? {} as B;
 		let file = this.getFile(fileReference);
 		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
-			stores[key as keyof A] = this.getStore(storeReferences[key]) as StoresFromStoreReferences<A>[keyof A];
+			stores[key] = this.getStore(storeReferences[key]) as StoresFromStoreReferences<A>[keyof A];
 		}
 		let links = {} as LinksFromLinkReferences<B>;
 		for (let key in linkReferences) {
-			links[key as keyof B] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
+			links[key] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
 		}
 		let queries = {} as QueriesFromQueryReferences<C>;
 		for (let key in queryReferences) {
-			queries[key as keyof C] = this.getQuery(queryReferences[key]) as QueriesFromQueryReferences<C>[keyof C];
+			queries[key] = this.getQuery(queryReferences[key]) as QueriesFromQueryReferences<C>[keyof C];
 		}
 		let schemaManager = new SchemaManager();
 		let database = new Database(stores, links, queries);
