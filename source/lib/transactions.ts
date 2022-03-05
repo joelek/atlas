@@ -3,6 +3,8 @@ import { Record, KeysRecordMap, RequiredKeys } from "./records";
 import { Links, LinksFromWritableLinks, ReadableLink, ReadableLinksFromLinks, WritableLink, WritableLinks, WritableLinksFromLinks } from "./links";
 import { ReadableStore, ReadableStoresFromStores, Stores, StoresFromWritableStores, WritableStore, WritableStores, WritableStoresFromStores } from "./stores";
 import { PromiseQueue } from "./utils";
+import { Queries, QueriesFromWritableQueries, ReadableQueriesFromQueries, ReadableQuery, WritableQueries, WritableQueriesFromQueries, WritableQuery } from "./queries";
+import { SubsetOf } from "./inference";
 
 export class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
 	protected writableStore: WritableStore<A, B>;
@@ -68,16 +70,37 @@ export class QueuedWritableLink<A extends Record, B extends RequiredKeys<A>, C e
 	}
 };
 
-export type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
+export class QueuedReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements ReadableQuery<A, B, C, D> {
+	protected writableQuery: WritableQuery<A, B, C, D>;
+	protected queue: PromiseQueue;
 
-export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>) => Promise<C>;
+	constructor(writableQuery: WritableQuery<A, B, C, D>, queue: PromiseQueue) {
+		this.writableQuery = writableQuery;
+		this.queue = queue;
+	}
 
-export class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>> {
+	filter(...parameters: Parameters<ReadableQuery<A, B, C, D>["filter"]>): ReturnType<ReadableQuery<A, B, C, D>["filter"]> {
+		return this.queue.enqueue(() => this.writableQuery.filter(...parameters));
+	}
+};
+
+export class QueuedWritableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> extends QueuedReadableQuery<A, B, C, D> implements WritableQuery<A, B, C, D> {
+	constructor(writableQuery: WritableQuery<A, B, C, D>, queue: PromiseQueue) {
+		super(writableQuery, queue);
+	}
+};
+
+export type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
+
+export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
+
+export class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>, C extends WritableQueries<any>> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
 	private writableStores: A;
 	private writableLinks: B;
+	private writableQueries: C;
 
 	private createReadableLinks(queue: PromiseQueue): ReadableLinksFromLinks<LinksFromWritableLinks<B>> {
 		let readableLinks = {} as ReadableLinksFromLinks<any>;
@@ -93,6 +116,14 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 			readableStores[key] = new QueuedReadableStore(this.writableStores[key], queue);
 		}
 		return readableStores;
+	}
+
+	private createReadableQueries(queue: PromiseQueue): ReadableQueriesFromQueries<QueriesFromWritableQueries<C>> {
+		let readableQueries = {} as ReadableQueriesFromQueries<any>;
+		for (let key in this.writableQueries) {
+			readableQueries[key] = new QueuedReadableQuery(this.writableQueries[key], queue);
+		}
+		return readableQueries;
 	}
 
 	private createWritableLinks(queue: PromiseQueue): WritableLinksFromLinks<LinksFromWritableLinks<B>> {
@@ -111,20 +142,30 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 		return writableStores;
 	}
 
-	constructor(file: File, writableStores: A, writableLinks: B) {
+	private createWritableQueries(queue: PromiseQueue): WritableQueriesFromQueries<QueriesFromWritableQueries<C>> {
+		let writableQueries = {} as WritableQueriesFromQueries<any>;
+		for (let key in this.writableQueries) {
+			writableQueries[key] = new QueuedWritableQuery(this.writableQueries[key], queue);
+		}
+		return writableQueries;
+	}
+
+	constructor(file: File, writableStores: A, writableLinks: B, writableQueries: C) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
 		this.writableStores = writableStores;
 		this.writableLinks = writableLinks;
+		this.writableQueries = writableQueries;
 	}
 
-	async enqueueReadableTransaction<C>(transaction: ReadableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, C>): Promise<C> {
+	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, QueriesFromWritableQueries<C>, D>): Promise<D> {
 		let queue = new PromiseQueue();
 		let stores = this.createReadableStores(queue);
 		let links = this.createReadableLinks(queue);
+		let queries = this.createReadableQueries(queue);
 		let promise = this.readableTransactionLock
-			.then(() => transaction(stores, links))
+			.then(() => transaction(stores, links, queries))
 			.then((value) => queue.enqueue(() => value));
 		this.writableTransactionLock = this.writableTransactionLock
 			.then(() => promise)
@@ -139,12 +180,13 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 		}
 	}
 
-	async enqueueWritableTransaction<C>(transaction: WritableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, C>): Promise<C> {
+	async enqueueWritableTransaction<D>(transaction: WritableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, QueriesFromWritableQueries<C>, D>): Promise<D> {
 		let queue = new PromiseQueue();
 		let stores = this.createWritableStores(queue);
 		let links = this.createWritableLinks(queue);
+		let queries = this.createWritableQueries(queue);
 		let promise = this.writableTransactionLock
-			.then(() => transaction(stores, links))
+			.then(() => transaction(stores, links, queries))
 			.then((value) => queue.enqueue(() => value));
 		this.writableTransactionLock = this.readableTransactionLock = this.writableTransactionLock
 			.then(() => promise)

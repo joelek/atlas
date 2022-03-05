@@ -8,7 +8,7 @@ import { Database, DatabaseManager } from "./databases";
 import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
-import { Query } from "./queries";
+import { Query, QueryManagersFromQueries, WritableQueriesFromQueryManagers } from "./queries";
 
 export class FileReference {
 	private FileReference!: "FileReference";
@@ -54,6 +54,10 @@ export type QueryReferences<A> = {
 	[B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E, infer F> ? QueryReference<C, D, E, F> : A[B];
 };
 
+export type QueriesFromQueryReferences<A extends QueryReferences<any>> = {
+	[B in keyof A]: A[B] extends QueryReference<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
+};
+
 export class OrderReference<A extends Order<any>> {
 	private OrderReference!: "OrderReference";
 };
@@ -78,7 +82,7 @@ export class Context {
 	private queries: Map<QueryReference<any, any, any, any>, Query<any, any, any, any>>;
 	private operators: Map<OperatorReference<any>, Operator<any>>;
 	private orders: Map<OrderReference<any>, Order<any>>;
-	private databaseManagers: Map<FileReference, DatabaseManager<any, any>>;
+	private databaseManagers: Map<FileReference, DatabaseManager<any, any, any>>;
 
 	private getFile(reference: FileReference): File {
 		let file = this.files.get(reference);
@@ -319,7 +323,7 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>> {
+	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(fileReference: FileReference, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
 		if (this.databaseManagers.has(fileReference)) {
 			throw `Expected given storage to not be in use by another database!`;
 		}
@@ -334,8 +338,12 @@ export class Context {
 		for (let key in linkReferences) {
 			links[key as keyof B] = this.getLink(linkReferences[key]) as LinksFromLinkReferences<B>[keyof B];
 		}
+		let queries = {} as QueriesFromQueryReferences<B>;
+		for (let key in queryReferences) {
+			queries[key as keyof C] = this.getQuery(queryReferences[key]) as QueriesFromQueryReferences<C>[keyof C];
+		}
 		let schemaManager = new SchemaManager();
-		let database = new Database(stores, links);
+		let database = new Database(stores, links, queries);
 		let databaseManager = schemaManager.createDatabaseManager(file, database);
 		this.databaseManagers.set(fileReference, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager(file);

@@ -46,7 +46,7 @@ function createUsersPostsAndComments() {
 		userPosts,
 		postComments,
 		userComments
-	});
+	}, {});
 	return {
 		storeManagers: {
 			users,
@@ -151,7 +151,7 @@ function createDirectories() {
 		directories
 	}, {
 		childDirectories
-	});
+	}, {});
 	return {
 		storeManagers: {
 			directories

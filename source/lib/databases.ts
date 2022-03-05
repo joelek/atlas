@@ -1,12 +1,14 @@
 import { File } from "./files";
 import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLinksFromLinkManagers } from "./links";
+import { OverridableWritableQuery, Queries, QueryManagers, WritableQueriesFromQueryManagers } from "./queries";
 import { Record, Keys, RequiredKeys } from "./records";
 import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./stores";
 import { TransactionManager } from "./transactions";
 
-export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>> {
+export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>, C extends QueryManagers<any>> {
 	private storeManagers: A;
 	private linkManagers: B;
+	private queryManagers: C;
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 	private linksWhereStoreIsChild: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 
@@ -64,9 +66,10 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		return set;
 	}
 
-	constructor(storeManagers: A, linkManagers: B) {
+	constructor(storeManagers: A, linkManagers: B, queryManagers: C) {
 		this.storeManagers = storeManagers;
 		this.linkManagers = linkManagers;
+		this.queryManagers = queryManagers;
 		this.linksWhereStoreIsParent = new Map();
 		this.linksWhereStoreIsChild = new Map();
 		for (let key in storeManagers) {
@@ -87,10 +90,11 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		}
 	}
 
-	createTransactionManager(file: File): TransactionManager<WritableStoresFromStoreManagers<A>, WritableLinksFromLinkManagers<B>> {
+	createTransactionManager(file: File): TransactionManager<WritableStoresFromStoreManagers<A>, WritableLinksFromLinkManagers<B>, WritableQueriesFromQueryManagers<C>> {
 		let writableStores = this.createWritableStores();
 		let writableLinks = this.createWritableLinks();
-		return new TransactionManager(file, writableStores, writableLinks);
+		let writableQueries = this.createWritableQueries();
+		return new TransactionManager(file, writableStores, writableLinks, writableQueries);
 	}
 
 	createWritableStores(): WritableStoresFromStoreManagers<A> {
@@ -111,6 +115,14 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			writableLinks[key] = new OverridableWritableLink(this.linkManagers[key], {});
 		}
 		return writableLinks;
+	}
+
+	createWritableQueries(): WritableQueriesFromQueryManagers<C> {
+		let writableQueries = {} as WritableQueriesFromQueryManagers<any>;
+		for (let key in this.queryManagers) {
+			writableQueries[key] = new OverridableWritableQuery(this.queryManagers[key], {});
+		}
+		return writableQueries;
 	}
 
 	enforceStoreConsistency<C extends Keys<A>>(storeNames: [...C]): void {
@@ -176,12 +188,14 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	}
 };
 
-export class Database<A extends Stores<any>, B extends Links<any>> {
+export class Database<A extends Stores<any>, B extends Links<any>, C extends Queries<any>> {
 	stores: A;
 	links: B;
+	queries: C;
 
-	constructor(stores?: A, links?: B) {
+	constructor(stores?: A, links?: B, queries?: C) {
 		this.stores = stores ?? {} as A;
 		this.links = links ?? {} as B;
+		this.queries = queries ?? {} as C;
 	}
 };

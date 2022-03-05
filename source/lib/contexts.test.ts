@@ -31,9 +31,11 @@ test(`It should work.`, async (assert) => {
 		posts
 	}, {
 		userPosts
+	}, {
+		query
 	});
 	await benchmark(async () => {
-		return manager.enqueueWritableTransaction(async ({ users }, { userPosts }) => {
+		return manager.enqueueWritableTransaction(async ({ users }, { userPosts }, { query }) => {
 			users.insert({
 				user_id: "User 1",
 				name: "Joel Ek",
@@ -42,7 +44,7 @@ test(`It should work.`, async (assert) => {
 		});
 	}, 1);
 	let observed = await benchmark(async () => {
-		return await manager.enqueueReadableTransaction(async ({ users }, { userPosts }) => {
+		return await manager.enqueueReadableTransaction(async ({ users }, { userPosts }, { query }) => {
 			return users.lookup({
 				user_id: "User 1"
 			});

@@ -3,10 +3,13 @@ import { Database, DatabaseManager } from "./databases";
 import { File } from "./files";
 import { Table } from "./tables";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
-import { DecreasingOrder, IncreasingOrder, Order, OrderMap } from "./orders";
+import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./stores";
 import { BlockManager } from "./blocks";
+import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries } from "./queries";
+import { EqualityOperator, Operator, OperatorMap, Operators } from "./operators";
+import { SubsetOf } from "./inference";
 
 export const BigIntFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BigIntField"),
@@ -146,6 +149,30 @@ export const IndicesSchema = bedrock.codecs.Array.of(IndexSchema);
 
 export type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
 
+
+export const EqualityOperatorSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("EqualityOperator")
+});
+
+export type EqualityOperatorSchema = ReturnType<typeof EqualityOperatorSchema["decode"]>;
+
+export const OperatorSchema = bedrock.codecs.Union.of(
+	EqualityOperatorSchema
+);
+
+export type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
+
+export const KeyOperatorSchema = bedrock.codecs.Object.of({
+	key: bedrock.codecs.String,
+	operator: OperatorSchema
+});
+
+export type KeyOperatorSchema = ReturnType<typeof KeyOperatorSchema["decode"]>;
+
+export const KeyOperatorsSchema = bedrock.codecs.Array.of(KeyOperatorSchema);
+
+export type KeyOperatorsSchema = ReturnType<typeof KeyOperatorsSchema["decode"]>;
+
 export const DecreasingOrderSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("DecreasingOrder")
 });
@@ -209,9 +236,23 @@ export const LinksSchema = bedrock.codecs.Record.of(LinkSchema);
 
 export type LinksSchema = ReturnType<typeof LinksSchema["decode"]>;
 
+export const QuerySchema = bedrock.codecs.Object.of({
+	version: bedrock.codecs.Integer,
+	store: bedrock.codecs.String,
+	operators: KeyOperatorsSchema,
+	orders: KeyOrdersSchema
+});
+
+export type QuerySchema = ReturnType<typeof QuerySchema["decode"]>;
+
+export const QueriesSchema = bedrock.codecs.Record.of(QuerySchema);
+
+export type QueriesSchema = ReturnType<typeof QueriesSchema["decode"]>;
+
 export const DatabaseSchema = bedrock.codecs.Object.of({
 	stores: StoresSchema,
-	links: LinksSchema
+	links: LinksSchema,
+	queries: QueriesSchema
 });
 
 export type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
@@ -238,7 +279,8 @@ export class SchemaManager {
 	private initializeDatabase(blockManager: BlockManager): void {
 		let databaseSchema: DatabaseSchema = {
 			stores: {},
-			links: {}
+			links: {},
+			queries: {}
 		};
 		let buffer = DatabaseSchema.encode(databaseSchema, "schema");
 		blockManager.createBlock(buffer.length);
@@ -281,6 +323,13 @@ export class SchemaManager {
 		}
 		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
 			return new NullableStringField(fieldSchema.defaultValue);
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
+	private loadOperatorManager(operatorSchema: OperatorSchema): Operator<any> {
+		if (isSchemaCompatible(EqualityOperatorSchema, operatorSchema)) {
+			return new EqualityOperator();
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -336,7 +385,23 @@ export class SchemaManager {
 		return new LinkManager(parent, child, recordKeysMap, orders);
 	}
 
-	private loadDatabaseManager(databaseSchema: DatabaseSchema, blockManager: BlockManager): DatabaseManager<any, any> {
+	private loadQueryManager(blockManager: BlockManager, querySchema: QuerySchema, storeManagers: StoreManagers<any>): QueryManager<any, any, any, any> {
+		let store = storeManagers[querySchema.store] as StoreManager<any, any> | undefined;
+		if (store == null) {
+			throw `Expected store with name "${querySchema.store}"!`;
+		}
+		let operators = {} as Operators<any>;
+		for (let operator of querySchema.operators) {
+			operators[operator.key] = this.loadOperatorManager(operator.operator);
+		}
+		let orders = {} as Orders<any>;
+		for (let order of querySchema.orders) {
+			orders[order.key] = this.loadOrderManager(order.order);
+		}
+		return new QueryManager(store, operators, orders);
+	}
+
+	private loadDatabaseManager(databaseSchema: DatabaseSchema, blockManager: BlockManager): DatabaseManager<any, any, any> {
 		let storeManagers = {} as StoreManagers<any>;
 		for (let key in databaseSchema.stores) {
 			storeManagers[key] = this.loadStoreManager(blockManager, databaseSchema.stores[key]);
@@ -345,7 +410,11 @@ export class SchemaManager {
 		for (let key in databaseSchema.links) {
 			linkManagers[key] = this.loadLinkManager(blockManager, databaseSchema.links[key], storeManagers);
 		}
-		return new DatabaseManager(storeManagers, linkManagers);
+		let queryManagers = {} as QueryManagers<any>;
+		for (let key in databaseSchema.queries) {
+			queryManagers[key] = this.loadQueryManager(blockManager, databaseSchema.queries[key], storeManagers);
+		}
+		return new DatabaseManager(storeManagers, linkManagers, queryManagers);
 	}
 
 	private compareField<A extends Value>(field: Field<A>, schema: FieldSchema): boolean {
@@ -675,6 +744,30 @@ export class SchemaManager {
 		return newSchema;
 	}
 
+	private createOperator<A extends Value>(operator: Operator<A>): OperatorSchema {
+		if (operator instanceof EqualityOperator) {
+			return {
+				type: "EqualityOperator"
+			};
+		}
+		throw `Expected code to be unreachable!`;
+	}
+
+	private createKeyOperators<A extends Record>(blockManager: BlockManager, operatorMap: OperatorMap<A>): KeyOperatorsSchema {
+		let operators: KeyOperatorsSchema = [];
+		for (let key in operatorMap) {
+			let operator = operatorMap[key];
+			if (operator == null) {
+				continue;
+			}
+			operators.push({
+				key,
+				operator: this.createOperator(operator)
+			});
+		}
+		return operators;
+	}
+
 	private createOrder<A extends Value>(order: Order<A>): OrderSchema {
 		if (order instanceof DecreasingOrder) {
 			return {
@@ -754,12 +847,69 @@ export class SchemaManager {
 		return newSchema;
 	}
 
-	private updateDatabase<A extends Stores<any>, B extends Links<any>>(blockManager: BlockManager, database: Database<A, B>, oldSchema: DatabaseSchema): DatabaseSchema {
+	private compareQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(stores: Stores<any>, query: Query<A, B, C, D>, oldSchema: QuerySchema): boolean {
+		if (this.getStoreName(query.store, stores) !== oldSchema.store) {
+			return false;
+		}
+		return true;
+	}
+
+	private createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(blockManager: BlockManager, stores: Stores<any>, query: Query<A, B, C, D>): QuerySchema {
+		let version = 0;
+		let store = this.getStoreName(query.store, stores);
+		let operators = this.createKeyOperators(blockManager, query.operators);
+		let orders = this.createKeyOrders(blockManager, query.orders);
+		return {
+			version,
+			store,
+			operators,
+			orders
+		};
+	}
+
+	private deleteQuery(blockManager: BlockManager, oldSchema: QuerySchema): void {
+
+	}
+
+	private updateQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(blockManager: BlockManager, stores: Stores<any>, query: Query<A, B, C, D>, oldSchema: QuerySchema): QuerySchema {
+		if (this.compareQuery(stores, query, oldSchema)) {
+			let orders = this.createKeyOrders(blockManager, query.orders);
+			return {
+				...oldSchema,
+				orders
+			};
+		} else {
+			let newSchema = this.createQuery(blockManager, stores, query);
+			newSchema.version = oldSchema.version + 1;
+			return newSchema;
+		}
+	}
+
+	private updateQueries<A extends Stores<any>, B extends Queries<any>>(blockManager: BlockManager, stores: A, queries: B, oldSchema: QueriesSchema): QueriesSchema {
+		let newSchema: QueriesSchema = {};
+		for (let key in oldSchema) {
+			if (queries[key] == null) {
+				this.deleteQuery(blockManager, oldSchema[key]);
+			}
+		}
+		for (let key in queries) {
+			if (oldSchema[key] == null) {
+				newSchema[key] = this.createQuery(blockManager, stores, queries[key]);
+			} else {
+				newSchema[key] = this.updateQuery(blockManager, stores, queries[key], oldSchema[key]);
+			}
+		}
+		return newSchema;
+	}
+
+	private updateDatabase<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(blockManager: BlockManager, database: Database<A, B, C>, oldSchema: DatabaseSchema): DatabaseSchema {
 		let stores = this.updateStores(blockManager, database.stores, oldSchema.stores);
 		let links = this.updateLinks(blockManager, database.stores, database.links, oldSchema.links);
+		let queries = this.updateQueries(blockManager, database.stores, database.queries, oldSchema.queries);
 		let newSchema: DatabaseSchema = {
 			stores,
-			links
+			links,
+			queries
 		};
 		return newSchema;
 	}
@@ -786,7 +936,7 @@ export class SchemaManager {
 
 	constructor() {}
 
-	createDatabaseManager<A extends Stores<any>, B extends Links<any>>(file: File, database: Database<A, B>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>> {
+	createDatabaseManager<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(file: File, database: Database<A, B, C>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>> {
 		let blockManager = new BlockManager(file);
 		if (blockManager.getBlockCount() === 0) {
 			this.initializeDatabase(blockManager);
@@ -801,6 +951,6 @@ export class SchemaManager {
 		let dirtyStoreNames = this.getDirtyStoreNames(oldSchema.stores, newSchema.stores);
 		databaseManager.enforceConsistency(dirtyStoreNames, dirtyLinkNames);
 		file.persist();
-		return databaseManager as DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>>;
+		return databaseManager as DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>>;
 	}
 };

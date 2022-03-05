@@ -13,7 +13,7 @@ async function delay(ms: number): Promise<void> {
 
 test(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let manager = new TransactionManager(file, {}, {});
+	let manager = new TransactionManager(file, {}, {}, {});
 	let events = new Array<string>();
 	let transactionOne = manager.enqueueReadableTransaction(async (access) => {
 		events.push("1S");
@@ -50,7 +50,7 @@ test(`It should wait for all read actions to complete before starting a write ac
 
 test(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let manager = new TransactionManager(file, {}, {});
+	let manager = new TransactionManager(file, {}, {}, {});
 	let events = new Array<string>();
 	let transactionOne = manager.enqueueWritableTransaction(async (access) => {
 		events.push("1S");
@@ -87,7 +87,7 @@ test(`It should wait for all write actions to complete before starting a read ac
 
 test(`It should recover from transactions that throw errors.`, async (assert) => {
 	let file = new VirtualFile(0);
-	let manager = new TransactionManager(file, {}, {});
+	let manager = new TransactionManager(file, {}, {}, {});
 	let events = new Array<string>();
 	let transactionOne = manager.enqueueWritableTransaction(async (access) => {
 		events.push("1S");
@@ -122,7 +122,7 @@ test(`It should throw an error when using transaction objects outside of the tra
 	}));
 	let manager = new TransactionManager(file, {
 		dummy
-	}, {});
+	}, {}, {});
 	let access = await manager.enqueueWritableTransaction(async (access) => {
 		return access;
 	});
