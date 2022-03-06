@@ -11,6 +11,11 @@ export type CacheStatus = {
 	maxWeight?: number;
 };
 
+export type CacheEntry<A extends Primitive, B> = {
+	key: A;
+	value: B;
+};
+
 export class Cache<A extends Primitive, B> {
 	private detail: CacheDetail<A, B>;
 	private map: Map<A, B>;
@@ -40,8 +45,13 @@ export class Cache<A extends Primitive, B> {
 		};
 	}
 
-	[Symbol.iterator](): Iterator<[A, B]> {
-		return this.map[Symbol.iterator]();
+	* [Symbol.iterator](): Iterator<CacheEntry<A, B>> {
+		for (let tuple of this.map) {
+			yield {
+				key: tuple[0],
+				value: tuple[1]
+			};
+		}
 	}
 
 	clear(): void {
