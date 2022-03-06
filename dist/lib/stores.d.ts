@@ -1,8 +1,9 @@
 import { FilterMap } from "./filters";
 import { Table } from "./tables";
-import { OrderMap } from "./orders";
+import { OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RequiredKeys } from "./records";
 import { BlockManager } from "./blocks";
+import { SubsetOf } from "./inference";
 export declare type Entry<A extends Record> = {
     bid(): number;
     record(): A;
@@ -62,9 +63,10 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(record: A): void;
-    static construct<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, options: {
+    static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
         fields: Fields<A>;
         keys: [...B];
+        orders?: Orders<C>;
     }): StoreManager<A, B>;
 }
 export declare type StoreManagers<A> = {

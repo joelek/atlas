@@ -29,13 +29,16 @@ const test_1 = require("./test");
     observed.sort();
     assert.array.equals(observed, expected);
 });
-(0, test_1.test)(`It should support iteration of the records stored.`, async (assert) => {
+(0, test_1.test)(`It should support iteration of the records stored in increasing order.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
             key: new records_1.StringField("")
         },
-        keys: ["key"]
+        keys: ["key"],
+        orders: {
+            key: new orders_1.IncreasingOrder()
+        }
     });
     users.insert({
         key: "A"
@@ -44,8 +47,30 @@ const test_1 = require("./test");
         key: "B"
     });
     let iterable = users;
-    let observed = Array.from(iterable).map((entry) => entry.record().key).sort();
+    let observed = Array.from(iterable).map((entry) => entry.record().key);
     let expected = ["A", "B"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support iteration of the records stored in decreasing order.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField("")
+        },
+        keys: ["key"],
+        orders: {
+            key: new orders_1.DecreasingOrder()
+        }
+    });
+    users.insert({
+        key: "A"
+    });
+    users.insert({
+        key: "B"
+    });
+    let iterable = users;
+    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let expected = ["B", "A"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support filtering of the records stored.`, async (assert) => {

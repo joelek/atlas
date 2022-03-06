@@ -152,6 +152,7 @@ class StoreManager {
     static construct(blockManager, options) {
         let fields = options.fields;
         let keys = options.keys;
+        let orders = options.orders ?? {};
         let recordManager = new records_1.RecordManager(fields);
         let storage = new tables_1.Table(blockManager, {
             getKeyFromValue: (value) => {
@@ -160,7 +161,7 @@ class StoreManager {
                 return recordManager.encodeKeys(keys, record);
             }
         });
-        let manager = new StoreManager(blockManager, fields, keys, {}, storage);
+        let manager = new StoreManager(blockManager, fields, keys, orders, storage);
         return manager;
     }
 }
