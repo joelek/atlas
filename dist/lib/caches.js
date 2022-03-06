@@ -28,8 +28,13 @@ class Cache {
             maxWeight: maxWeight
         };
     }
-    [Symbol.iterator]() {
-        return this.map[Symbol.iterator]();
+    *[Symbol.iterator]() {
+        for (let tuple of this.map) {
+            yield {
+                key: tuple[0],
+                value: tuple[1]
+            };
+        }
     }
     clear() {
         this.map.clear();

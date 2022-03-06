@@ -8,13 +8,17 @@ export declare type CacheStatus = {
     weight: number;
     maxWeight?: number;
 };
+export declare type CacheEntry<A extends Primitive, B> = {
+    key: A;
+    value: B;
+};
 export declare class Cache<A extends Primitive, B> {
     private detail;
     private map;
     private status;
     private purgeIfNecessary;
     constructor(detail?: CacheDetail<A, B>, maxWeight?: number);
-    [Symbol.iterator](): Iterator<[A, B]>;
+    [Symbol.iterator](): Iterator<CacheEntry<A, B>>;
     clear(): void;
     insert(key: A, value: B): void;
     length(): number;
