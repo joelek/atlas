@@ -29,13 +29,16 @@ test(`It should support for-of iteration of the records stored.`, async (assert)
 	assert.array.equals(observed, expected);
 });
 
-test(`It should support iteration of the records stored.`, async (assert) => {
+test(`It should support iteration of the records stored in increasing order.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let users = StoreManager.construct(blockManager, {
 		fields: {
 			key: new StringField("")
 		},
-		keys: ["key"]
+		keys: ["key"],
+		orders: {
+			key: new IncreasingOrder()
+		}
 	});
 	users.insert({
 		key: "A"
@@ -44,8 +47,31 @@ test(`It should support iteration of the records stored.`, async (assert) => {
 		key: "B"
 	});
 	let iterable = users;
-	let observed = Array.from(iterable).map((entry) => entry.record().key).sort();
+	let observed = Array.from(iterable).map((entry) => entry.record().key);
 	let expected = ["A", "B"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support iteration of the records stored in decreasing order.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		orders: {
+			key: new DecreasingOrder()
+		}
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	let iterable = users;
+	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let expected = ["B", "A"];
 	assert.array.equals(observed, expected);
 });
 
