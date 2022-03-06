@@ -253,6 +253,7 @@ export class Context {
 
 	createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B> {
 		orderReferences = orderReferences ?? {} as OrderReferences<C>;
+		// TODO: Default store orders.
 		let fields = {} as Fields<A>;
 		for (let key in fieldReferences) {
 			fields[key] = this.getField(fieldReferences[key]);
