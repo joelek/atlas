@@ -1,9 +1,10 @@
 import { StreamIterable } from "./streams";
 import { FilterMap } from "./filters";
 import { Table } from "./tables";
-import { OrderMap } from "./orders";
+import { OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./blocks";
+import { SubsetOf } from "./inference";
 
 export type Entry<A extends Record> = {
 	bid(): number;
@@ -205,12 +206,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return this.insert(record);
 	}
 
-	static construct<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, options: {
+	static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
 		fields: Fields<A>,
-		keys: [...B]
+		keys: [...B],
+		orders?: Orders<C>
 	}): StoreManager<A, B> {
 		let fields = options.fields;
 		let keys = options.keys;
+		let orders = options.orders ?? {};
 		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
 			getKeyFromValue: (value) => {
@@ -219,7 +222,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 				return recordManager.encodeKeys(keys, record);
 			}
 		});
-		let manager = new StoreManager(blockManager, fields, keys, {}, storage);
+		let manager = new StoreManager(blockManager, fields, keys, orders, storage);
 		return manager;
 	}
 };
