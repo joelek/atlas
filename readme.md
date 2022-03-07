@@ -43,14 +43,14 @@ The future of the Internet will be built on decentralized and distributed applic
 
 ## Overview
 
-Atlas is initialized by creating a context for the database using `atlas.createContext()`. The `context` is subsequently used to define all database entities and the way in which they interact with each other.
+Atlas is initialized by creating a context for the database using `atlas.createContext()`. The context is subsequently used to define all database entities and the way in which they relate to each other.
 
 ```ts
 import * as atlas from "@joelek/atlas";
 let context = atlas.createContext();
 ```
 
-The `context` will utimately produce a transaction manager that is used to transact with the database.
+The context will utimately produce a transaction manager that is used to transact with the database.
 
 ### Data types
 
@@ -65,7 +65,7 @@ Atlas supports all non-composite data types defined by [Bedrock](https://github.
 
 ### Fields
 
-Atlas defines the `field` entity as one of the data types supported by Atlas coupled with data related to its specific occurence such as constraints or default values. `Fields` may be created as non-nullable or nullable as shown below.
+Atlas defines the field entity as one of the data types supported by Atlas coupled with data related to its specific occurence such as constraints or default values. Fields may be created as non-nullable or nullable as shown below.
 
 ```ts
 context.createBigIntField();
@@ -84,11 +84,11 @@ context.createNullableStringField();
 
 ### Records
 
-Atlas defines the `record` entity as an associative collection of `fields` where each `field` is assigned a specific `key`. `Records` are not created explicitly but rather implicitly through the `store` entity.
+Atlas defines the record entity as an associative collection of fields where each field is assigned a specific key. Records are not created explicitly but rather implicitly through the store entity.
 
 ### Orders
 
-Atlas defines the `order` entity as an ordering scheme using the sort-order provided by [Bedrock](https://github.com/joelek/bedrock).
+Atlas defines the order entity as an ordering scheme using the sort-order provided by [Bedrock](https://github.com/joelek/bedrock).
 
 ```ts
 context.createDecreasingOrder();
@@ -97,7 +97,7 @@ context.createIncreasingOrder();
 
 ### Stores
 
-Atlas defines the `store` entity as a `record` coupled with a sequence of `keys` specifying the uniquely identifying `fields` of the implicitly defined `record`. `Stores` are created as shown below where the uniquely identifying `fields` must be non-nullable.
+Atlas defines the store entity as a record coupled with a sequence of keys specifying the uniquely identifying fields of the implicitly defined record. Stores are created as shown below where the uniquely identifying fields must be non-nullable.
 
 ```ts
 let users = context.createStore({
@@ -107,7 +107,7 @@ let users = context.createStore({
 }, ["user_id"]);
 ```
 
-`Stores` will be ordered by the uniquely identifying `fields` in increasing order unless explicitly specified when creating the `store`.
+Stores will be ordered by the uniquely identifying fields in increasing order unless explicitly specified when creating the store.
 
 ```ts
 let users = context.createStore({
@@ -121,11 +121,11 @@ let users = context.createStore({
 
 ### Links
 
-Atlas defines the `link` entity as a link between a parent and a child `store` as well as how the `keys` of the parent `store` map to `keys` of the child `store`. It can be used to filter the child `store` for `records` linked to a given `record` in the parent `store` as well as to lookup the parent `record` linked to a given `record` in the child `store`.
+Atlas defines the link entity as a link between a parent and a child store as well as how the keys of the parent store map to keys of the child store. It can be used to filter the child store for records linked to a given record in the parent store as well as to lookup the parent record linked to a given record in the child store.
 
-`Links` are used to enforce data-consistency in the database. All `records` that are inserted are required to adhere to the constraints enforced by all `links` specified in the database.
+Links are used to enforce data-consistency in the database. All records that are inserted are required to adhere to the constraints enforced by all links specified in the database.
 
-A `link` is referencing when the parent and child `stores` correspond to separate `stores`. A referencing `link` is created as shown below.
+A link is `referencing` when the parent and child stores correspond to separate stores. A referencing link is created as shown below.
 
 ```ts
 let users = context.createStore({
@@ -143,7 +143,7 @@ let userPosts = context.createLink(users, posts, {
 });
 ```
 
-A `link` is self-referencing when the parent and child `stores` correspond to the same `store`. A self-referencing `link` is created as shown below. Self-referencing `links` must allow orphaned child `records` through the use of a nullable `field` in order not to restrict the database from inserting any `records`.
+A link is `self-referencing` when the parent and child stores correspond to the same store. A self-referencing link is created as shown below. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records.
 
 ```ts
 let directories = context.createStore({
@@ -155,7 +155,7 @@ let childDirectories = context.createLink(directories, directories, {
 });
 ```
 
-The `records` retrieved when filtering a `link` will be ordered by the `order` of the child `store` unless explicitly specified.
+The records retrieved when filtering a link will be ordered by the order of the child store unless explicitly specified.
 
 ```ts
 let userPosts = context.createLink(users, posts, {
@@ -167,11 +167,11 @@ let userPosts = context.createLink(users, posts, {
 
 ### Filters
 
-Atlas defines the `filter` entity as a logical operator coupled with a parameter value. `Filters` are commonly not defined explicitly but rather implicitly through the `operator` entity.
+Atlas defines the filter entity as a logical operator coupled with a parameter value. Filters are commonly not defined explicitly but rather implicitly through the operator entity.
 
 ### Operators
 
-Atlas defines the `operator` entity as a logical operator that subsequently may be used to create a `filter` entity using a parameter value.
+Atlas defines the operator entity as a logical operator that subsequently may be used to create a filter entity using a parameter value.
 
 ```ts
 context.createEqualityOperator();
@@ -179,7 +179,7 @@ context.createEqualityOperator();
 
 ### Queries
 
-Atlas defines the `query` entity as a `store` coupled with an associative collection of `operators`. It can be used to filter the `store` for `records` matching all given `operators`.
+Atlas defines the query entity as a store coupled with an associative collection of operators. It can be used to filter the store for records matching all given operators.
 
 ```ts
 let getUsersByName = context.createQuery(users, {
@@ -187,7 +187,7 @@ let getUsersByName = context.createQuery(users, {
 });
 ```
 
-The `records` retrieved when filtering a `query` will be ordered by the `order` of the `store` unless explicitly specified.
+The records retrieved when filtering a query will be ordered by the order of the store unless explicitly specified.
 
 ```ts
 let getUserByName = context.createQuery(users, {
@@ -199,13 +199,13 @@ let getUserByName = context.createQuery(users, {
 
 ### Indices
 
-Atlas defines the `index` entity as a `store` coupled with a sequence of `keys` specifying the indexed `fields`. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. `Indices` are not defined explicitly but rather implicitly through the `store`, `link` and `query` entities.
+Atlas defines the index entity as a store coupled with a sequence of keys specifying the indexed fields. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Indices are not defined explicitly but rather implicitly through the store, link and query entities.
 
 ## Transactions
 
-All database operations are performed in the context of an associated transaction. Transactions are short-lived constructs with either `read` or `write` access that should be created with the access required for the corresponding operations. Transactions with `read` access are executed in parallel whereas transactions with `write` access are executed in serial. Only create transactions with `write` access when absolutely needed as `write` access reduces transaction throughput!
+All database operations are performed in the context of an associated transaction. Transactions are `short-lived` constructs with either read or write access that should be created with the access required for the corresponding operations. Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
 
-The transaction manager is created with a `path` that defines where the database will be stored as well as all `stores`, `links` and `queries` that should exist in the schema of the database.
+The transaction manager is created with a path that defines where the database will be stored as well as all stores, links and queries that should exist in the schema of the database.
 
 ```ts
 let manager = context.createTransactionManager("./private/db", {
@@ -219,7 +219,7 @@ let manager = context.createTransactionManager("./private/db", {
 ```
 Transactions are enqueued through the transaction manager.
 
-A transaction with `write` access will be provided with `write` access to all `stores`, `links` and `queries` that exist in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file only if all operations complete successfully.
+A transaction with write access will be provided with write access to all stores, links and queries that exist in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file only if all operations complete successfully.
 
 ```ts
 await manager.enqueueWritableTransaction(async ({
@@ -238,7 +238,7 @@ await manager.enqueueWritableTransaction(async ({
 });
 ```
 
-A transaction with `read` access will be provided with `read` access to all `stores`, `links` and `queries` that exist in the database. All operations are performed through a transaction-specific queue.
+A transaction with read access will be provided with read access to all stores, links and queries that exist in the database. All operations are performed through a transaction-specific queue.
 
 ```ts
 let user = await manager.enqueueReadableTransaction(async ({
@@ -257,18 +257,18 @@ let user = await manager.enqueueReadableTransaction(async ({
 
 ## Schema migration
 
-Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema specified by the `stores`, `links` and `queries` when creating the transaction manager by determining the differences between the two schemas.
+Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema specified by the stores, links and queries when creating the transaction manager by determining the differences between the two schemas.
 
 Please make sure that you understand how Atlas handles schema migration before you use Atlas in production environments.
 
-* Atlas removes all existing `stores` not referenced in the new schema. All `records` of the corresponding `stores` are removed.
-* Atlas creates new `stores` for all `stores` not referenced in the existing schema.
-* Atlas updates all `stores` referenced both in the new and in the existing schemas. All `records` of the corresponding `stores` are updated.
-* Atlas removes all existing `fields` not referenced in the new schema of a given `store`. All `records` of the corresponding `store` will have their correponding `field` values removed.
-* Atlas creates new `fields` for all `fields` not referenced in the existing schema of a given `store`. All `records` of the corresponding `store` will have their corresponding `field` values set to a default `field` value.
-* Atlas updates all `fields` referenced both in the new and in the existing schemas of a given `store`. All `records` of the corresponding `store` will have their corresponding `field` values changed to either a default `field` value or the existing `field` value. The existing `field` value is always used when the value of the corresponding `field` is considered compatible with the updated `field`. This is always the case when changing a non-nullable `field` into a nullable `field` but not guaranteed to be the case when changing a nullable `field` into a non-nullable `field`.
+* Atlas removes all existing stores not referenced in the new schema. All records of the corresponding stores are removed.
+* Atlas creates new stores for all stores not referenced in the existing schema.
+* Atlas updates all stores referenced both in the new and in the existing schemas. All records of the corresponding stores are updated.
+* Atlas removes all existing fields not referenced in the new schema of a given store. All records of the corresponding store will have their correponding field values removed.
+* Atlas creates new fields for all fields not referenced in the existing schema of a given store. All records of the corresponding store will have their corresponding field values set to a default field value.
+* Atlas updates all fields referenced both in the new and in the existing schemas of a given store. All records of the corresponding store will have their corresponding field values changed to either a default field value or the existing field value. The existing field value is always used when the value of the corresponding field is considered compatible with the updated field. This is always the case when changing a non-nullable field into a nullable field but not guaranteed to be the case when changing a nullable field into a non-nullable field.
 
-In addition to this, Atlas will enforce the data-consistency for all `links` not referenced in the existing schema.
+In addition to this, Atlas will enforce the data-consistency for all links not referenced in the existing schema.
 
 ## Performance
 
