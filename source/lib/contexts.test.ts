@@ -25,8 +25,7 @@ test(`It should work.`, async (assert) => {
 		name: context.createEqualityOperator(),
 		age: context.createEqualityOperator()
 	});
-	let file = context.createVirtualFile();
-	let manager = context.createTransactionManager(file, {
+	let manager = context.createTransactionManager("./private/atlas", {
 		users,
 		posts
 	}, {
@@ -49,7 +48,7 @@ test(`It should work.`, async (assert) => {
 				user_id: "User 1"
 			});
 		});
-	}, 10000);
+	}, 1);
 	let expected = {
 		user_id: "User 1",
 		name: "Joel Ek",
