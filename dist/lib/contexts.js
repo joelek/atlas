@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Context = exports.OperatorReference = exports.OrderReference = exports.QueryReference = exports.LinkReference = exports.StoreReference = exports.FieldReference = exports.FileReference = void 0;
+exports.Context = exports.OperatorReference = exports.OrderReference = exports.QueryReference = exports.LinkReference = exports.StoreReference = exports.FieldReference = void 0;
 const links_1 = require("./links");
 const stores_1 = require("./stores");
 const records_1 = require("./records");
@@ -10,11 +10,6 @@ const databases_1 = require("./databases");
 const operators_1 = require("./operators");
 const schemas_1 = require("./schemas");
 const queries_1 = require("./queries");
-class FileReference {
-    FileReference;
-}
-exports.FileReference = FileReference;
-;
 class FieldReference {
     FieldReference;
 }
@@ -46,7 +41,6 @@ class OperatorReference {
 exports.OperatorReference = OperatorReference;
 ;
 class Context {
-    files;
     fields;
     links;
     stores;
@@ -54,13 +48,6 @@ class Context {
     operators;
     orders;
     databaseManagers;
-    getFile(reference) {
-        let file = this.files.get(reference);
-        if (file == null) {
-            throw `Expected file to be defined in context!`;
-        }
-        return file;
-    }
     getField(reference) {
         let field = this.fields.get(reference);
         if (field == null) {
@@ -103,8 +90,13 @@ class Context {
         }
         return order;
     }
+    createFile(path) {
+        let bin = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.bin`), 64 * 1024 * 1024);
+        let log = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.log`), 64 * 1024 * 1024);
+        let file = new files_1.DurableFile(bin, log);
+        return file;
+    }
     constructor() {
-        this.files = new Map();
         this.fields = new Map();
         this.links = new Map();
         this.stores = new Map();
@@ -202,6 +194,7 @@ class Context {
     }
     createStore(fieldReferences, keys, orderReferences) {
         orderReferences = orderReferences ?? {};
+        // TODO: Default store orders.
         let fields = {};
         for (let key in fieldReferences) {
             fields[key] = this.getField(fieldReferences[key]);
@@ -251,25 +244,11 @@ class Context {
         this.orders.set(reference, order);
         return reference;
     }
-    createDurableFile(path) {
-        let reference = new FileReference();
-        let bin = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.bin`), 64 * 1024 * 1024);
-        let log = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.log`), 64 * 1024 * 1024);
-        let file = new files_1.DurableFile(bin, log);
-        this.files.set(reference, file);
-        return reference;
-    }
-    createVirtualFile() {
-        let reference = new FileReference();
-        let file = new files_1.VirtualFile(0);
-        this.files.set(reference, file);
-        return reference;
-    }
-    createTransactionManager(fileReference, storeReferences, linkReferences, queryReferences) {
-        if (this.databaseManagers.has(fileReference)) {
+    createTransactionManager(path, storeReferences, linkReferences, queryReferences) {
+        if (this.databaseManagers.has(path)) {
             throw `Expected given storage to not be in use by another database!`;
         }
-        let file = this.getFile(fileReference);
+        let file = this.createFile(path);
         let stores = {};
         for (let key in storeReferences) {
             stores[key] = this.getStore(storeReferences[key]);
@@ -285,7 +264,7 @@ class Context {
         let schemaManager = new schemas_1.SchemaManager();
         let database = new databases_1.Database(stores, links, queries);
         let databaseManager = schemaManager.createDatabaseManager(file, database);
-        this.databaseManagers.set(fileReference, databaseManager);
+        this.databaseManagers.set(path, databaseManager);
         let transactionManager = databaseManager.createTransactionManager(file);
         return transactionManager;
     }

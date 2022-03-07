@@ -26,8 +26,7 @@ const contexts_1 = require("./contexts");
         name: context.createEqualityOperator(),
         age: context.createEqualityOperator()
     });
-    let file = context.createVirtualFile();
-    let manager = context.createTransactionManager(file, {
+    let manager = context.createTransactionManager("./private/atlas", {
         users,
         posts
     }, {
