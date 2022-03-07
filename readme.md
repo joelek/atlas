@@ -29,7 +29,7 @@ let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 
 ## Background
 
-Databases are used when structured and frequently changing data needs to be persistently stored. They can be used by single applications or, when using adequate management software, used as a component shared by multiple applications in a system.
+Databases are used when structured and frequently changing data needs to be persistently stored. They can be used by single applications or, when using adequate management software, as a component shared by multiple applications in a system.
 
 Database mangement software is implemented using either an embedded architecture or a client/server architecture. Embedded management software is, just as the name suggests, embedded in the application in contrast to separate from the application in the client/server architecture.
 
@@ -37,7 +37,7 @@ While the client/server architecture enables the database to be shared by multip
 
 For management software using the client/server architecture, the interconnectedness can act as a limiting factor on the development of a single application in the system. For complex systems, there is also the issue of not knowing which applications use which parts of the data, often resulting in data being kept around just in case some application might still use it.
 
-Embedded management software provides mitigation for these issues at the trade-off of only allowing the database be used by a single application. The database may be tightly integrated which reduces the risk of unforseen errors. It may also be updated as needed as the requirements of the application change and does not depend on an external dependency in the form of another server, often running on another machine, providing the application with the database.
+Embedded management software provides mitigation for these issues at the trade-off of only allowing the database to be used by a single application. The database may be tightly integrated which reduces the risk of unforseen errors. It may also be updated as needed as the requirements of the application change and does not depend on an external dependency in the form of the database server, often running on another machine, providing the application with the database.
 
 The future of the Internet will be built on decentralized and distributed applications that require robust embedded database software. Atlas is a lightweight embedded database manager that enables the development of robust, database-driven applications. It provides advanced type inference and compile-time type checking through the TypeScript compiler.
 
@@ -82,10 +82,6 @@ context.createStringField();
 context.createNullableStringField();
 ```
 
-### Records
-
-Atlas defines the record entity as an associative collection of fields where each field is assigned a specific key. Records are not created explicitly but rather implicitly through the store entity.
-
 ### Orders
 
 Atlas defines the order entity as an ordering scheme using the sort-order provided by [Bedrock](https://github.com/joelek/bedrock).
@@ -97,7 +93,7 @@ context.createIncreasingOrder();
 
 ### Stores
 
-Atlas defines the store entity as a record coupled with a sequence of keys specifying the uniquely identifying fields of the implicitly defined record. Stores are created as shown below where the uniquely identifying fields must be non-nullable.
+Atlas defines the store entity as an associative collection of fields where each field is assigned a specific key coupled with a sequence of keys specifying the uniquely identifying fields. Stores are created as shown below where the uniquely identifying fields must be non-nullable.
 
 ```ts
 let users = context.createStore({
@@ -121,9 +117,11 @@ let users = context.createStore({
 
 ### Links
 
-Atlas defines the link entity as a link between a parent and a child store as well as how the keys of the parent store map to keys of the child store. It can be used to filter the child store for records linked to a given record in the parent store as well as to lookup the parent record linked to a given record in the child store.
+Atlas defines the link entity as a link between a parent and a child store as well as how the keys of the parent store map to the keys of the child store. It can be used to filter the child store for records linked to a given record in the parent store as well as to lookup the parent record linked to a given record in the child store.
 
-Links are used to enforce data-consistency in the database. All records that are inserted are required to adhere to the constraints enforced by all links specified in the database.
+Links are used to maintain data-consistency and can be configured to allow or forbid `orphans`. Orphans are allowed only when the keys of the parent store map to nullable fields in the child store.
+
+A record that is about to be inserted into a child store is checked against its links. Insertion will be prevented whenever there is at least one link not allowing orphans and when there is no corresponding parent record in the parent store. Conversely, a record that is about to be removed from a parent store is checked against its links. Links that do not allow orphans will cause removal of all child records linked to the parent record in question. This behaviour is referred to as `cascading delete` in database terminology. Please make sure that you understand the implications of this behaviour before using Atlas in production environments.
 
 A link is `referencing` when the parent and child stores correspond to separate stores. A referencing link is created as shown below.
 
@@ -143,7 +141,7 @@ let userPosts = context.createLink(users, posts, {
 });
 ```
 
-A link is `self-referencing` when the parent and child stores correspond to the same store. A self-referencing link is created as shown below. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records.
+A link is `self-referencing` when the parent and child stores correspond to the same store. A self-referencing link is created as shown below. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records at all into the store.
 
 ```ts
 let directories = context.createStore({
@@ -165,10 +163,6 @@ let userPosts = context.createLink(users, posts, {
 });
 ```
 
-### Filters
-
-Atlas defines the filter entity as a logical operator coupled with a parameter value. Filters are commonly not defined explicitly but rather implicitly through the operator entity.
-
 ### Operators
 
 Atlas defines the operator entity as a logical operator that subsequently may be used to create a filter entity using a parameter value.
@@ -177,9 +171,13 @@ Atlas defines the operator entity as a logical operator that subsequently may be
 context.createEqualityOperator();
 ```
 
+### Filters
+
+Atlas defines the filter entity as a logical operator coupled with a parameter value. Filters are commonly not defined explicitly but rather implicitly through operators.
+
 ### Queries
 
-Atlas defines the query entity as a store coupled with an associative collection of operators. It can be used to filter the store for records matching all given operators.
+Atlas defines the query entity as a store coupled with an associative collection of operators where each operator is assigned a specific key corresponding to one of the keys in the store. It can be used to filter the store for records matching all operators specified.
 
 ```ts
 let getUsersByName = context.createQuery(users, {
@@ -217,6 +215,7 @@ let manager = context.createTransactionManager("./private/db", {
 	getUsersByName
 });
 ```
+
 Transactions are enqueued through the transaction manager.
 
 A transaction with write access will be provided with write access to all stores, links and queries that exist in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file only if all operations complete successfully.
@@ -257,18 +256,18 @@ let user = await manager.enqueueReadableTransaction(async ({
 
 ## Schema migration
 
-Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema specified by the stores, links and queries when creating the transaction manager by determining the differences between the two schemas.
+Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema created from the stores, links and queries specified when creating the transaction manager by determining the differences between the new and existing schemas.
 
-Please make sure that you understand how Atlas handles schema migration before you use Atlas in production environments.
+Please make sure that you understand how Atlas handles automatic schema migration before you use Atlas in production environments.
 
 * Atlas removes all existing stores not referenced in the new schema. All records of the corresponding stores are removed.
 * Atlas creates new stores for all stores not referenced in the existing schema.
 * Atlas updates all stores referenced both in the new and in the existing schemas. All records of the corresponding stores are updated.
-* Atlas removes all existing fields not referenced in the new schema of a given store. All records of the corresponding store will have their correponding field values removed.
-* Atlas creates new fields for all fields not referenced in the existing schema of a given store. All records of the corresponding store will have their corresponding field values set to a default field value.
-* Atlas updates all fields referenced both in the new and in the existing schemas of a given store. All records of the corresponding store will have their corresponding field values changed to either a default field value or the existing field value. The existing field value is always used when the value of the corresponding field is considered compatible with the updated field. This is always the case when changing a non-nullable field into a nullable field but not guaranteed to be the case when changing a nullable field into a non-nullable field.
+* Atlas removes all existing fields not referenced in the new schema of a given store. All records of the corresponding store will have their correponding values removed.
+* Atlas creates new fields for all fields not referenced in the existing schema of a given store. All records of the corresponding store will have their corresponding values set to a default value.
+* Atlas updates all fields referenced both in the new and in the existing schemas of a given store. All records of the corresponding store will have their corresponding values set to either a default value or the existing value. The existing value is always used when the value is considered compatible with the new field. This is always the case when changing a non-nullable field into a nullable field but not guaranteed to be the case when changing a nullable field into a non-nullable field. A default value is always used when the fundamental type of a field changes.
 
-In addition to this, Atlas will enforce the data-consistency for all links not referenced in the existing schema.
+In addition to this, Atlas will enforce data-consistency for all links not referenced in the existing schema.
 
 ## Performance
 
@@ -326,3 +325,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement search support using legacy RadixTree.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
+* Add unspecified store keys to orders for links and queries.
