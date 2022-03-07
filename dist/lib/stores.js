@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreManager = exports.WritableStoreManager = void 0;
 const streams_1 = require("./streams");
 const tables_1 = require("./tables");
+const orders_1 = require("./orders");
 const records_1 = require("./records");
 ;
 ;
@@ -96,6 +97,11 @@ class StoreManager {
     }
     filter(filters, orders) {
         orders = orders ?? this.orders;
+        for (let key of this.keys) {
+            if (!(key in orders)) {
+                orders[key] = new orders_1.IncreasingOrder();
+            }
+        }
         // TODO: Use indices.
         let filtersRemaining = { ...filters };
         let ordersRemaining = { ...orders };

@@ -54,7 +54,7 @@ function createUsersAndPosts() {
     let iterable = userPosts.filter({
         user_id: "User 1"
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().post_id).sort();
+    let observed = Array.from(iterable).map((entry) => entry.record().post_id);
     let expected = ["Post 1", "Post 2"];
     assert.array.equals(observed, expected);
 });
@@ -63,7 +63,7 @@ function createUsersAndPosts() {
     let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     }, {
-        post_id: new orders_1.IncreasingOrder()
+        post_id: new orders_1.DecreasingOrder()
     });
     users.insert({
         user_id: "User 1"
@@ -87,7 +87,7 @@ function createUsersAndPosts() {
         user_id: "User 1"
     });
     let observed = Array.from(iterable).map((entry) => entry.record().post_id);
-    let expected = ["Post 1", "Post 2"];
+    let expected = ["Post 2", "Post 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support looking up the corresponding parent for a referencing link.`, async (assert) => {
@@ -144,7 +144,7 @@ function createDirectories() {
     let iterable = childDirectories.filter({
         directory_id: "Directory 1"
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().directory_id).sort();
+    let observed = Array.from(iterable).map((entry) => entry.record().directory_id);
     let expected = ["Directory 2", "Directory 3"];
     assert.array.equals(observed, expected);
 });
@@ -153,7 +153,7 @@ function createDirectories() {
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     }, {
-        directory_id: new orders_1.IncreasingOrder()
+        directory_id: new orders_1.DecreasingOrder()
     });
     directories.insert({
         directory_id: "Directory 1",
@@ -171,7 +171,7 @@ function createDirectories() {
         directory_id: "Directory 1"
     });
     let observed = Array.from(iterable).map((entry) => entry.record().directory_id);
-    let expected = ["Directory 2", "Directory 3"];
+    let expected = ["Directory 3", "Directory 2"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support looking up the corresponding parent for a self-referencing link.`, async (assert) => {

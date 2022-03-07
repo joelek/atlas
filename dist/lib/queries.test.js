@@ -46,7 +46,7 @@ function createUsers() {
     let iterable = queryManager.filter({
         name: "B"
     });
-    let observed = Array.from(iterable).map((user) => user.record().key).sort();
+    let observed = Array.from(iterable).map((user) => user.record().key);
     let expected = ["User 2", "User 3"];
     assert.array.equals(observed, expected);
 });
@@ -55,12 +55,12 @@ function createUsers() {
     let queryManager = new queries_1.QueryManager(users, {
         name: new operators_1.EqualityOperator()
     }, {
-        key: new orders_1.IncreasingOrder()
+        key: new orders_1.DecreasingOrder()
     });
     let iterable = queryManager.filter({
         name: "B"
     });
     let observed = Array.from(iterable).map((user) => user.record().key);
-    let expected = ["User 2", "User 3"];
+    let expected = ["User 3", "User 2"];
     assert.array.equals(observed, expected);
 });

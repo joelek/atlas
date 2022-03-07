@@ -194,11 +194,6 @@ class Context {
     }
     createStore(fieldReferences, keys, orderReferences) {
         orderReferences = orderReferences ?? {};
-        for (let key of keys) {
-            if (!(key in orderReferences)) {
-                orderReferences[key] = this.createIncreasingOrder();
-            }
-        }
         let fields = {};
         for (let key in fieldReferences) {
             fields[key] = this.getField(fieldReferences[key]);

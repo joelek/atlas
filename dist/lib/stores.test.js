@@ -26,7 +26,6 @@ const test_1 = require("./test");
         observed.push(entry.record().key);
     }
     let expected = ["A", "B"];
-    observed.sort();
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support iteration of the records stored in increasing order.`, async (assert) => {
@@ -90,7 +89,7 @@ const test_1 = require("./test");
     let iterable = users.filter({
         key: new filters_1.EqualityFilter("A")
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().key).sort();
+    let observed = Array.from(iterable).map((entry) => entry.record().key);
     let expected = ["A"];
     assert.array.equals(observed, expected);
 });
