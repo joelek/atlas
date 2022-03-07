@@ -49,7 +49,7 @@ const contexts_1 = require("./contexts");
                 user_id: "User 1"
             });
         });
-    }, 10000);
+    }, 1);
     let expected = {
         user_id: "User 1",
         name: "Joel Ek",
