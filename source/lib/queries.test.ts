@@ -1,7 +1,7 @@
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityOperator } from "./operators";
-import { IncreasingOrder } from "./orders";
+import { DecreasingOrder, IncreasingOrder } from "./orders";
 import { QueryManager } from "./queries";
 import { StringField } from "./records";
 import { StoreManager } from "./stores";
@@ -45,7 +45,7 @@ test(`It should support filtering without explicit ordering.`, async (assert) =>
 	let iterable = queryManager.filter({
 		name: "B"
 	});
-	let observed = Array.from(iterable).map((user) => user.record().key).sort();
+	let observed = Array.from(iterable).map((user) => user.record().key);
 	let expected = ["User 2", "User 3"];
 	assert.array.equals(observed, expected);
 });
@@ -55,12 +55,12 @@ test(`It should support filtering with explicit ordering.`, async (assert) => {
 	let queryManager = new QueryManager(users, {
 		name: new EqualityOperator()
 	}, {
-		key: new IncreasingOrder()
+		key: new DecreasingOrder()
 	});
 	let iterable = queryManager.filter({
 		name: "B"
 	});
 	let observed = Array.from(iterable).map((user) => user.record().key);
-	let expected = ["User 2", "User 3"];
+	let expected = ["User 3", "User 2"];
 	assert.array.equals(observed, expected);
 });

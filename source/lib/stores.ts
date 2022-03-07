@@ -1,7 +1,7 @@
 import { StreamIterable } from "./streams";
 import { FilterMap } from "./filters";
 import { Table } from "./tables";
-import { OrderMap, Orders } from "./orders";
+import { IncreasingOrder, OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
@@ -148,6 +148,11 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>> {
 		orders = orders ?? this.orders;
+		for (let key of this.keys) {
+			if (!(key in orders)) {
+				orders[key] = new IncreasingOrder();
+			}
+		}
 		// TODO: Use indices.
 		let filtersRemaining = { ...filters } as FilterMap<A>;
 		let ordersRemaining = { ...orders } as OrderMap<A>;

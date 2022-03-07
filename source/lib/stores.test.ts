@@ -25,7 +25,6 @@ test(`It should support for-of iteration of the records stored.`, async (assert)
 		observed.push(entry.record().key);
 	}
 	let expected = ["A", "B"];
-	observed.sort();
 	assert.array.equals(observed, expected);
 });
 
@@ -92,7 +91,7 @@ test(`It should support filtering of the records stored.`, async (assert) => {
 	let iterable = users.filter({
 		key: new EqualityFilter("A")
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().key).sort();
+	let observed = Array.from(iterable).map((entry) => entry.record().key);
 	let expected = ["A"];
 	assert.array.equals(observed, expected);
 });

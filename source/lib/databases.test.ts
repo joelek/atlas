@@ -62,7 +62,7 @@ test(`It should support inserting records for referencing links.`, async (assert
 	await writableStores.users.insert({
 		user_id: "User 0"
 	});
-	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id).sort(), ["User 0"]);
+	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id), ["User 0"]);
 });
 
 test(`It should prevent inserting orphaned records for referencing links.`, async (assert) => {
@@ -87,8 +87,8 @@ test(`It should remove orphaned child records for referencing links.`, async (as
 	await writableStores.users.remove({
 		user_id: "User 0"
 	});
-	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id).sort(), []);
-	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.record().post_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id), []);
+	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.record().post_id), []);
 });
 
 test(`It should remove orphaned grandchild records for referencing links.`, async (assert) => {
@@ -108,9 +108,9 @@ test(`It should remove orphaned grandchild records for referencing links.`, asyn
 	await writableStores.users.remove({
 		user_id: "User 0"
 	});
-	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id).sort(), []);
-	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.record().post_id).sort(), []);
-	assert.array.equals(Array.from(storeManagers.comments).map((record) => record.record().comment_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id), []);
+	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.record().post_id), []);
+	assert.array.equals(Array.from(storeManagers.comments).map((record) => record.record().comment_id), []);
 });
 
 test(`It should not remove records with parents for referencing links.`, async (assert) => {
@@ -130,9 +130,9 @@ test(`It should not remove records with parents for referencing links.`, async (
 	await writableStores.posts.remove({
 		post_id: "Post 0"
 	});
-	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id).sort(), ["User 0"]);
-	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.record().post_id).sort(), []);
-	assert.array.equals(Array.from(storeManagers.comments).map((record) => record.record().comment_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.users).map((record) => record.record().user_id), ["User 0"]);
+	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.record().post_id), []);
+	assert.array.equals(Array.from(storeManagers.comments).map((record) => record.record().comment_id), []);
 });
 
 function createDirectories() {
@@ -167,7 +167,7 @@ test(`It should support inserting records for self-referencing links.`, async (a
 		directory_id: "Directory 0",
 		parent_directory_id: null
 	});
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), ["Directory 0"]);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0"]);
 });
 
 test(`It should prevent inserting orphaned records for self-referencing links.`, async (assert) => {
@@ -193,7 +193,7 @@ test(`It should remove orphaned child records for self-referencing links.`, asyn
 	await writableStores.directories.remove({
 		directory_id: "Directory 0"
 	});
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), []);
 });
 
 test(`It should remove orphaned grandchild records for self-referencing links.`, async (assert) => {
@@ -213,7 +213,7 @@ test(`It should remove orphaned grandchild records for self-referencing links.`,
 	await writableStores.directories.remove({
 		directory_id: "Directory 0"
 	});
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), []);
 });
 
 test(`It should not remove records with parents for self-referencing links.`, async (assert) => {
@@ -233,7 +233,7 @@ test(`It should not remove records with parents for self-referencing links.`, as
 	await writableStores.directories.remove({
 		directory_id: "Directory 1"
 	});
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), ["Directory 0"]);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0"]);
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is an orphaned chain link.`, async (assert) => {
@@ -247,7 +247,7 @@ test(`It should support enforcing link consistency for self-referencing links wh
 		parent_directory_id: "Directory 1"
 	});
 	consistencyManager.enforceLinkConsistency(["childDirectories"]);
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), []);
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is a cyclical link.`, async (assert) => {
@@ -261,7 +261,7 @@ test(`It should support enforcing link consistency for self-referencing links wh
 		parent_directory_id: "Directory 0"
 	});
 	consistencyManager.enforceLinkConsistency(["childDirectories"]);
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), ["Directory 0", "Directory 1"]);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is a chain link.`, async (assert) => {
@@ -275,7 +275,7 @@ test(`It should support enforcing link consistency for self-referencing links wh
 		parent_directory_id: "Directory 0"
 	});
 	consistencyManager.enforceLinkConsistency(["childDirectories"]);
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), ["Directory 0", "Directory 1"]);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is an orphaned chain link.`, async (assert) => {
@@ -289,7 +289,7 @@ test(`It should support enforcing store consistency for self-referencing links w
 		parent_directory_id: "Directory 1"
 	});
 	consistencyManager.enforceStoreConsistency(["directories"]);
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), []);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), []);
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is a cyclical link.`, async (assert) => {
@@ -303,7 +303,7 @@ test(`It should support enforcing store consistency for self-referencing links w
 		parent_directory_id: "Directory 0"
 	});
 	consistencyManager.enforceStoreConsistency(["directories"]);
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), ["Directory 0", "Directory 1"]);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is a chain link.`, async (assert) => {
@@ -317,5 +317,5 @@ test(`It should support enforcing store consistency for self-referencing links w
 		parent_directory_id: "Directory 0"
 	});
 	consistencyManager.enforceStoreConsistency(["directories"]);
-	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id).sort(), ["Directory 0", "Directory 1"]);
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });

@@ -1,7 +1,7 @@
 import { test } from "./test";
 import { VirtualFile } from "./files";
 import { LinkManager } from "./links";
-import { IncreasingOrder } from "./orders";
+import { DecreasingOrder, IncreasingOrder } from "./orders";
 import { NullableStringField, StringField } from "./records";
 import { StoreManager } from "./stores";
 import { BlockManager } from "./blocks";
@@ -53,7 +53,7 @@ test(`It should support filtering without explicit ordering for a referencing li
 	let iterable = userPosts.filter({
 		user_id: "User 1"
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().post_id).sort();
+	let observed = Array.from(iterable).map((entry) => entry.record().post_id);
 	let expected = ["Post 1", "Post 2"];
 	assert.array.equals(observed, expected);
 });
@@ -63,7 +63,7 @@ test(`It should support filtering with explicit ordering for a referencing link.
 	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	}, {
-		post_id: new IncreasingOrder()
+		post_id: new DecreasingOrder()
 	});
 	users.insert({
 		user_id: "User 1"
@@ -87,7 +87,7 @@ test(`It should support filtering with explicit ordering for a referencing link.
 		user_id: "User 1"
 	});
 	let observed = Array.from(iterable).map((entry) => entry.record().post_id);
-	let expected = ["Post 1", "Post 2"];
+	let expected = ["Post 2", "Post 1"];
 	assert.array.equals(observed, expected);
 });
 
@@ -146,7 +146,7 @@ test(`It should support filtering without explicit ordering for a self-referenci
 	let iterable = childDirectories.filter({
 		directory_id: "Directory 1"
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().directory_id).sort();
+	let observed = Array.from(iterable).map((entry) => entry.record().directory_id);
 	let expected = ["Directory 2", "Directory 3"];
 	assert.array.equals(observed, expected);
 });
@@ -156,7 +156,7 @@ test(`It should support filtering with explicit ordering for a self-referencing 
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	}, {
-		directory_id: new IncreasingOrder()
+		directory_id: new DecreasingOrder()
 	});
 	directories.insert({
 		directory_id: "Directory 1",
@@ -174,7 +174,7 @@ test(`It should support filtering with explicit ordering for a self-referencing 
 		directory_id: "Directory 1"
 	});
 	let observed = Array.from(iterable).map((entry) => entry.record().directory_id);
-	let expected = ["Directory 2", "Directory 3"];
+	let expected = ["Directory 3", "Directory 2"];
 	assert.array.equals(observed, expected);
 });
 
