@@ -276,7 +276,14 @@ The performance of Atlas will utimately depend on the general performance of the
 
 Storing the database on a Solid State Drive (SSD) is highly recommended for optimal performance, especially for write-heavy applications.
 
-[TODO]
+### Benchmark
+
+The table shown below gives a rough estimate of the performance of Atlas in fully ACID-compliant transactions per second.
+
+| Device                        | Read (T/s) | Write (T/s) |
+| ----------------------------- | ---------- | ----------- |
+| WD Black SN750 1TB M.2 SSD    | 12 192     | 520         |
+| Seagate IronWolf 8TB 3.5" HDD | 11 350     | 12          |
 
 ## Sponsorship
 
