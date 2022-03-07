@@ -222,7 +222,14 @@ Transactions are enqueued through the transaction manager.
 A transaction with `write` access will be provided with `write` access to all `stores`, `links` and `queries` that exist in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file only if all operations complete successfully.
 
 ```ts
-await manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { getUsersByName }) => {
+await manager.enqueueWritableTransaction(async ({
+	users,
+	posts
+}, {
+	userPosts
+}, {
+	getUsersByName
+}) => {
 	return users.insert({
 		user_id: Uint8Array.of(1),
 		name: "Joel Ek",
@@ -234,7 +241,14 @@ await manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts },
 A transaction with `read` access will be provided with `read` access to all `stores`, `links` and `queries` that exist in the database. All operations are performed through a transaction-specific queue.
 
 ```ts
-let user = await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { getUsersByName }) => {
+let user = await manager.enqueueReadableTransaction(async ({
+	users,
+	posts
+}, {
+	userPosts
+}, {
+	getUsersByName
+}) => {
 	return users.lookup({
 		user_id: Uint8Array.of(1)
 	});
