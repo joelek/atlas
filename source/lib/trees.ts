@@ -311,37 +311,6 @@ export class RadixTree {
 		}
 	}
 
-	private * createNodeIterable(nodePath: NodePath): Iterable<NodePath> {
-		let head = new NodeHead();
-		let { path, blockIndex } = nodePath;
-		this.blockManager.readBlock(blockIndex, head.buffer, 0);
-		let prefix = head.prefix();
-		yield {
-			path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix]],
-			blockIndex: blockIndex
-		};
-		let subtree = head.subtree();
-		if (subtree !== 0) {
-			yield * this.createNodeIterable({
-				path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix], []],
-				blockIndex: subtree
-			});
-		}
-		if (this.blockManager.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-			let body = new NodeBody();
-			this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-			for (let i = 0; i < 16; i++) {
-				let child = body.child(i);
-				if (child !== 0) {
-					yield * this.createNodeIterable({
-						path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix, i]],
-						blockIndex: child
-					});
-				}
-			}
-		}
-	}
-
 	private updateChildParents(blockIndex: number): void {
 		let head = new NodeHead();
 		let body = new NodeBody();
@@ -437,84 +406,6 @@ export class RadixTree {
 			}
 		}
 		return blockIndex;
-	}
-
-	private getMatchingRange2(key: Array<Uint8Array>, relationship: Relationship): { offset: number, length: number } | undefined {
-		let head = new NodeHead();
-		this.blockManager.readBlock(this.blockIndex, head.buffer);
-		let total = head.total();
-		let traversion = this.traverse(key);
-		this.blockManager.readBlock(traversion.nodePath.blockIndex, head.buffer, 0);
-		let resident = head.resident();
-		let isPrefix = isPathPrefix(key.map(getNibblesFromBytes), traversion.nodePath.path);
-		if (relationship === "=") {
-			if (traversion.keyOrderRelativeToNode === 0) {
-				return {
-					offset: traversion.skipped,
-					length: (resident !== 0 ? 1 : 0)
-				};
-			}
-		} else if (relationship === "^=") {
-			if (traversion.keyOrderRelativeToNode === 0) {
-				return {
-					offset: traversion.skipped,
-					length: head.total()
-				};
-			} else if (traversion.keyOrderRelativeToNode < 0) {
-				return {
-					offset: traversion.skipped,
-					length: isPrefix ? head.total() : 0
-				};
-			}
-		} else if (relationship === "<") {
-			if (traversion.keyOrderRelativeToNode === 0) {
-				return {
-					offset: 0,
-					length: traversion.skipped
-				};
-			} else if (traversion.keyOrderRelativeToNode < 0) {
-				return {
-					offset: 0,
-					length: traversion.skipped
-				};
-			}
-		} else if (relationship === "<=") {
-			if (traversion.keyOrderRelativeToNode === 0) {
-				return {
-					offset: 0,
-					length: traversion.skipped + (resident !== 0 ? 1 : 0)
-				};
-			} else {
-				return {
-					offset: 0,
-					length: traversion.skipped
-				};
-			}
-		} else if (relationship === ">") {
-			if (traversion.keyOrderRelativeToNode === 0) {
-				return {
-					offset: traversion.skipped + (resident !== 0 ? 1 : 0),
-					length: total - traversion.skipped - (resident !== 0 ? 1 : 0)
-				};
-			} else {
-				return {
-					offset: traversion.skipped,
-					length: total - traversion.skipped
-				};
-			}
-		} else if (relationship === ">=") {
-			if (traversion.keyOrderRelativeToNode === 0) {
-				return {
-					offset: traversion.skipped,
-					length: total - traversion.skipped
-				};
-			} else {
-				return {
-					offset: traversion.skipped,
-					length: total - traversion.skipped
-				};
-			}
-		}
 	}
 
 	private getMatchingRange(key: Array<Uint8Array>, relationship: Relationship): { offset: number, length: number } | undefined {
@@ -858,27 +749,6 @@ export class RadixTree {
 			offset: 0,
 			length: this.length()
 		}, []);
-	}
-
-	debug(nodePath?: NodePath): void {
-		nodePath = nodePath ?? {
-			path: [[]],
-			blockIndex: this.blockIndex
-		};
-		let head = new NodeHead();
-		for (let node of this.createNodeIterable(nodePath)) {
-			this.blockManager.readBlock(node.blockIndex, head.buffer, 0);
-			let key = node.path.map((pathPart) => {
-				return "0x" + pathPart.map((nibble) => nibble.toString(16)).join("");
-			}).join(", ");
-			console.log(key, node.blockIndex, {
-				prefix: head.prefix(),
-				parent: head.parent(),
-				total: head.total(),
-				resident: head.resident(),
-				subtree: head.subtree()
-			});
-		}
 	}
 
 	branch(key: Array<Uint8Array>): RadixTree | undefined {
