@@ -7,7 +7,7 @@ export interface Writable {
 };
 
 export abstract class Chunk {
-	protected buffer: Uint8Array;
+	readonly buffer: Uint8Array;
 
 	constructor(buffer: Uint8Array) {
 		this.buffer = buffer;
