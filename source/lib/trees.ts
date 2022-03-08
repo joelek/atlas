@@ -184,19 +184,12 @@ export class NodeBody extends Chunk {
 	static readonly LENGTH = 16 * 6;
 };
 
-export type NodePath = {
-	path: Array<Array<number>>,
-	blockIndex: number
-};
-
 export class RadixTree {
 	private blockManager: BlockManager;
 	private blockIndex: number;
 
-	private * createDecreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
+	private * createDecreasingIterable(blockIndex: number, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
 		let head = new NodeHead();
-		let { path, blockIndex } = nodePath;
-		if (DEBUG) IntegerAssert.atLeast(1, path.length);
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let total = head.total();
 		if (cursor.offset >= total) {
@@ -213,10 +206,7 @@ export class RadixTree {
 			for (let i = 16 - 1; i >= 0; i--) {
 				let child = body.child(i);
 				if (child !== 0) {
-					yield * this.createDecreasingIterable({
-						path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix, i]],
-						blockIndex: child
-					}, cursor, directions);
+					yield * this.createDecreasingIterable(child, cursor, directions);
 					if (cursor.length <= 0) {
 						return;
 					}
@@ -225,10 +215,7 @@ export class RadixTree {
 		}
 		let subtree = head.subtree();
 		if (subtree !== 0) {
-			yield * this.createIterable({
-				path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix], []],
-				blockIndex: subtree
-			}, cursor, directions);
+			yield * this.createIterable(subtree, cursor, directions);
 			if (cursor.length <= 0) {
 				return;
 			}
@@ -247,10 +234,8 @@ export class RadixTree {
 		}
 	}
 
-	private * createIncreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
+	private * createIncreasingIterable(blockIndex: number, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
 		let head = new NodeHead();
-		let { path, blockIndex } = nodePath;
-		if (DEBUG) IntegerAssert.atLeast(1, path.length);
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let total = head.total();
 		if (cursor.offset >= total) {
@@ -275,10 +260,7 @@ export class RadixTree {
 		}
 		let subtree = head.subtree();
 		if (subtree !== 0) {
-			yield * this.createIterable({
-				path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix], []],
-				blockIndex: subtree
-			}, cursor, directions);
+			yield * this.createIterable(subtree, cursor, directions);
 			if (cursor.length <= 0) {
 				return;
 			}
@@ -289,10 +271,7 @@ export class RadixTree {
 			for (let i = 0; i < 16; i++) {
 				let child = body.child(i);
 				if (child !== 0) {
-					yield * this.createIncreasingIterable({
-						path: [...path.slice(0, -1), [...path[path.length - 1], ...prefix, i]],
-						blockIndex: child
-					}, cursor, directions);
+					yield * this.createIncreasingIterable(child, cursor, directions);
 					if (cursor.length <= 0) {
 						return;
 					}
@@ -301,13 +280,13 @@ export class RadixTree {
 		}
 	}
 
-	private * createIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
+	private * createIterable(blockIndex: number, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
 		directions = [...directions];
 		let direction = directions.shift() ?? "increasing";
 		if (direction === "increasing") {
-			yield * this.createIncreasingIterable(nodePath, cursor, directions);
+			yield * this.createIncreasingIterable(blockIndex, cursor, directions);
 		} else {
-			yield * this.createDecreasingIterable(nodePath, cursor, directions);
+			yield * this.createDecreasingIterable(blockIndex, cursor, directions);
 		}
 	}
 
@@ -597,7 +576,7 @@ export class RadixTree {
 		return;
 	}
 
-	private traverse(key: Array<Uint8Array>): { nodePath: NodePath, skipped: number, keyOrderRelativeToNode: number } {
+	private traverse(key: Array<Uint8Array>): { blockIndex: number, skipped: number, keyOrderRelativeToNode: number } {
 		let head = new NodeHead();
 		let next = new NodeHead();
 		let body = new NodeBody();
@@ -675,10 +654,7 @@ export class RadixTree {
 		this.blockManager.readBlock(blockIndex, head.buffer);
 		path[path.length-1].push(...head.prefix());
 		return {
-			nodePath: {
-				path,
-				blockIndex
-			},
+			blockIndex,
 			skipped,
 			keyOrderRelativeToNode: comparePath(key.map(getNibblesFromBytes), path)
 		};
@@ -742,10 +718,7 @@ export class RadixTree {
 	}
 
 	* [Symbol.iterator](): Iterator<number> {
-		yield * this.createIterable({
-			path: [[]],
-			blockIndex: this.blockIndex
-		}, {
+		yield * this.createIterable(this.blockIndex, {
 			offset: 0,
 			length: this.length()
 		}, []);
@@ -756,7 +729,7 @@ export class RadixTree {
 		if (traversion.keyOrderRelativeToNode !== 0) {
 			return;
 		}
-		let { blockIndex } = traversion.nodePath;
+		let blockIndex = traversion.blockIndex;
 		let head = new NodeHead();
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let subtree = head.subtree();
@@ -798,7 +771,7 @@ export class RadixTree {
 		if (traversion.keyOrderRelativeToNode !== 0) {
 			return;
 		}
-		let { blockIndex } = traversion.nodePath;
+		let blockIndex = traversion.blockIndex;
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let resident = head.resident();
 		if (resident === 0) {
@@ -813,7 +786,7 @@ export class RadixTree {
 		if (traversion.keyOrderRelativeToNode !== 0) {
 			return false;
 		}
-		let { blockIndex } = traversion.nodePath;
+		let blockIndex = traversion.blockIndex;
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		if (head.resident() === 0) {
 			return false;
@@ -850,10 +823,7 @@ export class RadixTree {
 			this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
 			offset += head.total() - (range.length + range.offset);
 		}
-		let iterable = this.createIterable({
-			path: [[]],
-			blockIndex: this.blockIndex
-		}, {
+		let iterable = this.createIterable(this.blockIndex, {
 			offset,
 			length
 		}, directions);
