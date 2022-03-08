@@ -325,3 +325,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement search support using legacy RadixTree.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
+* Simplify iterator entry for HashTable.
