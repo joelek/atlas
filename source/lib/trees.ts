@@ -189,16 +189,11 @@ export type NodePath = {
 	blockIndex: number
 };
 
-export interface RadixTreeEntry<A> {
-	key(): Array<Uint8Array>;
-	value(): A
-};
-
 export class RadixTree {
 	private blockManager: BlockManager;
 	private blockIndex: number;
 
-	private * createDecreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<RadixTreeEntry<number>> {
+	private * createDecreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
 		let head = new NodeHead();
 		let { path, blockIndex } = nodePath;
 		if (DEBUG) IntegerAssert.atLeast(1, path.length);
@@ -241,10 +236,7 @@ export class RadixTree {
 		let resident = head.resident();
 		if (resident !== 0) {
 			if (cursor.offset === 0) {
-				yield {
-					key: () => getKeyFromPath([...path.slice(0, -1), [...path[path.length - 1], ...prefix]]),
-					value: () => resident
-				};
+				yield resident;
 				cursor.length -= 1;
 				if (cursor.length <= 0) {
 					return;
@@ -255,7 +247,7 @@ export class RadixTree {
 		}
 	}
 
-	private * createIncreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<RadixTreeEntry<number>> {
+	private * createIncreasingIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
 		let head = new NodeHead();
 		let { path, blockIndex } = nodePath;
 		if (DEBUG) IntegerAssert.atLeast(1, path.length);
@@ -272,10 +264,7 @@ export class RadixTree {
 		let resident = head.resident();
 		if (resident !== 0) {
 			if (cursor.offset === 0) {
-				yield {
-					key: () => getKeyFromPath([...path.slice(0, -1), [...path[path.length - 1], ...prefix]]),
-					value: () => resident
-				};
+				yield resident;
 				cursor.length -= 1;
 				if (cursor.length <= 0) {
 					return;
@@ -312,7 +301,7 @@ export class RadixTree {
 		}
 	}
 
-	private * createIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<RadixTreeEntry<number>> {
+	private * createIterable(nodePath: NodePath, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
 		directions = [...directions];
 		let direction = directions.shift() ?? "increasing";
 		if (direction === "increasing") {
@@ -861,7 +850,7 @@ export class RadixTree {
 		this.blockIndex = blockIndex;
 	}
 
-	* [Symbol.iterator](): Iterator<RadixTreeEntry<number>> {
+	* [Symbol.iterator](): Iterator<number> {
 		yield * this.createIterable({
 			path: [[]],
 			blockIndex: this.blockIndex
@@ -965,7 +954,7 @@ export class RadixTree {
 		return true;
 	}
 
-	search(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): SearchResults<RadixTreeEntry<number>> {
+	search(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): SearchResults<number> {
 		let range = this.getMatchingRange(key, relationship);
 		if (range == null) {
 			return {
