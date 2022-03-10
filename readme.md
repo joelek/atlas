@@ -54,6 +54,7 @@ Atlas is initialized by creating a context for the database using `atlas.createC
 
 ```ts
 import * as atlas from "@joelek/atlas";
+
 let context = atlas.createContext();
 ```
 
@@ -209,7 +210,7 @@ let getUserByName = context.createQuery(users, {
 
 Atlas defines the index entity as a store coupled with a list of keys specifying the indexed fields. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Indices are not defined explicitly but rather implicitly through the store, link and query entities.
 
-## Transactions
+### Transactions
 
 All database operations are performed in the context of an associated transaction. Transactions are short-lived constructs with either read or write access that should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
 
