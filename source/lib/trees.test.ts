@@ -452,3 +452,74 @@ test(`It should throw errors when used after deletion.`, async (assert) => {
 		Array.from(tree.search([], "="));
 	});
 });
+
+test(`It should support inserting values not prevously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.lookup([]) == null);
+	tree.insert([], 1);
+	assert.true(tree.lookup([]) === 1);
+});
+
+test(`It should support inserting values prevously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.lookup([]) == null);
+	tree.insert([], 1);
+	assert.true(tree.lookup([]) === 1);
+	tree.insert([], 1);
+	assert.true(tree.lookup([]) === 1);
+});
+
+test(`It should keep track of the number of values stored.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.length() === 0);
+	tree.insert([getKeyFromString("a")], 1);
+	assert.true(tree.length() === 1);
+	tree.insert([getKeyFromString("b")], 2);
+	assert.true(tree.length() === 2);
+	tree.remove([getKeyFromString("b")]);
+	assert.true(tree.length() === 1);
+	tree.remove([getKeyFromString("a")]);
+	assert.true(tree.length() === 0);
+});
+
+test(`It should support looking up values not prevously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.lookup([]) == null);
+});
+
+test(`It should support looking up values prevously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.lookup([]) == null);
+	tree.insert([], 1);
+	assert.true(tree.lookup([]) === 1);
+});
+
+test(`It should support removing values not prevously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.lookup([]) == null);
+	tree.remove([]);
+	assert.true(tree.lookup([]) == null);
+});
+
+test(`It should support removing values prevously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	assert.true(tree.lookup([]) == null);
+	tree.insert([], 1);
+	assert.true(tree.lookup([]) === 1);
+	tree.remove([]);
+	assert.true(tree.lookup([]) == null);
+});
