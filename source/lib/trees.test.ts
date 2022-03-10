@@ -407,3 +407,17 @@ function getKeyFromString(string: string): Uint8Array {
 		assert.array.equals(observed, expected);
 	});
 })();
+
+(async () => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([getKeyFromString("one")], 1);
+	tree.insert([getKeyFromString("two")], 2);
+
+	test(`It should support iteration.`, async (assert) => {
+		let observed = Array.from(tree);
+		let expected = [1, 2];
+		assert.array.equals(observed, expected);
+	});
+})();
