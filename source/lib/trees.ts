@@ -403,195 +403,6 @@ export class RadixTree {
 		return blockIndex;
 	}
 
-	private getMatchingRange(key: Array<Uint8Array>, relationship: Relationship): RadixTreeRange | undefined {
-		let head = new NodeHead();
-		let next = new NodeHead();
-		let body = new NodeBody();
-		let blockIndex = this.blockIndex;
-		this.blockManager.readBlock(blockIndex, head.buffer);
-		let count = 0;
-		let total = head.total();
-		for (let [keyIndex, keyPart] of key.entries()) {
-			let keyNibbles = getNibblesFromBytes(keyPart);
-			while (true) {
-				this.blockManager.readBlock(blockIndex, head.buffer);
-				let nodeNibbles = head.prefix();
-				if (keyNibbles.length > 0) {
-					let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
-					if (commonPrefixLength < nodeNibbles.length) {
-						if (relationship === "^=") {
-							if (!(keyIndex + 1 < key.length)) {
-								return {
-									offset: count,
-									length: head.total()
-								};
-							}
-						} else if (relationship === "<") {
-							return {
-								offset: 0,
-								length: count
-							};
-						} else if (relationship === "<=") {
-							return {
-								offset: 0,
-								length: count
-							};
-						} else if (relationship === ">") {
-							return {
-								offset: count,
-								length: total - count
-							};
-						} else if (relationship === ">=") {
-							return {
-								offset: count,
-								length: total - count
-							};
-						}
-						return;
-					}
-					keyNibbles = keyNibbles.slice(commonPrefixLength);
-				}
-				let keyNibble = keyNibbles.shift();
-				if (keyNibble == null) {
-					break;
-				}
-				let resident = head.resident();
-				if (resident !== 0) {
-					count += 1;
-				}
-				if (this.blockManager.getBlockSize(blockIndex) < NodeHead.LENGTH + NodeBody.LENGTH) {
-					if (relationship === "<") {
-						return {
-							offset: 0,
-							length: count
-						};
-					} else if (relationship === "<=") {
-						return {
-							offset: 0,
-							length: count
-						};
-					} else if (relationship === ">") {
-						return {
-							offset: count,
-							length: total - count
-						};
-					} else if (relationship === ">=") {
-						return {
-							offset: count,
-							length: total - count
-						};
-					}
-					return;
-				}
-				this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-				for (let i = 0; i < keyNibble; i++) {
-					let child = body.child(i);
-					if (child !== 0) {
-						this.blockManager.readBlock(child, next.buffer, 0);
-						count += next.total();
-					}
-				}
-				let child = body.child(keyNibble);
-				if (child === 0) {
-					if (relationship === "<") {
-						return {
-							offset: 0,
-							length: count
-						};
-					} else if (relationship === "<=") {
-						return {
-							offset: 0,
-							length: count
-						};
-					} else if (relationship === ">") {
-						return {
-							offset: count,
-							length: total - count
-						};
-					} else if (relationship === ">=") {
-						return {
-							offset: count,
-							length: total - count
-						};
-					}
-					return;
-				}
-				blockIndex = child;
-			}
-			if (keyIndex + 1 < key.length) {
-				let resident = head.resident();
-				if (resident !== 0) {
-					count += 1;
-				}
-				let subtree = head.subtree();
-				if (subtree === 0) {
-					if (relationship === "<") {
-						return {
-							offset: 0,
-							length: count
-						};
-					} else if (relationship === "<=") {
-						return {
-							offset: 0,
-							length: count
-						};
-					} else if (relationship === ">") {
-						return {
-							offset: count,
-							length: total - count
-						};
-					} else if (relationship === ">=") {
-						return {
-							offset: count,
-							length: total - count
-						};
-					}
-					return;
-				}
-				blockIndex = subtree;
-			}
-		}
-		let resident = head.resident();
-		if (relationship === "=") {
-			if (resident !== 0) {
-				return {
-					offset: count,
-					length: 1
-				};
-			}
-		} else if (relationship === "^=") {
-			return {
-				offset: count,
-				length: head.total()
-			};
-		} else if (relationship === "<") {
-			return {
-				offset: 0,
-				length: count
-			};
-		} else if (relationship === "<=") {
-			count += resident !== 0 ? 1 : 0;
-			return {
-				offset: 0,
-				length: count
-			};
-		} else if (relationship === ">") {
-			if (comparePath([head.prefix()], key.map(getNibblesFromBytes)) <= 0) {
-				count += resident !== 0 ? 1 : 0;
-			}
-			return {
-				offset: count,
-				length: total - count
-			};
-		} else if (relationship === ">=") {
-			return {
-				offset: count,
-				length: total - count
-			};
-		}
-		return;
-	}
-
 	private getRange(key: Array<Uint8Array>, relationship: Relationship): RadixTreeRange | undefined {
 		let head = new NodeHead();
 		this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
@@ -846,7 +657,7 @@ export class RadixTree {
 	}
 
 	* search(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): Iterable<number> {
-		let range = this.getMatchingRange(key, relationship);
+		let range = this.getRange(key, relationship);
 		if (range == null) {
 			return;
 		}
@@ -854,7 +665,7 @@ export class RadixTree {
 		let direction = directions[0] ?? "increasing";
 		let anchor = options?.anchor;
 		if (anchor != null) {
-			let anchorRange = this.getMatchingRange(anchor, direction === "increasing" ? ">" : "<");
+			let anchorRange = this.getRange(anchor, direction === "increasing" ? ">" : "<");
 			if (anchorRange != null) {
 				range = combineRanges(range, anchorRange);
 				if (range == null) {
