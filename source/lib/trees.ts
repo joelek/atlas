@@ -1,4 +1,3 @@
-import * as bedrock from "@joelek/bedrock";
 import { IntegerAssert } from "../mod/asserts";
 import { BlockManager } from "./blocks";
 import { Chunk } from "./chunks";
@@ -8,76 +7,6 @@ import { DEBUG } from "./variables";
 export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 
 export type Direction = "increasing" | "decreasing";
-
-export function compareKeyPart(one: Uint8Array, two: Uint8Array): number {
-	return bedrock.utils.Chunk.comparePrefixes(one, two)
-};
-
-export function compareKey(one: Array<Uint8Array>, two: Array<Uint8Array>): number {
-	if (one.length < two.length) {
-		return -1;
-	}
-	if (one.length > two.length) {
-		return 1;
-	}
-	for (let i = 0; i < one.length; i++) {
-		let comparison = compareKeyPart(one[i], two[i]);
-		if (comparison !== 0) {
-			return comparison;
-		}
-	}
-	return 0;
-};
-
-export function comparePathPart(one: Array<number>, two: Array<number>): number {
-	if (one.length < two.length) {
-		return -1;
-	}
-	if (one.length > two.length) {
-		return 1;
-	}
-	for (let i = 0; i < one.length; i++) {
-		let comparison = one[i] - two[i];
-		if (comparison !== 0) {
-			return comparison;
-		}
-	}
-	return 0;
-};
-
-export function comparePath(one: Array<Array<number>>, two: Array<Array<number>>): number {
-	if (one.length < two.length) {
-		return -1;
-	}
-	if (one.length > two.length) {
-		return 1;
-	}
-	for (let i = 0; i < one.length; i++) {
-		let comparison = comparePathPart(one[i], two[i]);
-		if (comparison !== 0) {
-			return comparison;
-		}
-	}
-	return 0;
-};
-
-export function isPathPrefix(one: Array<Array<number>>, two: Array<Array<number>>): boolean {
-	if (one.length > two.length) {
-		return false;
-	}
-	for (let i = 0; i < one.length; i++) {
-		if (i < one.length - 1) {
-			if (comparePathPart(one[i], two[i]) !== 0) {
-				return false;
-			}
-		} else {
-			if (comparePathPart(one[i], two[i]) > 0) {
-				return false;
-			}
-		}
-	}
-	return true;
-};
 
 export function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number {
 	let length = Math.min(one.length, two.length);
@@ -111,10 +40,6 @@ export function getBytesFromNibbles(nibbles: Array<number>): Uint8Array {
 		bytes.push(byte);
 	}
 	return Uint8Array.from(bytes);
-};
-
-export function getKeyFromPath(path: Array<Array<number>>): Array<Uint8Array> {
-	return path.map(getBytesFromNibbles);
 };
 
 export class NodeHead extends Chunk {
