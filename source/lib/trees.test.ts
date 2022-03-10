@@ -17,43 +17,43 @@ function getKeyFromString(string: string): Uint8Array {
 
 	test(`It should combine ranges when range one is just before range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 1, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 1, length: 6 };
+		let expected = {};
 		assert.record.equals(observed, expected);
 	});
 
 	test(`It should combine ranges when range one overlaps the beginning of range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 2, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 2, length: 5 };
+		let expected = { offset: 3, length: 1 };
 		assert.record.equals(observed, expected);
 	});
 
 	test(`It should combine ranges when range one is at the beginning of range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 3, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 4 };
+		let expected = { offset: 3, length: 2 };
 		assert.record.equals(observed, expected);
 	});
 
 	test(`It should combine ranges when range one is embedded into range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 4, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 4 };
+		let expected = { offset: 4, length: 2 };
 		assert.record.equals(observed, expected);
 	});
 
 	test(`It should combine ranges when range one is at the end of range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 5, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 4 };
+		let expected = { offset: 5, length: 2 };
 		assert.record.equals(observed, expected);
 	});
 
 	test(`It should combine ranges when range one overlaps the end of range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 6, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 5 };
+		let expected = { offset: 6, length: 1 };
 		assert.record.equals(observed, expected);
 	});
 
 	test(`It should combine ranges when range one is just after range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 7, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 6 };
+		let expected = {};
 		assert.record.equals(observed, expected);
 	});
 

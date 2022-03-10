@@ -189,13 +189,13 @@ export function combineRanges(one: RadixTreeRange, two: RadixTreeRange): RadixTr
 	if (one.offset > two.offset) {
 		return combineRanges(two, one);
 	}
-	if (one.offset + one.length < two.offset) {
+	let gap = two.offset - (one.offset + one.length);
+	if (gap >= 0) {
 		return;
 	}
-	let a = one.offset + one.length;
-	let b = two.offset + two.length;
-	let offset = one.offset;
-	let length = Math.max(a, b) - offset;
+	let overlap = 0 - gap;
+	let offset = two.offset;
+	let length = Math.min(overlap, two.length);
 	return {
 		offset,
 		length
