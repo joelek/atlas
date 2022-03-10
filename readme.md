@@ -4,15 +4,19 @@ Lightweight embedded database manager for NodeJS with advanced type inference an
 
 ```ts
 import * as atlas from "@joelek/atlas";
+
 let context = atlas.createContext();
+
 let users = context.createStore({
 	user_id: context.createBinaryField(),
 	name: context.createStringField(),
 	age: context.createIntegerField()
 }, ["user_id"]);
+
 let manager = context.createTransactionManager("./private/db", {
 	users
 });
+
 await manager.enqueueWritableTransaction(async ({ users }) => {
 	return users.insert({
 		user_id: Uint8Array.of(1),
@@ -20,6 +24,7 @@ await manager.enqueueWritableTransaction(async ({ users }) => {
 		age: 38
 	});
 });
+
 let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 	return users.lookup({
 		user_id: Uint8Array.of(1)
@@ -33,17 +38,19 @@ Databases are used when structured and frequently changing data needs to be pers
 
 Database mangement software is implemented using either an embedded architecture or a client/server architecture. Embedded management software is, just as the name suggests, embedded in the application in contrast to separate from the application in the client/server architecture.
 
-While the client/server architecture enables the database to be shared by multiple applications which is inherently more scalable, the architecture does come with a set of drawbacks. Since the database is shared, all applications must be updated whenever the structure of the database changes in a significant way. Conversely, the database must be updated whenever either of the applications change in a significant way. These problems are exacerbated for distributed applications and for applications with separate environments for its different development stages.
+While the client/server architecture enables the database to be shared by multiple applications, the architecture does come with a set of drawbacks. Since the database is shared, all applications must be updated whenever the structure of the database changes in a significant way. Conversely, the database must be updated whenever either of the applications change in a significant way. These problems are exacerbated for distributed applications and for applications with separate environments for its different development stages.
 
-For management software using the client/server architecture, the interconnectedness can act as a limiting factor on the development of a single application in the system. For complex systems, there is also the issue of not knowing which applications use which parts of the data, often resulting in data being kept around just in case some application might still use it.
+For management software using the client/server architecture, the interconnectedness can act as a limiting factor on the development of a single application in the system. For complex systems, there is also the issue of not knowing which applications use which parts of the data, often resulting in data being kept around in case some application still uses it.
 
-Embedded management software provides mitigation for these issues at the trade-off of only allowing the database to be used by a single application. The database may be tightly integrated which reduces the risk of unforseen errors. It may also be updated as needed as the requirements of the application change and does not depend on an external dependency in the form of the database server, often running on another machine, providing the application with the database.
+Embedded management software provides mitigation for these issues at the trade-off of only allowing the database to be used by a single application. The database may be tightly integrated which reduces the risk of unforseen errors. It may also be updated as needed as the requirements of the application change.
+
+Applications using embedded management software also benefit from not depending on an external dependency to provide the application with the database. Since there is no external dependency, the risk of unforseen errors is minimized.
 
 The future of the Internet will be built on decentralized and distributed applications that require robust embedded database software. Atlas is a lightweight embedded database manager that enables the development of robust, database-driven applications. It provides advanced type inference and compile-time type checking through the TypeScript compiler.
 
 ## Overview
 
-Atlas is initialized by creating a context for the database using `atlas.createContext()`. The context is subsequently used to define all database entities and the way in which they relate to each other.
+Atlas is initialized by creating a context for the database using `atlas.createContext()`. The context is subsequently used to define all database entities and the way in which they connect to each other.
 
 ```ts
 import * as atlas from "@joelek/atlas";
@@ -93,7 +100,7 @@ context.createIncreasingOrder();
 
 ### Stores
 
-Atlas defines the store entity as an associative collection of fields where each field is assigned a specific key coupled with a sequence of keys specifying the uniquely identifying fields. Stores are created as shown below where the uniquely identifying fields must be non-nullable.
+Atlas defines the store entity as an associative collection of fields coupled with a tuple of keys specifying which of those fields identify a unique record. The tuple may specify zero, one or several identifying fields and they must all be non-nullable. All fields not specified as identifying are considered metadata fields.
 
 ```ts
 let users = context.createStore({
@@ -103,7 +110,7 @@ let users = context.createStore({
 }, ["user_id"]);
 ```
 
-Stores will be ordered by the uniquely identifying fields in increasing order unless explicitly specified when creating the store.
+Stores will be ordered by the identifying fields in increasing order unless explicitly specified when creating the store.
 
 ```ts
 let users = context.createStore({
@@ -117,7 +124,7 @@ let users = context.createStore({
 
 ### Links
 
-Atlas defines the link entity as a link between a parent and a child store as well as how the keys of the parent store map to the keys of the child store. It can be used to filter the child store for records linked to a given record in the parent store as well as to lookup the parent record linked to a given record in the child store.
+Atlas defines the link entity as a link between a parent and a child store as well as how the keys of the parent store map to the keys of the child store. Links may be used to filter child stores for the corresponding records linked to a specific record in the parent store. Links may also be used to to lookup the parent record corresponding to a specific record in the child store.
 
 Links are used to maintain data-consistency and can be configured to allow or forbid `orphans`. Orphans are allowed only when the keys of the parent store map to nullable fields in the child store.
 
@@ -131,23 +138,26 @@ let users = context.createStore({
 	name: context.createStringField(),
 	age: context.createIntegerField()
 }, ["user_id"]);
+
 let posts = context.createStore({
 	post_id: context.createBinaryField(),
 	post_user_id: context.createBinaryField(),
 	title: context.createStringField()
 }, ["post_id"]);
+
 let userPosts = context.createLink(users, posts, {
 	user_id: "post_user_id"
 });
 ```
 
-A link is `self-referencing` when the parent and child stores correspond to the same store. A self-referencing link is created as shown below. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records at all into the store.
+A link is `self-referencing` when the parent and child stores correspond to the same store. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records at all into the store.
 
 ```ts
 let directories = context.createStore({
 	directory_id: context.createBinaryField(),
 	parent_directory_id: context.createNullableBinaryField()
 }, ["directory_id"]);
+
 let childDirectories = context.createLink(directories, directories, {
 	directory_id: "parent_directory_id"
 });
@@ -173,11 +183,11 @@ context.createEqualityOperator();
 
 ### Filters
 
-Atlas defines the filter entity as a logical operator coupled with a parameter value. Filters are commonly not defined explicitly but rather implicitly through operators.
+Atlas defines the filter entity as a logical operator coupled with a parameter value. Filters are commonly not defined explicitly but rather implicitly through links and queries.
 
 ### Queries
 
-Atlas defines the query entity as a store coupled with an associative collection of operators where each operator is assigned a specific key corresponding to one of the keys in the store. It can be used to filter the store for records matching all operators specified.
+Atlas defines the query entity as a store coupled with an associative collection of operators where each operator is assigned a specific key corresponding to one of the keys in the store. Queries can be used to filter the corresponding store for records matching all operators specified.
 
 ```ts
 let getUsersByName = context.createQuery(users, {
@@ -197,13 +207,13 @@ let getUserByName = context.createQuery(users, {
 
 ### Indices
 
-Atlas defines the index entity as a store coupled with a sequence of keys specifying the indexed fields. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Indices are not defined explicitly but rather implicitly through the store, link and query entities.
+Atlas defines the index entity as a store coupled with a list of keys specifying the indexed fields. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Indices are not defined explicitly but rather implicitly through the store, link and query entities.
 
 ## Transactions
 
-All database operations are performed in the context of an associated transaction. Transactions are `short-lived` constructs with either read or write access that should be created with the access required for the corresponding operations. Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
+All database operations are performed in the context of an associated transaction. Transactions are short-lived constructs with either read or write access that should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
 
-The transaction manager is created with a path that defines where the database will be stored as well as all stores, links and queries that should exist in the schema of the database.
+The transaction manager is created with a path specifying where the database files should be stored as well as all stores, links and queries that should be present in the database.
 
 ```ts
 let manager = context.createTransactionManager("./private/db", {
@@ -216,9 +226,7 @@ let manager = context.createTransactionManager("./private/db", {
 });
 ```
 
-Transactions are enqueued through the transaction manager.
-
-A transaction with write access will be provided with write access to all stores, links and queries that exist in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file only if all operations complete successfully.
+A transaction with write access will be provided with write access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file if and only if all operations complete successfully.
 
 ```ts
 await manager.enqueueWritableTransaction(async ({
@@ -237,7 +245,7 @@ await manager.enqueueWritableTransaction(async ({
 });
 ```
 
-A transaction with read access will be provided with read access to all stores, links and queries that exist in the database. All operations are performed through a transaction-specific queue.
+A transaction with read access will be provided with read access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue.
 
 ```ts
 let user = await manager.enqueueReadableTransaction(async ({
@@ -254,9 +262,11 @@ let user = await manager.enqueueReadableTransaction(async ({
 });
 ```
 
+Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
+
 ## Schema migration
 
-Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema created from the stores, links and queries specified when creating the transaction manager by determining the differences between the new and existing schemas.
+Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema implied by the stores, links and queries specified when creating the transaction manager. This is done by determining the differences between the new and the existing schema.
 
 Please make sure that you understand how Atlas handles automatic schema migration before you use Atlas in production environments.
 
