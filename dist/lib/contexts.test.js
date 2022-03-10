@@ -8,7 +8,7 @@ const contexts_1 = require("./contexts");
     let users = context.createStore({
         user_id: context.createStringField(),
         name: context.createStringField(),
-        age: context.createNumberField()
+        age: context.createIntegerField()
     }, ["user_id"], {
         name: context.createIncreasingOrder()
     });
