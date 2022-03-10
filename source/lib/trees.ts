@@ -592,87 +592,70 @@ export class RadixTree {
 		return;
 	}
 
-	private traverse(key: Array<Uint8Array>): { blockIndex: number, skipped: number, keyOrderRelativeToNode: number } {
+	private getOffset(key: Array<Uint8Array>): { offset: number, blockIndex?: number, prefixBlockIndex?: number } {
 		let head = new NodeHead();
 		let next = new NodeHead();
 		let body = new NodeBody();
-		let path = [[]] as Array<Array<number>>;
 		let blockIndex = this.blockIndex;
-		let skipped = 0;
-		outer: for (let [keyIndex, keyPart] of key.entries()) {
+		let offset = 0;
+		for (let [keyIndex, keyPart] of key.entries()) {
 			let keyNibbles = getNibblesFromBytes(keyPart);
-			inner: while (keyNibbles.length > 0) {
+			while (true) {
 				this.blockManager.readBlock(blockIndex, head.buffer);
 				let nodeNibbles = head.prefix();
 				let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
 				if (commonPrefixLength < nodeNibbles.length) {
-					break outer;
+					return {
+						offset,
+						prefixBlockIndex: blockIndex
+					};
 				}
 				keyNibbles.splice(0, commonPrefixLength);
 				let keyNibble = keyNibbles.shift();
 				if (keyNibble == null) {
-					break inner;
-				}
-				if (this.blockManager.getBlockSize(blockIndex) < NodeHead.LENGTH + NodeBody.LENGTH) {
-					break outer;
+					break;
 				}
 				if (head.resident() !== 0) {
-					skipped += 1;
+					offset += 1;
+				}
+				if (this.blockManager.getBlockSize(blockIndex) < NodeHead.LENGTH + NodeBody.LENGTH) {
+					return {
+						offset
+					};
 				}
 				this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-				let child = body.child(keyNibble);
-				if (child === 0) {
-					let precedingNibble: number | undefined;
-					for (let i = keyNibble - 1; i >= 0; i--) {
-						let child = body.child(i);
-						if (child !== 0) {
-							precedingNibble = i;
-							break;
-						}
-					}
-					if (precedingNibble != null) {
-						for (let i = 0; i < precedingNibble; i++) {
-							let child = body.child(i);
-							if (child !== 0) {
-								this.blockManager.readBlock(child, next.buffer, 0);
-								skipped += next.total();
-							}
-						}
-						path[path.length-1].push(...nodeNibbles, precedingNibble);
-						blockIndex = body.child(precedingNibble);
-					}
-					break outer;
-				}
 				for (let i = 0; i < keyNibble; i++) {
 					let child = body.child(i);
 					if (child !== 0) {
 						this.blockManager.readBlock(child, next.buffer, 0);
-						skipped += next.total();
+						offset += next.total();
 					}
 				}
-				path[path.length-1].push(...nodeNibbles, keyNibble);
+				let child = body.child(keyNibble);
+				if (child === 0) {
+					return {
+						offset
+					};
+				}
 				blockIndex = child;
 			}
 			if (keyIndex + 1 < key.length) {
 				let resident = head.resident();
 				if (resident !== 0) {
-					skipped += 1;
+					offset += 1;
 				}
 				let subtree = head.subtree();
 				if (subtree === 0) {
-					break outer;
+					return {
+						offset
+					};
 				}
-				path[path.length-1].push(...head.prefix());
-				path.push([]);
 				blockIndex = subtree;
 			}
 		}
-		this.blockManager.readBlock(blockIndex, head.buffer);
-		path[path.length-1].push(...head.prefix());
 		return {
-			blockIndex,
-			skipped,
-			keyOrderRelativeToNode: comparePath(key.map(getNibblesFromBytes), path)
+			offset,
+			blockIndex
 		};
 	}
 
@@ -738,11 +721,10 @@ export class RadixTree {
 	}
 
 	branch(key: Array<Uint8Array>): RadixTree | undefined {
-		let traversion = this.traverse(key);
-		if (traversion.keyOrderRelativeToNode !== 0) {
+		let { blockIndex } = { ...this.getOffset(key) };
+		if (blockIndex == null) {
 			return;
 		}
-		let blockIndex = traversion.blockIndex;
 		let head = new NodeHead();
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let subtree = head.subtree();
@@ -779,12 +761,11 @@ export class RadixTree {
 	}
 
 	lookup(key: Array<Uint8Array>): number | undefined {
-		let head = new NodeHead();
-		let traversion = this.traverse(key);
-		if (traversion.keyOrderRelativeToNode !== 0) {
+		let { blockIndex } = { ...this.getOffset(key) };
+		if (blockIndex == null) {
 			return;
 		}
-		let blockIndex = traversion.blockIndex;
+		let head = new NodeHead();
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let resident = head.resident();
 		if (resident === 0) {
@@ -794,12 +775,11 @@ export class RadixTree {
 	}
 
 	remove(key: Array<Uint8Array>): boolean {
-		let head = new NodeHead();
-		let traversion = this.traverse(key);
-		if (traversion.keyOrderRelativeToNode !== 0) {
+		let { blockIndex } = { ...this.getOffset(key) };
+		if (blockIndex == null) {
 			return false;
 		}
-		let blockIndex = traversion.blockIndex;
+		let head = new NodeHead();
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		if (head.resident() === 0) {
 			return false;
