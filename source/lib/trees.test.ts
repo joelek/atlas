@@ -421,3 +421,34 @@ function getKeyFromString(string: string): Uint8Array {
 		assert.array.equals(observed, expected);
 	});
 })();
+
+test(`It should throw errors when used after deletion.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.delete();
+	await assert.throws(async () => {
+		Array.from(tree);
+	});
+	await assert.throws(async () => {
+		tree.branch([]);
+	});
+	await assert.throws(async () => {
+		tree.delete();
+	});
+	await assert.throws(async () => {
+		tree.insert([], 1);
+	});
+	await assert.throws(async () => {
+		tree.length();
+	});
+	await assert.throws(async () => {
+		tree.lookup([]);
+	});
+	await assert.throws(async () => {
+		tree.remove([]);
+	});
+	await assert.throws(async () => {
+		Array.from(tree.search([], "="));
+	});
+});
