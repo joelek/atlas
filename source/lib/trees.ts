@@ -195,7 +195,6 @@ export class RadixTree {
 		if (cursor.length <= 0) {
 			return;
 		}
-		let prefix = head.prefix();
 		if (this.blockManager.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
 			let body = new NodeBody();
 			this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
@@ -241,7 +240,6 @@ export class RadixTree {
 		if (cursor.length <= 0) {
 			return;
 		}
-		let prefix = head.prefix();
 		let resident = head.resident();
 		if (resident !== 0) {
 			if (cursor.offset === 0) {
