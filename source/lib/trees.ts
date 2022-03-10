@@ -592,6 +592,61 @@ export class RadixTree {
 		return;
 	}
 
+	private getRange(key: Array<Uint8Array>, relationship: Relationship): RadixTreeRange | undefined {
+		let head = new NodeHead();
+		this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+		let total = head.total();
+		let { offset, blockIndex, prefixBlockIndex } = { ...this.getOffset(key) };
+		let identicalMatch = false;
+		let prefixMatch = false;
+		if (blockIndex != null) {
+			this.blockManager.readBlock(blockIndex, head.buffer, 0);
+			identicalMatch = head.resident() !== 0;
+			prefixMatch = true;
+		}
+		if (prefixBlockIndex != null) {
+			this.blockManager.readBlock(prefixBlockIndex, head.buffer, 0);
+			prefixMatch = true;
+		}
+		if (relationship === "=") {
+			if (identicalMatch) {
+				return {
+					offset: offset,
+					length: 1
+				};
+			}
+		} else if (relationship === "^=") {
+			if (prefixMatch) {
+				return {
+					offset: offset,
+					length: head.total()
+				};
+			}
+		} else if (relationship === "<") {
+			return {
+				offset: 0,
+				length: offset
+			};
+		} else if (relationship === "<=") {
+			offset += identicalMatch ? 1 : 0;
+			return {
+				offset: 0,
+				length: offset
+			};
+		} else if (relationship === ">") {
+			offset += identicalMatch ? 1 : 0;
+			return {
+				offset: offset,
+				length: total - offset
+			};
+		} else if (relationship === ">=") {
+			return {
+				offset: offset,
+				length: total - offset
+			};
+		}
+	}
+
 	private getOffset(key: Array<Uint8Array>): { offset: number, blockIndex?: number, prefixBlockIndex?: number } {
 		let head = new NodeHead();
 		let next = new NodeHead();
