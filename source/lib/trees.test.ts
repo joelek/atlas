@@ -62,7 +62,7 @@ function getKeyFromString(string: string): Uint8Array {
 		let expected = {};
 		assert.record.equals(observed, expected);
 	});
-});
+})();
 
 (async () => {
 	let blockManager = new BlockManager(new VirtualFile(0));
