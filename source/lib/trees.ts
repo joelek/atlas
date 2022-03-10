@@ -9,10 +9,6 @@ export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 
 export type Direction = "increasing" | "decreasing";
 
-export interface SearchResults<A> extends Iterable<A> {
-	total(): number;
-};
-
 export function compareKeyPart(one: Uint8Array, two: Uint8Array): number {
 	return bedrock.utils.Chunk.comparePrefixes(one, two)
 };
@@ -797,13 +793,10 @@ export class RadixTree {
 		return true;
 	}
 
-	search(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): SearchResults<number> {
+	* search(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): Iterable<number> {
 		let range = this.getMatchingRange(key, relationship);
 		if (range == null) {
-			return {
-				[Symbol.iterator]: () => [][Symbol.iterator](),
-				total: () => 0
-			};
+			return;
 		}
 		let directions = options?.directions ?? [];
 		let direction = directions[0] ?? "increasing";
@@ -823,17 +816,10 @@ export class RadixTree {
 			this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
 			offset += head.total() - (range.length + range.offset);
 		}
-		let iterable = this.createIterable(this.blockIndex, {
+		yield * this.createIterable(this.blockIndex, {
 			offset,
 			length
 		}, directions);
-		let total = range.length;
-		return {
-			* [Symbol.iterator]() {
-				yield * iterable;
-			},
-			total: () => total
-		};
 	}
 
 	static readonly INITIAL_SIZE = NodeHead.LENGTH;
