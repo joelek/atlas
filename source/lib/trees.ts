@@ -180,11 +180,16 @@ export class NodeBody extends Chunk {
 	static readonly LENGTH = 16 * 6;
 };
 
+export type RadixTreeRange = {
+	offset: number;
+	length: number;
+};
+
 export class RadixTree {
 	private blockManager: BlockManager;
 	private blockIndex: number;
 
-	private * createDecreasingIterable(blockIndex: number, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
+	private * createDecreasingIterable(blockIndex: number, cursor: RadixTreeRange, directions: Array<Direction>): Iterable<number> {
 		let head = new NodeHead();
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let total = head.total();
@@ -229,7 +234,7 @@ export class RadixTree {
 		}
 	}
 
-	private * createIncreasingIterable(blockIndex: number, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
+	private * createIncreasingIterable(blockIndex: number, cursor: RadixTreeRange, directions: Array<Direction>): Iterable<number> {
 		let head = new NodeHead();
 		this.blockManager.readBlock(blockIndex, head.buffer, 0);
 		let total = head.total();
@@ -274,7 +279,7 @@ export class RadixTree {
 		}
 	}
 
-	private * createIterable(blockIndex: number, cursor: { offset: number, length: number }, directions: Array<Direction>): Iterable<number> {
+	private * createIterable(blockIndex: number, cursor: RadixTreeRange, directions: Array<Direction>): Iterable<number> {
 		directions = [...directions];
 		let direction = directions.shift() ?? "increasing";
 		if (direction === "increasing") {
@@ -381,7 +386,7 @@ export class RadixTree {
 		return blockIndex;
 	}
 
-	private getMatchingRange(key: Array<Uint8Array>, relationship: Relationship): { offset: number, length: number } | undefined {
+	private getMatchingRange(key: Array<Uint8Array>, relationship: Relationship): RadixTreeRange | undefined {
 		let head = new NodeHead();
 		let next = new NodeHead();
 		let body = new NodeBody();
