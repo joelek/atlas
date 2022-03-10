@@ -185,6 +185,23 @@ export type RadixTreeRange = {
 	length: number;
 };
 
+export function combineRanges(one: RadixTreeRange, two: RadixTreeRange): RadixTreeRange | undefined {
+	if (one.offset > two.offset) {
+		return combineRanges(two, one);
+	}
+	if (one.offset + one.length < two.offset) {
+		return;
+	}
+	let a = one.offset + one.length;
+	let b = two.offset + two.length;
+	let offset = one.offset;
+	let length = Math.max(a, b) - offset;
+	return {
+		offset,
+		length
+	};
+};
+
 export class RadixTree {
 	private blockManager: BlockManager;
 	private blockIndex: number;
@@ -807,7 +824,10 @@ export class RadixTree {
 		if (anchor != null) {
 			let anchorRange = this.getMatchingRange(anchor, direction === "increasing" ? ">" : "<");
 			if (anchorRange != null) {
-				range = anchorRange; // TODO: Overlap.
+				range = combineRanges(range, anchorRange);
+				if (range == null) {
+					return;
+				}
 			}
 		}
 		let offset = Math.max(0, Math.min(options?.offset ?? 0, range.length));
