@@ -734,10 +734,7 @@ export class RadixTree {
 	}
 
 	* [Symbol.iterator](): Iterator<number> {
-		yield * this.createIterable(this.blockIndex, {
-			offset: 0,
-			length: this.length()
-		}, []);
+		yield * this.search([], "^=");
 	}
 
 	branch(key: Array<Uint8Array>): RadixTree | undefined {
