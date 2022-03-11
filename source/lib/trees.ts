@@ -508,7 +508,7 @@ export class RadixTree {
 	}
 
 	* [Symbol.iterator](): Iterator<number> {
-		yield * this.search([], "^=");
+		yield * this.filter([], "^=");
 	}
 
 	branch(key: Array<Uint8Array>): RadixTree | undefined {
@@ -527,6 +527,38 @@ export class RadixTree {
 
 	delete(): void {
 		this.doDelete(this.blockIndex);
+	}
+
+	* filter(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): Iterable<number> {
+		let range = this.getRange(key, relationship);
+		if (range == null) {
+			return;
+		}
+		let directions = options?.directions ?? [];
+		let direction = directions[0] ?? "increasing";
+		let anchor = options?.anchor;
+		if (anchor != null) {
+			let anchorRange = this.getRange(anchor, direction === "increasing" ? ">" : "<");
+			if (anchorRange != null) {
+				range = combineRanges(range, anchorRange);
+				if (range == null) {
+					return;
+				}
+			}
+		}
+		let offset = Math.max(0, Math.min(options?.offset ?? 0, range.length));
+		let length = Math.max(0, Math.min(options?.length ?? 10, range.length - offset));
+		if (direction === "increasing") {
+			offset += range.offset;
+		} else {
+			let head = new NodeHead();
+			this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+			offset += head.total() - (range.length + range.offset);
+		}
+		yield * this.createIterable(this.blockIndex, {
+			offset,
+			length
+		}, directions);
 	}
 
 	insert(key: Array<Uint8Array>, value: number): boolean {
@@ -579,38 +611,6 @@ export class RadixTree {
 		this.blockManager.writeBlock(blockIndex, head.buffer, 0);
 		this.updateTotal(blockIndex, -1);
 		return true;
-	}
-
-	* search(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): Iterable<number> {
-		let range = this.getRange(key, relationship);
-		if (range == null) {
-			return;
-		}
-		let directions = options?.directions ?? [];
-		let direction = directions[0] ?? "increasing";
-		let anchor = options?.anchor;
-		if (anchor != null) {
-			let anchorRange = this.getRange(anchor, direction === "increasing" ? ">" : "<");
-			if (anchorRange != null) {
-				range = combineRanges(range, anchorRange);
-				if (range == null) {
-					return;
-				}
-			}
-		}
-		let offset = Math.max(0, Math.min(options?.offset ?? 0, range.length));
-		let length = Math.max(0, Math.min(options?.length ?? 10, range.length - offset));
-		if (direction === "increasing") {
-			offset += range.offset;
-		} else {
-			let head = new NodeHead();
-			this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
-			offset += head.total() - (range.length + range.offset);
-		}
-		yield * this.createIterable(this.blockIndex, {
-			offset,
-			length
-		}, directions);
 	}
 
 	static readonly INITIAL_SIZE = NodeHead.LENGTH;
