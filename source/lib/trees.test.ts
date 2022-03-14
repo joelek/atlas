@@ -380,30 +380,30 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("d"), getKeyFromString("2")], 7);
 
 	test(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
-		let results = tree.filter([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["increasing", "increasing"]});
+		let results = tree.filter([getKeyFromString("a")], ">", ["increasing", "increasing"]);
 		let observed = Array.from(results);
-		let expected = [3, 4, 5];
+		let expected = [2, 3, 4, 5, 6, 7];
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
-		let results = tree.filter([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["increasing", "decreasing"]});
+		let results = tree.filter([getKeyFromString("a")], ">", ["increasing", "decreasing"]);
 		let observed = Array.from(results);
-		let expected = [2, 5, 4];
+		let expected = [3, 2, 5, 4, 7, 6];
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
-		let results = tree.filter([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["decreasing", "increasing"]});
+		let results = tree.filter([getKeyFromString("a")], ">", ["decreasing", "increasing"]);
 		let observed = Array.from(results);
-		let expected = [7, 4, 5];
+		let expected = [6, 7, 4, 5, 2, 3];
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
-		let results = tree.filter([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["decreasing", "decreasing"]});
+		let results = tree.filter([getKeyFromString("a")], ">", ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
-		let expected = [6, 5, 4];
+		let expected = [7, 6, 5, 4, 3, 2];
 		assert.array.equals(observed, expected);
 	});
 })();

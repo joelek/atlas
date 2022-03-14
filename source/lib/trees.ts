@@ -529,36 +529,13 @@ export class RadixTree {
 		this.doDelete(this.blockIndex);
 	}
 
-	* filter(key: Array<Uint8Array>, relationship: Relationship, options?: { anchor?: Array<Uint8Array>, offset?: number, length?: number, directions?: Array<Direction> }): Iterable<number> {
+	* filter(key: Array<Uint8Array>, relationship: Relationship, directions?: Array<Direction>): Iterable<number> {
 		let range = this.getRange(key, relationship);
 		if (range == null) {
 			return;
 		}
-		let directions = options?.directions ?? [];
-		let direction = directions[0] ?? "increasing";
-		let anchor = options?.anchor;
-		if (anchor != null) {
-			let anchorRange = this.getRange(anchor, direction === "increasing" ? ">" : "<");
-			if (anchorRange != null) {
-				range = combineRanges(range, anchorRange);
-				if (range == null) {
-					return;
-				}
-			}
-		}
-		let offset = Math.max(0, Math.min(options?.offset ?? 0, range.length));
-		let length = Math.max(0, Math.min(options?.length ?? 10, range.length - offset));
-		if (direction === "increasing") {
-			offset += range.offset;
-		} else {
-			let head = new NodeHead();
-			this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
-			offset += head.total() - (range.length + range.offset);
-		}
-		yield * this.createIterable(this.blockIndex, {
-			offset,
-			length
-		}, directions);
+		directions = directions ?? [];
+		yield * this.createIterable(this.blockIndex, range, directions);
 	}
 
 	insert(key: Array<Uint8Array>, value: number): boolean {
