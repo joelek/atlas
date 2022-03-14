@@ -10,50 +10,105 @@ function getKeyFromString(string) {
 }
 ;
 (async () => {
-    (0, test_1.test)(`It should combine ranges when range one is before range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 0, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = {};
-        assert.record.equals(observed, expected);
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("a"), getKeyFromString("a")], 2);
+    tree.insert([getKeyFromString("a"), getKeyFromString("b")], 3);
+    tree.insert([getKeyFromString("b")], 4);
+    tree.insert([getKeyFromString("b"), getKeyFromString("a")], 5);
+    tree.insert([getKeyFromString("b"), getKeyFromString("b")], 6);
+    tree.insert([getKeyFromString("c")], 7);
+    (0, test_1.test)(`It should support filtering values matching a zero element key in "^=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("^=", []));
+        let expected = [1, 2, 3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one is just before range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 1, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = {};
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a zero element key in "=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("=", []));
+        let expected = [];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one overlaps the beginning of range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 2, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = { offset: 3, length: 1 };
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a zero element key in ">" mode`, async (assert) => {
+        let observed = Array.from(tree.filter(">", []));
+        let expected = [1, 2, 3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one is at the beginning of range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 3, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = { offset: 3, length: 2 };
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a zero element key in ">=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter(">=", []));
+        let expected = [1, 2, 3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one is embedded into range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 4, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = { offset: 4, length: 2 };
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a zero element key in "<" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("<", []));
+        let expected = [];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one is at the end of range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 5, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = { offset: 5, length: 2 };
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a zero element key in "<=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("<=", []));
+        let expected = [];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one overlaps the end of range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 6, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = { offset: 6, length: 1 };
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a one element key in "^=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("^=", [getKeyFromString("a")]));
+        let expected = [1, 2, 3];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one is just after range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 7, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = {};
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a one element key in "=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("=", [getKeyFromString("a")]));
+        let expected = [1];
+        assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should combine ranges when range one is after range two.`, async (assert) => {
-        let observed = (0, trees_1.combineRanges)({ offset: 8, length: 2 }, { offset: 3, length: 4 }) ?? {};
-        let expected = {};
-        assert.record.equals(observed, expected);
+    (0, test_1.test)(`It should support filtering values matching a one element key in ">" mode`, async (assert) => {
+        let observed = Array.from(tree.filter(">", [getKeyFromString("a")]));
+        let expected = [2, 3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a one element key in ">=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter(">=", [getKeyFromString("a")]));
+        let expected = [1, 2, 3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a one element key in "<" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("<", [getKeyFromString("b")]));
+        let expected = [1, 2, 3];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a one element key in "<=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("<=", [getKeyFromString("b")]));
+        let expected = [1, 2, 3, 4];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a two element key in "^=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("^=", [getKeyFromString("a"), getKeyFromString("a")]));
+        let expected = [2];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a two element key in "=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("=", [getKeyFromString("a"), getKeyFromString("a")]));
+        let expected = [2];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a two element key in ">" mode`, async (assert) => {
+        let observed = Array.from(tree.filter(">", [getKeyFromString("a"), getKeyFromString("a")]));
+        let expected = [3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a two element key in ">=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter(">=", [getKeyFromString("a"), getKeyFromString("a")]));
+        let expected = [2, 3, 4, 5, 6, 7];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a two element key in "<" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("<", [getKeyFromString("b"), getKeyFromString("b")]));
+        let expected = [1, 2, 3, 4, 5];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should support filtering values matching a two element key in "<=" mode`, async (assert) => {
+        let observed = Array.from(tree.filter("<=", [getKeyFromString("b"), getKeyFromString("b")]));
+        let expected = [1, 2, 3, 4, 5, 6];
+        assert.array.equals(observed, expected);
     });
 })();
 (async () => {
@@ -61,8 +116,8 @@ function getKeyFromString(string) {
     blockManager.createBlock(256);
     let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
     tree.insert([getKeyFromString("apa")], 1);
-    (0, test_1.test)(`It should return the correct search results for a full root node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], ">");
+    (0, test_1.test)(`It should return the correct values for a full root node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [1];
         assert.array.equals(observed, expected);
@@ -78,218 +133,218 @@ function getKeyFromString(string) {
     tree.insert([getKeyFromString("banan")], 4);
     tree.insert([getKeyFromString("banan1")], 5);
     tree.insert([getKeyFromString("banan3")], 6);
-    (0, test_1.test)(`It should return the correct search results for a root node match in ^= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], "^=");
+    (0, test_1.test)(`It should return the correct values for a root node match in ^= mode.`, async (assert) => {
+        let results = tree.filter("^=", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for an inner node match in ^= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa")], "^=");
+    (0, test_1.test)(`It should return the correct values for an inner node match in ^= mode.`, async (assert) => {
+        let results = tree.filter("^=", [getKeyFromString("apa")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a leaf node match in ^= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1")], "^=");
+    (0, test_1.test)(`It should return the correct values for a leaf node match in ^= mode.`, async (assert) => {
+        let results = tree.filter("^=", [getKeyFromString("apa1")]);
         let observed = Array.from(results);
         let expected = [2];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a non-existing leaf node match in ^= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa2")], "^=");
+    (0, test_1.test)(`It should return the correct values for a non-existing leaf node match in ^= mode.`, async (assert) => {
+        let results = tree.filter("^=", [getKeyFromString("apa2")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in ^= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("ap")], "^=");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in ^= mode.`, async (assert) => {
+        let results = tree.filter("^=", [getKeyFromString("ap")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a childless leaf node match in ^= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1b")], "^=");
+    (0, test_1.test)(`It should return the correct values for a childless leaf node match in ^= mode.`, async (assert) => {
+        let results = tree.filter("^=", [getKeyFromString("apa1b")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a root node match in = mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], "=");
+    (0, test_1.test)(`It should return the correct values for a root node match in = mode.`, async (assert) => {
+        let results = tree.filter("=", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for an inner node match in = mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa")], "=");
+    (0, test_1.test)(`It should return the correct values for an inner node match in = mode.`, async (assert) => {
+        let results = tree.filter("=", [getKeyFromString("apa")]);
         let observed = Array.from(results);
         let expected = [1];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a leaf node match in = mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1")], "=");
+    (0, test_1.test)(`It should return the correct values for a leaf node match in = mode.`, async (assert) => {
+        let results = tree.filter("=", [getKeyFromString("apa1")]);
         let observed = Array.from(results);
         let expected = [2];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a non-existing leaf node match in = mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa2")], "=");
+    (0, test_1.test)(`It should return the correct values for a non-existing leaf node match in = mode.`, async (assert) => {
+        let results = tree.filter("=", [getKeyFromString("apa2")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in = mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("ap")], "=");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in = mode.`, async (assert) => {
+        let results = tree.filter("=", [getKeyFromString("ap")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in = mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1b")], "=");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in = mode.`, async (assert) => {
+        let results = tree.filter("=", [getKeyFromString("apa1b")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a root node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], ">");
+    (0, test_1.test)(`It should return the correct values for a root node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for an inner node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa")], ">");
+    (0, test_1.test)(`It should return the correct values for an inner node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("apa")]);
         let observed = Array.from(results);
         let expected = [2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a leaf node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1")], ">");
+    (0, test_1.test)(`It should return the correct values for a leaf node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("apa1")]);
         let observed = Array.from(results);
         let expected = [3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a non-existing leaf node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa2")], ">");
+    (0, test_1.test)(`It should return the correct values for a non-existing leaf node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("apa2")]);
         let observed = Array.from(results);
         let expected = [3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("ap")], ">");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("ap")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a childless leaf node match in > mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1b")], ">");
+    (0, test_1.test)(`It should return the correct values for a childless leaf node match in > mode.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("apa1b")]);
         let observed = Array.from(results);
         let expected = [3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a root node match in >= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], ">=");
+    (0, test_1.test)(`It should return the correct values for a root node match in >= mode.`, async (assert) => {
+        let results = tree.filter(">=", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for an inner node match in >= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa")], ">=");
+    (0, test_1.test)(`It should return the correct values for an inner node match in >= mode.`, async (assert) => {
+        let results = tree.filter(">=", [getKeyFromString("apa")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a leaf node match in >= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1")], ">=");
+    (0, test_1.test)(`It should return the correct values for a leaf node match in >= mode.`, async (assert) => {
+        let results = tree.filter(">=", [getKeyFromString("apa1")]);
         let observed = Array.from(results);
         let expected = [2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a non-existing leaf node match in >= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa2")], ">=");
+    (0, test_1.test)(`It should return the correct values for a non-existing leaf node match in >= mode.`, async (assert) => {
+        let results = tree.filter(">=", [getKeyFromString("apa2")]);
         let observed = Array.from(results);
         let expected = [3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in >= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("ap")], ">=");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in >= mode.`, async (assert) => {
+        let results = tree.filter(">=", [getKeyFromString("ap")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a childless leaf node match in >= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("apa1b")], ">=");
+    (0, test_1.test)(`It should return the correct values for a childless leaf node match in >= mode.`, async (assert) => {
+        let results = tree.filter(">=", [getKeyFromString("apa1b")]);
         let observed = Array.from(results);
         let expected = [3, 4, 5, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a root node match in < mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], "<");
+    (0, test_1.test)(`It should return the correct values for a root node match in < mode.`, async (assert) => {
+        let results = tree.filter("<", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for an inner node match in < mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan")], "<");
+    (0, test_1.test)(`It should return the correct values for an inner node match in < mode.`, async (assert) => {
+        let results = tree.filter("<", [getKeyFromString("banan")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a leaf node match in < mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan1")], "<");
+    (0, test_1.test)(`It should return the correct values for a leaf node match in < mode.`, async (assert) => {
+        let results = tree.filter("<", [getKeyFromString("banan1")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a non-existing leaf node match in < mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan2")], "<");
+    (0, test_1.test)(`It should return the correct values for a non-existing leaf node match in < mode.`, async (assert) => {
+        let results = tree.filter("<", [getKeyFromString("banan2")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in < mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("bana")], "<");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in < mode.`, async (assert) => {
+        let results = tree.filter("<", [getKeyFromString("bana")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a childless leaf node match in < mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan1b")], "<");
+    (0, test_1.test)(`It should return the correct values for a childless leaf node match in < mode.`, async (assert) => {
+        let results = tree.filter("<", [getKeyFromString("banan1b")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a root node match in <= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("")], "<=");
+    (0, test_1.test)(`It should return the correct values for a root node match in <= mode.`, async (assert) => {
+        let results = tree.filter("<=", [getKeyFromString("")]);
         let observed = Array.from(results);
         let expected = [];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for an inner node match in <= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan")], "<=");
+    (0, test_1.test)(`It should return the correct values for an inner node match in <= mode.`, async (assert) => {
+        let results = tree.filter("<=", [getKeyFromString("banan")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a leaf node match in <= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan1")], "<=");
+    (0, test_1.test)(`It should return the correct values for a leaf node match in <= mode.`, async (assert) => {
+        let results = tree.filter("<=", [getKeyFromString("banan1")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a non-existing leaf node match in <= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan2")], "<=");
+    (0, test_1.test)(`It should return the correct values for a non-existing leaf node match in <= mode.`, async (assert) => {
+        let results = tree.filter("<=", [getKeyFromString("banan2")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a partial inner node match in <= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("bana")], "<=");
+    (0, test_1.test)(`It should return the correct values for a partial inner node match in <= mode.`, async (assert) => {
+        let results = tree.filter("<=", [getKeyFromString("bana")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results for a childless leaf node match in <= mode.`, async (assert) => {
-        let results = tree.search([getKeyFromString("banan1b")], "<=");
+    (0, test_1.test)(`It should return the correct values for a childless leaf node match in <= mode.`, async (assert) => {
+        let results = tree.filter("<=", [getKeyFromString("banan1b")]);
         let observed = Array.from(results);
         let expected = [1, 2, 3, 4, 5];
         assert.array.equals(observed, expected);
@@ -305,13 +360,13 @@ function getKeyFromString(string) {
     tree.insert([getKeyFromString("two")], 4);
     tree.insert([getKeyFromString("two"), getKeyFromString("a")], 5);
     tree.insert([getKeyFromString("two"), getKeyFromString("b")], 6);
-    (0, test_1.test)(`It should return the correct branch for an existing trunk.`, async (assert) => {
+    (0, test_1.test)(`It should return the correct branch for an existing key.`, async (assert) => {
         let results = tree.branch([getKeyFromString("one")]);
         let observed = Array.from(results ?? []);
         let expected = [2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct branch for a non-existing trunk.`, async (assert) => {
+    (0, test_1.test)(`It should return the correct branch for a non-existing key.`, async (assert) => {
         let results = tree.branch([getKeyFromString("three")]);
         let observed = Array.from(results ?? []);
         let expected = [];
@@ -329,28 +384,28 @@ function getKeyFromString(string) {
     tree.insert([getKeyFromString("c"), getKeyFromString("2")], 5);
     tree.insert([getKeyFromString("d"), getKeyFromString("1")], 6);
     tree.insert([getKeyFromString("d"), getKeyFromString("2")], 7);
-    (0, test_1.test)(`It should return the correct search results when directions are "increasing", "increasing".`, async (assert) => {
-        let results = tree.search([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["increasing", "increasing"] });
+    (0, test_1.test)(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("a")], ["increasing", "increasing"]);
         let observed = Array.from(results);
-        let expected = [3, 4, 5];
+        let expected = [2, 3, 4, 5, 6, 7];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results when directions are "increasing", "decreasing".`, async (assert) => {
-        let results = tree.search([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["increasing", "decreasing"] });
+    (0, test_1.test)(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("a")], ["increasing", "decreasing"]);
         let observed = Array.from(results);
-        let expected = [2, 5, 4];
+        let expected = [3, 2, 5, 4, 7, 6];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results when directions are "decreasing", "increasing".`, async (assert) => {
-        let results = tree.search([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["decreasing", "increasing"] });
+    (0, test_1.test)(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("a")], ["decreasing", "increasing"]);
         let observed = Array.from(results);
-        let expected = [7, 4, 5];
+        let expected = [6, 7, 4, 5, 2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct search results when directions are "decreasing", "decreasing".`, async (assert) => {
-        let results = tree.search([getKeyFromString("a")], ">", { offset: 1, length: 3, directions: ["decreasing", "decreasing"] });
+    (0, test_1.test)(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("a")], ["decreasing", "decreasing"]);
         let observed = Array.from(results);
-        let expected = [6, 5, 4];
+        let expected = [7, 6, 5, 4, 3, 2];
         assert.array.equals(observed, expected);
     });
 })();
@@ -363,6 +418,68 @@ function getKeyFromString(string) {
     (0, test_1.test)(`It should support iteration.`, async (assert) => {
         let observed = Array.from(tree);
         let expected = [1, 2];
+        assert.array.equals(observed, expected);
+    });
+})();
+(async () => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a"), getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("a"), getKeyFromString("b")], 2);
+    tree.insert([getKeyFromString("a"), getKeyFromString("c")], 3);
+    tree.insert([getKeyFromString("b"), getKeyFromString("a")], 4);
+    tree.insert([getKeyFromString("b"), getKeyFromString("b")], 5);
+    tree.insert([getKeyFromString("b"), getKeyFromString("c")], 6);
+    tree.insert([getKeyFromString("c"), getKeyFromString("a")], 7);
+    tree.insert([getKeyFromString("c"), getKeyFromString("b")], 8);
+    tree.insert([getKeyFromString("c"), getKeyFromString("c")], 9);
+    (0, test_1.test)(`It should return the correct values when directions are "increasing", "increasing" and key is set.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "increasing"]);
+        let observed = Array.from(results);
+        let expected = [6, 7, 8, 9];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "increasing", "decreasing" and key is set.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "decreasing"]);
+        let observed = Array.from(results);
+        let expected = [6, 9, 8, 7];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "decreasing", "increasing" and key is set.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "increasing"]);
+        let observed = Array.from(results);
+        let expected = [7, 8, 9, 6];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "decreasing", "decreasing" and key is set.`, async (assert) => {
+        let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "decreasing"]);
+        let observed = Array.from(results);
+        let expected = [9, 8, 7, 6];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
+        let results = tree.filter(">", [], ["increasing", "increasing"]);
+        let observed = Array.from(results);
+        let expected = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
+        let results = tree.filter(">", [], ["increasing", "decreasing"]);
+        let observed = Array.from(results);
+        let expected = [3, 2, 1, 6, 5, 4, 9, 8, 7];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
+        let results = tree.filter(">", [], ["decreasing", "increasing"]);
+        let observed = Array.from(results);
+        let expected = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+        assert.array.equals(observed, expected);
+    });
+    (0, test_1.test)(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
+        let results = tree.filter(">", [], ["decreasing", "decreasing"]);
+        let observed = Array.from(results);
+        let expected = [9, 8, 7, 6, 5, 4, 3, 2, 1];
         assert.array.equals(observed, expected);
     });
 })();
@@ -393,7 +510,7 @@ function getKeyFromString(string) {
         tree.remove([]);
     });
     await assert.throws(async () => {
-        Array.from(tree.search([], "="));
+        Array.from(tree.filter("=", []));
     });
 });
 (0, test_1.test)(`It should support inserting values not prevously inserted.`, async (assert) => {

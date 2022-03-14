@@ -21,36 +21,38 @@ export declare class NodeBody extends Chunk {
     static readonly OFFSET = 32;
     static readonly LENGTH: number;
 }
-export declare type RadixTreeRange = {
-    offset: number;
-    length: number;
-};
-export declare function combineRanges(one: RadixTreeRange, two: RadixTreeRange): RadixTreeRange | undefined;
+export declare class RadixTreeWalker {
+    private blockManager;
+    private relationship;
+    private keys;
+    private directions;
+    private doYield;
+    private onKeyIsNodeKey;
+    private onKeyIsPrefixForNodeKey;
+    private onKeyIsBeforeNodeKey;
+    private onKeyIsAfterNodeKey;
+    private onNodeKeyIsPrefixForKey;
+    private visitNode;
+    private doTraverse;
+    constructor(blockManager: BlockManager, relationship: Relationship, keys: Array<Array<number>>, directions: Array<Direction>);
+    traverse(bid: number): Iterable<number>;
+}
 export declare class RadixTree {
     private blockManager;
     private blockIndex;
-    private createDecreasingIterable;
-    private createIncreasingIterable;
-    private createIterable;
     private updateChildParents;
     private createNodes;
-    private getRange;
-    private getOffset;
+    private locateNode;
     private updateTotal;
     private doDelete;
     constructor(blockManager: BlockManager, blockIndex: number);
     [Symbol.iterator](): Iterator<number>;
     branch(key: Array<Uint8Array>): RadixTree | undefined;
     delete(): void;
+    filter(relationship: Relationship, key: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number>;
     insert(key: Array<Uint8Array>, value: number): boolean;
     length(): number;
     lookup(key: Array<Uint8Array>): number | undefined;
     remove(key: Array<Uint8Array>): boolean;
-    search(key: Array<Uint8Array>, relationship: Relationship, options?: {
-        anchor?: Array<Uint8Array>;
-        offset?: number;
-        length?: number;
-        directions?: Array<Direction>;
-    }): Iterable<number>;
     static readonly INITIAL_SIZE = 32;
 }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadixTree = exports.combineRanges = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
+exports.RadixTree = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
 const asserts_1 = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const utils_1 = require("./utils");
@@ -107,127 +107,268 @@ class NodeBody extends chunks_1.Chunk {
 }
 exports.NodeBody = NodeBody;
 ;
-function combineRanges(one, two) {
-    if (one.offset > two.offset) {
-        return combineRanges(two, one);
+class RadixTreeWalker {
+    blockManager;
+    relationship;
+    keys;
+    directions;
+    *doYield(bid, depth, reverse, include) {
+        let iterables = [];
+        if (include.resident || include.subtree) {
+            let head = new NodeHead();
+            this.blockManager.readBlock(bid, head.buffer, 0);
+            if (include.resident) {
+                let resident = head.resident();
+                if (resident !== 0) {
+                    iterables.push([resident]);
+                }
+            }
+            if (include.subtree) {
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    let reverse = this.directions[depth + 1] === "decreasing";
+                    iterables.push(this.doYield(subtree, depth + 1, reverse, { resident: true, subtree: true, children: true }));
+                }
+            }
+        }
+        if (include.children) {
+            if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+                let body = new NodeBody();
+                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                for (let i = 0; i < 16; i++) {
+                    let child = body.child(i);
+                    if (child !== 0) {
+                        iterables.push(this.doYield(child, depth, reverse, { resident: true, subtree: true, children: true }));
+                    }
+                }
+            }
+        }
+        for (let iterable of reverse ? iterables.reverse() : iterables) {
+            yield* iterable;
+        }
     }
-    let gap = two.offset - (one.offset + one.length);
-    if (gap >= 0) {
-        return;
+    *onKeyIsNodeKey(bid, depth, reverse) {
+        let iterables = [];
+        if (this.relationship === "^=") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+            }
+            else {
+                let head = new NodeHead();
+                this.blockManager.readBlock(bid, head.buffer, 0);
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    iterables.push(this.doTraverse(subtree, depth + 1));
+                }
+            }
+        }
+        else if (this.relationship === "=") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: false, children: false }));
+            }
+            else {
+                let head = new NodeHead();
+                this.blockManager.readBlock(bid, head.buffer, 0);
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    iterables.push(this.doTraverse(subtree, depth + 1));
+                }
+            }
+        }
+        else if (this.relationship === ">") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: false, subtree: true, children: true }));
+            }
+            else {
+                let head = new NodeHead();
+                this.blockManager.readBlock(bid, head.buffer, 0);
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    iterables.push(this.doTraverse(subtree, depth + 1));
+                }
+            }
+        }
+        else if (this.relationship === ">=") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+            }
+            else {
+                let head = new NodeHead();
+                this.blockManager.readBlock(bid, head.buffer, 0);
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    iterables.push(this.doTraverse(subtree, depth + 1));
+                }
+            }
+        }
+        else if (this.relationship === "<") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: false, subtree: false, children: false }));
+            }
+            else {
+                let head = new NodeHead();
+                this.blockManager.readBlock(bid, head.buffer, 0);
+                let resident = head.resident();
+                if (resident !== 0) {
+                    iterables.push([resident]);
+                }
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    iterables.push(this.doTraverse(subtree, depth + 1));
+                }
+            }
+        }
+        else if (this.relationship === "<=") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: false, children: false }));
+            }
+            else {
+                let head = new NodeHead();
+                this.blockManager.readBlock(bid, head.buffer, 0);
+                let resident = head.resident();
+                if (resident !== 0) {
+                    iterables.push([resident]);
+                }
+                let subtree = head.subtree();
+                if (subtree !== 0) {
+                    iterables.push(this.doTraverse(subtree, depth + 1));
+                }
+            }
+        }
+        for (let iterable of reverse ? iterables.reverse() : iterables) {
+            yield* iterable;
+        }
     }
-    let overlap = 0 - gap;
-    let offset = two.offset;
-    let length = Math.min(overlap, two.length);
-    return {
-        offset,
-        length
-    };
+    *onKeyIsPrefixForNodeKey(bid, depth, reverse) {
+        let iterables = [];
+        if (this.relationship === "^=") {
+            if (depth === this.keys.length - 1) {
+                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+            }
+        }
+        else if (this.relationship === ">") {
+            iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+        }
+        else if (this.relationship === ">=") {
+            iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+        }
+        for (let iterable of reverse ? iterables.reverse() : iterables) {
+            yield* iterable;
+        }
+    }
+    *onKeyIsBeforeNodeKey(bid, depth, reverse) {
+        if (this.relationship === ">") {
+            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
+        }
+        else if (this.relationship === ">=") {
+            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
+        }
+    }
+    *onKeyIsAfterNodeKey(bid, depth, reverse) {
+        if (this.relationship === "<") {
+            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
+        }
+        else if (this.relationship === "<=") {
+            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
+        }
+    }
+    *onNodeKeyIsPrefixForKey(bid, depth, reverse, suffix) {
+        let iterables = [];
+        if (this.relationship === "<" || this.relationship === "<=") {
+            let head = new NodeHead();
+            this.blockManager.readBlock(bid, head.buffer, 0);
+            let resident = head.resident();
+            if (resident !== 0) {
+                iterables.push([resident]);
+            }
+            let subtree = head.subtree();
+            if (subtree !== 0) {
+                iterables.push(this.doTraverse(subtree, depth + 1));
+            }
+        }
+        if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+            let nextSuffixNibble = suffix.shift();
+            if (this.relationship === "<" || this.relationship === "<=") {
+                for (let i = 0; i < nextSuffixNibble; i++) {
+                    let child = body.child(i);
+                    if (child !== 0) {
+                        iterables.push(this.doYield(child, depth, reverse, { resident: true, subtree: true, children: true }));
+                    }
+                }
+            }
+            let child = body.child(nextSuffixNibble);
+            if (child !== 0) {
+                iterables.push(this.visitNode(child, depth, reverse, suffix));
+            }
+            if (this.relationship === ">" || this.relationship === ">=") {
+                for (let i = nextSuffixNibble + 1; i < 16; i++) {
+                    let child = body.child(i);
+                    if (child !== 0) {
+                        iterables.push(this.doYield(child, depth, reverse, { resident: true, subtree: true, children: true }));
+                    }
+                }
+            }
+        }
+        for (let iterable of reverse ? iterables.reverse() : iterables) {
+            yield* iterable;
+        }
+    }
+    *visitNode(bid, depth, reverse, suffix) {
+        let head = new NodeHead();
+        this.blockManager.readBlock(bid, head.buffer, 0);
+        let prefix = head.prefix();
+        let commonPrefixLength = computeCommonPrefixLength(prefix, suffix);
+        let nextPrefixNibble = prefix[commonPrefixLength];
+        let nextSuffixNibble = suffix[commonPrefixLength];
+        if (nextSuffixNibble == null) {
+            if (nextPrefixNibble == null) {
+                // Key is an exact match for the current node.
+                yield* this.onKeyIsNodeKey(bid, depth, reverse);
+            }
+            else {
+                // Key is a prefix match for the current node.
+                yield* this.onKeyIsPrefixForNodeKey(bid, depth, reverse);
+            }
+        }
+        else {
+            if (nextPrefixNibble == null) {
+                // Key potentially matches a node located at a greater depth.
+                yield* this.onNodeKeyIsPrefixForKey(bid, depth, reverse, suffix.slice(commonPrefixLength));
+            }
+            else {
+                if (nextSuffixNibble < nextPrefixNibble) {
+                    // Key matches a non-existant node before the current node.
+                    yield* this.onKeyIsBeforeNodeKey(bid, depth, reverse);
+                }
+                else {
+                    // Key matches a non-existant node after the current node.
+                    yield* this.onKeyIsAfterNodeKey(bid, depth, reverse);
+                }
+            }
+        }
+    }
+    *doTraverse(bid, depth) {
+        let suffix = this.keys[depth] ?? [];
+        let reverse = this.directions[depth] === "decreasing";
+        yield* this.visitNode(bid, depth, reverse, suffix.slice());
+    }
+    constructor(blockManager, relationship, keys, directions) {
+        this.blockManager = blockManager;
+        this.relationship = relationship;
+        this.keys = keys.length > 0 ? keys : [[]];
+        this.directions = directions;
+    }
+    *traverse(bid) {
+        yield* this.doTraverse(bid, 0);
+    }
 }
-exports.combineRanges = combineRanges;
+exports.RadixTreeWalker = RadixTreeWalker;
 ;
 class RadixTree {
     blockManager;
     blockIndex;
-    *createDecreasingIterable(blockIndex, cursor, directions) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(blockIndex, head.buffer, 0);
-        let total = head.total();
-        if (cursor.offset >= total) {
-            cursor.offset -= total;
-            return;
-        }
-        if (cursor.length <= 0) {
-            return;
-        }
-        if (this.blockManager.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-            for (let i = 16 - 1; i >= 0; i--) {
-                let child = body.child(i);
-                if (child !== 0) {
-                    yield* this.createDecreasingIterable(child, cursor, directions);
-                    if (cursor.length <= 0) {
-                        return;
-                    }
-                }
-            }
-        }
-        let subtree = head.subtree();
-        if (subtree !== 0) {
-            yield* this.createIterable(subtree, cursor, directions);
-            if (cursor.length <= 0) {
-                return;
-            }
-        }
-        let resident = head.resident();
-        if (resident !== 0) {
-            if (cursor.offset === 0) {
-                yield resident;
-                cursor.length -= 1;
-                if (cursor.length <= 0) {
-                    return;
-                }
-            }
-            else {
-                cursor.offset -= 1;
-            }
-        }
-    }
-    *createIncreasingIterable(blockIndex, cursor, directions) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(blockIndex, head.buffer, 0);
-        let total = head.total();
-        if (cursor.offset >= total) {
-            cursor.offset -= total;
-            return;
-        }
-        if (cursor.length <= 0) {
-            return;
-        }
-        let resident = head.resident();
-        if (resident !== 0) {
-            if (cursor.offset === 0) {
-                yield resident;
-                cursor.length -= 1;
-                if (cursor.length <= 0) {
-                    return;
-                }
-            }
-            else {
-                cursor.offset -= 1;
-            }
-        }
-        let subtree = head.subtree();
-        if (subtree !== 0) {
-            yield* this.createIterable(subtree, cursor, directions);
-            if (cursor.length <= 0) {
-                return;
-            }
-        }
-        if (this.blockManager.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-            for (let i = 0; i < 16; i++) {
-                let child = body.child(i);
-                if (child !== 0) {
-                    yield* this.createIncreasingIterable(child, cursor, directions);
-                    if (cursor.length <= 0) {
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    *createIterable(blockIndex, cursor, directions) {
-        directions = [...directions];
-        let direction = directions.shift() ?? "increasing";
-        if (direction === "increasing") {
-            yield* this.createIncreasingIterable(blockIndex, cursor, directions);
-        }
-        else {
-            yield* this.createDecreasingIterable(blockIndex, cursor, directions);
-        }
-    }
     updateChildParents(blockIndex) {
         let head = new NodeHead();
         let body = new NodeBody();
@@ -324,71 +465,10 @@ class RadixTree {
         }
         return blockIndex;
     }
-    getRange(key, relationship) {
+    locateNode(key) {
         let head = new NodeHead();
-        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
-        let total = head.total();
-        let { offset, blockIndex, prefixBlockIndex } = { ...this.getOffset(key) };
-        let identicalMatch = false;
-        let prefixMatch = false;
-        if (blockIndex != null) {
-            this.blockManager.readBlock(blockIndex, head.buffer, 0);
-            identicalMatch = head.resident() !== 0;
-            prefixMatch = true;
-        }
-        if (prefixBlockIndex != null) {
-            this.blockManager.readBlock(prefixBlockIndex, head.buffer, 0);
-            prefixMatch = true;
-        }
-        if (relationship === "=") {
-            if (identicalMatch) {
-                return {
-                    offset: offset,
-                    length: 1
-                };
-            }
-        }
-        else if (relationship === "^=") {
-            if (prefixMatch) {
-                return {
-                    offset: offset,
-                    length: head.total()
-                };
-            }
-        }
-        else if (relationship === "<") {
-            return {
-                offset: 0,
-                length: offset
-            };
-        }
-        else if (relationship === "<=") {
-            offset += identicalMatch ? 1 : 0;
-            return {
-                offset: 0,
-                length: offset
-            };
-        }
-        else if (relationship === ">") {
-            offset += identicalMatch ? 1 : 0;
-            return {
-                offset: offset,
-                length: total - offset
-            };
-        }
-        else if (relationship === ">=") {
-            return {
-                offset: offset,
-                length: total - offset
-            };
-        }
-    }
-    getOffset(key) {
-        let head = new NodeHead();
-        let next = new NodeHead();
         let body = new NodeBody();
         let blockIndex = this.blockIndex;
-        let offset = 0;
         for (let [keyIndex, keyPart] of key.entries()) {
             let keyNibbles = getNibblesFromBytes(keyPart);
             while (true) {
@@ -396,58 +476,32 @@ class RadixTree {
                 let nodeNibbles = head.prefix();
                 let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
                 if (commonPrefixLength < nodeNibbles.length) {
-                    return {
-                        offset,
-                        prefixBlockIndex: blockIndex
-                    };
+                    return;
                 }
                 keyNibbles.splice(0, commonPrefixLength);
                 let keyNibble = keyNibbles.shift();
                 if (keyNibble == null) {
                     break;
                 }
-                if (head.resident() !== 0) {
-                    offset += 1;
-                }
                 if (this.blockManager.getBlockSize(blockIndex) < NodeHead.LENGTH + NodeBody.LENGTH) {
-                    return {
-                        offset
-                    };
+                    return;
                 }
                 this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-                for (let i = 0; i < keyNibble; i++) {
-                    let child = body.child(i);
-                    if (child !== 0) {
-                        this.blockManager.readBlock(child, next.buffer, 0);
-                        offset += next.total();
-                    }
-                }
                 let child = body.child(keyNibble);
                 if (child === 0) {
-                    return {
-                        offset
-                    };
+                    return;
                 }
                 blockIndex = child;
             }
             if (keyIndex + 1 < key.length) {
-                let resident = head.resident();
-                if (resident !== 0) {
-                    offset += 1;
-                }
                 let subtree = head.subtree();
                 if (subtree === 0) {
-                    return {
-                        offset
-                    };
+                    return;
                 }
                 blockIndex = subtree;
             }
         }
-        return {
-            offset,
-            blockIndex
-        };
+        return blockIndex;
     }
     updateTotal(blockIndex, delta) {
         let head = new NodeHead();
@@ -505,10 +559,10 @@ class RadixTree {
         this.blockIndex = blockIndex;
     }
     *[Symbol.iterator]() {
-        yield* this.search([], "^=");
+        yield* this.filter("^=", []);
     }
     branch(key) {
-        let { blockIndex } = { ...this.getOffset(key) };
+        let blockIndex = this.locateNode(key);
         if (blockIndex == null) {
             return;
         }
@@ -522,6 +576,10 @@ class RadixTree {
     }
     delete() {
         this.doDelete(this.blockIndex);
+    }
+    *filter(relationship, key, directions) {
+        let treeWalker = new RadixTreeWalker(this.blockManager, relationship, key.map(getNibblesFromBytes), directions ?? []);
+        yield* treeWalker.traverse(this.blockIndex);
     }
     insert(key, value) {
         let head = new NodeHead();
@@ -545,7 +603,7 @@ class RadixTree {
         return head.total();
     }
     lookup(key) {
-        let { blockIndex } = { ...this.getOffset(key) };
+        let blockIndex = this.locateNode(key);
         if (blockIndex == null) {
             return;
         }
@@ -558,7 +616,7 @@ class RadixTree {
         return resident;
     }
     remove(key) {
-        let { blockIndex } = { ...this.getOffset(key) };
+        let blockIndex = this.locateNode(key);
         if (blockIndex == null) {
             return false;
         }
@@ -571,38 +629,6 @@ class RadixTree {
         this.blockManager.writeBlock(blockIndex, head.buffer, 0);
         this.updateTotal(blockIndex, -1);
         return true;
-    }
-    *search(key, relationship, options) {
-        let range = this.getRange(key, relationship);
-        if (range == null) {
-            return;
-        }
-        let directions = options?.directions ?? [];
-        let direction = directions[0] ?? "increasing";
-        let anchor = options?.anchor;
-        if (anchor != null) {
-            let anchorRange = this.getRange(anchor, direction === "increasing" ? ">" : "<");
-            if (anchorRange != null) {
-                range = combineRanges(range, anchorRange);
-                if (range == null) {
-                    return;
-                }
-            }
-        }
-        let offset = Math.max(0, Math.min(options?.offset ?? 0, range.length));
-        let length = Math.max(0, Math.min(options?.length ?? 10, range.length - offset));
-        if (direction === "increasing") {
-            offset += range.offset;
-        }
-        else {
-            let head = new NodeHead();
-            this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
-            offset += head.total() - (range.length + range.offset);
-        }
-        yield* this.createIterable(this.blockIndex, {
-            offset,
-            length
-        }, directions);
     }
     static INITIAL_SIZE = NodeHead.LENGTH;
 }
