@@ -508,7 +508,7 @@ export class RadixTree {
 	}
 
 	* [Symbol.iterator](): Iterator<number> {
-		yield * this.filter([], "^=");
+		yield * this.filter("^=", []);
 	}
 
 	branch(key: Array<Uint8Array>): RadixTree | undefined {
@@ -529,7 +529,7 @@ export class RadixTree {
 		this.doDelete(this.blockIndex);
 	}
 
-	* filter(key: Array<Uint8Array>, relationship: Relationship, directions?: Array<Direction>): Iterable<number> {
+	* filter(relationship: Relationship, key: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number> {
 		let range = this.getRange(key, relationship);
 		if (range == null) {
 			return;
