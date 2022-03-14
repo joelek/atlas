@@ -9,6 +9,127 @@ function getKeyFromString(string: string): Uint8Array {
 };
 
 (async () => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([getKeyFromString("a")], 1);
+	tree.insert([getKeyFromString("a"), getKeyFromString("a")], 2);
+	tree.insert([getKeyFromString("a"), getKeyFromString("b")], 3);
+	tree.insert([getKeyFromString("b")], 4);
+	tree.insert([getKeyFromString("b"), getKeyFromString("a")], 5);
+	tree.insert([getKeyFromString("b"), getKeyFromString("b")], 6);
+	tree.insert([getKeyFromString("c")], 7);
+
+	test(`It should support filtering values matching a zero element key in "^=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("^=", []));
+		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a zero element key in "=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("=", []));
+		let expected = [] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a zero element key in ">" mode`, async (assert) => {
+		let observed = Array.from(tree.filter(">", []));
+		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a zero element key in ">=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter(">=", []));
+		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a zero element key in "<" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("<", []));
+		let expected = [] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a zero element key in "<=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("<=", []));
+		let expected = [] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a one element key in "^=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("^=", [getKeyFromString("a")]));
+		let expected = [1, 2, 3] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a one element key in "=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("=", [getKeyFromString("a")]));
+		let expected = [1] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a one element key in ">" mode`, async (assert) => {
+		let observed = Array.from(tree.filter(">", [getKeyFromString("a")]));
+		let expected = [2, 3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a one element key in ">=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter(">=", [getKeyFromString("a")]));
+		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a one element key in "<" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("<", [getKeyFromString("b")]));
+		let expected = [1, 2, 3] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a one element key in "<=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("<=", [getKeyFromString("b")]));
+		let expected = [1, 2, 3, 4] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a two element key in "^=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("^=", [getKeyFromString("a"), getKeyFromString("a")]));
+		let expected = [2] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a two element key in "=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("=", [getKeyFromString("a"), getKeyFromString("a")]));
+		let expected = [2] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a two element key in ">" mode`, async (assert) => {
+		let observed = Array.from(tree.filter(">", [getKeyFromString("a"), getKeyFromString("a")]));
+		let expected = [3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a two element key in ">=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter(">=", [getKeyFromString("a"), getKeyFromString("a")]));
+		let expected = [2, 3, 4, 5, 6, 7] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a two element key in "<" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("<", [getKeyFromString("b"), getKeyFromString("b")]));
+		let expected = [1, 2, 3, 4, 5] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support filtering values matching a two element key in "<=" mode`, async (assert) => {
+		let observed = Array.from(tree.filter("<=", [getKeyFromString("b"), getKeyFromString("b")]));
+		let expected = [1, 2, 3, 4, 5, 6] as Array<number>;
+		assert.array.equals(observed, expected);
+	});
+})();
+
+(async () => {
 	test(`It should combine ranges when range one is before range two.`, async (assert) => {
 		let observed = combineRanges({ offset: 0, length: 2 }, { offset: 3, length: 4 }) ?? {};
 		let expected = {};
@@ -418,6 +539,77 @@ function getKeyFromString(string: string): Uint8Array {
 	test(`It should support iteration.`, async (assert) => {
 		let observed = Array.from(tree);
 		let expected = [1, 2];
+		assert.array.equals(observed, expected);
+	});
+})();
+
+(async () => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([getKeyFromString("a"), getKeyFromString("a")], 1);
+	tree.insert([getKeyFromString("a"), getKeyFromString("b")], 2);
+	tree.insert([getKeyFromString("a"), getKeyFromString("c")], 3);
+	tree.insert([getKeyFromString("b"), getKeyFromString("a")], 4);
+	tree.insert([getKeyFromString("b"), getKeyFromString("b")], 5);
+	tree.insert([getKeyFromString("b"), getKeyFromString("c")], 6);
+	tree.insert([getKeyFromString("c"), getKeyFromString("a")], 7);
+	tree.insert([getKeyFromString("c"), getKeyFromString("b")], 8);
+	tree.insert([getKeyFromString("c"), getKeyFromString("c")], 9);
+
+	test(`It should return the correct values when directions are "increasing", "increasing" and key is set.`, async (assert) => {
+		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "increasing"]);
+		let observed = Array.from(results);
+		let expected = [6, 7, 8, 9];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "increasing", "decreasing" and key is set.`, async (assert) => {
+		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "decreasing"]);
+		let observed = Array.from(results);
+		let expected = [6, 9, 8, 7];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "decreasing", "increasing" and key is set.`, async (assert) => {
+		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "increasing"]);
+		let observed = Array.from(results);
+		let expected = [7, 8, 9, 6];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "decreasing", "decreasing" and key is set.`, async (assert) => {
+		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "decreasing"]);
+		let observed = Array.from(results);
+		let expected = [9, 8, 7, 6];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
+		let results = tree.filter(">", [], ["increasing", "increasing"]);
+		let observed = Array.from(results);
+		let expected = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
+		let results = tree.filter(">", [], ["increasing", "decreasing"]);
+		let observed = Array.from(results);
+		let expected = [3, 2, 1, 6, 5, 4, 9, 8, 7];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
+		let results = tree.filter(">", [], ["decreasing", "increasing"]);
+		let observed = Array.from(results);
+		let expected = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
+		let results = tree.filter(">", [], ["decreasing", "decreasing"]);
+		let observed = Array.from(results);
+		let expected = [9, 8, 7, 6, 5, 4, 3, 2, 1];
 		assert.array.equals(observed, expected);
 	});
 })();
