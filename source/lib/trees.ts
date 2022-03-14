@@ -779,12 +779,8 @@ export class RadixTree {
 	}
 
 	* filter(relationship: Relationship, key: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number> {
-		let range = this.getRange(key, relationship);
-		if (range == null) {
-			return;
-		}
-		directions = directions ?? [];
-		yield * this.createIterable(this.blockIndex, range, directions);
+		let treeWalker = new RadixTreeWalker(this.blockManager, relationship, key.map(getNibblesFromBytes), directions ?? []);
+		yield * treeWalker.traverse(this.blockIndex);
 	}
 
 	insert(key: Array<Uint8Array>, value: number): boolean {
