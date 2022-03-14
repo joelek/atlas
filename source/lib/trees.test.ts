@@ -1,7 +1,7 @@
 import * as bedrock from "@joelek/bedrock"
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
-import { combineRanges, RadixTree } from "./trees";
+import { RadixTree } from "./trees";
 import { test } from "./test";
 
 function getKeyFromString(string: string): Uint8Array {
@@ -126,62 +126,6 @@ function getKeyFromString(string: string): Uint8Array {
 		let observed = Array.from(tree.filter("<=", [getKeyFromString("b"), getKeyFromString("b")]));
 		let expected = [1, 2, 3, 4, 5, 6] as Array<number>;
 		assert.array.equals(observed, expected);
-	});
-})();
-
-(async () => {
-	test(`It should combine ranges when range one is before range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 0, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = {};
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one is just before range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 1, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = {};
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one overlaps the beginning of range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 2, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 1 };
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one is at the beginning of range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 3, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 3, length: 2 };
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one is embedded into range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 4, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 4, length: 2 };
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one is at the end of range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 5, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 5, length: 2 };
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one overlaps the end of range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 6, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = { offset: 6, length: 1 };
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one is just after range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 7, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = {};
-		assert.record.equals(observed, expected);
-	});
-
-	test(`It should combine ranges when range one is after range two.`, async (assert) => {
-		let observed = combineRanges({ offset: 8, length: 2 }, { offset: 3, length: 4 }) ?? {};
-		let expected = {};
-		assert.record.equals(observed, expected);
 	});
 })();
 

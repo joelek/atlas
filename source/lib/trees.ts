@@ -105,28 +105,6 @@ export class NodeBody extends Chunk {
 	static readonly LENGTH = 16 * 6;
 };
 
-export type RadixTreeRange = {
-	offset: number;
-	length: number;
-};
-
-export function combineRanges(one: RadixTreeRange, two: RadixTreeRange): RadixTreeRange | undefined {
-	if (one.offset > two.offset) {
-		return combineRanges(two, one);
-	}
-	let gap = two.offset - (one.offset + one.length);
-	if (gap >= 0) {
-		return;
-	}
-	let overlap = 0 - gap;
-	let offset = two.offset;
-	let length = Math.min(overlap, two.length);
-	return {
-		offset,
-		length
-	};
-};
-
 export class RadixTreeWalker {
 	private blockManager: BlockManager;
 	private relationship: Relationship;
@@ -380,106 +358,6 @@ export class RadixTree {
 	private blockManager: BlockManager;
 	private blockIndex: number;
 
-	private * createDecreasingIterable(blockIndex: number, cursor: RadixTreeRange, directions: Array<Direction>): Iterable<number> {
-		let head = new NodeHead();
-		this.blockManager.readBlock(blockIndex, head.buffer, 0);
-		let total = head.total();
-		if (cursor.offset >= total) {
-			cursor.offset -= total;
-			return;
-		}
-		if (cursor.length <= 0) {
-			return;
-		}
-		if (this.blockManager.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-			let body = new NodeBody();
-			this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-			for (let i = 16 - 1; i >= 0; i--) {
-				let child = body.child(i);
-				if (child !== 0) {
-					yield * this.createDecreasingIterable(child, cursor, directions);
-					if (cursor.length <= 0) {
-						return;
-					}
-				}
-			}
-		}
-		let subtree = head.subtree();
-		if (subtree !== 0) {
-			yield * this.createIterable(subtree, cursor, directions);
-			if (cursor.length <= 0) {
-				return;
-			}
-		}
-		let resident = head.resident();
-		if (resident !== 0) {
-			if (cursor.offset === 0) {
-				yield resident;
-				cursor.length -= 1;
-				if (cursor.length <= 0) {
-					return;
-				}
-			} else {
-				cursor.offset -= 1;
-			}
-		}
-	}
-
-	private * createIncreasingIterable(blockIndex: number, cursor: RadixTreeRange, directions: Array<Direction>): Iterable<number> {
-		let head = new NodeHead();
-		this.blockManager.readBlock(blockIndex, head.buffer, 0);
-		let total = head.total();
-		if (cursor.offset >= total) {
-			cursor.offset -= total;
-			return;
-		}
-		if (cursor.length <= 0) {
-			return;
-		}
-		let resident = head.resident();
-		if (resident !== 0) {
-			if (cursor.offset === 0) {
-				yield resident;
-				cursor.length -= 1;
-				if (cursor.length <= 0) {
-					return;
-				}
-			} else {
-				cursor.offset -= 1;
-			}
-		}
-		let subtree = head.subtree();
-		if (subtree !== 0) {
-			yield * this.createIterable(subtree, cursor, directions);
-			if (cursor.length <= 0) {
-				return;
-			}
-		}
-		if (this.blockManager.getBlockSize(blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-			let body = new NodeBody();
-			this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-			for (let i = 0; i < 16; i++) {
-				let child = body.child(i);
-				if (child !== 0) {
-					yield * this.createIncreasingIterable(child, cursor, directions);
-					if (cursor.length <= 0) {
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	private * createIterable(blockIndex: number, cursor: RadixTreeRange, directions: Array<Direction>): Iterable<number> {
-		directions = [...directions];
-		let direction = directions.shift() ?? "increasing";
-		if (direction === "increasing") {
-			yield * this.createIncreasingIterable(blockIndex, cursor, directions);
-		} else {
-			yield * this.createDecreasingIterable(blockIndex, cursor, directions);
-		}
-	}
-
 	private updateChildParents(blockIndex: number): void {
 		let head = new NodeHead();
 		let body = new NodeBody();
@@ -575,61 +453,6 @@ export class RadixTree {
 			}
 		}
 		return blockIndex;
-	}
-
-	private getRange(key: Array<Uint8Array>, relationship: Relationship): RadixTreeRange | undefined {
-		let head = new NodeHead();
-		this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
-		let total = head.total();
-		let { offset, blockIndex, prefixBlockIndex } = { ...this.getOffset(key) };
-		let identicalMatch = false;
-		let prefixMatch = false;
-		if (blockIndex != null) {
-			this.blockManager.readBlock(blockIndex, head.buffer, 0);
-			identicalMatch = head.resident() !== 0;
-			prefixMatch = true;
-		}
-		if (prefixBlockIndex != null) {
-			this.blockManager.readBlock(prefixBlockIndex, head.buffer, 0);
-			prefixMatch = true;
-		}
-		if (relationship === "=") {
-			if (identicalMatch) {
-				return {
-					offset: offset,
-					length: 1
-				};
-			}
-		} else if (relationship === "^=") {
-			if (prefixMatch) {
-				return {
-					offset: offset,
-					length: head.total()
-				};
-			}
-		} else if (relationship === "<") {
-			return {
-				offset: 0,
-				length: offset
-			};
-		} else if (relationship === "<=") {
-			offset += identicalMatch ? 1 : 0;
-			return {
-				offset: 0,
-				length: offset
-			};
-		} else if (relationship === ">") {
-			offset += identicalMatch ? 1 : 0;
-			return {
-				offset: offset,
-				length: total - offset
-			};
-		} else if (relationship === ">=") {
-			return {
-				offset: offset,
-				length: total - offset
-			};
-		}
 	}
 
 	private getOffset(key: Array<Uint8Array>): { offset: number, blockIndex?: number, prefixBlockIndex?: number } {
