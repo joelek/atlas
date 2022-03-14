@@ -455,12 +455,10 @@ export class RadixTree {
 		return blockIndex;
 	}
 
-	private getOffset(key: Array<Uint8Array>): { offset: number, blockIndex?: number, prefixBlockIndex?: number } {
+	private locateNode(key: Array<Uint8Array>): number | undefined {
 		let head = new NodeHead();
-		let next = new NodeHead();
 		let body = new NodeBody();
 		let blockIndex = this.blockIndex;
-		let offset = 0;
 		for (let [keyIndex, keyPart] of key.entries()) {
 			let keyNibbles = getNibblesFromBytes(keyPart);
 			while (true) {
@@ -468,58 +466,32 @@ export class RadixTree {
 				let nodeNibbles = head.prefix();
 				let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
 				if (commonPrefixLength < nodeNibbles.length) {
-					return {
-						offset,
-						prefixBlockIndex: blockIndex
-					};
+					return;
 				}
 				keyNibbles.splice(0, commonPrefixLength);
 				let keyNibble = keyNibbles.shift();
 				if (keyNibble == null) {
 					break;
 				}
-				if (head.resident() !== 0) {
-					offset += 1;
-				}
 				if (this.blockManager.getBlockSize(blockIndex) < NodeHead.LENGTH + NodeBody.LENGTH) {
-					return {
-						offset
-					};
+					return;
 				}
 				this.blockManager.readBlock(blockIndex, body.buffer, NodeBody.OFFSET);
-				for (let i = 0; i < keyNibble; i++) {
-					let child = body.child(i);
-					if (child !== 0) {
-						this.blockManager.readBlock(child, next.buffer, 0);
-						offset += next.total();
-					}
-				}
 				let child = body.child(keyNibble);
 				if (child === 0) {
-					return {
-						offset
-					};
+					return;
 				}
 				blockIndex = child;
 			}
 			if (keyIndex + 1 < key.length) {
-				let resident = head.resident();
-				if (resident !== 0) {
-					offset += 1;
-				}
 				let subtree = head.subtree();
 				if (subtree === 0) {
-					return {
-						offset
-					};
+					return;
 				}
 				blockIndex = subtree;
 			}
 		}
-		return {
-			offset,
-			blockIndex
-		};
+		return blockIndex;
 	}
 
 	private updateTotal(blockIndex: number, delta: number): void {
@@ -584,7 +556,7 @@ export class RadixTree {
 	}
 
 	branch(key: Array<Uint8Array>): RadixTree | undefined {
-		let { blockIndex } = { ...this.getOffset(key) };
+		let blockIndex = this.locateNode(key);
 		if (blockIndex == null) {
 			return;
 		}
@@ -629,7 +601,7 @@ export class RadixTree {
 	}
 
 	lookup(key: Array<Uint8Array>): number | undefined {
-		let { blockIndex } = { ...this.getOffset(key) };
+		let blockIndex = this.locateNode(key);
 		if (blockIndex == null) {
 			return;
 		}
@@ -643,7 +615,7 @@ export class RadixTree {
 	}
 
 	remove(key: Array<Uint8Array>): boolean {
-		let { blockIndex } = { ...this.getOffset(key) };
+		let blockIndex = this.locateNode(key);
 		if (blockIndex == null) {
 			return false;
 		}
