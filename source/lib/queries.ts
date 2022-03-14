@@ -1,9 +1,9 @@
 import { FilterMap } from "./filters";
 import { SubsetOf } from "./inference";
-import { Operators } from "./operators";
+import { EqualityOperator, Operators } from "./operators";
 import { OrderMap, Orders } from "./orders";
-import { RequiredKeys, Record } from "./records";
-import { Entry, Store, StoreManager } from "./stores";
+import { RequiredKeys, Record, Keys, Key } from "./records";
+import { Entry, Index, Store, StoreManager } from "./stores";
 
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
 	filter(parameters: C): Promise<Iterable<Entry<A>>>;
@@ -94,6 +94,30 @@ export class Query<A extends Record, B extends RequiredKeys<A>, C extends Subset
 		this.store = store;
 		this.operators = operators;
 		this.orders = orders;
+		this.store.index(new Index(this.createIndexKeys()));
+	}
+
+	createIndexKeys(): Keys<A> {
+		let keys = [] as Keys<A>;
+		for (let key in this.operators) {
+			let operator = this.operators[key];
+			if (operator instanceof EqualityOperator) {
+				keys.push(key);
+			}
+		}
+		for (let key in this.orders) {
+			let order = this.orders[key];
+			if (order != null) {
+				keys.push(key);
+			}
+		}
+		for (let key of this.store.keys) {
+			let order = this.orders[key as unknown as Key<D>];
+			if (order == null) {
+				keys.push(key);
+			}
+		}
+		return keys;
 	}
 };
 

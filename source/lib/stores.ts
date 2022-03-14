@@ -2,7 +2,7 @@ import { StreamIterable } from "./streams";
 import { FilterMap } from "./filters";
 import { Table } from "./tables";
 import { IncreasingOrder, OrderMap, Orders } from "./orders";
-import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
+import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 
@@ -250,6 +250,18 @@ export class Index<A extends Record> {
 	constructor(keys: Keys<A>) {
 		this.keys = keys;
 	}
+
+	equals(that: Index<A>): boolean {
+		if (this.keys.length !== that.keys.length) {
+			return false;
+		}
+		for (let i = 0; i < this.keys.length; i++) {
+			if (this.keys[i] !== that.keys[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
 };
 
 export class Store<A extends Record, B extends RequiredKeys<A>> {
@@ -263,6 +275,33 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 		this.keys = keys;
 		this.orders = orders;
 		this.indices = [];
+		this.index(new Index(this.createIndexKeys()));
+	}
+
+	createIndexKeys(): Keys<A> {
+		let keys = [] as Keys<A>;
+		for (let key in this.orders) {
+			let order = this.orders[key];
+			if (order != null) {
+				keys.push(key);
+			}
+		}
+		for (let key of this.keys) {
+			let order = this.orders[key];
+			if (order == null) {
+				keys.push(key);
+			}
+		}
+		return keys;
+	}
+
+	index(that: Index<A>): void {
+		for (let index of this.indices) {
+			if (index.equals(that)) {
+				return;
+			}
+		}
+		this.indices.push(that);
 	}
 };
 

@@ -238,7 +238,6 @@ export class Context {
 			}
 			orders[key] = this.getOrder(orderReference);
 		}
-		// TODO: Create indices.
 		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
 		this.links.set(reference, link);
 		return reference;
@@ -254,7 +253,6 @@ export class Context {
 		for (let key in orderReferences) {
 			orders[key] = this.getOrder(orderReferences[key]) as any;
 		}
-		// TODO: Create indices.
 		let reference = new StoreReference();
 		let store = new Store(fields, keys, orders);
 		this.stores.set(reference, store);
@@ -272,7 +270,6 @@ export class Context {
 		for (let key in orderReferences) {
 			orders[key] = this.getOrder(orderReferences[key]);
 		}
-		// TODO: Create indices.
 		let reference = new QueryReference();
 		let query = new Query(store, operators, orders);
 		this.queries.set(reference, query);

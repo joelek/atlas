@@ -1,7 +1,7 @@
 import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
-import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
-import { Entry, Store, StoreManager } from "./stores";
+import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
+import { Entry, Index, Store, StoreManager } from "./stores";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<Entry<C>>>;
@@ -124,6 +124,28 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;
 		this.orders = orders;
+		this.child.index(new Index(this.createIndexKeys()));
+	}
+
+	createIndexKeys(): Keys<C> {
+		let keys = [] as Keys<C>;
+		for (let key in this.recordKeysMap) {
+			let thatKey = this.recordKeysMap[key] as Key<C>;
+			keys.push(thatKey);
+		}
+		for (let key in this.orders) {
+			let order = this.orders[key];
+			if (order != null) {
+				keys.push(key);
+			}
+		}
+		for (let key of this.child.keys) {
+			let order = this.orders[key];
+			if (order == null) {
+				keys.push(key);
+			}
+		}
+		return keys;
 	}
 };
 
