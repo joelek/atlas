@@ -21,15 +21,27 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("B"), getKeyFromString("B"), getKeyFromString("A")], 7);
 	tree.insert([getKeyFromString("B"), getKeyFromString("B"), getKeyFromString("B")], 8);
 
-	test(`It should support ordered filtering.`, async (assert) => {
+	test(`It should support ordered filtering in ">" mode.`, async (assert) => {
 		let observed = Array.from(tree.filter(">", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
 		let expected = [8, 7, 2, 1, 4, 3];
 		assert.array.equals(observed, expected);
 	});
 
-	test(`It should support ordered filtering.`, async (assert) => {
+	test(`It should support ordered filtering in ">=" mode.`, async (assert) => {
+		let observed = Array.from(tree.filter(">=", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
+		let expected = [5, 8, 7, 2, 1, 4, 3];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support ordered filtering in "<" mode.`, async (assert) => {
 		let observed = Array.from(tree.filter("<", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
 		let expected = [6];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support ordered filtering in "<=" mode.`, async (assert) => {
+		let observed = Array.from(tree.filter("<=", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
+		let expected = [6, 5];
 		assert.array.equals(observed, expected);
 	});
 })();
