@@ -487,14 +487,14 @@ function getKeyFromString(string: string): Uint8Array {
 	test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("a")], ["decreasing", "increasing"]);
 		let observed = Array.from(results);
-		let expected = [6, 7, 4, 5, 2, 3];
+		let expected = [] as Array<number>;
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("a")], ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
-		let expected = [7, 6, 5, 4, 3, 2];
+		let expected = [] as Array<number>;
 		assert.array.equals(observed, expected);
 	});
 })();
@@ -537,21 +537,21 @@ function getKeyFromString(string: string): Uint8Array {
 	test(`It should return the correct values when directions are "increasing", "decreasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "decreasing"]);
 		let observed = Array.from(results);
-		let expected = [6, 9, 8, 7];
+		let expected = [4, 9, 8, 7];
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "decreasing", "increasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "increasing"]);
 		let observed = Array.from(results);
-		let expected = [7, 8, 9, 6];
+		let expected = [6, 1, 2, 3];
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "decreasing", "decreasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
-		let expected = [9, 8, 7, 6];
+		let expected = [4, 3, 2, 1];
 		assert.array.equals(observed, expected);
 	});
 
@@ -572,14 +572,14 @@ function getKeyFromString(string: string): Uint8Array {
 	test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
 		let results = tree.filter(">", [], ["decreasing", "increasing"]);
 		let observed = Array.from(results);
-		let expected = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+		let expected = [] as Array<number>;
 		assert.array.equals(observed, expected);
 	});
 
 	test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
 		let results = tree.filter(">", [], ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
-		let expected = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+		let expected = [] as Array<number>;
 		assert.array.equals(observed, expected);
 	});
 })();
