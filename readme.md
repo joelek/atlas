@@ -17,6 +17,7 @@ let manager = context.createTransactionManager("./private/db", {
 	users
 });
 
+// All types for the transaction are fully inferred and checked at compile-time.
 await manager.enqueueWritableTransaction(async ({ users }) => {
 	return users.insert({
 		user_id: Uint8Array.of(1),
@@ -25,6 +26,7 @@ await manager.enqueueWritableTransaction(async ({ users }) => {
 	});
 });
 
+// All types for the transaction are fully inferred and checked at compile-time.
 let user = await manager.enqueueReadableTransaction(async ({ users }) => {
 	return users.lookup({
 		user_id: Uint8Array.of(1)
