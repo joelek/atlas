@@ -8,8 +8,8 @@ export type RequiredKey<A> = Key<A> & {
 	[B in keyof A]: null extends A[B] ? never : B;
 }[keyof A];
 export type RequiredKeys<A> = Array<RequiredKey<A>>;
-export type KeysRecord<A extends Record, B extends RequiredKeys<A>> = A | Pick<A, B[number]>;
-export type KeysRecordMap<A extends Record, B extends RequiredKeys<A>, C extends Record> = {
+export type KeysRecord<A extends Record, B extends Keys<A>> = A | Pick<A, B[number]>;
+export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record> = {
 	[D in B[number]]: {
 		[E in keyof C]: A[D] extends C[E] ? E : never;
 	}[keyof C];
