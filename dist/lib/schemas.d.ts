@@ -389,6 +389,8 @@ export declare class SchemaManager {
     private loadFieldManager;
     private loadOperatorManager;
     private loadOrderManager;
+    private loadIndexManager;
+    private loadRecordManager;
     private loadStoreManager;
     private loadLinkManager;
     private loadQueryManager;
@@ -400,8 +402,10 @@ export declare class SchemaManager {
     private compareStore;
     private compareLink;
     private createField;
+    private createIndex;
     private createStore;
     private deleteStore;
+    private deleteIndex;
     private updateStore;
     private updateStores;
     private createOperator;

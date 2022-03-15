@@ -1,10 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreManager = exports.WritableStoreManager = void 0;
+exports.OverridableWritableStore = exports.Store = exports.Index = exports.StoreManager = exports.IndexManager = exports.FilteredStore = exports.WritableStoreManager = void 0;
 const streams_1 = require("./streams");
+const filters_1 = require("./filters");
 const tables_1 = require("./tables");
 const orders_1 = require("./orders");
 const records_1 = require("./records");
+const trees_1 = require("./trees");
+const sorters_1 = require("../mod/sorters");
 ;
 ;
 class WritableStoreManager {
@@ -33,7 +36,134 @@ class WritableStoreManager {
 }
 exports.WritableStoreManager = WritableStoreManager;
 ;
-// TODO: Handle indices.
+class FilteredStore {
+    recordManager;
+    blockManager;
+    bids;
+    filters;
+    orders;
+    constructor(recordManager, blockManager, bids, filters, orders) {
+        this.recordManager = recordManager;
+        this.blockManager = blockManager;
+        this.bids = bids;
+        this.filters = filters ?? {};
+        this.orders = orders ?? {};
+    }
+    *[Symbol.iterator]() {
+        let iterable = streams_1.StreamIterable.of(this.bids)
+            .map((bid) => {
+            let buffer = this.blockManager.readBlock(bid);
+            let record = this.recordManager.decode(buffer);
+            return {
+                bid,
+                record
+            };
+        })
+            .filter((entry) => {
+            for (let key in this.filters) {
+                let filter = this.filters[key];
+                if (filter == null) {
+                    continue;
+                }
+                let value = entry.record[key];
+                if (!filter.matches(value)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        if (Object.keys(this.orders).length > 0) {
+            iterable = iterable.sort((one, two) => {
+                for (let key in this.orders) {
+                    let order = this.orders[key];
+                    if (order == null) {
+                        continue;
+                    }
+                    let comparison = order.compare(one.record[key], two.record[key]);
+                    if (comparison !== 0) {
+                        return comparison;
+                    }
+                }
+                return 0;
+            });
+        }
+        yield* iterable.map((entry) => {
+            return {
+                bid: () => entry.bid,
+                record: () => entry.record
+            };
+        });
+    }
+    static getOptimal(filteredStores) {
+        filteredStores.sort(sorters_1.CompositeSorter.of(sorters_1.NumberSorter.decreasing((value) => Object.keys(value.orders).length), sorters_1.NumberSorter.decreasing((value) => Object.keys(value.filters).length)));
+        return filteredStores.pop();
+    }
+}
+exports.FilteredStore = FilteredStore;
+;
+class IndexManager {
+    recordManager;
+    blockManager;
+    bid;
+    keys;
+    tree;
+    constructor(recordManager, blockManager, keys, options) {
+        let bid = options?.bid ?? blockManager.createBlock(trees_1.RadixTree.INITIAL_SIZE);
+        this.recordManager = recordManager;
+        this.blockManager = blockManager;
+        this.bid = bid;
+        this.keys = keys;
+        this.tree = new trees_1.RadixTree(blockManager, bid);
+    }
+    delete() {
+        this.tree.delete();
+    }
+    filter(filters, orders) {
+        filters = filters ?? {};
+        orders = orders ?? {};
+        filters = { ...filters };
+        orders = { ...orders };
+        let keysConsumed = [];
+        let keysRemaining = [...this.keys];
+        let tree = this.tree;
+        for (let indexKey of this.keys) {
+            let filter = filters[indexKey];
+            if (filter == null) {
+                break;
+            }
+            if (filter instanceof filters_1.EqualityFilter) {
+                let encodedValue = filter.getEncodedValue();
+                let branch = tree.branch([encodedValue]);
+                if (branch == null) {
+                    return [];
+                }
+                delete filters[indexKey];
+                keysConsumed.push(keysRemaining.shift());
+                tree = branch;
+            }
+        }
+        let orderKeys = Object.keys(orders);
+        for (let i = 0; i < orderKeys.length; i++) {
+            if (keysRemaining[i] !== orderKeys[i]) {
+                break;
+            }
+            delete orders[orderKeys[i]];
+        }
+        return [
+            new FilteredStore(this.recordManager, this.blockManager, tree, filters, orders)
+        ];
+    }
+    insert(keysRecord, bid) {
+        let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
+        this.tree.insert(keys, bid);
+    }
+    remove(keysRecord) {
+        let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
+        this.tree.remove(keys);
+    }
+}
+exports.IndexManager = IndexManager;
+;
 class StoreManager {
     blockManager;
     fields;
@@ -41,50 +171,15 @@ class StoreManager {
     orders;
     recordManager;
     table;
-    filterIterable(bids, filters, orders) {
-        return streams_1.StreamIterable.of(bids)
-            .map((bid) => {
-            let buffer = this.blockManager.readBlock(bid);
-            let record = this.recordManager.decode(buffer);
-            return {
-                bid: () => bid,
-                record: () => record
-            };
-        })
-            .filter((entry) => {
-            for (let key in filters) {
-                let filter = filters[key];
-                if (filter == null) {
-                    continue;
-                }
-                let value = entry.record()[key];
-                if (!filter.matches(value)) {
-                    return false;
-                }
-            }
-            return true;
-        })
-            .sort((one, two) => {
-            for (let key in orders) {
-                let order = orders[key];
-                if (order == null) {
-                    continue;
-                }
-                let comparison = order.compare(one.record()[key], two.record()[key]);
-                if (comparison !== 0) {
-                    return comparison;
-                }
-            }
-            return 0;
-        });
-    }
-    constructor(blockManager, fields, keys, orders, table) {
+    indexManagers;
+    constructor(blockManager, fields, keys, orders, table, indexManagers) {
         this.blockManager = blockManager;
         this.fields = fields;
         this.keys = keys;
         this.orders = orders;
         this.recordManager = new records_1.RecordManager(fields);
         this.table = table;
+        this.indexManagers = indexManagers;
     }
     *[Symbol.iterator]() {
         yield* this.filter();
@@ -95,19 +190,21 @@ class StoreManager {
         }
         this.table.delete();
     }
-    filter(filters, orders) {
+    *filter(filters, orders) {
         orders = orders ?? this.orders;
         for (let key of this.keys) {
             if (!(key in orders)) {
                 orders[key] = new orders_1.IncreasingOrder();
             }
         }
-        // TODO: Use indices.
-        let filtersRemaining = { ...filters };
-        let ordersRemaining = { ...orders };
-        let iterable = streams_1.StreamIterable.of(this.table)
-            .map((entry) => entry.value());
-        return this.filterIterable(iterable, filtersRemaining, ordersRemaining);
+        let filteredStores = this.indexManagers.flatMap((indexManager) => {
+            return indexManager.filter(filters, orders);
+        });
+        filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, streams_1.StreamIterable.of(this.table).map((entry) => entry.value()), filters, orders));
+        let filteredStore = FilteredStore.getOptimal(filteredStores);
+        if (filteredStore != null) {
+            yield* filteredStore;
+        }
     }
     insert(record) {
         let key = this.recordManager.encodeKeys(this.keys, record);
@@ -123,9 +220,13 @@ class StoreManager {
             let oldRecord = this.recordManager.decode(buffer);
             this.blockManager.resizeBlock(index, encoded.length);
             this.blockManager.writeBlock(index, encoded);
-            // TODO: Remove old record from indices.
+            for (let indexManager of this.indexManagers) {
+                indexManager.remove(oldRecord);
+            }
         }
-        // TODO: Insert record into indices.
+        for (let indexManager of this.indexManagers) {
+            indexManager.insert(record, index);
+        }
     }
     length() {
         return this.table.length();
@@ -149,7 +250,9 @@ class StoreManager {
             let oldRecord = this.recordManager.decode(buffer);
             this.table.remove(key);
             this.blockManager.deleteBlock(index);
-            // TODO: Remove old record from indices.
+            for (let indexManager of this.indexManagers) {
+                indexManager.remove(oldRecord);
+            }
         }
     }
     update(record) {
@@ -159,6 +262,7 @@ class StoreManager {
         let fields = options.fields;
         let keys = options.keys;
         let orders = options.orders ?? {};
+        let indices = options.indices ?? [];
         let recordManager = new records_1.RecordManager(fields);
         let storage = new tables_1.Table(blockManager, {
             getKeyFromValue: (value) => {
@@ -167,7 +271,8 @@ class StoreManager {
                 return recordManager.encodeKeys(keys, record);
             }
         });
-        let manager = new StoreManager(blockManager, fields, keys, orders, storage);
+        let indexManagers = indices.map((index) => new IndexManager(recordManager, blockManager, index.keys));
+        let manager = new StoreManager(blockManager, fields, keys, orders, storage, indexManagers);
         return manager;
     }
 }

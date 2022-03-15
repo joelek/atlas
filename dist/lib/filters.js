@@ -13,6 +13,9 @@ class EqualityFilter extends Filter {
         super();
         this.value = value;
     }
+    getEncodedValue() {
+        return bedrock.codecs.Any.encodePayload(this.value);
+    }
     getValue() {
         return this.value;
     }

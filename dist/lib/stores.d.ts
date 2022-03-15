@@ -1,7 +1,7 @@
 import { FilterMap } from "./filters";
 import { Table } from "./tables";
 import { OrderMap, Orders } from "./orders";
-import { Fields, Record, Keys, KeysRecord, RequiredKeys } from "./records";
+import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 export declare type Entry<A extends Record> = {
@@ -46,6 +46,30 @@ export declare class WritableStoreManager<A extends Record, B extends RequiredKe
     remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]>;
     update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]>;
 }
+export declare class FilteredStore<A extends Record> {
+    private recordManager;
+    private blockManager;
+    private bids;
+    private filters;
+    private orders;
+    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>);
+    [Symbol.iterator](): Iterator<Entry<A>>;
+    static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined;
+}
+export declare class IndexManager<A extends Record, B extends Keys<A>> {
+    private recordManager;
+    private blockManager;
+    private bid;
+    private keys;
+    private tree;
+    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Keys<A>, options?: {
+        bid?: number;
+    });
+    delete(): void;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Array<FilteredStore<A>>;
+    insert(keysRecord: KeysRecord<A, B>, bid: number): void;
+    remove(keysRecord: KeysRecord<A, B>): void;
+}
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
     private fields;
@@ -53,8 +77,8 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private orders;
     private recordManager;
     private table;
-    private filterIterable;
-    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table);
+    private indexManagers;
+    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>);
     [Symbol.iterator](): Iterator<Entry<A>>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>>;
@@ -67,6 +91,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
         fields: Fields<A>;
         keys: [...B];
         orders?: Orders<C>;
+        indices?: Array<Index<A>>;
     }): StoreManager<A, B>;
 }
 export declare type StoreManagers<A> = {

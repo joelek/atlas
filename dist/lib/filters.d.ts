@@ -6,6 +6,7 @@ export declare abstract class Filter<A extends Value> {
 export declare class EqualityFilter<A extends Value> extends Filter<A> {
     private value;
     constructor(value: A);
+    getEncodedValue(): Uint8Array;
     getValue(): A;
     matches(value: A): boolean;
 }

@@ -15,12 +15,12 @@ const contexts_1 = require("./contexts");
     let posts = context.createStore({
         post_id: context.createStringField(),
         user_id: context.createStringField(),
-        name: context.createStringField()
+        title: context.createStringField()
     }, ["post_id"]);
     let userPosts = context.createLink(users, posts, {
         user_id: "user_id"
     }, {
-        name: context.createIncreasingOrder()
+        title: context.createIncreasingOrder()
     });
     let query = context.createQuery(users, {
         name: context.createEqualityOperator(),
@@ -35,16 +35,25 @@ const contexts_1 = require("./contexts");
         query
     });
     await (0, test_1.benchmark)(async () => {
-        return manager.enqueueWritableTransaction(async ({ users }, { userPosts }, { query }) => {
+        return manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
             users.insert({
                 user_id: "User 1",
                 name: "Joel Ek",
                 age: 38
             });
+            posts.insert({
+                post_id: "Post 1",
+                user_id: "User 1",
+                title: "Some title."
+            });
         });
     }, 1);
     let observed = await (0, test_1.benchmark)(async () => {
-        return await manager.enqueueReadableTransaction(async ({ users }, { userPosts }, { query }) => {
+        return await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+            let allUserPosts = await userPosts.filter({
+                user_id: "User 1"
+            });
+            console.log(Array.from(allUserPosts).map((entry) => entry.record()));
             return users.lookup({
                 user_id: "User 1"
             });

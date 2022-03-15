@@ -11,6 +11,7 @@ const stores_1 = require("./stores");
 const blocks_1 = require("./blocks");
 const queries_1 = require("./queries");
 const operators_1 = require("./operators");
+const trees_1 = require("./trees");
 exports.BigIntFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BigIntField"),
     defaultValue: bedrock.codecs.BigInt
@@ -201,6 +202,18 @@ class SchemaManager {
         }
         throw `Expected code to be unreachable!`;
     }
+    loadIndexManager(recordManager, blockManager, indexSchema) {
+        return new stores_1.IndexManager(recordManager, blockManager, indexSchema.keys, {
+            bid: indexSchema.bid
+        });
+    }
+    loadRecordManager(blockManager, fieldsSchema) {
+        let fields = {};
+        for (let key in fieldsSchema) {
+            fields[key] = this.loadFieldManager(blockManager, fieldsSchema[key]);
+        }
+        return new records_1.RecordManager(fields);
+    }
     loadStoreManager(blockManager, oldSchema) {
         let fields = {};
         for (let key in oldSchema.fields) {
@@ -211,7 +224,6 @@ class SchemaManager {
         for (let order of oldSchema.orders) {
             orders[order.key] = this.loadOrderManager(order.order);
         }
-        // TODO: Create index managers.
         let recordManager = new records_1.RecordManager(fields);
         let storage = new tables_1.Table(blockManager, {
             getKeyFromValue: (value) => {
@@ -222,7 +234,10 @@ class SchemaManager {
         }, {
             bid: oldSchema.storageBid
         });
-        return new stores_1.StoreManager(blockManager, fields, keys, orders, storage);
+        let indexManagers = oldSchema.indices.map((indexSchema) => {
+            return this.loadIndexManager(recordManager, blockManager, indexSchema);
+        });
+        return new stores_1.StoreManager(blockManager, fields, keys, orders, storage, indexManagers);
     }
     loadLinkManager(blockManager, linkSchema, storeManagers) {
         let parent = storeManagers[linkSchema.parent];
@@ -498,6 +513,13 @@ class SchemaManager {
         }
         throw `Expected code to be unreachable!`;
     }
+    createIndex(blockManager, index) {
+        let schema = {
+            keys: index.keys,
+            bid: blockManager.createBlock(trees_1.RadixTree.INITIAL_SIZE)
+        };
+        return schema;
+    }
     createStore(blockManager, store) {
         let version = 0;
         let fields = {};
@@ -507,8 +529,8 @@ class SchemaManager {
         let keys = store.keys;
         let orders = this.createKeyOrders(blockManager, store.orders);
         let indices = [];
-        for (let i = 0; i < store.indices.length; i++) {
-            // TODO: Handle indices.
+        for (let index of store.indices) {
+            indices.push(this.createIndex(blockManager, index));
         }
         let schema = {
             version,
@@ -523,16 +545,30 @@ class SchemaManager {
     deleteStore(blockManager, oldSchema) {
         this.loadStoreManager(blockManager, oldSchema).delete();
     }
+    deleteIndex(blockManager, indexSchema, fieldsSchema) {
+        let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
+        this.loadIndexManager(recordManager, blockManager, indexSchema).delete();
+    }
     updateStore(blockManager, store, oldSchema) {
         if (this.compareStore(store, oldSchema)) {
             let indices = [];
             newIndices: for (let index of store.indices) {
                 oldIndices: for (let indexSchema of oldSchema.indices) {
                     if (this.compareIndex(index, indexSchema)) {
+                        indices.push(indexSchema);
                         continue newIndices;
                     }
                 }
-                // TODO: Create index and insert existing records.
+                let recordManager = this.loadRecordManager(blockManager, oldSchema.fields);
+                let storeManager = this.loadStoreManager(blockManager, oldSchema);
+                let indexSchema = this.createIndex(blockManager, index);
+                let indexManager = this.loadIndexManager(recordManager, blockManager, indexSchema);
+                for (let entry of storeManager) {
+                    let bid = entry.bid();
+                    let record = entry.record();
+                    indexManager.insert(record, bid);
+                }
+                indices.push(indexSchema);
             }
             oldIndices: for (let indexSchema of oldSchema.indices) {
                 newIndices: for (let index of store.indices) {
@@ -540,7 +576,7 @@ class SchemaManager {
                         continue oldIndices;
                     }
                 }
-                // TODO: Delete index.
+                this.deleteIndex(blockManager, indexSchema, oldSchema.fields);
             }
             return {
                 ...oldSchema,
