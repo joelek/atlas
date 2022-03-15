@@ -52,7 +52,7 @@ test(`It should work.`, async (assert) => {
 			let allUserPosts = await userPosts.filter({
 				user_id: "User 1"
 			});
-			console.log(allUserPosts);
+			console.log(Array.from(allUserPosts).map((entry) => entry.record()));
 			return users.lookup({
 				user_id: "User 1"
 			});

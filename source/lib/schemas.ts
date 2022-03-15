@@ -5,11 +5,12 @@ import { Table } from "./tables";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
-import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index } from "./stores";
+import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager } from "./stores";
 import { BlockManager } from "./blocks";
 import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries } from "./queries";
 import { EqualityOperator, Operator, OperatorMap, Operators } from "./operators";
 import { SubsetOf } from "./inference";
+import { RadixTree } from "./trees";
 
 export const BigIntFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BigIntField"),
@@ -344,6 +345,20 @@ export class SchemaManager {
 		throw `Expected code to be unreachable!`;
 	}
 
+	private loadIndexManager(recordManager: RecordManager<any>, blockManager: BlockManager, indexSchema: IndexSchema): IndexManager<any, any> {
+		return new IndexManager(recordManager, blockManager, indexSchema.keys, {
+			bid: indexSchema.bid
+		});
+	}
+
+	private loadRecordManager(blockManager: BlockManager, fieldsSchema: FieldsSchema): RecordManager<any> {
+		let fields = {} as Fields<any>;
+		for (let key in fieldsSchema) {
+			fields[key] = this.loadFieldManager(blockManager, fieldsSchema[key]);
+		}
+		return new RecordManager(fields);
+	}
+
 	private loadStoreManager(blockManager: BlockManager, oldSchema: StoreSchema): StoreManager<any, any> {
 		let fields = {} as Fields<any>;
 		for (let key in oldSchema.fields) {
@@ -354,7 +369,6 @@ export class SchemaManager {
 		for (let order of oldSchema.orders) {
 			orders[order.key] = this.loadOrderManager(order.order);
 		}
-		// TODO: Create index managers.
 		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
 			getKeyFromValue: (value) => {
@@ -365,7 +379,10 @@ export class SchemaManager {
 		}, {
 			bid: oldSchema.storageBid
 		});
-		return new StoreManager(blockManager, fields, keys, orders, storage);
+		let indexManagers = oldSchema.indices.map((indexSchema) => {
+			return this.loadIndexManager(recordManager, blockManager, indexSchema);
+		});
+		return new StoreManager(blockManager, fields, keys, orders, storage, indexManagers);
 	}
 
 	private loadLinkManager(blockManager: BlockManager, linkSchema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
@@ -651,6 +668,14 @@ export class SchemaManager {
 		throw `Expected code to be unreachable!`;
 	}
 
+	private createIndex<A extends Record>(blockManager: BlockManager, index: Index<A>): IndexSchema {
+		let schema: IndexSchema = {
+			keys: index.keys,
+			bid: blockManager.createBlock(RadixTree.INITIAL_SIZE)
+		};
+		return schema;
+	}
+
 	private createStore<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, store: Store<A, B>): StoreSchema {
 		let version = 0;
 		let fields: FieldsSchema = {};
@@ -660,8 +685,8 @@ export class SchemaManager {
 		let keys: KeysSchema = store.keys;
 		let orders = this.createKeyOrders(blockManager, store.orders);
 		let indices: IndicesSchema = [];
-		for (let i = 0; i < store.indices.length; i++) {
-			// TODO: Handle indices.
+		for (let index of store.indices) {
+			indices.push(this.createIndex(blockManager, index));
 		}
 		let schema: StoreSchema = {
 			version,
@@ -678,16 +703,31 @@ export class SchemaManager {
 		this.loadStoreManager(blockManager, oldSchema).delete();
 	}
 
+	private deleteIndex(blockManager: BlockManager, indexSchema: IndexSchema, fieldsSchema: FieldsSchema): void {
+		let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
+		this.loadIndexManager(recordManager, blockManager, indexSchema).delete();
+	}
+
 	private updateStore<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, store: Store<A, B>, oldSchema: StoreSchema): StoreSchema {
 		if (this.compareStore(store, oldSchema)) {
 			let indices: IndicesSchema = [];
 			newIndices: for (let index of store.indices) {
 				oldIndices: for (let indexSchema of oldSchema.indices) {
 					if (this.compareIndex(index, indexSchema)) {
+						indices.push(indexSchema);
 						continue newIndices;
 					}
 				}
-				// TODO: Create index and insert existing records.
+				let recordManager = this.loadRecordManager(blockManager, oldSchema.fields);
+				let storeManager = this.loadStoreManager(blockManager, oldSchema);
+				let indexSchema = this.createIndex(blockManager, index);
+				let indexManager = this.loadIndexManager(recordManager, blockManager, indexSchema);
+				for (let entry of storeManager) {
+					let bid = entry.bid();
+					let record = entry.record();
+					indexManager.insert(record, bid);
+				}
+				indices.push(indexSchema);
 			}
 			oldIndices: for (let indexSchema of oldSchema.indices) {
 				newIndices: for (let index of store.indices) {
@@ -695,7 +735,7 @@ export class SchemaManager {
 						continue oldIndices;
 					}
 				}
-				// TODO: Delete index.
+				this.deleteIndex(blockManager, indexSchema, oldSchema.fields);
 			}
 			return {
 				...oldSchema,
