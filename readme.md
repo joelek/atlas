@@ -332,11 +332,11 @@ NB: This project targets TypeScript 4 in strict mode.
 * Allow BlockManager to keep track of the exact stored size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Add type-safety checks for keys during schema deserialization.
-* Implement index support using legacy RadixTree.
-* Implement search support using legacy RadixTree.
+* Implement search support using RadixTree.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
 * Simplify iterator entry for HashTable.
 * Document address space, limitations and overhead.
 * Add pagination to stores, links and queries.
 * Make TransactionManager collect at most N records.
+* Improve heuristic for index selector.
