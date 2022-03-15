@@ -12,6 +12,32 @@ function getKeyFromString(string: string): Uint8Array {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([getKeyFromString("A"), getKeyFromString("A"), getKeyFromString("A")], 1);
+	tree.insert([getKeyFromString("A"), getKeyFromString("A"), getKeyFromString("B")], 2);
+	tree.insert([getKeyFromString("A"), getKeyFromString("B"), getKeyFromString("A")], 3);
+	tree.insert([getKeyFromString("A"), getKeyFromString("B"), getKeyFromString("B")], 4);
+	tree.insert([getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], 5);
+	tree.insert([getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("B")], 6);
+	tree.insert([getKeyFromString("B"), getKeyFromString("B"), getKeyFromString("A")], 7);
+	tree.insert([getKeyFromString("B"), getKeyFromString("B"), getKeyFromString("B")], 8);
+
+	test(`It should support ordered filtering.`, async (assert) => {
+		let observed = Array.from(tree.filter(">", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
+		let expected = [8, 7, 2, 1, 4, 3];
+		assert.array.equals(observed, expected);
+	});
+
+	test(`It should support ordered filtering.`, async (assert) => {
+		let observed = Array.from(tree.filter("<", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
+		let expected = [6];
+		assert.array.equals(observed, expected);
+	});
+})();
+
+(async () => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
 	tree.insert([getKeyFromString("a")], 1);
 	tree.insert([getKeyFromString("a"), getKeyFromString("a")], 2);
 	tree.insert([getKeyFromString("a"), getKeyFromString("b")], 3);
