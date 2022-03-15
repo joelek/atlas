@@ -15,6 +15,10 @@ export class EqualityFilter<A extends Value> extends Filter<A> {
 		this.value = value;
 	}
 
+	getEncodedValue(): Uint8Array {
+		return bedrock.codecs.Any.encodePayload(this.value);
+	}
+
 	getValue(): A {
 		return this.value;
 	}
