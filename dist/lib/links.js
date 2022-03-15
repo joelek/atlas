@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OverridableWritableLink = exports.Link = exports.LinkManager = exports.WritableLinkManager = void 0;
 const filters_1 = require("./filters");
+const stores_1 = require("./stores");
 ;
 ;
 class WritableLinkManager {
@@ -72,6 +73,27 @@ class Link {
         this.child = child;
         this.recordKeysMap = recordKeysMap;
         this.orders = orders;
+        this.child.index(new stores_1.Index(this.createIndexKeys()));
+    }
+    createIndexKeys() {
+        let keys = [];
+        for (let key in this.recordKeysMap) {
+            let thatKey = this.recordKeysMap[key];
+            keys.push(thatKey);
+        }
+        for (let key in this.orders) {
+            let order = this.orders[key];
+            if (order != null) {
+                keys.push(key);
+            }
+        }
+        for (let key of this.child.keys) {
+            let order = this.orders[key];
+            if (order == null) {
+                keys.push(key);
+            }
+        }
+        return keys;
     }
 }
 exports.Link = Link;

@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OverridableWritableQuery = exports.Query = exports.QueryManager = exports.WritableQueryManager = void 0;
+const operators_1 = require("./operators");
+const stores_1 = require("./stores");
 ;
 ;
 class WritableQueryManager {
@@ -45,6 +47,29 @@ class Query {
         this.store = store;
         this.operators = operators;
         this.orders = orders;
+        this.store.index(new stores_1.Index(this.createIndexKeys()));
+    }
+    createIndexKeys() {
+        let keys = [];
+        for (let key in this.operators) {
+            let operator = this.operators[key];
+            if (operator instanceof operators_1.EqualityOperator) {
+                keys.push(key);
+            }
+        }
+        for (let key in this.orders) {
+            let order = this.orders[key];
+            if (order != null) {
+                keys.push(key);
+            }
+        }
+        for (let key of this.store.keys) {
+            let order = this.orders[key];
+            if (order == null) {
+                keys.push(key);
+            }
+        }
+        return keys;
     }
 }
 exports.Query = Query;

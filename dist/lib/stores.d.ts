@@ -81,6 +81,7 @@ export declare type WritableStoresFromStoreManagers<A extends StoreManagers<any>
 export declare class Index<A extends Record> {
     keys: Keys<A>;
     constructor(keys: Keys<A>);
+    equals(that: Index<A>): boolean;
 }
 export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     fields: Fields<A>;
@@ -88,6 +89,8 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     indices: Array<Index<A>>;
     orders: OrderMap<A>;
     constructor(fields: Fields<A>, keys: [...B], orders: OrderMap<A>);
+    createIndexKeys(): Keys<A>;
+    index(that: Index<A>): void;
 }
 export declare type Stores<A> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];

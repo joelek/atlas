@@ -178,6 +178,17 @@ class Index {
     constructor(keys) {
         this.keys = keys;
     }
+    equals(that) {
+        if (this.keys.length !== that.keys.length) {
+            return false;
+        }
+        for (let i = 0; i < this.keys.length; i++) {
+            if (this.keys[i] !== that.keys[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 exports.Index = Index;
 ;
@@ -191,6 +202,31 @@ class Store {
         this.keys = keys;
         this.orders = orders;
         this.indices = [];
+        this.index(new Index(this.createIndexKeys()));
+    }
+    createIndexKeys() {
+        let keys = [];
+        for (let key in this.orders) {
+            let order = this.orders[key];
+            if (order != null) {
+                keys.push(key);
+            }
+        }
+        for (let key of this.keys) {
+            let order = this.orders[key];
+            if (order == null) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    }
+    index(that) {
+        for (let index of this.indices) {
+            if (index.equals(that)) {
+                return;
+            }
+        }
+        this.indices.push(that);
     }
 }
 exports.Store = Store;

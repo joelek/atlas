@@ -112,7 +112,7 @@ class RadixTreeWalker {
     relationship;
     keys;
     directions;
-    *doYield(bid, depth, reverse, include) {
+    *doYield(bid, depth, relationship, reverse, include) {
         let iterables = [];
         if (include.resident || include.subtree) {
             let head = new NodeHead();
@@ -127,7 +127,22 @@ class RadixTreeWalker {
                 let subtree = head.subtree();
                 if (subtree !== 0) {
                     let reverse = this.directions[depth + 1] === "decreasing";
-                    iterables.push(this.doYield(subtree, depth + 1, reverse, { resident: true, subtree: true, children: true }));
+                    let relationship = this.relationship;
+                    if (reverse) {
+                        if (relationship === "<") {
+                            relationship = ">";
+                        }
+                        else if (relationship === "<=") {
+                            relationship = ">=";
+                        }
+                        else if (relationship === ">") {
+                            relationship = "<";
+                        }
+                        else if (relationship === ">=") {
+                            relationship = "<=";
+                        }
+                    }
+                    iterables.push(this.doYield(subtree, depth + 1, relationship, reverse, { resident: true, subtree: true, children: true }));
                 }
             }
         }
@@ -138,7 +153,7 @@ class RadixTreeWalker {
                 for (let i = 0; i < 16; i++) {
                     let child = body.child(i);
                     if (child !== 0) {
-                        iterables.push(this.doYield(child, depth, reverse, { resident: true, subtree: true, children: true }));
+                        iterables.push(this.doYield(child, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
                     }
                 }
             }
@@ -147,11 +162,11 @@ class RadixTreeWalker {
             yield* iterable;
         }
     }
-    *onKeyIsNodeKey(bid, depth, reverse) {
+    *onKeyIsNodeKey(bid, depth, relationship, reverse) {
         let iterables = [];
-        if (this.relationship === "^=") {
+        if (relationship === "^=") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
             }
             else {
                 let head = new NodeHead();
@@ -162,9 +177,9 @@ class RadixTreeWalker {
                 }
             }
         }
-        else if (this.relationship === "=") {
+        else if (relationship === "=") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: false, children: false }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: false, children: false }));
             }
             else {
                 let head = new NodeHead();
@@ -175,9 +190,9 @@ class RadixTreeWalker {
                 }
             }
         }
-        else if (this.relationship === ">") {
+        else if (relationship === ">") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: false, subtree: true, children: true }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: false, subtree: true, children: true }));
             }
             else {
                 let head = new NodeHead();
@@ -188,9 +203,9 @@ class RadixTreeWalker {
                 }
             }
         }
-        else if (this.relationship === ">=") {
+        else if (relationship === ">=") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
             }
             else {
                 let head = new NodeHead();
@@ -201,9 +216,9 @@ class RadixTreeWalker {
                 }
             }
         }
-        else if (this.relationship === "<") {
+        else if (relationship === "<") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: false, subtree: false, children: false }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: false, subtree: false, children: false }));
             }
             else {
                 let head = new NodeHead();
@@ -218,9 +233,9 @@ class RadixTreeWalker {
                 }
             }
         }
-        else if (this.relationship === "<=") {
+        else if (relationship === "<=") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: false, children: false }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: false, children: false }));
             }
             else {
                 let head = new NodeHead();
@@ -239,42 +254,42 @@ class RadixTreeWalker {
             yield* iterable;
         }
     }
-    *onKeyIsPrefixForNodeKey(bid, depth, reverse) {
+    *onKeyIsPrefixForNodeKey(bid, depth, relationship, reverse) {
         let iterables = [];
-        if (this.relationship === "^=") {
+        if (relationship === "^=") {
             if (depth === this.keys.length - 1) {
-                iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
             }
         }
-        else if (this.relationship === ">") {
-            iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+        else if (relationship === ">") {
+            iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
         }
-        else if (this.relationship === ">=") {
-            iterables.push(this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true }));
+        else if (relationship === ">=") {
+            iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
         }
         for (let iterable of reverse ? iterables.reverse() : iterables) {
             yield* iterable;
         }
     }
-    *onKeyIsBeforeNodeKey(bid, depth, reverse) {
-        if (this.relationship === ">") {
-            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
+    *onKeyIsBeforeNodeKey(bid, depth, relationship, reverse) {
+        if (relationship === ">") {
+            yield* this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true });
         }
-        else if (this.relationship === ">=") {
-            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
-        }
-    }
-    *onKeyIsAfterNodeKey(bid, depth, reverse) {
-        if (this.relationship === "<") {
-            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
-        }
-        else if (this.relationship === "<=") {
-            yield* this.doYield(bid, depth, reverse, { resident: true, subtree: true, children: true });
+        else if (relationship === ">=") {
+            yield* this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true });
         }
     }
-    *onNodeKeyIsPrefixForKey(bid, depth, reverse, suffix) {
+    *onKeyIsAfterNodeKey(bid, depth, relationship, reverse) {
+        if (relationship === "<") {
+            yield* this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true });
+        }
+        else if (relationship === "<=") {
+            yield* this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true });
+        }
+    }
+    *onNodeKeyIsPrefixForKey(bid, depth, relationship, reverse, suffix) {
         let iterables = [];
-        if (this.relationship === "<" || this.relationship === "<=") {
+        if (relationship === "<" || relationship === "<=") {
             let head = new NodeHead();
             this.blockManager.readBlock(bid, head.buffer, 0);
             let resident = head.resident();
@@ -290,23 +305,23 @@ class RadixTreeWalker {
             let body = new NodeBody();
             this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
             let nextSuffixNibble = suffix.shift();
-            if (this.relationship === "<" || this.relationship === "<=") {
+            if (relationship === "<" || relationship === "<=") {
                 for (let i = 0; i < nextSuffixNibble; i++) {
                     let child = body.child(i);
                     if (child !== 0) {
-                        iterables.push(this.doYield(child, depth, reverse, { resident: true, subtree: true, children: true }));
+                        iterables.push(this.doYield(child, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
                     }
                 }
             }
             let child = body.child(nextSuffixNibble);
             if (child !== 0) {
-                iterables.push(this.visitNode(child, depth, reverse, suffix));
+                iterables.push(this.visitNode(child, depth, relationship, reverse, suffix));
             }
-            if (this.relationship === ">" || this.relationship === ">=") {
+            if (relationship === ">" || relationship === ">=") {
                 for (let i = nextSuffixNibble + 1; i < 16; i++) {
                     let child = body.child(i);
                     if (child !== 0) {
-                        iterables.push(this.doYield(child, depth, reverse, { resident: true, subtree: true, children: true }));
+                        iterables.push(this.doYield(child, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
                     }
                 }
             }
@@ -315,7 +330,7 @@ class RadixTreeWalker {
             yield* iterable;
         }
     }
-    *visitNode(bid, depth, reverse, suffix) {
+    *visitNode(bid, depth, relationship, reverse, suffix) {
         let head = new NodeHead();
         this.blockManager.readBlock(bid, head.buffer, 0);
         let prefix = head.prefix();
@@ -325,34 +340,50 @@ class RadixTreeWalker {
         if (nextSuffixNibble == null) {
             if (nextPrefixNibble == null) {
                 // Key is an exact match for the current node.
-                yield* this.onKeyIsNodeKey(bid, depth, reverse);
+                yield* this.onKeyIsNodeKey(bid, depth, relationship, reverse);
             }
             else {
                 // Key is a prefix match for the current node.
-                yield* this.onKeyIsPrefixForNodeKey(bid, depth, reverse);
+                yield* this.onKeyIsPrefixForNodeKey(bid, depth, relationship, reverse);
             }
         }
         else {
             if (nextPrefixNibble == null) {
                 // Key potentially matches a node located at a greater depth.
-                yield* this.onNodeKeyIsPrefixForKey(bid, depth, reverse, suffix.slice(commonPrefixLength));
+                yield* this.onNodeKeyIsPrefixForKey(bid, depth, relationship, reverse, suffix.slice(commonPrefixLength));
             }
             else {
                 if (nextSuffixNibble < nextPrefixNibble) {
                     // Key matches a non-existant node before the current node.
-                    yield* this.onKeyIsBeforeNodeKey(bid, depth, reverse);
+                    yield* this.onKeyIsBeforeNodeKey(bid, depth, relationship, reverse);
                 }
                 else {
                     // Key matches a non-existant node after the current node.
-                    yield* this.onKeyIsAfterNodeKey(bid, depth, reverse);
+                    yield* this.onKeyIsAfterNodeKey(bid, depth, relationship, reverse);
                 }
             }
         }
     }
     *doTraverse(bid, depth) {
         let suffix = this.keys[depth] ?? [];
-        let reverse = this.directions[depth] === "decreasing";
-        yield* this.visitNode(bid, depth, reverse, suffix.slice());
+        let direction = this.directions[depth] ?? "increasing";
+        let reverse = direction === "decreasing";
+        let relationship = this.relationship;
+        if (reverse) {
+            if (relationship === "<") {
+                relationship = ">";
+            }
+            else if (relationship === "<=") {
+                relationship = ">=";
+            }
+            else if (relationship === ">") {
+                relationship = "<";
+            }
+            else if (relationship === ">=") {
+                relationship = "<=";
+            }
+        }
+        yield* this.visitNode(bid, depth, relationship, reverse, suffix.slice());
     }
     constructor(blockManager, relationship, keys, directions) {
         this.blockManager = blockManager;
