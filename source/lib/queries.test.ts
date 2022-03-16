@@ -2,9 +2,9 @@ import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityOperator } from "./operators";
 import { DecreasingOrder, IncreasingOrder } from "./orders";
-import { QueryManager } from "./queries";
+import { Query, QueryManager } from "./queries";
 import { StringField } from "./records";
-import { StoreManager } from "./stores";
+import { Store, StoreManager } from "./stores";
 import { test } from "./test";
 
 function createUsers() {
@@ -62,5 +62,51 @@ test(`It should support filtering with explicit ordering.`, async (assert) => {
 	});
 	let observed = Array.from(iterable).map((user) => user.record().key);
 	let expected = ["User 3", "User 2"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should create the correct index for a query without orders.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"]);
+	let query = new Query(users, {
+		name: new EqualityOperator()
+	}, {});
+	let index = query.createIndex();
+	let observed = index.keys;
+	let expected = ["name", "user_id"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should create the correct index for a query with metadata field orders.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"]);
+	let query = new Query(users, {
+		name: new EqualityOperator()
+	}, {
+		name: new IncreasingOrder()
+	});
+	let index = query.createIndex();
+	let observed = index.keys;
+	let expected = ["name", "user_id"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should create the correct index for a query with identifying field orders.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"]);
+	let query = new Query(users, {
+		name: new EqualityOperator()
+	}, {
+		user_id: new IncreasingOrder()
+	});
+	let index = query.createIndex();
+	let observed = index.keys;
+	let expected = ["name", "user_id"];
 	assert.array.equals(observed, expected);
 });

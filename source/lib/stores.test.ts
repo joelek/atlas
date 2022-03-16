@@ -1,9 +1,9 @@
-import { StoreManager } from "./stores";
+import { Store, StoreManager } from "./stores";
 import { StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";
-import { IncreasingOrder, DecreasingOrder } from "./orders";
+import { IncreasingOrder, DecreasingOrder, Order } from "./orders";
 import { test } from "./test";
 
 test(`It should support for-of iteration of the records stored.`, async (assert) => {
@@ -312,4 +312,46 @@ test(`It should support updating a record not previously inserted.`, async (asse
 		name: "One"
 	});
 	assert.true(users.lookup({ key: "A" }).name === "One");
+});
+
+test(`It should create the correct index for a store without orders.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"], {
+		user_id: undefined as Order<string> | undefined,
+		name: undefined as Order<string> | undefined
+	});
+	let index = users.createIndex();
+	let observed = index.keys;
+	let expected = ["user_id"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should create the correct index for a store with metadata field orders.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"], {
+		user_id: undefined as Order<string> | undefined,
+		name: new IncreasingOrder()
+	});
+	let index = users.createIndex();
+	let observed = index.keys;
+	let expected = ["name", "user_id"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should create the correct index for a store with identifying field orders.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"], {
+		user_id: new IncreasingOrder(),
+		name: undefined as Order<string> | undefined
+	});
+	let index = users.createIndex();
+	let observed = index.keys;
+	let expected = ["user_id"];
+	assert.array.equals(observed, expected);
 });
