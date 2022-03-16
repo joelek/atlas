@@ -119,11 +119,11 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 	recordKeysMap: E;
 	orders: OrderMap<C>;
 
-	constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders: OrderMap<C>) {
+	constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
 		this.parent = parent;
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;
-		this.orders = orders;
+		this.orders = orders ?? {};
 		this.child.index(this.createIndex());
 	}
 
@@ -131,17 +131,21 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 		let keys = [] as Keys<C>;
 		for (let key in this.recordKeysMap) {
 			let thatKey = this.recordKeysMap[key] as Key<C>;
-			keys.push(thatKey);
+			if (!keys.includes(thatKey)) {
+				keys.push(thatKey);
+			}
 		}
 		for (let key in this.orders) {
 			let order = this.orders[key];
-			if (order != null) {
+			if (order == null) {
+				continue;
+			}
+			if (!keys.includes(key)) {
 				keys.push(key);
 			}
 		}
 		for (let key of this.child.keys) {
-			let order = this.orders[key];
-			if (order == null) {
+			if (!keys.includes(key)) {
 				keys.push(key);
 			}
 		}
