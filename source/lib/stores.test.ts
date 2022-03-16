@@ -1,10 +1,11 @@
-import { Store, StoreManager } from "./stores";
-import { StringField } from "./records";
+import { IndexManager, Store, StoreManager } from "./stores";
+import { RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder, Order } from "./orders";
 import { test } from "./test";
+import { Table } from "./tables";
 
 test(`It should support for-of iteration of the records stored.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
@@ -353,5 +354,96 @@ test(`It should create the correct index for a store with identifying field orde
 	let index = users.createIndex();
 	let observed = index.keys;
 	let expected = ["user_id"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should update indices on insert.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new StringField("")
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let index = new IndexManager(recordManager, blockManager, ["name"]);
+	let users = new StoreManager(blockManager, fields, keys, {
+		user_id: new IncreasingOrder()
+	}, table, [ index ]);
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	let observed = Array.from(index).map((record) => record.record().name);
+	let expected = ["Name 1"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should update indices on update.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new StringField("")
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let index = new IndexManager(recordManager, blockManager, ["name"]);
+	let users = new StoreManager(blockManager, fields, keys, {
+		user_id: new IncreasingOrder()
+	}, table, [ index ]);
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Name 2"
+	});
+	let observed = Array.from(index).map((record) => record.record().name);
+	let expected = ["Name 2"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should update indices on remove.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new StringField("")
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let index = new IndexManager(recordManager, blockManager, ["name"]);
+	let users = new StoreManager(blockManager, fields, keys, {
+		user_id: new IncreasingOrder()
+	}, table, [ index ]);
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	users.remove({
+		user_id: "User 1"
+	});
+	let observed = Array.from(index).map((record) => record.record().name);
+	let expected = [] as Array<string>;
 	assert.array.equals(observed, expected);
 });
