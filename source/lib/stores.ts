@@ -382,13 +382,13 @@ export class Index<A extends Record> {
 export class Store<A extends Record, B extends RequiredKeys<A>> {
 	fields: Fields<A>;
 	keys: [...B];
-	indices: Array<Index<A>>;
 	orders: OrderMap<A>;
+	indices: Array<Index<A>>;
 
-	constructor(fields: Fields<A>, keys: [...B], orders: OrderMap<A>) {
+	constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>) {
 		this.fields = fields;
 		this.keys = keys;
-		this.orders = orders;
+		this.orders = orders ?? {};
 		this.indices = [];
 		this.index(this.createIndex());
 	}
@@ -397,13 +397,15 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 		let keys = [] as Keys<A>;
 		for (let key in this.orders) {
 			let order = this.orders[key];
-			if (order != null) {
+			if (order == null) {
+				continue;
+			}
+			if (!keys.includes(key)) {
 				keys.push(key);
 			}
 		}
 		for (let key of this.keys) {
-			let order = this.orders[key];
-			if (order == null) {
+			if (!keys.includes(key)) {
 				keys.push(key);
 			}
 		}
