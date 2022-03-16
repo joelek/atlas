@@ -115,6 +115,9 @@ class IndexManager {
         this.keys = keys;
         this.tree = new trees_1.RadixTree(blockManager, bid);
     }
+    *[Symbol.iterator]() {
+        yield* new FilteredStore(this.recordManager, this.blockManager, this.tree, {}, {});
+    }
     delete() {
         this.tree.delete();
     }
@@ -187,6 +190,9 @@ class StoreManager {
     delete() {
         for (let entry of this) {
             this.blockManager.deleteBlock(entry.bid());
+        }
+        for (let indexManager of this.indexManagers) {
+            indexManager.delete();
         }
         this.table.delete();
     }

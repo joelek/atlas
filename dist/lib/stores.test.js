@@ -7,6 +7,7 @@ const files_1 = require("./files");
 const filters_1 = require("./filters");
 const orders_1 = require("./orders");
 const test_1 = require("./test");
+const tables_1 = require("./tables");
 (0, test_1.test)(`It should support for-of iteration of the records stored.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
@@ -337,5 +338,93 @@ const test_1 = require("./test");
     let index = users.createIndex();
     let observed = index.keys;
     let expected = ["user_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should update indices on insert.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {
+        user_id: new orders_1.IncreasingOrder()
+    }, table, [index]);
+    users.insert({
+        user_id: "User 1",
+        name: "Name 1"
+    });
+    let observed = Array.from(index).map((record) => record.record().name);
+    let expected = ["Name 1"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should update indices on update.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {
+        user_id: new orders_1.IncreasingOrder()
+    }, table, [index]);
+    users.insert({
+        user_id: "User 1",
+        name: "Name 1"
+    });
+    users.insert({
+        user_id: "User 1",
+        name: "Name 2"
+    });
+    let observed = Array.from(index).map((record) => record.record().name);
+    let expected = ["Name 2"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should update indices on remove.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {
+        user_id: new orders_1.IncreasingOrder()
+    }, table, [index]);
+    users.insert({
+        user_id: "User 1",
+        name: "Name 1"
+    });
+    users.remove({
+        user_id: "User 1"
+    });
+    let observed = Array.from(index).map((record) => record.record().name);
+    let expected = [];
     assert.array.equals(observed, expected);
 });

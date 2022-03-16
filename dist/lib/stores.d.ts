@@ -65,6 +65,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Keys<A>, options?: {
         bid?: number;
     });
+    [Symbol.iterator](): Iterator<Entry<A>>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Array<FilteredStore<A>>;
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;

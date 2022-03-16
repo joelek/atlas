@@ -45,10 +45,10 @@ class BlockHeader extends chunks_1.Chunk {
         let category = Math.ceil(Math.log2(minLength));
         return category;
     }
-    static getLength(cateogry) {
+    static getLength(category) {
         if (variables_1.DEBUG)
-            asserts.IntegerAssert.atLeast(0, cateogry);
-        let length = Math.pow(2, cateogry);
+            asserts.IntegerAssert.atLeast(0, category);
+        let length = Math.pow(2, category);
         return length;
     }
     static LENGTH = 8;

@@ -18,7 +18,7 @@ export declare class BlockHeader extends Chunk {
     offset(value?: number): number;
     length(value?: number): number;
     static getCategory(minLength: number): number;
-    static getLength(cateogry: number): number;
+    static getLength(category: number): number;
     static readonly LENGTH = 8;
 }
 export declare class BlockReference extends Chunk {
