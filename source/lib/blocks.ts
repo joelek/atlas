@@ -48,9 +48,9 @@ export class BlockHeader extends Chunk {
 		return category;
 	}
 
-	static getLength(cateogry: number): number {
-		if (DEBUG) asserts.IntegerAssert.atLeast(0, cateogry);
-		let length = Math.pow(2, cateogry);
+	static getLength(category: number): number {
+		if (DEBUG) asserts.IntegerAssert.atLeast(0, category);
+		let length = Math.pow(2, category);
 		return length;
 	}
 
