@@ -169,6 +169,10 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		this.tree = new RadixTree(blockManager, bid);
 	}
 
+	* [Symbol.iterator](): Iterator<Entry<A>> {
+		yield * new FilteredStore(this.recordManager, this.blockManager, this.tree, {}, {});
+	}
+
 	delete(): void {
 		this.tree.delete();
 	}
