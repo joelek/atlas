@@ -251,6 +251,9 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		for (let entry of this) {
 			this.blockManager.deleteBlock(entry.bid());
 		}
+		for (let indexManager of this.indexManagers) {
+			indexManager.delete();
+		}
 		this.table.delete();
 	}
 
