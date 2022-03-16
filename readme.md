@@ -282,22 +282,22 @@ Please make sure that you understand how Atlas handles automatic schema migratio
 
 In addition to this, Atlas will enforce data-consistency for all links not referenced in the existing schema.
 
-## Performance
+## Technical details
+
+### Performance
 
 The performance of Atlas will utimately depend on the general performance of the underlying hardware, most notably the hardware used to store the database.
 
-Storing the database on a Solid State Drive (SSD) is highly recommended for optimal performance, especially for write-heavy applications.
-
-### Benchmark
-
-The table shown below gives a rough estimate of the performance of Atlas in fully ACID-compliant transactions per second.
+The table shown below gives a rough estimate of the performance of Atlas in fully ACID-compliant transactions per second. Please note how write performance drops significantly when the database is stored using mechanical storage. This is a direct result of the transaction model employed by Atlas and due to the high latency of synchronizing mechanical storage.
 
 | Device                        | Read (T/s) | Write (T/s) |
 | ----------------------------- | ---------- | ----------- |
 | WD Black SN750 1TB M.2 SSD    | 12 192     | 520         |
 | Seagate IronWolf 8TB 3.5" HDD | 11 350     | 12          |
 
-## Limits and overheads
+Storing the database on a Solid State Drive (SSD) is highly recommended for optimal performance, especially for write-heavy applications.
+
+### Limits and overheads
 
 Atlas implements a virtual block system in which all database entities are stored. Each block is allocated as a contiguous array of 2^k bytes where k is the smallest non-negative number able to store the complete block. This allows blocks to shrink and grow as needed without unnecessary reallocation and simplifies block reuse as there are fewer unique block sizes in the system. It does however imply that each block is stored with an overhead of between 0% and 100%. A 256 byte block will be stored in an array of 256 bytes with an overhead of 0 bytes. A 257 byte block will be stored in an array of 512 bytes with an overhead of 255 bytes.
 
