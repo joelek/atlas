@@ -356,9 +356,7 @@ const tables_1 = require("./tables");
         }
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
-    let users = new stores_1.StoreManager(blockManager, fields, keys, {
-        user_id: new orders_1.IncreasingOrder()
-    }, table, [index]);
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index]);
     users.insert({
         user_id: "User 1",
         name: "Name 1"
@@ -383,9 +381,7 @@ const tables_1 = require("./tables");
         }
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
-    let users = new stores_1.StoreManager(blockManager, fields, keys, {
-        user_id: new orders_1.IncreasingOrder()
-    }, table, [index]);
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index]);
     users.insert({
         user_id: "User 1",
         name: "Name 1"
@@ -414,9 +410,7 @@ const tables_1 = require("./tables");
         }
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
-    let users = new stores_1.StoreManager(blockManager, fields, keys, {
-        user_id: new orders_1.IncreasingOrder()
-    }, table, [index]);
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index]);
     users.insert({
         user_id: "User 1",
         name: "Name 1"
@@ -426,5 +420,75 @@ const tables_1 = require("./tables");
     });
     let observed = Array.from(index).map((record) => record.record().name);
     let expected = [];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should use the optimal index when filtering with filters.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let indexOne = new stores_1.IndexManager(recordManager, blockManager, ["user_id"]);
+    let usersOne = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne]);
+    usersOne.insert({
+        user_id: "User 1",
+        name: "Name"
+    });
+    let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
+    let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo]);
+    usersTwo.insert({
+        user_id: "User 2",
+        name: "Name"
+    });
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo]);
+    let iterable = users.filter({
+        name: new filters_1.EqualityFilter("Name")
+    });
+    let observed = Array.from(iterable).map((record) => record.record().user_id);
+    let expected = ["User 1"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should use the optimal index when filtering with filters and orders`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let indexOne = new stores_1.IndexManager(recordManager, blockManager, ["user_id"]);
+    let usersOne = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne]);
+    usersOne.insert({
+        user_id: "User 1",
+        name: "Name"
+    });
+    let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name", "user_id"]);
+    let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo]);
+    usersTwo.insert({
+        user_id: "User 2",
+        name: "Name"
+    });
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo]);
+    let iterable = users.filter({
+        name: new filters_1.EqualityFilter("Name")
+    });
+    let observed = Array.from(iterable).map((record) => record.record().user_id);
+    let expected = ["User 2"];
     assert.array.equals(observed, expected);
 });
