@@ -47,29 +47,34 @@ class Query {
         this.store = store;
         this.operators = operators;
         this.orders = orders;
-        this.store.index(new stores_1.Index(this.createIndexKeys()));
+        this.store.index(this.createIndex());
     }
-    createIndexKeys() {
+    createIndex() {
         let keys = [];
         for (let key in this.operators) {
             let operator = this.operators[key];
-            if (operator instanceof operators_1.EqualityOperator) {
+            if (!(operator instanceof operators_1.EqualityOperator)) {
+                continue;
+            }
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
         for (let key in this.orders) {
             let order = this.orders[key];
-            if (order != null) {
+            if (order == null) {
+                continue;
+            }
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
         for (let key of this.store.keys) {
-            let order = this.orders[key];
-            if (order == null) {
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
-        return keys;
+        return new stores_1.Index(keys);
     }
 }
 exports.Query = Query;

@@ -300,3 +300,42 @@ const test_1 = require("./test");
     });
     assert.true(users.lookup({ key: "A" }).name === "One");
 });
+(0, test_1.test)(`It should create the correct index for a store without orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"], {
+        user_id: undefined,
+        name: undefined
+    });
+    let index = users.createIndex();
+    let observed = index.keys;
+    let expected = ["user_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a store with metadata field orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"], {
+        user_id: undefined,
+        name: new orders_1.IncreasingOrder()
+    });
+    let index = users.createIndex();
+    let observed = index.keys;
+    let expected = ["name", "user_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a store with identifying field orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"], {
+        user_id: new orders_1.IncreasingOrder(),
+        name: undefined
+    });
+    let index = users.createIndex();
+    let observed = index.keys;
+    let expected = ["user_id"];
+    assert.array.equals(observed, expected);
+});

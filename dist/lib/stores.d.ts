@@ -111,10 +111,10 @@ export declare class Index<A extends Record> {
 export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     fields: Fields<A>;
     keys: [...B];
-    indices: Array<Index<A>>;
     orders: OrderMap<A>;
-    constructor(fields: Fields<A>, keys: [...B], orders: OrderMap<A>);
-    createIndexKeys(): Keys<A>;
+    indices: Array<Index<A>>;
+    constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>);
+    createIndex(): Index<A>;
     index(that: Index<A>): void;
 }
 export declare type Stores<A> = {

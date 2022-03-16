@@ -1,8 +1,8 @@
 import { SubsetOf } from "./inference";
 import { Operators } from "./operators";
 import { Orders } from "./orders";
-import { RequiredKeys, Record, Keys } from "./records";
-import { Entry, Store, StoreManager } from "./stores";
+import { RequiredKeys, Record } from "./records";
+import { Entry, Index, Store, StoreManager } from "./stores";
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
     filter(parameters: C): Promise<Iterable<Entry<A>>>;
 }
@@ -52,7 +52,7 @@ export declare class Query<A extends Record, B extends RequiredKeys<A>, C extend
     operators: Operators<C>;
     orders: Orders<D>;
     constructor(store: Store<A, B>, operators: Operators<C>, orders: Orders<D>);
-    createIndexKeys(): Keys<A>;
+    createIndex(): Index<A>;
 }
 export declare type Queries<A> = {
     [B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : A[B];

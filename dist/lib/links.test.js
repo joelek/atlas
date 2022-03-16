@@ -215,3 +215,117 @@ function createDirectories() {
     let expected = undefined;
     assert.true(observed === expected);
 });
+(0, test_1.test)(`It should create the correct index for a referencing link without orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let posts = new stores_1.Store({
+        post_id: new records_1.StringField(""),
+        post_user_id: new records_1.StringField(""),
+        title: new records_1.StringField("")
+    }, ["post_id"]);
+    let userPosts = new links_1.Link(users, posts, {
+        user_id: "post_user_id"
+    }, {
+        post_id: undefined,
+        post_user_id: undefined,
+        title: undefined
+    });
+    let index = userPosts.createIndex();
+    let observed = index.keys;
+    let expected = ["post_user_id", "post_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a referencing link with metadata field orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let posts = new stores_1.Store({
+        post_id: new records_1.StringField(""),
+        post_user_id: new records_1.StringField(""),
+        title: new records_1.StringField("")
+    }, ["post_id"]);
+    let userPosts = new links_1.Link(users, posts, {
+        user_id: "post_user_id"
+    }, {
+        title: new orders_1.IncreasingOrder()
+    });
+    let index = userPosts.createIndex();
+    let observed = index.keys;
+    let expected = ["post_user_id", "title", "post_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a referencing link with identifying field orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let posts = new stores_1.Store({
+        post_id: new records_1.StringField(""),
+        post_user_id: new records_1.StringField(""),
+        title: new records_1.StringField("")
+    }, ["post_id"]);
+    let userPosts = new links_1.Link(users, posts, {
+        user_id: "post_user_id"
+    }, {
+        post_id: new orders_1.IncreasingOrder(),
+        post_user_id: new orders_1.IncreasingOrder()
+    });
+    let index = userPosts.createIndex();
+    let observed = index.keys;
+    let expected = ["post_user_id", "post_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a self-referencing link without orders.`, async (assert) => {
+    let directories = new stores_1.Store({
+        directory_id: new records_1.StringField(""),
+        parent_directory_id: new records_1.NullableStringField(null),
+        name: new records_1.StringField("")
+    }, ["directory_id"]);
+    let childDirectories = new links_1.Link(directories, directories, {
+        directory_id: "parent_directory_id"
+    }, {
+        directory_id: undefined,
+        parent_directory_id: undefined,
+        name: undefined
+    });
+    let index = childDirectories.createIndex();
+    let observed = index.keys;
+    let expected = ["parent_directory_id", "directory_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a self-referencing link with metadata field orders.`, async (assert) => {
+    let directories = new stores_1.Store({
+        directory_id: new records_1.StringField(""),
+        parent_directory_id: new records_1.NullableStringField(null),
+        name: new records_1.StringField("")
+    }, ["directory_id"]);
+    let childDirectories = new links_1.Link(directories, directories, {
+        directory_id: "parent_directory_id"
+    }, {
+        name: new orders_1.IncreasingOrder()
+    });
+    let index = childDirectories.createIndex();
+    let observed = index.keys;
+    let expected = ["parent_directory_id", "name", "directory_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a self-referencing link with identifying field orders.`, async (assert) => {
+    let directories = new stores_1.Store({
+        directory_id: new records_1.StringField(""),
+        parent_directory_id: new records_1.NullableStringField(null),
+        name: new records_1.StringField("")
+    }, ["directory_id"]);
+    let childDirectories = new links_1.Link(directories, directories, {
+        directory_id: "parent_directory_id"
+    }, {
+        directory_id: new orders_1.IncreasingOrder(),
+        parent_directory_id: new orders_1.IncreasingOrder()
+    });
+    let index = childDirectories.createIndex();
+    let observed = index.keys;
+    let expected = ["parent_directory_id", "directory_id"];
+    assert.array.equals(observed, expected);
+});

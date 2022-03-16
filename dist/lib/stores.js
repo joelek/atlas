@@ -300,30 +300,32 @@ exports.Index = Index;
 class Store {
     fields;
     keys;
-    indices;
     orders;
+    indices;
     constructor(fields, keys, orders) {
         this.fields = fields;
         this.keys = keys;
-        this.orders = orders;
+        this.orders = orders ?? {};
         this.indices = [];
-        this.index(new Index(this.createIndexKeys()));
+        this.index(this.createIndex());
     }
-    createIndexKeys() {
+    createIndex() {
         let keys = [];
         for (let key in this.orders) {
             let order = this.orders[key];
-            if (order != null) {
+            if (order == null) {
+                continue;
+            }
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
         for (let key of this.keys) {
-            let order = this.orders[key];
-            if (order == null) {
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
-        return keys;
+        return new Index(keys);
     }
     index(that) {
         for (let index of this.indices) {

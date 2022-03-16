@@ -72,28 +72,32 @@ class Link {
         this.parent = parent;
         this.child = child;
         this.recordKeysMap = recordKeysMap;
-        this.orders = orders;
-        this.child.index(new stores_1.Index(this.createIndexKeys()));
+        this.orders = orders ?? {};
+        this.child.index(this.createIndex());
     }
-    createIndexKeys() {
+    createIndex() {
         let keys = [];
         for (let key in this.recordKeysMap) {
             let thatKey = this.recordKeysMap[key];
-            keys.push(thatKey);
+            if (!keys.includes(thatKey)) {
+                keys.push(thatKey);
+            }
         }
         for (let key in this.orders) {
             let order = this.orders[key];
-            if (order != null) {
+            if (order == null) {
+                continue;
+            }
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
         for (let key of this.child.keys) {
-            let order = this.orders[key];
-            if (order == null) {
+            if (!keys.includes(key)) {
                 keys.push(key);
             }
         }
-        return keys;
+        return new stores_1.Index(keys);
     }
 }
 exports.Link = Link;

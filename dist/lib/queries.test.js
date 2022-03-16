@@ -64,3 +64,46 @@ function createUsers() {
     let expected = ["User 3", "User 2"];
     assert.array.equals(observed, expected);
 });
+(0, test_1.test)(`It should create the correct index for a query without orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let query = new queries_1.Query(users, {
+        name: new operators_1.EqualityOperator()
+    }, {});
+    let index = query.createIndex();
+    let observed = index.keys;
+    let expected = ["name", "user_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a query with metadata field orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let query = new queries_1.Query(users, {
+        name: new operators_1.EqualityOperator()
+    }, {
+        name: new orders_1.IncreasingOrder()
+    });
+    let index = query.createIndex();
+    let observed = index.keys;
+    let expected = ["name", "user_id"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should create the correct index for a query with identifying field orders.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let query = new queries_1.Query(users, {
+        name: new operators_1.EqualityOperator()
+    }, {
+        user_id: new orders_1.IncreasingOrder()
+    });
+    let index = query.createIndex();
+    let observed = index.keys;
+    let expected = ["name", "user_id"];
+    assert.array.equals(observed, expected);
+});
