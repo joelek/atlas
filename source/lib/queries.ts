@@ -94,10 +94,10 @@ export class Query<A extends Record, B extends RequiredKeys<A>, C extends Subset
 		this.store = store;
 		this.operators = operators;
 		this.orders = orders;
-		this.store.index(new Index(this.createIndexKeys()));
+		this.store.index(this.createIndex());
 	}
 
-	createIndexKeys(): Keys<A> {
+	createIndex(): Index<A> {
 		let keys = [] as Keys<A>;
 		for (let key in this.operators) {
 			let operator = this.operators[key];
@@ -117,7 +117,7 @@ export class Query<A extends Record, B extends RequiredKeys<A>, C extends Subset
 				keys.push(key);
 			}
 		}
-		return keys;
+		return new Index(keys);
 	}
 };
 

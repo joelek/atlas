@@ -390,10 +390,10 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 		this.keys = keys;
 		this.orders = orders;
 		this.indices = [];
-		this.index(new Index(this.createIndexKeys()));
+		this.index(this.createIndex());
 	}
 
-	createIndexKeys(): Keys<A> {
+	createIndex(): Index<A> {
 		let keys = [] as Keys<A>;
 		for (let key in this.orders) {
 			let order = this.orders[key];
@@ -407,7 +407,7 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 				keys.push(key);
 			}
 		}
-		return keys;
+		return new Index(keys);
 	}
 
 	index(that: Index<A>): void {

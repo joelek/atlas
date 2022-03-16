@@ -124,10 +124,10 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;
 		this.orders = orders;
-		this.child.index(new Index(this.createIndexKeys()));
+		this.child.index(this.createIndex());
 	}
 
-	createIndexKeys(): Keys<C> {
+	createIndex(): Index<C> {
 		let keys = [] as Keys<C>;
 		for (let key in this.recordKeysMap) {
 			let thatKey = this.recordKeysMap[key] as Key<C>;
@@ -145,7 +145,7 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 				keys.push(key);
 			}
 		}
-		return keys;
+		return new Index(keys);
 	}
 };
 
