@@ -16,6 +16,9 @@ class IncreasingOrder extends Order {
         let twoEncoded = bedrock.codecs.Any.encodePayload(two);
         return bedrock.utils.Chunk.comparePrefixes(oneEncoded, twoEncoded);
     }
+    getDirection() {
+        return "increasing";
+    }
 }
 exports.IncreasingOrder = IncreasingOrder;
 class DecreasingOrder extends Order {
@@ -26,6 +29,9 @@ class DecreasingOrder extends Order {
         let oneEncoded = bedrock.codecs.Any.encodePayload(one);
         let twoEncoded = bedrock.codecs.Any.encodePayload(two);
         return bedrock.utils.Chunk.comparePrefixes(twoEncoded, oneEncoded);
+    }
+    getDirection() {
+        return "decreasing";
     }
 }
 exports.DecreasingOrder = DecreasingOrder;

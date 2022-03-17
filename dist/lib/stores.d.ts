@@ -92,7 +92,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
         fields: Fields<A>;
         keys: [...B];
         orders?: Orders<C>;
-        indices?: Array<Index<A>>;
+        indices?: Array<Index<any>>;
     }): StoreManager<A, B>;
 }
 export declare type StoreManagers<A> = {

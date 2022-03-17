@@ -143,15 +143,22 @@ class IndexManager {
                 tree = branch;
             }
         }
+        let directions = [];
         let orderKeys = Object.keys(orders);
         for (let i = 0; i < orderKeys.length; i++) {
             if (keysRemaining[i] !== orderKeys[i]) {
                 break;
             }
+            let order = orders[orderKeys[i]];
+            if (order == null) {
+                break;
+            }
+            directions.push(order.getDirection());
             delete orders[orderKeys[i]];
         }
+        let iterable = tree.filter("^=", [], directions);
         return [
-            new FilteredStore(this.recordManager, this.blockManager, tree, filters, orders)
+            new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders)
         ];
     }
     insert(keysRecord, bid) {

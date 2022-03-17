@@ -136,6 +136,54 @@ const tables_1 = require("./tables");
     let expected = ["B", "A"];
     assert.array.equals(observed, expected);
 });
+(0, test_1.test)(`It should support ordering of the records stored in increasing order with an index.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField("")
+        },
+        keys: ["key"],
+        indices: [
+            new stores_1.Index(["key"])
+        ]
+    });
+    users.insert({
+        key: "A"
+    });
+    users.insert({
+        key: "B"
+    });
+    let iterable = users.filter({}, {
+        key: new orders_1.IncreasingOrder()
+    });
+    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let expected = ["A", "B"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support ordering of the records stored in decreasing order with an index.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField("")
+        },
+        keys: ["key"],
+        indices: [
+            new stores_1.Index(["key"])
+        ]
+    });
+    users.insert({
+        key: "A"
+    });
+    users.insert({
+        key: "B"
+    });
+    let iterable = users.filter({}, {
+        key: new orders_1.DecreasingOrder()
+    });
+    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let expected = ["B", "A"];
+    assert.array.equals(observed, expected);
+});
 (0, test_1.test)(`It should support inserting a record previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
