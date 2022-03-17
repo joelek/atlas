@@ -1,4 +1,4 @@
-import { IndexManager, Store, StoreManager } from "./stores";
+import { Index, IndexManager, Store, StoreManager } from "./stores";
 import { RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
@@ -126,6 +126,56 @@ test(`It should support ordering of the records stored in decreasing order.`, as
 			key: new StringField("")
 		},
 		keys: ["key"]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	let iterable = users.filter({}, {
+		key: new DecreasingOrder()
+	});
+	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let expected = ["B", "A"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support ordering of the records stored in increasing order with an index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	let iterable = users.filter({}, {
+		key: new IncreasingOrder()
+	});
+	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let expected = ["A", "B"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support ordering of the records stored in decreasing order with an index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
 	});
 	users.insert({
 		key: "A"

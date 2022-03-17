@@ -332,7 +332,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		fields: Fields<A>,
 		keys: [...B],
 		orders?: Orders<C>,
-		indices?: Array<Index<A>>
+		indices?: Array<Index<any>>
 	}): StoreManager<A, B> {
 		let fields = options.fields;
 		let keys = options.keys;
