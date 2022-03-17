@@ -5,7 +5,7 @@ import { IncreasingOrder, OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
-import { RadixTree } from "./trees";
+import { Direction, RadixTree } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
 export type Entry<A extends Record> = {
@@ -199,15 +199,22 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				tree = branch;
 			}
 		}
+		let directions = [] as Array<Direction>;
 		let orderKeys = Object.keys(orders) as Keys<A>;
 		for (let i = 0; i < orderKeys.length; i++) {
 			if (keysRemaining[i] !== orderKeys[i]) {
 				break;
 			}
+			let order = orders[orderKeys[i]];
+			if (order == null) {
+				break;
+			}
+			directions.push(order.getDirection());
 			delete orders[orderKeys[i]];
 		}
+		let iterable = tree.filter("^=", [], directions);
 		return [
-			new FilteredStore(this.recordManager, this.blockManager, tree, filters, orders)
+			new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders)
 		];
 	}
 
