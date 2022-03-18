@@ -1,4 +1,3 @@
-import { benchmark } from "./test";
 import { test } from "./test";
 import { Context } from "./contexts";
 
@@ -33,31 +32,26 @@ test(`It should work.`, async (assert) => {
 	}, {
 		query
 	});
-	await benchmark(async () => {
-		return manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
-			users.insert({
-				user_id: "User 1",
-				name: "Joel Ek",
-				age: 38
-			});
-			posts.insert({
-				post_id: "Post 1",
-				user_id: "User 1",
-				title: "Some title."
-			});
+	await manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+		users.insert({
+			user_id: "User 1",
+			name: "Joel Ek",
+			age: 38
 		});
-	}, 1);
-	let observed = await benchmark(async () => {
-		return await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
-			let allUserPosts = await userPosts.filter({
-				user_id: "User 1"
-			});
-			console.log(Array.from(allUserPosts).map((entry) => entry.record()));
-			return users.lookup({
-				user_id: "User 1"
-			});
+		posts.insert({
+			post_id: "Post 1",
+			user_id: "User 1",
+			title: "Some title."
 		});
-	}, 1);
+	});
+	let observed = await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+		let allUserPosts = await userPosts.filter({
+			user_id: "User 1"
+		});
+		return users.lookup({
+			user_id: "User 1"
+		});
+	});
 	let expected = {
 		user_id: "User 1",
 		name: "Joel Ek",
