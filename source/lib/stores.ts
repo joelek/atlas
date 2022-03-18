@@ -97,7 +97,7 @@ export class FilteredStore<A extends Record> {
 	}
 
 	* [Symbol.iterator](): Iterator<Entry<A>> {
-		yield * StreamIterable.of(this.bids)
+		let iterable = StreamIterable.of(this.bids)
 			.map((bid) => {
 				let buffer = this.blockManager.readBlock(bid);
 				let record = this.recordManager.decode(buffer);
@@ -118,8 +118,9 @@ export class FilteredStore<A extends Record> {
 					}
 				}
 				return true;
-			})
-			.sort((one, two) => {
+			});
+		if (Object.keys(this.orders).length > 0) {
+			iterable = iterable.sort((one, two) => {
 				for (let key in this.orders) {
 					let order = this.orders[key];
 					if (order == null) {
@@ -131,13 +132,15 @@ export class FilteredStore<A extends Record> {
 					}
 				}
 				return 0;
-			})
-			.map((entry) => {
-				return {
-					bid: () => entry.bid,
-					record: () => entry.record
-				};
 			});
+		}
+		yield * iterable.map((entry) => {
+			return {
+				bid: () => entry.bid,
+				record: () => entry.record
+			};
+
+		});
 	}
 
 	static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined {
