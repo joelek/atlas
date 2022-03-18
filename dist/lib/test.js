@@ -73,15 +73,21 @@ function test(name, cb) {
 }
 exports.test = test;
 ;
-async function benchmark(subject, times = 1) {
+async function benchmark(subject) {
     let start = process.hrtime.bigint();
-    let result = await subject();
-    for (let i = 1; i < times; i++) {
-        await subject();
+    let result;
+    let times = 0;
+    while (true) {
+        result = await subject();
+        times += 1;
+        let duration_ms = Number(process.hrtime.bigint() - start) / 1000 / 1000;
+        if (duration_ms >= 1000) {
+            break;
+        }
     }
-    let duration_ms = (Number(process.hrtime.bigint() - start) / 1000 / 1000 / times);
-    let ops_per_sec = 1000 / duration_ms;
-    console.log(`${duration_ms.toFixed(6)} ms, ${ops_per_sec.toFixed(0)} ops/s`);
+    let ms_per_op = (Number(process.hrtime.bigint() - start) / 1000 / 1000 / times);
+    let ops_per_sec = 1000 / ms_per_op;
+    console.log(`${ms_per_op.toFixed(6)} ms/op, ${ops_per_sec.toFixed(0)} ops/s`);
     return result;
 }
 exports.benchmark = benchmark;

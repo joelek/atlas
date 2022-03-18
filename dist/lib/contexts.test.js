@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
-const test_2 = require("./test");
 const contexts_1 = require("./contexts");
-(0, test_2.test)(`It should work.`, async (assert) => {
+(0, test_1.test)(`It should work.`, async (assert) => {
     let context = new contexts_1.Context();
     let users = context.createStore({
         user_id: context.createStringField(),
@@ -34,31 +33,26 @@ const contexts_1 = require("./contexts");
     }, {
         query
     });
-    await (0, test_1.benchmark)(async () => {
-        return manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
-            users.insert({
-                user_id: "User 1",
-                name: "Joel Ek",
-                age: 38
-            });
-            posts.insert({
-                post_id: "Post 1",
-                user_id: "User 1",
-                title: "Some title."
-            });
+    await manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+        users.insert({
+            user_id: "User 1",
+            name: "Joel Ek",
+            age: 38
         });
-    }, 1);
-    let observed = await (0, test_1.benchmark)(async () => {
-        return await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
-            let allUserPosts = await userPosts.filter({
-                user_id: "User 1"
-            });
-            console.log(Array.from(allUserPosts).map((entry) => entry.record()));
-            return users.lookup({
-                user_id: "User 1"
-            });
+        posts.insert({
+            post_id: "Post 1",
+            user_id: "User 1",
+            title: "Some title."
         });
-    }, 1);
+    });
+    let observed = await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+        let allUserPosts = await userPosts.filter({
+            user_id: "User 1"
+        });
+        return users.lookup({
+            user_id: "User 1"
+        });
+    });
     let expected = {
         user_id: "User 1",
         name: "Joel Ek",

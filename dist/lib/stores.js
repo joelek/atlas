@@ -50,7 +50,7 @@ class FilteredStore {
         this.orders = orders ?? {};
     }
     *[Symbol.iterator]() {
-        yield* streams_1.StreamIterable.of(this.bids)
+        let iterable = streams_1.StreamIterable.of(this.bids)
             .map((bid) => {
             let buffer = this.blockManager.readBlock(bid);
             let record = this.recordManager.decode(buffer);
@@ -71,21 +71,23 @@ class FilteredStore {
                 }
             }
             return true;
-        })
-            .sort((one, two) => {
-            for (let key in this.orders) {
-                let order = this.orders[key];
-                if (order == null) {
-                    continue;
+        });
+        if (Object.keys(this.orders).length > 0) {
+            iterable = iterable.sort((one, two) => {
+                for (let key in this.orders) {
+                    let order = this.orders[key];
+                    if (order == null) {
+                        continue;
+                    }
+                    let comparison = order.compare(one.record[key], two.record[key]);
+                    if (comparison !== 0) {
+                        return comparison;
+                    }
                 }
-                let comparison = order.compare(one.record[key], two.record[key]);
-                if (comparison !== 0) {
-                    return comparison;
-                }
-            }
-            return 0;
-        })
-            .map((entry) => {
+                return 0;
+            });
+        }
+        yield* iterable.map((entry) => {
             return {
                 bid: () => entry.bid,
                 record: () => entry.record

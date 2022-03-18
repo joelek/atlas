@@ -13,4 +13,4 @@ export declare const Assert: {
     };
 };
 export declare function test(name: string, cb: (assert: typeof Assert) => Promise<any>): void;
-export declare function benchmark<A>(subject: (() => A) | (() => Promise<A>), times?: number): Promise<A>;
+export declare function benchmark<A>(subject: (() => A) | (() => Promise<A>)): Promise<A>;
