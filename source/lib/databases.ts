@@ -39,8 +39,8 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 				let storeManager = linkManager.getChild();
 				let records = new Array<Record>();
 				for (let record of queueEntry.records) {
-					for (let entry of linkManager.filter(record)) {
-						records.push(entry.record());
+					for (let childRecord of linkManager.filter(record)) {
+						records.push(childRecord);
 					}
 				}
 				if (records.length > 0) {
@@ -153,12 +153,11 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
 				let child = linkManager.getChild();
 				let records = [] as Array<Record>;
-				for (let entry of child) {
-					let record = entry.record();
+				for (let childRecord of child) {
 					try {
-						linkManager.lookup(record);
+						linkManager.lookup(childRecord);
 					} catch (error) {
-						records.push(record);
+						records.push(childRecord);
 					}
 				}
 				this.doRemove(child, records);
@@ -171,12 +170,11 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			let linkManager = this.linkManagers[key];
 			let child = linkManager.getChild();
 			let records = [] as Array<Record>;
-			for (let entry of child) {
-				let record = entry.record();
+			for (let childRecord of child) {
 				try {
-					linkManager.lookup(record);
+					linkManager.lookup(childRecord);
 				} catch (error) {
-					records.push(record);
+					records.push(childRecord);
 				}
 			}
 			this.doRemove(child, records);
@@ -197,12 +195,11 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		for (let linkManager of linkManagers) {
 			let child = linkManager.getChild();
 			let records = [] as Array<Record>;
-			for (let entry of child) {
-				let record = entry.record();
+			for (let childRecord of child) {
 				try {
-					linkManager.lookup(record);
+					linkManager.lookup(childRecord);
 				} catch (error) {
-					records.push(record);
+					records.push(childRecord);
 				}
 			}
 			this.doRemove(child, records);

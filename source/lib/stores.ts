@@ -8,11 +8,6 @@ import { SubsetOf } from "./inference";
 import { Direction, RadixTree } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
-export type Entry<A extends Record> = {
-	bid(): number;
-	record(): A;
-};
-
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<A>>;
 	length(): Promise<number>;
@@ -57,10 +52,7 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 	}
 
 	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
-		return StreamIterable.of(this.storeManager.filter(...parameters))
-			.map((entry) => {
-				return entry.record()
-			});
+		return this.storeManager.filter(...parameters);
 	}
 
 	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
@@ -99,23 +91,20 @@ export class FilteredStore<A extends Record> {
 		this.orders = orders ?? {};
 	}
 
-	* [Symbol.iterator](): Iterator<Entry<A>> {
+	* [Symbol.iterator](): Iterator<A> {
 		let iterable = StreamIterable.of(this.bids)
 			.map((bid) => {
 				let buffer = this.blockManager.readBlock(bid);
 				let record = this.recordManager.decode(buffer);
-				return {
-					bid,
-					record
-				};
+				return record;
 			})
-			.filter((entry) => {
+			.filter((record) => {
 				for (let key in this.filters) {
 					let filter = this.filters[key];
 					if (filter == null) {
 						continue;
 					}
-					let value = entry.record[key];
+					let value = record[key];
 					if (!filter.matches(value)) {
 						return false;
 					}
@@ -129,7 +118,7 @@ export class FilteredStore<A extends Record> {
 					if (order == null) {
 						continue;
 					}
-					let comparison = order.compare(one.record[key], two.record[key]);
+					let comparison = order.compare(one[key], two[key]);
 					if (comparison !== 0) {
 						return comparison;
 					}
@@ -137,13 +126,7 @@ export class FilteredStore<A extends Record> {
 				return 0;
 			});
 		}
-		yield * iterable.map((entry) => {
-			return {
-				bid: () => entry.bid,
-				record: () => entry.record
-			};
-
-		});
+		yield * iterable;
 	}
 
 	static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined {
@@ -173,7 +156,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		this.tree = new RadixTree(blockManager, bid);
 	}
 
-	* [Symbol.iterator](): Iterator<Entry<A>> {
+	* [Symbol.iterator](): Iterator<A> {
 		yield * new FilteredStore(this.recordManager, this.blockManager, this.tree, {}, {});
 	}
 
@@ -254,7 +237,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.indexManagers = indexManagers;
 	}
 
-	* [Symbol.iterator](): Iterator<Entry<A>> {
+	* [Symbol.iterator](): Iterator<A> {
 		yield * this.filter();
 	}
 
@@ -268,7 +251,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table.delete();
 	}
 
-	* filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>> {
+	* filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<A> {
 		orders = orders ?? this.orders;
 		for (let key of this.keys) {
 			if (!(key in orders)) {
@@ -454,10 +437,7 @@ export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A
 	}
 
 	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? StreamIterable.of(this.storeManager.filter(...parameters))
-			.map((entry) => {
-				return entry.record()
-			});
+		return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
 	}
 
 	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {

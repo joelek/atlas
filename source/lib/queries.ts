@@ -3,7 +3,7 @@ import { SubsetOf } from "./inference";
 import { EqualityOperator, Operators } from "./operators";
 import { OrderMap, Orders } from "./orders";
 import { RequiredKeys, Record, Keys, Key } from "./records";
-import { Entry, Index, Store, StoreManager } from "./stores";
+import { Index, Store, StoreManager } from "./stores";
 import { StreamIterable } from "./streams";
 
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
@@ -46,10 +46,7 @@ export class WritableQueryManager<A extends Record, B extends RequiredKeys<A>, C
 	}
 
 	async filter(...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
-		return StreamIterable.of(this.queryManager.filter(...parameters))
-			.map((entry) => {
-				return entry.record()
-			});
+		return this.queryManager.filter(...parameters);
 	}
 };
 
@@ -64,7 +61,7 @@ export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends
 		this.orders = orders;
 	}
 
-	filter(parameters: C): Iterable<Entry<A>> {
+	filter(parameters: C): Iterable<A> {
 		let filters = {} as FilterMap<A>;
 		for (let key in this.operators) {
 			filters[key] = this.operators[key].createFilter(parameters[key]) as any;
@@ -144,9 +141,6 @@ export class OverridableWritableQuery<A extends Record, B extends RequiredKeys<A
 	}
 
 	async filter(...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? StreamIterable.of(this.queryManager.filter(...parameters))
-			.map((entry) => {
-				return entry.record()
-			});
+		return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
 	}
 };

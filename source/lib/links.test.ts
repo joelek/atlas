@@ -53,7 +53,7 @@ test(`It should support filtering without explicit ordering for a referencing li
 	let iterable = userPosts.filter({
 		user_id: "User 1"
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().post_id);
+	let observed = Array.from(iterable).map((entry) => entry.post_id);
 	let expected = ["Post 1", "Post 2"];
 	assert.array.equals(observed, expected);
 });
@@ -86,7 +86,7 @@ test(`It should support filtering with explicit ordering for a referencing link.
 	let iterable = userPosts.filter({
 		user_id: "User 1"
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().post_id);
+	let observed = Array.from(iterable).map((entry) => entry.post_id);
 	let expected = ["Post 2", "Post 1"];
 	assert.array.equals(observed, expected);
 });
@@ -146,7 +146,7 @@ test(`It should support filtering without explicit ordering for a self-referenci
 	let iterable = childDirectories.filter({
 		directory_id: "Directory 1"
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().directory_id);
+	let observed = Array.from(iterable).map((entry) => entry.directory_id);
 	let expected = ["Directory 2", "Directory 3"];
 	assert.array.equals(observed, expected);
 });
@@ -173,7 +173,7 @@ test(`It should support filtering with explicit ordering for a self-referencing 
 	let iterable = childDirectories.filter({
 		directory_id: "Directory 1"
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().directory_id);
+	let observed = Array.from(iterable).map((entry) => entry.directory_id);
 	let expected = ["Directory 3", "Directory 2"];
 	assert.array.equals(observed, expected);
 });

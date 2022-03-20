@@ -753,9 +753,8 @@ export class SchemaManager {
 			let newSchema = this.createStore(blockManager, store);
 			let oldManager = this.loadStoreManager(blockManager, oldSchema);
 			let newManager = this.loadStoreManager(blockManager, newSchema);
-			for (let entry of oldManager) {
+			for (let oldRecord of oldManager) {
 				try {
-					let oldRecord = entry.record();
 					let newRecord = {} as A;
 					for (let key in store.fields) {
 						let field = store.fields[key];

@@ -23,7 +23,7 @@ test(`It should support for-of iteration of the records stored.`, async (assert)
 	});
 	let observed = [] as Array<string>;
 	for (let entry of users) {
-		observed.push(entry.record().key);
+		observed.push(entry.key);
 	}
 	let expected = ["A", "B"];
 	assert.array.equals(observed, expected);
@@ -47,7 +47,7 @@ test(`It should support iteration of the records stored in increasing order.`, a
 		key: "B"
 	});
 	let iterable = users;
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["A", "B"];
 	assert.array.equals(observed, expected);
 });
@@ -70,7 +70,7 @@ test(`It should support iteration of the records stored in decreasing order.`, a
 		key: "B"
 	});
 	let iterable = users;
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["B", "A"];
 	assert.array.equals(observed, expected);
 });
@@ -92,7 +92,7 @@ test(`It should support filtering of the records stored.`, async (assert) => {
 	let iterable = users.filter({
 		key: new EqualityFilter("A")
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["A"];
 	assert.array.equals(observed, expected);
 });
@@ -114,7 +114,7 @@ test(`It should support ordering of the records stored in increasing order.`, as
 	let iterable = users.filter({}, {
 		key: new IncreasingOrder()
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["A", "B"];
 	assert.array.equals(observed, expected);
 });
@@ -136,7 +136,7 @@ test(`It should support ordering of the records stored in decreasing order.`, as
 	let iterable = users.filter({}, {
 		key: new DecreasingOrder()
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["B", "A"];
 	assert.array.equals(observed, expected);
 });
@@ -161,7 +161,7 @@ test(`It should support ordering of the records stored in increasing order with 
 	let iterable = users.filter({}, {
 		key: new IncreasingOrder()
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["A", "B"];
 	assert.array.equals(observed, expected);
 });
@@ -186,7 +186,7 @@ test(`It should support ordering of the records stored in decreasing order with 
 	let iterable = users.filter({}, {
 		key: new DecreasingOrder()
 	});
-	let observed = Array.from(iterable).map((entry) => entry.record().key);
+	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["B", "A"];
 	assert.array.equals(observed, expected);
 });
@@ -428,7 +428,7 @@ test(`It should update indices on insert.`, async (assert) => {
 		user_id: "User 1",
 		name: "Name 1"
 	});
-	let observed = Array.from(index).map((record) => record.record().name);
+	let observed = Array.from(index).map((record) => record.name);
 	let expected = ["Name 1"];
 	assert.array.equals(observed, expected);
 });
@@ -458,7 +458,7 @@ test(`It should update indices on update.`, async (assert) => {
 		user_id: "User 1",
 		name: "Name 2"
 	});
-	let observed = Array.from(index).map((record) => record.record().name);
+	let observed = Array.from(index).map((record) => record.name);
 	let expected = ["Name 2"];
 	assert.array.equals(observed, expected);
 });
@@ -487,7 +487,7 @@ test(`It should update indices on remove.`, async (assert) => {
 	users.remove({
 		user_id: "User 1"
 	});
-	let observed = Array.from(index).map((record) => record.record().name);
+	let observed = Array.from(index).map((record) => record.name);
 	let expected = [] as Array<string>;
 	assert.array.equals(observed, expected);
 });
@@ -523,7 +523,7 @@ test(`It should use the optimal index when filtering with filters.`, async (asse
 	let iterable = users.filter({
 		name: new EqualityFilter("Name")
 	});
-	let observed = Array.from(iterable).map((record) => record.record().user_id);
+	let observed = Array.from(iterable).map((record) => record.user_id);
 	let expected = ["User 1"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
@@ -559,7 +559,7 @@ test(`It should use the optimal index when filtering with filters and orders`, a
 	let iterable = users.filter({
 		name: new EqualityFilter("Name")
 	});
-	let observed = Array.from(iterable).map((record) => record.record().user_id);
+	let observed = Array.from(iterable).map((record) => record.user_id);
 	let expected = ["User 2"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
