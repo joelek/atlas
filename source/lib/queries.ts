@@ -4,9 +4,10 @@ import { EqualityOperator, Operators } from "./operators";
 import { OrderMap, Orders } from "./orders";
 import { RequiredKeys, Record, Keys, Key } from "./records";
 import { Entry, Index, Store, StoreManager } from "./stores";
+import { StreamIterable } from "./streams";
 
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	filter(parameters: C): Promise<Iterable<Entry<A>>>;
+	filter(parameters: C): Promise<Iterable<A>>;
 };
 
 export type ReadableQueries<A> = {
@@ -45,7 +46,10 @@ export class WritableQueryManager<A extends Record, B extends RequiredKeys<A>, C
 	}
 
 	async filter(...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
-		return this.queryManager.filter(...parameters);
+		return StreamIterable.of(this.queryManager.filter(...parameters))
+			.map((entry) => {
+				return entry.record()
+			});
 	}
 };
 
@@ -140,6 +144,9 @@ export class OverridableWritableQuery<A extends Record, B extends RequiredKeys<A
 	}
 
 	async filter(...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
+		return this.overrides.filter?.(...parameters) ?? StreamIterable.of(this.queryManager.filter(...parameters))
+			.map((entry) => {
+				return entry.record()
+			});
 	}
 };

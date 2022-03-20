@@ -2,9 +2,10 @@ import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
 import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
 import { Entry, Index, Store, StoreManager } from "./stores";
+import { StreamIterable } from "./streams";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<Entry<C>>>;
+	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<C>>;
 	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
@@ -44,7 +45,10 @@ export class WritableLinkManager<A extends Record, B extends RequiredKeys<A>, C 
 	}
 
 	async filter(...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
-		return this.linkManager.filter(...parameters);
+		return StreamIterable.of(this.linkManager.filter(...parameters))
+			.map((entry) => {
+				return entry.record()
+			});
 	}
 
 	async lookup(...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {
@@ -167,7 +171,10 @@ export class OverridableWritableLink<A extends Record, B extends RequiredKeys<A>
 	}
 
 	async filter(...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
+		return this.overrides.filter?.(...parameters) ?? StreamIterable.of(this.linkManager.filter(...parameters))
+			.map((entry) => {
+				return entry.record()
+			});
 	}
 
 	async lookup(...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {

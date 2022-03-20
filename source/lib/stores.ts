@@ -14,7 +14,7 @@ export type Entry<A extends Record> = {
 };
 
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<Entry<A>>>;
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<A>>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 };
@@ -57,7 +57,10 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 	}
 
 	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
-		return this.storeManager.filter(...parameters);
+		return StreamIterable.of(this.storeManager.filter(...parameters))
+			.map((entry) => {
+				return entry.record()
+			});
 	}
 
 	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
@@ -451,7 +454,10 @@ export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A
 	}
 
 	async filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
+		return this.overrides.filter?.(...parameters) ?? StreamIterable.of(this.storeManager.filter(...parameters))
+			.map((entry) => {
+				return entry.record()
+			});
 	}
 
 	async insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
