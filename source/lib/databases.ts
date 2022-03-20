@@ -3,7 +3,10 @@ import { LinkManager, LinkManagers, Links, OverridableWritableLink, WritableLink
 import { OverridableWritableQuery, Queries, QueryManagers, WritableQueriesFromQueryManagers } from "./queries";
 import { Record, Keys, RequiredKeys } from "./records";
 import { OverridableWritableStore, StoreManager, StoreManagers, Stores, WritableStoresFromStoreManagers } from "./stores";
+import { StreamIterable } from "./streams";
 import { TransactionManager } from "./transactions";
+
+const MAX_LIMIT = 100;
 
 export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>, C extends QueryManagers<any>> {
 	private storeManagers: A;
@@ -102,6 +105,11 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
 			writableStores[key] = new OverridableWritableStore(storeManager, {
+				filter: async (filters, orders) => {
+					return StreamIterable.of<any>(storeManager.filter(filters, orders))
+						.limit(MAX_LIMIT)
+						.collect()
+				},
 				insert: async (record) => this.doInsert(storeManager, [record]),
 				remove: async (record) => this.doRemove(storeManager, [record])
 			});
@@ -112,7 +120,14 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	createWritableLinks(): WritableLinksFromLinkManagers<B> {
 		let writableLinks = {} as WritableLinksFromLinkManagers<any>;
 		for (let key in this.linkManagers) {
-			writableLinks[key] = new OverridableWritableLink(this.linkManagers[key], {});
+			let linkManager = this.linkManagers[key];
+			writableLinks[key] = new OverridableWritableLink(linkManager, {
+				filter: async (keysRecord) => {
+					return StreamIterable.of<any>(linkManager.filter(keysRecord))
+						.limit(MAX_LIMIT)
+						.collect()
+				}
+			});
 		}
 		return writableLinks;
 	}
@@ -120,7 +135,14 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	createWritableQueries(): WritableQueriesFromQueryManagers<C> {
 		let writableQueries = {} as WritableQueriesFromQueryManagers<any>;
 		for (let key in this.queryManagers) {
-			writableQueries[key] = new OverridableWritableQuery(this.queryManagers[key], {});
+			let queryManager = this.queryManagers[key];
+			writableQueries[key] = new OverridableWritableQuery(queryManager, {
+				filter: async (parameters) => {
+					return StreamIterable.of<any>(queryManager.filter(parameters))
+						.limit(MAX_LIMIT)
+						.collect()
+				}
+			});
 		}
 		return writableQueries;
 	}
