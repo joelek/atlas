@@ -11,10 +11,6 @@ export declare class HashTableSlot extends BlockReference {
     constructor(buffer?: Uint8Array);
     probeDistance(value?: number): number;
 }
-export interface Entry {
-    key(): Array<Uint8Array>;
-    value(): number;
-}
 export interface TableDetail {
     getKeyFromValue(value: number): Array<Uint8Array>;
 }
@@ -37,7 +33,7 @@ export declare class Table {
     private getSlotCount;
     private propagateBackwards;
     private resizeIfNecessary;
-    [Symbol.iterator](): Iterator<Entry>;
+    [Symbol.iterator](): Iterator<number>;
     clear(): void;
     delete(): void;
     insert(key: Array<Uint8Array>, value: number): boolean;

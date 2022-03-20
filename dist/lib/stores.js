@@ -16,10 +16,7 @@ class WritableStoreManager {
         this.storeManager = storeManager;
     }
     async filter(...parameters) {
-        return streams_1.StreamIterable.of(this.storeManager.filter(...parameters))
-            .map((entry) => {
-            return entry.record();
-        });
+        return this.storeManager.filter(...parameters);
     }
     async insert(...parameters) {
         return this.storeManager.insert(...parameters);
@@ -57,18 +54,15 @@ class FilteredStore {
             .map((bid) => {
             let buffer = this.blockManager.readBlock(bid);
             let record = this.recordManager.decode(buffer);
-            return {
-                bid,
-                record
-            };
+            return record;
         })
-            .filter((entry) => {
+            .filter((record) => {
             for (let key in this.filters) {
                 let filter = this.filters[key];
                 if (filter == null) {
                     continue;
                 }
-                let value = entry.record[key];
+                let value = record[key];
                 if (!filter.matches(value)) {
                     return false;
                 }
@@ -82,7 +76,7 @@ class FilteredStore {
                     if (order == null) {
                         continue;
                     }
-                    let comparison = order.compare(one.record[key], two.record[key]);
+                    let comparison = order.compare(one[key], two[key]);
                     if (comparison !== 0) {
                         return comparison;
                     }
@@ -90,12 +84,7 @@ class FilteredStore {
                 return 0;
             });
         }
-        yield* iterable.map((entry) => {
-            return {
-                bid: () => entry.bid,
-                record: () => entry.record
-            };
-        });
+        yield* iterable;
     }
     static getOptimal(filteredStores) {
         filteredStores.sort(sorters_1.CompositeSorter.of(sorters_1.NumberSorter.decreasing((value) => Object.keys(value.orders).length), sorters_1.NumberSorter.decreasing((value) => Object.keys(value.filters).length)));
@@ -198,8 +187,8 @@ class StoreManager {
         yield* this.filter();
     }
     delete() {
-        for (let entry of this) {
-            this.blockManager.deleteBlock(entry.bid());
+        for (let bid of this.table) {
+            this.blockManager.deleteBlock(bid);
         }
         for (let indexManager of this.indexManagers) {
             indexManager.delete();
@@ -216,7 +205,7 @@ class StoreManager {
         let filteredStores = this.indexManagers.flatMap((indexManager) => {
             return indexManager.filter(filters, orders);
         });
-        filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, streams_1.StreamIterable.of(this.table).map((entry) => entry.value()), filters, orders));
+        filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders));
         let filteredStore = FilteredStore.getOptimal(filteredStores);
         if (filteredStore != null) {
             yield* filteredStore;
@@ -362,10 +351,7 @@ class OverridableWritableStore {
         this.overrides = overrides;
     }
     async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? streams_1.StreamIterable.of(this.storeManager.filter(...parameters))
-            .map((entry) => {
-            return entry.record();
-        });
+        return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
     }
     async insert(...parameters) {
         return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);

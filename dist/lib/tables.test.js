@@ -18,7 +18,7 @@ const DETAIL = {
     let ht = new hash.Table(blockManager, DETAIL, {
         minimumCapacity: 2
     });
-    let observed = Array.from(ht).map((entry) => entry.value()).sort();
+    let observed = Array.from(ht).sort();
     let expected = [];
     assert.array.equals(observed, expected);
 });
@@ -29,7 +29,7 @@ const DETAIL = {
         minimumCapacity: 2
     });
     ht.insert(DETAIL.getKeyFromValue(1), 1);
-    let observed = Array.from(ht).map((entry) => entry.value()).sort();
+    let observed = Array.from(ht).sort();
     let expected = [1];
     assert.array.equals(observed, expected);
 });
@@ -40,7 +40,7 @@ const DETAIL = {
         minimumCapacity: 2
     });
     ht.insert(DETAIL.getKeyFromValue(2), 2);
-    let observed = Array.from(ht).map((entry) => entry.value()).sort();
+    let observed = Array.from(ht).sort();
     let expected = [2];
     assert.array.equals(observed, expected);
 });
@@ -52,7 +52,7 @@ const DETAIL = {
     });
     ht.insert(DETAIL.getKeyFromValue(1), 1);
     ht.insert(DETAIL.getKeyFromValue(2), 2);
-    let observed = Array.from(ht).map((entry) => entry.value()).sort();
+    let observed = Array.from(ht).sort();
     let expected = [1, 2];
     assert.array.equals(observed, expected);
 });
@@ -65,7 +65,7 @@ const DETAIL = {
     ht.insert(DETAIL.getKeyFromValue(1), 1);
     ht.insert(DETAIL.getKeyFromValue(2), 2);
     ht.clear();
-    let observed = Array.from(ht).map((entry) => entry.value()).sort();
+    let observed = Array.from(ht).sort();
     let expected = [];
     assert.array.equals(observed, expected);
 });

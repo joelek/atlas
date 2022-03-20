@@ -36,8 +36,8 @@ class DatabaseManager {
                 let storeManager = linkManager.getChild();
                 let records = new Array();
                 for (let record of queueEntry.records) {
-                    for (let entry of linkManager.filter(record)) {
-                        records.push(entry.record());
+                    for (let childRecord of linkManager.filter(record)) {
+                        records.push(childRecord);
                     }
                 }
                 if (records.length > 0) {
@@ -142,13 +142,12 @@ class DatabaseManager {
             for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
                 let child = linkManager.getChild();
                 let records = [];
-                for (let entry of child) {
-                    let record = entry.record();
+                for (let childRecord of child) {
                     try {
-                        linkManager.lookup(record);
+                        linkManager.lookup(childRecord);
                     }
                     catch (error) {
-                        records.push(record);
+                        records.push(childRecord);
                     }
                 }
                 this.doRemove(child, records);
@@ -160,13 +159,12 @@ class DatabaseManager {
             let linkManager = this.linkManagers[key];
             let child = linkManager.getChild();
             let records = [];
-            for (let entry of child) {
-                let record = entry.record();
+            for (let childRecord of child) {
                 try {
-                    linkManager.lookup(record);
+                    linkManager.lookup(childRecord);
                 }
                 catch (error) {
-                    records.push(record);
+                    records.push(childRecord);
                 }
             }
             this.doRemove(child, records);
@@ -186,13 +184,12 @@ class DatabaseManager {
         for (let linkManager of linkManagers) {
             let child = linkManager.getChild();
             let records = [];
-            for (let entry of child) {
-                let record = entry.record();
+            for (let childRecord of child) {
                 try {
-                    linkManager.lookup(record);
+                    linkManager.lookup(childRecord);
                 }
                 catch (error) {
-                    records.push(record);
+                    records.push(childRecord);
                 }
             }
             this.doRemove(child, records);

@@ -560,12 +560,20 @@ class SchemaManager {
                     }
                 }
                 let recordManager = this.loadRecordManager(blockManager, oldSchema.fields);
-                let storeManager = this.loadStoreManager(blockManager, oldSchema);
                 let indexSchema = this.createIndex(blockManager, index);
                 let indexManager = this.loadIndexManager(recordManager, blockManager, indexSchema);
-                for (let entry of storeManager) {
-                    let bid = entry.bid();
-                    let record = entry.record();
+                let storage = new tables_1.Table(blockManager, {
+                    getKeyFromValue: (value) => {
+                        let buffer = blockManager.readBlock(value);
+                        let record = recordManager.decode(buffer);
+                        return recordManager.encodeKeys(oldSchema.keys, record);
+                    }
+                }, {
+                    bid: oldSchema.storageBid
+                });
+                for (let bid of storage) {
+                    let buffer = blockManager.readBlock(bid);
+                    let record = recordManager.decode(buffer);
                     indexManager.insert(record, bid);
                 }
                 indices.push(indexSchema);
@@ -587,9 +595,8 @@ class SchemaManager {
             let newSchema = this.createStore(blockManager, store);
             let oldManager = this.loadStoreManager(blockManager, oldSchema);
             let newManager = this.loadStoreManager(blockManager, newSchema);
-            for (let entry of oldManager) {
+            for (let oldRecord of oldManager) {
                 try {
-                    let oldRecord = entry.record();
                     let newRecord = {};
                     for (let key in store.fields) {
                         let field = store.fields[key];

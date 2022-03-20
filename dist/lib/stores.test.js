@@ -24,7 +24,7 @@ const tables_1 = require("./tables");
     });
     let observed = [];
     for (let entry of users) {
-        observed.push(entry.record().key);
+        observed.push(entry.key);
     }
     let expected = ["A", "B"];
     assert.array.equals(observed, expected);
@@ -47,7 +47,7 @@ const tables_1 = require("./tables");
         key: "B"
     });
     let iterable = users;
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["A", "B"];
     assert.array.equals(observed, expected);
 });
@@ -69,7 +69,7 @@ const tables_1 = require("./tables");
         key: "B"
     });
     let iterable = users;
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["B", "A"];
     assert.array.equals(observed, expected);
 });
@@ -90,7 +90,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({
         key: new filters_1.EqualityFilter("A")
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["A"];
     assert.array.equals(observed, expected);
 });
@@ -111,7 +111,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({}, {
         key: new orders_1.IncreasingOrder()
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["A", "B"];
     assert.array.equals(observed, expected);
 });
@@ -132,7 +132,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({}, {
         key: new orders_1.DecreasingOrder()
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["B", "A"];
     assert.array.equals(observed, expected);
 });
@@ -156,7 +156,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({}, {
         key: new orders_1.IncreasingOrder()
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["A", "B"];
     assert.array.equals(observed, expected);
 });
@@ -180,7 +180,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({}, {
         key: new orders_1.DecreasingOrder()
     });
-    let observed = Array.from(iterable).map((entry) => entry.record().key);
+    let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["B", "A"];
     assert.array.equals(observed, expected);
 });
@@ -409,7 +409,7 @@ const tables_1 = require("./tables");
         user_id: "User 1",
         name: "Name 1"
     });
-    let observed = Array.from(index).map((record) => record.record().name);
+    let observed = Array.from(index).map((record) => record.name);
     let expected = ["Name 1"];
     assert.array.equals(observed, expected);
 });
@@ -438,7 +438,7 @@ const tables_1 = require("./tables");
         user_id: "User 1",
         name: "Name 2"
     });
-    let observed = Array.from(index).map((record) => record.record().name);
+    let observed = Array.from(index).map((record) => record.name);
     let expected = ["Name 2"];
     assert.array.equals(observed, expected);
 });
@@ -466,7 +466,7 @@ const tables_1 = require("./tables");
     users.remove({
         user_id: "User 1"
     });
-    let observed = Array.from(index).map((record) => record.record().name);
+    let observed = Array.from(index).map((record) => record.name);
     let expected = [];
     assert.array.equals(observed, expected);
 });
@@ -501,7 +501,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({
         name: new filters_1.EqualityFilter("Name")
     });
-    let observed = Array.from(iterable).map((record) => record.record().user_id);
+    let observed = Array.from(iterable).map((record) => record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
@@ -536,7 +536,7 @@ const tables_1 = require("./tables");
     let iterable = users.filter({
         name: new filters_1.EqualityFilter("Name")
     });
-    let observed = Array.from(iterable).map((record) => record.record().user_id);
+    let observed = Array.from(iterable).map((record) => record.user_id);
     let expected = ["User 2"];
     assert.array.equals(observed, expected);
 });

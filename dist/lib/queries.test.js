@@ -46,7 +46,7 @@ function createUsers() {
     let iterable = queryManager.filter({
         name: "B"
     });
-    let observed = Array.from(iterable).map((user) => user.record().key);
+    let observed = Array.from(iterable).map((user) => user.key);
     let expected = ["User 2", "User 3"];
     assert.array.equals(observed, expected);
 });
@@ -60,7 +60,7 @@ function createUsers() {
     let iterable = queryManager.filter({
         name: "B"
     });
-    let observed = Array.from(iterable).map((user) => user.record().key);
+    let observed = Array.from(iterable).map((user) => user.key);
     let expected = ["User 3", "User 2"];
     assert.array.equals(observed, expected);
 });

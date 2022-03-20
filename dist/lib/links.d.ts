@@ -1,6 +1,6 @@
 import { OrderMap } from "./orders";
 import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
-import { Entry, Index, Store, StoreManager } from "./stores";
+import { Index, Store, StoreManager } from "./stores";
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
     filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<C>>;
     lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
@@ -39,7 +39,7 @@ export declare class LinkManager<A extends Record, B extends RequiredKeys<A>, C 
     constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>);
     getParent(): StoreManager<A, B>;
     getChild(): StoreManager<C, D>;
-    filter(keysRecord: KeysRecord<A, B>): Iterable<Entry<C>>;
+    filter(keysRecord: KeysRecord<A, B>): Iterable<C>;
     lookup(record: C | Pick<C, E[B[number]]>): A | undefined;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>): LinkManager<A, B, C, D, E>;
 }

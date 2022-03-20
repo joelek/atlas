@@ -4,10 +4,6 @@ import { OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
-export declare type Entry<A extends Record> = {
-    bid(): number;
-    record(): A;
-};
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<A>>;
     length(): Promise<number>;
@@ -53,7 +49,7 @@ export declare class FilteredStore<A extends Record> {
     private filters;
     private orders;
     constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>);
-    [Symbol.iterator](): Iterator<Entry<A>>;
+    [Symbol.iterator](): Iterator<A>;
     static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined;
 }
 export declare class IndexManager<A extends Record, B extends Keys<A>> {
@@ -65,7 +61,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Keys<A>, options?: {
         bid?: number;
     });
-    [Symbol.iterator](): Iterator<Entry<A>>;
+    [Symbol.iterator](): Iterator<A>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Array<FilteredStore<A>>;
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;
@@ -80,9 +76,9 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private table;
     private indexManagers;
     constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>);
-    [Symbol.iterator](): Iterator<Entry<A>>;
+    [Symbol.iterator](): Iterator<A>;
     delete(): void;
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<Entry<A>>;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<A>;
     insert(record: A): void;
     length(): number;
     lookup(keysRecord: KeysRecord<A, B>): A;

@@ -50,7 +50,6 @@ class HashTableSlot extends blocks_1.BlockReference {
 exports.HashTableSlot = HashTableSlot;
 ;
 ;
-;
 class Table {
     blockManager;
     bid;
@@ -217,10 +216,7 @@ class Table {
             this.readSlot(i, slot);
             let value = slot.value();
             if (value !== 0) {
-                yield {
-                    key: () => this.detail.getKeyFromValue(value),
-                    value: () => value
-                };
+                yield value;
             }
         }
     }
