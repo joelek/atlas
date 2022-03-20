@@ -4,7 +4,7 @@ import { Orders } from "./orders";
 import { RequiredKeys, Record } from "./records";
 import { Entry, Index, Store, StoreManager } from "./stores";
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-    filter(parameters: C): Promise<Iterable<Entry<A>>>;
+    filter(parameters: C): Promise<Iterable<A>>;
 }
 export declare type ReadableQueries<A> = {
     [B in keyof A]: A[B] extends ReadableQuery<infer C, infer D, infer E, infer F> ? ReadableQuery<C, D, E, F> : A[B];

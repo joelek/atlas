@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OverridableWritableQuery = exports.Query = exports.QueryManager = exports.WritableQueryManager = void 0;
 const operators_1 = require("./operators");
 const stores_1 = require("./stores");
+const streams_1 = require("./streams");
 ;
 ;
 class WritableQueryManager {
@@ -11,7 +12,10 @@ class WritableQueryManager {
         this.queryManager = queryManager;
     }
     async filter(...parameters) {
-        return this.queryManager.filter(...parameters);
+        return streams_1.StreamIterable.of(this.queryManager.filter(...parameters))
+            .map((entry) => {
+            return entry.record();
+        });
     }
 }
 exports.WritableQueryManager = WritableQueryManager;
@@ -87,7 +91,10 @@ class OverridableWritableQuery {
         this.overrides = overrides;
     }
     async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
+        return this.overrides.filter?.(...parameters) ?? streams_1.StreamIterable.of(this.queryManager.filter(...parameters))
+            .map((entry) => {
+            return entry.record();
+        });
     }
 }
 exports.OverridableWritableQuery = OverridableWritableQuery;

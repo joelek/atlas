@@ -9,7 +9,7 @@ export declare type Entry<A extends Record> = {
     record(): A;
 };
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<Entry<A>>>;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<A>>;
     length(): Promise<number>;
     lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 }

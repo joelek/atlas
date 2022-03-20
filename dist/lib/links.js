@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OverridableWritableLink = exports.Link = exports.LinkManager = exports.WritableLinkManager = void 0;
 const filters_1 = require("./filters");
 const stores_1 = require("./stores");
+const streams_1 = require("./streams");
 ;
 ;
 class WritableLinkManager {
@@ -11,7 +12,10 @@ class WritableLinkManager {
         this.linkManager = linkManager;
     }
     async filter(...parameters) {
-        return this.linkManager.filter(...parameters);
+        return streams_1.StreamIterable.of(this.linkManager.filter(...parameters))
+            .map((entry) => {
+            return entry.record();
+        });
     }
     async lookup(...parameters) {
         return this.linkManager.lookup(...parameters);
@@ -110,7 +114,10 @@ class OverridableWritableLink {
         this.overrides = overrides;
     }
     async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
+        return this.overrides.filter?.(...parameters) ?? streams_1.StreamIterable.of(this.linkManager.filter(...parameters))
+            .map((entry) => {
+            return entry.record();
+        });
     }
     async lookup(...parameters) {
         return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);

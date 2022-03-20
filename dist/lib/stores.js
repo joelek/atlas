@@ -16,7 +16,10 @@ class WritableStoreManager {
         this.storeManager = storeManager;
     }
     async filter(...parameters) {
-        return this.storeManager.filter(...parameters);
+        return streams_1.StreamIterable.of(this.storeManager.filter(...parameters))
+            .map((entry) => {
+            return entry.record();
+        });
     }
     async insert(...parameters) {
         return this.storeManager.insert(...parameters);
@@ -359,7 +362,10 @@ class OverridableWritableStore {
         this.overrides = overrides;
     }
     async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
+        return this.overrides.filter?.(...parameters) ?? streams_1.StreamIterable.of(this.storeManager.filter(...parameters))
+            .map((entry) => {
+            return entry.record();
+        });
     }
     async insert(...parameters) {
         return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
