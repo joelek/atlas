@@ -16,6 +16,19 @@ function * include<A, B extends A>(iterable: Iterable<A>, predicate: (value: A, 
 	}
 };
 
+function * limit<A>(iterable: Iterable<A>, length: number): Iterable<A> {
+	if (length > 0) {
+		let index = 0;
+		for (let value of iterable) {
+			yield value;
+			index += 1;
+			if (index >= length) {
+				break;
+			}
+		}
+	}
+};
+
 function * map<A, B>(iterable: Iterable<A>, transform: (value: A, index: number) => B): Iterable<B> {
 	let index = 0;
 	for (let value of iterable) {
@@ -65,6 +78,10 @@ export class StreamIterable<A> {
 			}
 		}
 		return false;
+	}
+
+	limit(length: number): StreamIterable<A> {
+		return new StreamIterable(limit(this.values, length));
 	}
 
 	map<B>(transform: (value: A, index: number) => B): StreamIterable<B> {
