@@ -38,7 +38,7 @@ function createUsersPostsAndComments() {
 	let userComments = LinkManager.construct(users, comments, {
 		user_id: "comment_user_id"
 	});
-	let consistencyManager = new DatabaseManager({
+	let databaseManager = new DatabaseManager({
 		users,
 		posts,
 		comments
@@ -53,7 +53,7 @@ function createUsersPostsAndComments() {
 			posts,
 			comments
 		},
-		writableStores: consistencyManager.createWritableStores()
+		writableStores: databaseManager.createWritableStores()
 	};
 };
 
@@ -147,7 +147,7 @@ function createDirectories() {
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
-	let consistencyManager = new DatabaseManager({
+	let databaseManager = new DatabaseManager({
 		directories
 	}, {
 		childDirectories
@@ -156,8 +156,8 @@ function createDirectories() {
 		storeManagers: {
 			directories
 		},
-		consistencyManager,
-		writableStores: consistencyManager.createWritableStores()
+		databaseManager: databaseManager,
+		writableStores: databaseManager.createWritableStores()
 	};
 };
 
@@ -237,7 +237,7 @@ test(`It should not remove records with parents for self-referencing links.`, as
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is an orphaned chain link.`, async (assert) => {
-	let { storeManagers, consistencyManager, writableStores } = createDirectories();
+	let { storeManagers, databaseManager, writableStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
@@ -246,12 +246,12 @@ test(`It should support enforcing link consistency for self-referencing links wh
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	consistencyManager.enforceLinkConsistency(["childDirectories"]);
+	databaseManager.enforceLinkConsistency(["childDirectories"]);
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), []);
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is a cyclical link.`, async (assert) => {
-	let { storeManagers, consistencyManager, writableStores } = createDirectories();
+	let { storeManagers, databaseManager, writableStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: "Directory 1"
@@ -260,12 +260,12 @@ test(`It should support enforcing link consistency for self-referencing links wh
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
 	});
-	consistencyManager.enforceLinkConsistency(["childDirectories"]);
+	databaseManager.enforceLinkConsistency(["childDirectories"]);
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is a chain link.`, async (assert) => {
-	let { storeManagers, consistencyManager, writableStores } = createDirectories();
+	let { storeManagers, databaseManager, writableStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
@@ -274,12 +274,12 @@ test(`It should support enforcing link consistency for self-referencing links wh
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
 	});
-	consistencyManager.enforceLinkConsistency(["childDirectories"]);
+	databaseManager.enforceLinkConsistency(["childDirectories"]);
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is an orphaned chain link.`, async (assert) => {
-	let { storeManagers, consistencyManager, writableStores } = createDirectories();
+	let { storeManagers, databaseManager, writableStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
@@ -288,12 +288,12 @@ test(`It should support enforcing store consistency for self-referencing links w
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	consistencyManager.enforceStoreConsistency(["directories"]);
+	databaseManager.enforceStoreConsistency(["directories"]);
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), []);
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is a cyclical link.`, async (assert) => {
-	let { storeManagers, consistencyManager, writableStores } = createDirectories();
+	let { storeManagers, databaseManager, writableStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: "Directory 1"
@@ -302,12 +302,12 @@ test(`It should support enforcing store consistency for self-referencing links w
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
 	});
-	consistencyManager.enforceStoreConsistency(["directories"]);
+	databaseManager.enforceStoreConsistency(["directories"]);
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is a chain link.`, async (assert) => {
-	let { storeManagers, consistencyManager, writableStores } = createDirectories();
+	let { storeManagers, databaseManager, writableStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
@@ -316,6 +316,6 @@ test(`It should support enforcing store consistency for self-referencing links w
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
 	});
-	consistencyManager.enforceStoreConsistency(["directories"]);
+	databaseManager.enforceStoreConsistency(["directories"]);
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.record().directory_id), ["Directory 0", "Directory 1"]);
 });
