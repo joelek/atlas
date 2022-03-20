@@ -278,7 +278,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		let filteredStores = this.indexManagers.flatMap((indexManager) => {
 			return indexManager.filter(filters, orders);
 		});
-		filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, StreamIterable.of(this.table).map((entry) => entry.value()), filters, orders));
+		filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders));
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
 		if (filteredStore != null) {
 			yield * filteredStore;

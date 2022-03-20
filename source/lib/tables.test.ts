@@ -18,7 +18,7 @@ test(`It should support iteration with no values inserted.`, async (assert) => {
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
-	let observed = Array.from(ht).map((entry) => entry.value()).sort();
+	let observed = Array.from(ht).sort();
 	let expected = [] as Array<number>;
 	assert.array.equals(observed, expected);
 });
@@ -30,7 +30,7 @@ test(`It should support iteration with value one inserted.`, async (assert) => {
 		minimumCapacity: 2
 	});
 	ht.insert(DETAIL.getKeyFromValue(1), 1);
-	let observed = Array.from(ht).map((entry) => entry.value()).sort();
+	let observed = Array.from(ht).sort();
 	let expected = [1] as Array<number>;
 	assert.array.equals(observed, expected);
 });
@@ -42,7 +42,7 @@ test(`It should support iteration with value two inserted.`, async (assert) => {
 		minimumCapacity: 2
 	});
 	ht.insert(DETAIL.getKeyFromValue(2), 2);
-	let observed = Array.from(ht).map((entry) => entry.value()).sort();
+	let observed = Array.from(ht).sort();
 	let expected = [2] as Array<number>;
 	assert.array.equals(observed, expected);
 });
@@ -55,7 +55,7 @@ test(`It should support iteration with both values inserted.`, async (assert) =>
 	});
 	ht.insert(DETAIL.getKeyFromValue(1), 1);
 	ht.insert(DETAIL.getKeyFromValue(2), 2);
-	let observed = Array.from(ht).map((entry) => entry.value()).sort();
+	let observed = Array.from(ht).sort();
 	let expected = [1, 2] as Array<number>;
 	assert.array.equals(observed, expected);
 });
@@ -69,7 +69,7 @@ test(`It should support clearing.`, async (assert) => {
 	ht.insert(DETAIL.getKeyFromValue(1), 1);
 	ht.insert(DETAIL.getKeyFromValue(2), 2);
 	ht.clear();
-	let observed = Array.from(ht).map((entry) => entry.value()).sort();
+	let observed = Array.from(ht).sort();
 	let expected = [] as Array<number>;
 	assert.array.equals(observed, expected);
 });

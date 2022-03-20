@@ -46,11 +46,6 @@ export class HashTableSlot extends BlockReference {
 	}
 };
 
-export interface Entry {
-	key(): Array<Uint8Array>;
-	value(): number;
-};
-
 export interface TableDetail {
 	getKeyFromValue(value: number): Array<Uint8Array>;
 };
@@ -232,17 +227,14 @@ export class Table {
 		this.header.write(this.blockManager.makeWritable(this.bid), 0);
 	}
 
-	* [Symbol.iterator](): Iterator<Entry> {
+	* [Symbol.iterator](): Iterator<number> {
 		let slotCount = this.getSlotCount();
 		let slot = new HashTableSlot();
 		for (let i = 0; i < slotCount; i++) {
 			this.readSlot(i, slot);
 			let value = slot.value();
 			if (value !== 0) {
-				yield {
-					key: () => this.detail.getKeyFromValue(value),
-					value: () => value
-				};
+				yield value;
 			}
 		}
 	}
