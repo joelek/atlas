@@ -301,7 +301,7 @@ Storing the database on a Solid State Drive (SSD) is highly recommended for opti
 
 Atlas implements a virtual block system in which all database entities are stored. Each block is allocated as a contiguous array of 2^k bytes where k is the smallest non-negative number able to store the complete block. This allows blocks to shrink and grow as needed without unnecessary reallocation and simplifies block reuse as there are fewer distinct block sizes in the system. It does however imply that each block is stored with an overhead of between 0% and 100%. A 256 byte block will be stored in an array of 256 bytes with an overhead of 0 bytes. A 257 byte block will be stored in an array of 512 bytes with an overhead of 255 bytes.
 
-Each block is assigned a sequential id in the block allocation table (BAT) where each 64-bit entry stores the block address using 48 bits, its category (k) using 8 bits as well as 8 bits of metadata. The 48-bit address space implies a maximum database size of 281 474 976 710 656 bytes (256 TiB). Each entry constitutes an additional overhead of 8 bytes which allows for storing roughly 35 184 372 088 832 unique blocks.
+Each block is assigned a sequential id in the block allocation table (BAT) where each 64-bit entry stores the block address using 48 bits, its category (k) using 8 bits as well as 8 bits of metadata. The 48-bit address space implies a maximum database size of 281 474 976 710 656 bytes (256 TiB). Each entry constitutes an additional overhead of 8 bytes which allows for storing roughly 3*10<sup>13</sup> unique blocks.
 
 ## Sponsorship
 
