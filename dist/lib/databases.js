@@ -4,7 +4,9 @@ exports.Database = exports.DatabaseManager = void 0;
 const links_1 = require("./links");
 const queries_1 = require("./queries");
 const stores_1 = require("./stores");
+const streams_1 = require("./streams");
 const transactions_1 = require("./transactions");
+const MAX_LIMIT = 100;
 class DatabaseManager {
     storeManagers;
     linkManagers;
@@ -95,6 +97,11 @@ class DatabaseManager {
         for (let key in this.storeManagers) {
             let storeManager = this.storeManagers[key];
             writableStores[key] = new stores_1.OverridableWritableStore(storeManager, {
+                filter: async (filters, orders) => {
+                    return streams_1.StreamIterable.of(storeManager.filter(filters, orders))
+                        .limit(MAX_LIMIT)
+                        .collect();
+                },
                 insert: async (record) => this.doInsert(storeManager, [record]),
                 remove: async (record) => this.doRemove(storeManager, [record])
             });
@@ -104,14 +111,28 @@ class DatabaseManager {
     createWritableLinks() {
         let writableLinks = {};
         for (let key in this.linkManagers) {
-            writableLinks[key] = new links_1.OverridableWritableLink(this.linkManagers[key], {});
+            let linkManager = this.linkManagers[key];
+            writableLinks[key] = new links_1.OverridableWritableLink(linkManager, {
+                filter: async (keysRecord) => {
+                    return streams_1.StreamIterable.of(linkManager.filter(keysRecord))
+                        .limit(MAX_LIMIT)
+                        .collect();
+                }
+            });
         }
         return writableLinks;
     }
     createWritableQueries() {
         let writableQueries = {};
         for (let key in this.queryManagers) {
-            writableQueries[key] = new queries_1.OverridableWritableQuery(this.queryManagers[key], {});
+            let queryManager = this.queryManagers[key];
+            writableQueries[key] = new queries_1.OverridableWritableQuery(queryManager, {
+                filter: async (parameters) => {
+                    return streams_1.StreamIterable.of(queryManager.filter(parameters))
+                        .limit(MAX_LIMIT)
+                        .collect();
+                }
+            });
         }
         return writableQueries;
     }

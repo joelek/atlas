@@ -19,6 +19,19 @@ function* include(iterable, predicate) {
     }
 }
 ;
+function* limit(iterable, length) {
+    if (length > 0) {
+        let index = 0;
+        for (let value of iterable) {
+            yield value;
+            index += 1;
+            if (index >= length) {
+                break;
+            }
+        }
+    }
+}
+;
 function* map(iterable, transform) {
     let index = 0;
     for (let value of iterable) {
@@ -61,6 +74,9 @@ class StreamIterable {
             }
         }
         return false;
+    }
+    limit(length) {
+        return new StreamIterable(limit(this.values, length));
     }
     map(transform) {
         return new StreamIterable(map(this.values, transform));
