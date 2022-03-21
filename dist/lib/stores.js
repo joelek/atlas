@@ -42,12 +42,14 @@ class FilteredStore {
     bids;
     filters;
     orders;
-    constructor(recordManager, blockManager, bids, filters, orders) {
+    anchor;
+    constructor(recordManager, blockManager, bids, filters, orders, anchor) {
         this.recordManager = recordManager;
         this.blockManager = blockManager;
         this.bids = bids;
         this.filters = filters ?? {};
         this.orders = orders ?? {};
+        this.anchor = anchor;
     }
     *[Symbol.iterator]() {
         let iterable = streams_1.StreamIterable.of(this.bids)
@@ -84,6 +86,20 @@ class FilteredStore {
                 return 0;
             });
         }
+        if (this.anchor != null) {
+            let encodedAnchor = this.recordManager.encode(this.anchor);
+            let found = false;
+            iterable = iterable.filter((record) => {
+                if (!found) {
+                    let encodedRecord = this.recordManager.encode(record);
+                    if ((0, tables_1.compareBuffers)([encodedAnchor], [encodedRecord]) === 0) {
+                        found = true;
+                        return false;
+                    }
+                }
+                return found;
+            });
+        }
         yield* iterable;
     }
     static getOptimal(filteredStores) {
@@ -113,7 +129,7 @@ class IndexManager {
     delete() {
         this.tree.delete();
     }
-    filter(filters, orders) {
+    filter(filters, orders, anchor) {
         filters = filters ?? {};
         orders = orders ?? {};
         filters = { ...filters };
@@ -150,7 +166,13 @@ class IndexManager {
             directions.push(order.getDirection());
             delete orders[orderKeys[i]];
         }
-        let iterable = tree.filter("^=", [], directions);
+        let relationship = "^=";
+        let keys = [];
+        if (anchor != null) {
+            relationship = ">";
+            keys = this.recordManager.encodeKeys(keysRemaining, anchor);
+        }
+        let iterable = tree.filter(relationship, keys, directions);
         return [
             new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders)
         ];
@@ -195,17 +217,18 @@ class StoreManager {
         }
         this.table.delete();
     }
-    *filter(filters, orders) {
+    *filter(filters, orders, anchorKeysRecord) {
         orders = orders ?? this.orders;
         for (let key of this.keys) {
             if (!(key in orders)) {
                 orders[key] = new orders_1.IncreasingOrder();
             }
         }
+        let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
         let filteredStores = this.indexManagers.flatMap((indexManager) => {
-            return indexManager.filter(filters, orders);
+            return indexManager.filter(filters, orders, anchor);
         });
-        filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders));
+        filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
         let filteredStore = FilteredStore.getOptimal(filteredStores);
         if (filteredStore != null) {
             yield* filteredStore;
