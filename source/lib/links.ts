@@ -2,10 +2,9 @@ import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
 import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
 import { Index, Store, StoreManager } from "./stores";
-import { StreamIterable } from "./streams";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	filter(keysRecord: KeysRecord<A, B>): Promise<Iterable<C>>;
+	filter(keysRecord: KeysRecord<A, B>, anchor?: KeysRecord<C, D>): Promise<Iterable<C>>;
 	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
@@ -74,14 +73,14 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 		return this.child;
 	}
 
-	filter(keysRecord: KeysRecord<A, B>): Iterable<C> {
+	filter(keysRecord: KeysRecord<A, B>, anchor?: KeysRecord<C, D>): Iterable<C> {
 		let filters = {} as FilterMap<C>;
 		for (let key in this.keysRecordMap) {
 			let keyOne = key as any as B[number];
 			let keyTwo = this.keysRecordMap[keyOne];
 			filters[keyTwo] = new EqualityFilter(keysRecord[keyOne]) as any;
 		}
-		return this.child.filter(filters, this.orders);
+		return this.child.filter(filters, this.orders, anchor);
 	}
 
 	lookup(record: C | Pick<C, E[B[number]]>): A | undefined {

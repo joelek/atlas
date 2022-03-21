@@ -343,5 +343,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement search support using RadixTree.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
-* Add pagination to stores, links and queries.
 * Improve heuristic for index selector.

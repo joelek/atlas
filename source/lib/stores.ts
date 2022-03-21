@@ -1,15 +1,15 @@
 import { StreamIterable } from "./streams";
 import { EqualityFilter, FilterMap } from "./filters";
-import { Table } from "./tables";
+import { compareBuffers, Table } from "./tables";
 import { IncreasingOrder, OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
-import { Direction, RadixTree } from "./trees";
+import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Promise<Iterable<A>>;
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Iterable<A>>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 };
@@ -82,13 +82,15 @@ export class FilteredStore<A extends Record> {
 	private bids: Iterable<number>;
 	private filters: FilterMap<A>;
 	private orders: OrderMap<A>;
+	private anchor?: A;
 
-	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>) {
+	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
 		this.recordManager = recordManager;
 		this.blockManager = blockManager;
 		this.bids = bids;
 		this.filters = filters ?? {};
 		this.orders = orders ?? {};
+		this.anchor = anchor;
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
@@ -126,6 +128,20 @@ export class FilteredStore<A extends Record> {
 				return 0;
 			});
 		}
+		if (this.anchor != null) {
+			let encodedAnchor = this.recordManager.encode(this.anchor);
+			let found = false;
+			iterable = iterable.filter((record) => {
+				if (!found) {
+					let encodedRecord = this.recordManager.encode(record);
+					if (compareBuffers([encodedAnchor], [encodedRecord]) === 0) {
+						found = true;
+						return false;
+					}
+				}
+				return found;
+			});
+		}
 		yield * iterable;
 	}
 
@@ -142,10 +158,10 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
 	private bid: number;
-	private keys: Keys<A>;
+	private keys: [...B];
 	private tree: RadixTree;
 
-	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Keys<A>, options?: {
+	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: [...B], options?: {
 		bid?: number
 	}) {
 		let bid = options?.bid ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
@@ -164,7 +180,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		this.tree.delete();
 	}
 
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Array<FilteredStore<A>> {
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): Array<FilteredStore<A>> {
 		filters = filters ?? {};
 		orders = orders ?? {};
 		filters = { ...filters };
@@ -201,7 +217,13 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			directions.push(order.getDirection());
 			delete orders[orderKeys[i]];
 		}
-		let iterable = tree.filter("^=", [], directions);
+		let relationship = "^=" as Relationship;
+		let keys = [] as Array<Uint8Array>;
+		if (anchor != null) {
+			relationship = ">";
+			keys = this.recordManager.encodeKeys(keysRemaining, anchor);
+		}
+		let iterable = tree.filter(relationship, keys, directions);
 		return [
 			new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders)
 		];
@@ -251,17 +273,18 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table.delete();
 	}
 
-	* filter(filters?: FilterMap<A>, orders?: OrderMap<A>): Iterable<A> {
+	* filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>): Iterable<A> {
 		orders = orders ?? this.orders;
 		for (let key of this.keys) {
 			if (!(key in orders)) {
 				orders[key] = new IncreasingOrder();
 			}
 		}
+		let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
 		let filteredStores = this.indexManagers.flatMap((indexManager) => {
-			return indexManager.filter(filters, orders);
+			return indexManager.filter(filters, orders, anchor);
 		});
-		filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders));
+		filteredStores.push(new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
 		if (filteredStore != null) {
 			yield * filteredStore;

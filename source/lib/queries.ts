@@ -2,12 +2,11 @@ import { FilterMap } from "./filters";
 import { SubsetOf } from "./inference";
 import { EqualityOperator, Operators } from "./operators";
 import { OrderMap, Orders } from "./orders";
-import { RequiredKeys, Record, Keys, Key } from "./records";
+import { RequiredKeys, Record, Keys, Key, KeysRecord } from "./records";
 import { Index, Store, StoreManager } from "./stores";
-import { StreamIterable } from "./streams";
 
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	filter(parameters: C): Promise<Iterable<A>>;
+	filter(parameters: C, anchor?: KeysRecord<A, B>): Promise<Iterable<A>>;
 };
 
 export type ReadableQueries<A> = {
@@ -61,7 +60,7 @@ export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends
 		this.orders = orders;
 	}
 
-	filter(parameters: C): Iterable<A> {
+	filter(parameters: C, anchor?: KeysRecord<A, B>): Iterable<A> {
 		let filters = {} as FilterMap<A>;
 		for (let key in this.operators) {
 			filters[key] = this.operators[key].createFilter(parameters[key]) as any;
@@ -70,7 +69,7 @@ export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends
 		for (let key in this.orders) {
 			orders[key] = this.orders[key] as any;
 		}
-		return this.storeManager.filter(filters, orders);
+		return this.storeManager.filter(filters, orders, anchor);
 	}
 };
 
