@@ -563,3 +563,129 @@ test(`It should use the optimal index when filtering with filters and orders`, a
 	let expected = ["User 2"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
+
+test(`It should support anchored filtering of the records stored in increasing order.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	users.insert({
+		key: "C"
+	});
+	users.insert({
+		key: "D"
+	});
+	let iterable = users.filter({}, {
+		key: new IncreasingOrder()
+	}, {
+		key: "B"
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["C", "D"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support anchored filtering of the records stored in increasing order with an index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	users.insert({
+		key: "C"
+	});
+	users.insert({
+		key: "D"
+	});
+	let iterable = users.filter({}, {
+		key: new IncreasingOrder()
+	}, {
+		key: "B"
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["C", "D"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support anchored filtering of the records stored in decreasing order.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	users.insert({
+		key: "C"
+	});
+	users.insert({
+		key: "D"
+	});
+	let iterable = users.filter({}, {
+		key: new DecreasingOrder()
+	}, {
+		key: "C"
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["B", "A"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support anchored filtering of the records stored in decreasing order with an index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	users.insert({
+		key: "C"
+	});
+	users.insert({
+		key: "D"
+	});
+	let iterable = users.filter({}, {
+		key: new DecreasingOrder()
+	}, {
+		key: "C"
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["B", "A"];
+	assert.array.equals(observed, expected);
+});
