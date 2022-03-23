@@ -1,7 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransactionManager = exports.QueuedWritableQuery = exports.QueuedReadableQuery = exports.QueuedWritableLink = exports.QueuedReadableLink = exports.QueuedWritableStore = exports.QueuedReadableStore = void 0;
+exports.TransactionManager = exports.QueuedWritableQuery = exports.QueuedReadableQuery = exports.QueuedWritableLink = exports.QueuedReadableLink = exports.QueuedWritableStore = exports.QueuedReadableStore = exports.WritableQueue = exports.ReadableQueue = void 0;
 const utils_1 = require("./utils");
+class ReadableQueue {
+    queue;
+    constructor(queue) {
+        this.queue = queue;
+    }
+    enqueueReadableOperation(operation) {
+        return this.queue.enqueue(operation);
+    }
+}
+exports.ReadableQueue = ReadableQueue;
+;
+class WritableQueue extends ReadableQueue {
+    constructor(queue) {
+        super(queue);
+    }
+    enqueueWritableOperation(operation) {
+        return this.queue.enqueue(operation);
+    }
+}
+exports.WritableQueue = WritableQueue;
+;
 class QueuedReadableStore {
     writableStore;
     queue;
@@ -139,11 +160,12 @@ class TransactionManager {
     }
     async enqueueReadableTransaction(transaction) {
         let queue = new utils_1.PromiseQueue();
+        let readableQueue = new ReadableQueue(queue);
         let stores = this.createReadableStores(queue);
         let links = this.createReadableLinks(queue);
         let queries = this.createReadableQueries(queue);
         let promise = this.readableTransactionLock
-            .then(() => transaction(stores, links, queries))
+            .then(() => transaction(readableQueue, stores, links, queries))
             .then((value) => queue.enqueue(() => value));
         this.writableTransactionLock = this.writableTransactionLock
             .then(() => promise)
@@ -161,11 +183,12 @@ class TransactionManager {
     }
     async enqueueWritableTransaction(transaction) {
         let queue = new utils_1.PromiseQueue();
+        let writableQueue = new WritableQueue(queue);
         let stores = this.createWritableStores(queue);
         let links = this.createWritableLinks(queue);
         let queries = this.createWritableQueries(queue);
         let promise = this.writableTransactionLock
-            .then(() => transaction(stores, links, queries))
+            .then(() => transaction(writableQueue, stores, links, queries))
             .then((value) => queue.enqueue(() => value));
         this.writableTransactionLock = this.readableTransactionLock = this.writableTransactionLock
             .then(() => promise)

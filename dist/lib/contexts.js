@@ -262,7 +262,9 @@ class Context {
         let databaseManager = schemaManager.createDatabaseManager(file, database);
         this.databaseManagers.set(path, databaseManager);
         let transactionManager = databaseManager.createTransactionManager(file);
-        return transactionManager;
+        return {
+            transactionManager
+        };
     }
 }
 exports.Context = Context;

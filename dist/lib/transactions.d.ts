@@ -5,6 +5,15 @@ import { ReadableStore, ReadableStoresFromStores, Stores, StoresFromWritableStor
 import { PromiseQueue } from "./utils";
 import { Queries, QueriesFromWritableQueries, ReadableQueriesFromQueries, ReadableQuery, WritableQueries, WritableQueriesFromQueries, WritableQuery } from "./queries";
 import { SubsetOf } from "./inference";
+export declare class ReadableQueue {
+    protected queue: PromiseQueue;
+    constructor(queue: PromiseQueue);
+    enqueueReadableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A>;
+}
+export declare class WritableQueue extends ReadableQueue {
+    constructor(queue: PromiseQueue);
+    enqueueWritableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A>;
+}
 export declare class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
     protected writableStore: WritableStore<A, B>;
     protected queue: PromiseQueue;
@@ -38,8 +47,8 @@ export declare class QueuedReadableQuery<A extends Record, B extends RequiredKey
 export declare class QueuedWritableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> extends QueuedReadableQuery<A, B, C, D> implements WritableQuery<A, B, C, D> {
     constructor(writableQuery: WritableQuery<A, B, C, D>, queue: PromiseQueue);
 }
-export declare type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
-export declare type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: WritableLinksFromLinks<B>, queries: WritableQueriesFromQueries<C>) => Promise<D>;
+export declare type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (queue: ReadableQueue, stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
+export declare type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (queue: WritableQueue, stores: WritableStoresFromStores<A>, links: WritableLinksFromLinks<B>, queries: WritableQueriesFromQueries<C>) => Promise<D>;
 export declare class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>, C extends WritableQueries<any>> {
     private file;
     private readableTransactionLock;

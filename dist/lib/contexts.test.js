@@ -25,7 +25,7 @@ const contexts_1 = require("./contexts");
         name: context.createEqualityOperator(),
         age: context.createEqualityOperator()
     });
-    let manager = context.createTransactionManager("./private/atlas", {
+    let { transactionManager } = context.createTransactionManager("./private/atlas", {
         users,
         posts
     }, {
@@ -33,7 +33,7 @@ const contexts_1 = require("./contexts");
     }, {
         query
     });
-    await manager.enqueueWritableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+    await transactionManager.enqueueWritableTransaction(async (queue, { users, posts }, { userPosts }, { query }) => {
         users.insert({
             user_id: "User 1",
             name: "Joel Ek",
@@ -45,7 +45,7 @@ const contexts_1 = require("./contexts");
             title: "Some title."
         });
     });
-    let observed = await manager.enqueueReadableTransaction(async ({ users, posts }, { userPosts }, { query }) => {
+    let observed = await transactionManager.enqueueReadableTransaction(async (queue, { users, posts }, { userPosts }, { query }) => {
         let allUserPosts = await userPosts.filter({
             user_id: "User 1"
         });
