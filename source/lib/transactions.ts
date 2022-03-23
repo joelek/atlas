@@ -6,6 +6,28 @@ import { PromiseQueue } from "./utils";
 import { Queries, QueriesFromWritableQueries, ReadableQueriesFromQueries, ReadableQuery, WritableQueries, WritableQueriesFromQueries, WritableQuery } from "./queries";
 import { SubsetOf } from "./inference";
 
+export class ReadableQueue {
+	protected queue: PromiseQueue;
+
+	constructor(queue: PromiseQueue) {
+		this.queue = queue;
+	}
+
+	enqueueReadableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A> {
+		return this.queue.enqueue(operation);
+	}
+};
+
+export class WritableQueue extends ReadableQueue {
+	constructor(queue: PromiseQueue) {
+		super(queue);
+	}
+
+	enqueueWritableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A> {
+		return this.queue.enqueue(operation);
+	}
+};
+
 export class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
 	protected writableStore: WritableStore<A, B>;
 	protected queue: PromiseQueue;
