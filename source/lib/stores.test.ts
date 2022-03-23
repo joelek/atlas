@@ -1,10 +1,10 @@
 import { Index, IndexManager, Store, StoreManager } from "./stores";
-import { RecordManager, StringField } from "./records";
+import { IntegerField, RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder, Order } from "./orders";
-import { test } from "./test";
+import { benchmark, test } from "./test";
 import { Table } from "./tables";
 
 test(`It should support for-of iteration of the records stored.`, async (assert) => {
@@ -688,4 +688,51 @@ test(`It should support anchored filtering of the records stored in decreasing o
 	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["B", "A"];
 	assert.array.equals(observed, expected);
+});
+
+test(`It should perform significantly better with a suitable index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let storeOne = StoreManager.construct(blockManager, {
+		fields: {
+			key: new IntegerField(0)
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
+	});
+	let storeTwo = StoreManager.construct(blockManager, {
+		fields: {
+			key: new IntegerField(0)
+		},
+		keys: ["key"],
+		indices: []
+	});
+	for (let key = 0; key < 1000; key++) {
+		storeOne.insert({
+			key
+		});
+		storeTwo.insert({
+			key
+		});
+	}
+	let averageOne = await benchmark(async () => {
+		let n = 0;
+		for (let user of storeOne.filter()) {
+			n += 1;
+			if (n >= 10) {
+				break;
+			}
+		}
+	});
+	let averageTwo = await benchmark(async () => {
+		let n = 0;
+		for (let user of storeTwo.filter()) {
+			n += 1;
+			if (n >= 10) {
+				break;
+			}
+		}
+	});
+	assert.true(averageOne * 100 < averageTwo);
 });
