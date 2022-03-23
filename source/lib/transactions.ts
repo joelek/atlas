@@ -112,9 +112,9 @@ export class QueuedWritableQuery<A extends Record, B extends RequiredKeys<A>, C 
 	}
 };
 
-export type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
+export type ReadableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (queue: ReadableQueue, stores: ReadableStoresFromStores<A>, links: ReadableLinksFromLinks<B>, queries: ReadableQueriesFromQueries<C>) => Promise<D>;
 
-export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (stores: WritableStoresFromStores<A>, links: WritableLinksFromLinks<B>, queries: WritableQueriesFromQueries<C>) => Promise<D>;
+export type WritableTransaction<A extends Stores<any>, B extends Links<any>, C extends Queries<any>, D> = (queue: WritableQueue, stores: WritableStoresFromStores<A>, links: WritableLinksFromLinks<B>, queries: WritableQueriesFromQueries<C>) => Promise<D>;
 
 export class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>, C extends WritableQueries<any>> {
 	private file: File;
@@ -183,11 +183,12 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, QueriesFromWritableQueries<C>, D>): Promise<D> {
 		let queue = new PromiseQueue();
+		let readableQueue = new ReadableQueue(queue);
 		let stores = this.createReadableStores(queue);
 		let links = this.createReadableLinks(queue);
 		let queries = this.createReadableQueries(queue);
 		let promise = this.readableTransactionLock
-			.then(() => transaction(stores, links, queries))
+			.then(() => transaction(readableQueue, stores, links, queries))
 			.then((value) => queue.enqueue(() => value));
 		this.writableTransactionLock = this.writableTransactionLock
 			.then(() => promise)
@@ -204,11 +205,12 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 
 	async enqueueWritableTransaction<D>(transaction: WritableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, QueriesFromWritableQueries<C>, D>): Promise<D> {
 		let queue = new PromiseQueue();
+		let writableQueue = new WritableQueue(queue);
 		let stores = this.createWritableStores(queue);
 		let links = this.createWritableLinks(queue);
 		let queries = this.createWritableQueries(queue);
 		let promise = this.writableTransactionLock
-			.then(() => transaction(stores, links, queries))
+			.then(() => transaction(writableQueue, stores, links, queries))
 			.then((value) => queue.enqueue(() => value));
 		this.writableTransactionLock = this.readableTransactionLock = this.writableTransactionLock
 			.then(() => promise)

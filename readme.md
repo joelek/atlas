@@ -18,7 +18,7 @@ let { transactionManager } = context.createTransactionManager("./private/db", {
 });
 
 // All types for the transaction are fully inferred and checked at compile-time.
-await manager.enqueueWritableTransaction(async ({ users }) => {
+await transactionManager.enqueueWritableTransaction(async (queue, { users }) => {
 	return users.insert({
 		user_id: Uint8Array.of(1),
 		name: "Joel Ek",
@@ -27,7 +27,7 @@ await manager.enqueueWritableTransaction(async ({ users }) => {
 });
 
 // All types for the transaction are fully inferred and checked at compile-time.
-let user = await manager.enqueueReadableTransaction(async ({ users }) => {
+let user = await transactionManager.enqueueReadableTransaction(async (queue, { users }) => {
 	return users.lookup({
 		user_id: Uint8Array.of(1)
 	});
@@ -232,7 +232,7 @@ let { transactionManager } = context.createTransactionManager("./private/db", {
 A transaction with write access will be provided with write access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file if and only if all operations complete successfully.
 
 ```ts
-await manager.enqueueWritableTransaction(async ({
+await transactionManager.enqueueWritableTransaction(async (queue, {
 	users,
 	posts
 }, {
@@ -251,7 +251,7 @@ await manager.enqueueWritableTransaction(async ({
 A transaction with read access will be provided with read access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue.
 
 ```ts
-let user = await manager.enqueueReadableTransaction(async ({
+let user = await transactionManager.enqueueReadableTransaction(async (queue, {
 	users,
 	posts
 }, {
