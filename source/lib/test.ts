@@ -69,20 +69,17 @@ export function test(name: string, cb: (assert: typeof Assert) => Promise<any>):
 	});
 };
 
-export async function benchmark<A>(subject: (() => A) | (() => Promise<A>)): Promise<A> {
+export async function benchmark<A>(subject: (() => A) | (() => Promise<A>)): Promise<number> {
 	let start = process.hrtime.bigint();
-	let result: A;
 	let times = 0;
 	while (true) {
-		result = await subject();
+		await subject();
 		times += 1;
-		let duration_ms = Number(process.hrtime.bigint() - start) / 1000 / 1000;
-		if (duration_ms >= 1000) {
+		let duration = Number(process.hrtime.bigint() - start) / 1000 / 1000;
+		if (duration >= 1000) {
 			break;
 		}
 	}
-	let ms_per_op = (Number(process.hrtime.bigint() - start) / 1000 / 1000 / times);
-	let ops_per_sec = 1000 / ms_per_op;
-	console.log(`${ms_per_op.toFixed(6)} ms/op, ${ops_per_sec.toFixed(0)} ops/s`);
-	return result;
+	let averageDuration = (Number(process.hrtime.bigint() - start) / 1000 / 1000 / times);
+	return averageDuration;
 };
