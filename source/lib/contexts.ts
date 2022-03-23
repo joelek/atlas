@@ -297,7 +297,9 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
+	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): {
+			transactionManager: TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>
+		} {
 		if (this.databaseManagers.has(path)) {
 			throw `Expected given storage to not be in use by another database!`;
 		}
@@ -319,6 +321,8 @@ export class Context {
 		let databaseManager = schemaManager.createDatabaseManager(file, database);
 		this.databaseManagers.set(path, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager(file);
-		return transactionManager;
+		return {
+			transactionManager
+		};
 	}
 };

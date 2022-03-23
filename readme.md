@@ -13,7 +13,7 @@ let users = context.createStore({
 	age: context.createIntegerField()
 }, ["user_id"]);
 
-let manager = context.createTransactionManager("./private/db", {
+let { transactionManager } = context.createTransactionManager("./private/db", {
 	users
 });
 
@@ -219,7 +219,7 @@ All database operations are performed in the context of an associated transactio
 The transaction manager is created with a path specifying where the database files should be stored as well as all stores, links and queries that should be present in the database.
 
 ```ts
-let manager = context.createTransactionManager("./private/db", {
+let { transactionManager } = context.createTransactionManager("./private/db", {
 	users,
 	posts
 }, {

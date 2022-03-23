@@ -24,7 +24,7 @@ test(`It should work.`, async (assert) => {
 		name: context.createEqualityOperator(),
 		age: context.createEqualityOperator()
 	});
-	let manager = context.createTransactionManager("./private/atlas", {
+	let { transactionManager } = context.createTransactionManager("./private/atlas", {
 		users,
 		posts
 	}, {
