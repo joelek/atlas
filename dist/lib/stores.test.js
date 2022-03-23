@@ -662,3 +662,49 @@ const tables_1 = require("./tables");
     let expected = ["B", "A"];
     assert.array.equals(observed, expected);
 });
+(0, test_1.test)(`It should perform significantly better with a suitable index.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let storeOne = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.IntegerField(0)
+        },
+        keys: ["key"],
+        indices: [
+            new stores_1.Index(["key"])
+        ]
+    });
+    let storeTwo = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.IntegerField(0)
+        },
+        keys: ["key"],
+        indices: []
+    });
+    for (let key = 0; key < 1000; key++) {
+        storeOne.insert({
+            key
+        });
+        storeTwo.insert({
+            key
+        });
+    }
+    let averageOne = await (0, test_1.benchmark)(async () => {
+        let n = 0;
+        for (let user of storeOne.filter()) {
+            n += 1;
+            if (n >= 10) {
+                break;
+            }
+        }
+    });
+    let averageTwo = await (0, test_1.benchmark)(async () => {
+        let n = 0;
+        for (let user of storeTwo.filter()) {
+            n += 1;
+            if (n >= 10) {
+                break;
+            }
+        }
+    });
+    assert.true(averageOne * 100 < averageTwo);
+});
