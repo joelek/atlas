@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransactionManager = exports.QueuedWritableQuery = exports.QueuedReadableQuery = exports.QueuedWritableLink = exports.QueuedReadableLink = exports.QueuedWritableStore = exports.QueuedReadableStore = exports.WritableQueue = exports.ReadableQueue = void 0;
+exports.TransactionManager = exports.QueuedWritableQuery = exports.QueuedReadableQuery = exports.QueuedWritableLink = exports.QueuedReadableLink = exports.QueuedWritableStore = exports.QueuedReadableStore = exports.TransactionalQuery = exports.TransactionalLink = exports.TransactionalStore = exports.WritableQueue = exports.ReadableQueue = void 0;
 const utils_1 = require("./utils");
 class ReadableQueue {
     queue;
@@ -22,6 +22,57 @@ class WritableQueue extends ReadableQueue {
     }
 }
 exports.WritableQueue = WritableQueue;
+;
+class TransactionalStore {
+    store;
+    constructor(store) {
+        this.store = store;
+    }
+    filter(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.store.filter(...parameters));
+    }
+    insert(queue, ...parameters) {
+        return queue.enqueueWritableOperation(() => this.store.insert(...parameters));
+    }
+    length(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.store.length(...parameters));
+    }
+    lookup(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.store.lookup(...parameters));
+    }
+    remove(queue, ...parameters) {
+        return queue.enqueueWritableOperation(() => this.store.remove(...parameters));
+    }
+    update(queue, ...parameters) {
+        return queue.enqueueWritableOperation(() => this.store.update(...parameters));
+    }
+}
+exports.TransactionalStore = TransactionalStore;
+;
+class TransactionalLink {
+    link;
+    constructor(link) {
+        this.link = link;
+    }
+    filter(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.link.filter(...parameters));
+    }
+    lookup(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.link.lookup(...parameters));
+    }
+}
+exports.TransactionalLink = TransactionalLink;
+;
+class TransactionalQuery {
+    query;
+    constructor(query) {
+        this.query = query;
+    }
+    filter(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.query.filter(...parameters));
+    }
+}
+exports.TransactionalQuery = TransactionalQuery;
 ;
 class QueuedReadableStore {
     writableStore;
@@ -157,6 +208,27 @@ class TransactionManager {
         this.writableStores = writableStores;
         this.writableLinks = writableLinks;
         this.writableQueries = writableQueries;
+    }
+    createTransactionalStores() {
+        let transactionalStores = {};
+        for (let key in this.writableStores) {
+            transactionalStores[key] = new TransactionalStore(this.writableStores[key]);
+        }
+        return transactionalStores;
+    }
+    createTransactionalLinks() {
+        let transactionalLinks = {};
+        for (let key in this.writableLinks) {
+            transactionalLinks[key] = new TransactionalLink(this.writableLinks[key]);
+        }
+        return transactionalLinks;
+    }
+    createTransactionalQueries() {
+        let transactionalQueries = {};
+        for (let key in this.writableQueries) {
+            transactionalQueries[key] = new TransactionalQuery(this.writableQueries[key]);
+        }
+        return transactionalQueries;
     }
     async enqueueReadableTransaction(transaction) {
         let queue = new utils_1.PromiseQueue();
