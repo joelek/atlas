@@ -28,6 +28,78 @@ export class WritableQueue extends ReadableQueue {
 	}
 };
 
+export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
+	protected store: WritableStore<A, B>;
+
+	constructor(store: WritableStore<A, B>) {
+		this.store = store;
+	}
+
+	filter(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
+		return queue.enqueueReadableOperation(() => this.store.filter(...parameters));
+	}
+
+	insert(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
+		return queue.enqueueWritableOperation(() => this.store.insert(...parameters));
+	}
+
+	length(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]> {
+		return queue.enqueueReadableOperation(() => this.store.length(...parameters));
+	}
+
+	lookup(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]> {
+		return queue.enqueueReadableOperation(() => this.store.lookup(...parameters));
+	}
+
+	remove(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
+		return queue.enqueueWritableOperation(() => this.store.remove(...parameters));
+	}
+
+	update(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
+		return queue.enqueueWritableOperation(() => this.store.update(...parameters));
+	}
+};
+
+export type TransactionalStoresFromWritableStores<A extends WritableStores<any>> = {
+	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? TransactionalStore<C, D> : never;
+};
+
+export class TransactionalLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
+	protected link: WritableLink<A, B, C, D, E>;
+
+	constructor(link: WritableLink<A, B, C, D, E>) {
+		this.link = link;
+	}
+
+	filter(queue: ReadableQueue, ...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
+		return queue.enqueueReadableOperation(() => this.link.filter(...parameters));
+	}
+
+	lookup(queue: ReadableQueue, ...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {
+		return queue.enqueueReadableOperation(() => this.link.lookup(...parameters));
+	}
+};
+
+export type TransactionalLinksFromWritableLinks<A extends WritableLinks<any>> = {
+	[B in keyof A]: A[B] extends WritableLink<infer C, infer D, infer E, infer F, infer G> ? TransactionalLink<C, D, E, F, G> : never;
+};
+
+export class TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
+	protected query: WritableQuery<A, B, C, D>;
+
+	constructor(query: WritableQuery<A, B, C, D>) {
+		this.query = query;
+	}
+
+	filter(queue: ReadableQueue, ...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
+		return queue.enqueueReadableOperation(() => this.query.filter(...parameters));
+	}
+};
+
+export type TransactionalQueriesFromWritableQueries<A extends WritableQueries<any>> = {
+	[B in keyof A]: A[B] extends WritableQuery<infer C, infer D, infer E, infer F> ? TransactionalQuery<C, D, E, F> : never;
+};
+
 export class QueuedReadableStore<A extends Record, B extends RequiredKeys<A>> implements ReadableStore<A, B> {
 	protected writableStore: WritableStore<A, B>;
 	protected queue: PromiseQueue;
@@ -179,6 +251,30 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 		this.writableStores = writableStores;
 		this.writableLinks = writableLinks;
 		this.writableQueries = writableQueries;
+	}
+
+	createTransactionalStores(): TransactionalStoresFromWritableStores<A> {
+		let transactionalStores = {} as TransactionalStoresFromWritableStores<any>;
+		for (let key in this.writableStores) {
+			transactionalStores[key] = new TransactionalStore(this.writableStores[key]);
+		}
+		return transactionalStores;
+	}
+
+	createTransactionalLinks(): TransactionalLinksFromWritableLinks<B> {
+		let transactionalLinks = {} as TransactionalLinksFromWritableLinks<any>;
+		for (let key in this.writableLinks) {
+			transactionalLinks[key] = new TransactionalLink(this.writableLinks[key]);
+		}
+		return transactionalLinks;
+	}
+
+	createTransactionalQueries(): TransactionalQueriesFromWritableQueries<C> {
+		let transactionalQueries = {} as TransactionalQueriesFromWritableQueries<any>;
+		for (let key in this.writableQueries) {
+			transactionalQueries[key] = new TransactionalQuery(this.writableQueries[key]);
+		}
+		return transactionalQueries;
 	}
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<StoresFromWritableStores<A>, LinksFromWritableLinks<B>, QueriesFromWritableQueries<C>, D>): Promise<D> {
