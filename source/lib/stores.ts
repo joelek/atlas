@@ -8,8 +8,6 @@ import { SubsetOf } from "./inference";
 import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
-const MAX_LIMIT = 100;
-
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
 	length(): Promise<number>;
@@ -275,7 +273,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table.delete();
 	}
 
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>): Array<A> {
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A> {
 		orders = orders ?? this.orders;
 		for (let key of this.keys) {
 			if (!(key in orders)) {
@@ -288,9 +286,11 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		});
 		filteredStores.push(new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
-		return StreamIterable.of(filteredStore)
-			.limit(MAX_LIMIT)
-			.collect()
+		let iterable = StreamIterable.of(filteredStore)
+		if (limit != null) {
+			iterable = iterable.limit(limit);
+		}
+		return iterable.collect();
 	}
 
 	insert(record: A): void {

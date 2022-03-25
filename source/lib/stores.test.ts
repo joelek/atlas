@@ -717,22 +717,10 @@ test(`It should perform significantly better with a suitable index.`, async (ass
 		});
 	}
 	let averageOne = await benchmark(async () => {
-		let n = 0;
-		for (let user of storeOne.filter()) {
-			n += 1;
-			if (n >= 10) {
-				break;
-			}
-		}
+		storeOne.filter(undefined, undefined, undefined, 10);
 	});
 	let averageTwo = await benchmark(async () => {
-		let n = 0;
-		for (let user of storeTwo.filter()) {
-			n += 1;
-			if (n >= 10) {
-				break;
-			}
-		}
+		storeTwo.filter(undefined, undefined, undefined, 10);
 	});
 	assert.true(averageOne * 100 < averageTwo);
 });
