@@ -4,7 +4,7 @@ import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./re
 import { Index, Store, StoreManager } from "./stores";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>): Promise<Iterable<C>>;
+	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>): Promise<Array<C>>;
 	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
@@ -73,7 +73,7 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 		return this.child;
 	}
 
-	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>): Iterable<C> {
+	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>): Array<C> {
 		let filters = {} as FilterMap<C>;
 		for (let key in this.keysRecordMap) {
 			let keyOne = key as any as B[number];

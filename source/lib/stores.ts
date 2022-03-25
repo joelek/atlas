@@ -9,7 +9,7 @@ import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Iterable<A>>;
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 };
@@ -273,7 +273,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table.delete();
 	}
 
-	* filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>): Iterable<A> {
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>): Array<A> {
 		orders = orders ?? this.orders;
 		for (let key of this.keys) {
 			if (!(key in orders)) {
@@ -286,9 +286,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		});
 		filteredStores.push(new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
-		if (filteredStore != null) {
-			yield * filteredStore;
-		}
+		return Array.from(filteredStore ?? []);
 	}
 
 	insert(record: A): void {

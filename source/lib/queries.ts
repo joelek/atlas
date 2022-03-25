@@ -6,7 +6,7 @@ import { RequiredKeys, Record, Keys, Key, KeysRecord } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	filter(parameters: C, anchor?: KeysRecord<A, B>): Promise<Iterable<A>>;
+	filter(parameters: C, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
 };
 
 export type ReadableQueries<A> = {
@@ -60,7 +60,7 @@ export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends
 		this.orders = orders;
 	}
 
-	filter(parameters: C, anchor?: KeysRecord<A, B>): Iterable<A> {
+	filter(parameters: C, anchor?: KeysRecord<A, B>): Array<A> {
 		let filters = {} as FilterMap<A>;
 		for (let key in this.operators) {
 			filters[key] = this.operators[key].createFilter(parameters[key]) as any;
