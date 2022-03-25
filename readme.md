@@ -345,3 +345,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider implementing fsync batching for transactions.
 * Improve heuristic for index selector.
 * Allow undefined values instead of nulls.
+* Implement enum types.
