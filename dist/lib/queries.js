@@ -25,7 +25,7 @@ class QueryManager {
         this.operators = operators;
         this.orders = orders;
     }
-    filter(parameters, anchor) {
+    filter(parameters, anchor, limit) {
         let filters = {};
         for (let key in this.operators) {
             filters[key] = this.operators[key].createFilter(parameters[key]);
@@ -34,7 +34,7 @@ class QueryManager {
         for (let key in this.orders) {
             orders[key] = this.orders[key];
         }
-        return this.storeManager.filter(filters, orders, anchor);
+        return this.storeManager.filter(filters, orders, anchor, limit);
     }
 }
 exports.QueryManager = QueryManager;

@@ -5,7 +5,7 @@ import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from ".
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Iterable<A>>;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
     length(): Promise<number>;
     lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 }
@@ -79,7 +79,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>);
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>): Iterable<A>;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
     insert(record: A): void;
     length(): number;
     lookup(keysRecord: KeysRecord<A, B>): A;

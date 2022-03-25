@@ -689,22 +689,10 @@ const tables_1 = require("./tables");
         });
     }
     let averageOne = await (0, test_1.benchmark)(async () => {
-        let n = 0;
-        for (let user of storeOne.filter()) {
-            n += 1;
-            if (n >= 10) {
-                break;
-            }
-        }
+        storeOne.filter(undefined, undefined, undefined, 10);
     });
     let averageTwo = await (0, test_1.benchmark)(async () => {
-        let n = 0;
-        for (let user of storeTwo.filter()) {
-            n += 1;
-            if (n >= 10) {
-                break;
-            }
-        }
+        storeTwo.filter(undefined, undefined, undefined, 10);
     });
     assert.true(averageOne * 100 < averageTwo);
 });

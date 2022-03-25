@@ -217,7 +217,7 @@ class StoreManager {
         }
         this.table.delete();
     }
-    *filter(filters, orders, anchorKeysRecord) {
+    filter(filters, orders, anchorKeysRecord, limit) {
         orders = orders ?? this.orders;
         for (let key of this.keys) {
             if (!(key in orders)) {
@@ -230,9 +230,11 @@ class StoreManager {
         });
         filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
         let filteredStore = FilteredStore.getOptimal(filteredStores);
-        if (filteredStore != null) {
-            yield* filteredStore;
+        let iterable = streams_1.StreamIterable.of(filteredStore);
+        if (limit != null) {
+            iterable = iterable.limit(limit);
         }
+        return iterable.collect();
     }
     insert(record) {
         let key = this.recordManager.encodeKeys(this.keys, record);
