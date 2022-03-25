@@ -112,8 +112,13 @@ class PromiseQueue {
         if (!this.open) {
             throw `Expected queue to be open!`;
         }
-        return this.lock = this.lock
-            .then(operation instanceof Promise ? () => operation : operation);
+        try {
+            return this.lock = this.lock
+                .then(operation instanceof Promise ? () => operation : operation);
+        }
+        finally {
+            this.lock = this.lock.catch(() => null);
+        }
     }
 }
 exports.PromiseQueue = PromiseQueue;

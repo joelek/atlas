@@ -133,3 +133,22 @@ const test_1 = require("./test");
         queue.enqueue(Promise.resolve(1));
     });
 });
+(0, test_1.test)(`It should not recover when errors are uncaught.`, async (assert) => {
+    let queue = new index.PromiseQueue();
+    await assert.throws(async () => {
+        await queue.enqueue(() => {
+            throw "";
+        });
+    });
+});
+(0, test_1.test)(`It should recover when errors are caught.`, async (assert) => {
+    let queue = new index.PromiseQueue();
+    try {
+        await queue.enqueue(() => {
+            throw "";
+        });
+    }
+    catch (error) { }
+    let observed = await queue.enqueue(async () => 1);
+    assert.true(observed === 1);
+});
