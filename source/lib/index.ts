@@ -5,6 +5,11 @@ import { Value } from "./records";
 import { ReadableLink, WritableLink } from "./links";
 import { ReadableQuery, WritableQuery } from "./queries";
 import { ReadableStore, WritableStore } from "./stores";
+import * as transactions from "./transactions";
+
+export type ReadableQueue = transactions.ReadableQueue;
+
+export type WritableQueue = transactions.WritableQueue;
 
 export type RecordOf<A> = A extends StoreReference<infer C, infer D> ? C : never;
 
