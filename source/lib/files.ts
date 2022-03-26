@@ -46,6 +46,7 @@ export class CachedFile extends File {
 
 	read(buffer: Uint8Array, offset: number): Uint8Array {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, offset);
+		buffer.fill(0);
 		let current = offset;
 		let bytes = 0;
 		let end = offset + buffer.length;
@@ -341,6 +342,7 @@ export class DurableFile extends File {
 
 	read(buffer: Uint8Array, offset: number): Uint8Array {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, offset);
+		buffer.fill(0);
 		let current = offset;
 		let bytes = 0;
 		let end = offset + buffer.length;
