@@ -346,4 +346,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Improve heuristic for index selector.
 * Allow undefined values instead of nulls.
 * Implement enum types.
-* Fix issue with DurableFile and CachedFile. PhysicalFile works,  CachedFile(PhysicalFile) works with large cache size, VirtualFile works, CachedFile(VirtualFile) works with large cache size, DurableFile(VirtualFile, VirtualFile) is broken. Issue is likely with AVL-tree removal.
+* Fix issue with DurableFile.
