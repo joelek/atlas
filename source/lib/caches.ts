@@ -55,6 +55,9 @@ export class Cache<A extends Primitive, B> {
 	}
 
 	clear(): void {
+		for (let [key, value] of this.map) {
+			this.detail.onRemove?.(key);
+		}
 		this.map.clear();
 		this.status.weight = 0;
 	}
