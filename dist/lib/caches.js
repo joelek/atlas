@@ -37,6 +37,9 @@ class Cache {
         }
     }
     clear() {
+        for (let [key, value] of this.map) {
+            this.detail.onRemove?.(key);
+        }
         this.map.clear();
         this.status.weight = 0;
     }

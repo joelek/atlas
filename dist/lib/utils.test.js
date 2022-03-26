@@ -2,6 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const index = require("./utils");
 const test_1 = require("./test");
+async function delay(ms) {
+    await new Promise((resolve, reject) => {
+        setTimeout(resolve, ms);
+    });
+}
+;
 (0, test_1.test)(`It should decode strings.`, async (assert) => {
     let buffer = Uint8Array.of(0xFF, 0x00);
     let value = index.Binary.string(buffer, 0, 1, "hex");
@@ -151,4 +157,25 @@ const test_1 = require("./test");
     catch (error) { }
     let observed = await queue.enqueue(async () => 1);
     assert.true(observed === 1);
+});
+(0, test_1.test)(`It should execute operations in order.`, async (assert) => {
+    let queue = new index.PromiseQueue();
+    let events = new Array();
+    let operationOne = queue.enqueue(async () => {
+        events.push("1S");
+        await delay(0);
+        events.push("1E");
+        return 1;
+    });
+    let operationTwo = queue.enqueue(async () => {
+        events.push("2S");
+        await delay(0);
+        events.push("2E");
+        return 2;
+    });
+    events.push("S");
+    assert.true(await operationOne === 1);
+    assert.true(await operationTwo === 2);
+    events.push("E");
+    assert.array.equals(events, ["S", "1S", "1E", "2S", "2E", "E"]);
 });

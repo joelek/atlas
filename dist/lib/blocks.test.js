@@ -122,6 +122,16 @@ const blocks_1 = require("./blocks");
         blockManager.readBlock(id, buffer, 5);
     });
 });
+(0, test_1.test)(`It should prevent operations overlapping the beginning and the end of a block.`, async (assert) => {
+    let file = new files.VirtualFile(0);
+    let blockManager = new blocks.BlockManager(file);
+    let id = blockManager.createBlock(4);
+    blockManager.writeBlock(id, Uint8Array.of(0, 1, 2, 3), 0);
+    let buffer = new Uint8Array(6);
+    await assert.throws(async () => {
+        blockManager.readBlock(id, buffer, -1);
+    });
+});
 (0, test_1.test)(`It should support swapping two blocks.`, async (assert) => {
     let file = new files.VirtualFile(0);
     let blockManager = new blocks.BlockManager(file);

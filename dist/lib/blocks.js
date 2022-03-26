@@ -164,6 +164,8 @@ class BlockManager {
         let capactity = Math.floor(length / BlockHeader.LENGTH);
         if (count === capactity) {
             this.resizeSystemBlock(this.header.table, length + length);
+            // The old system block becomes an application block which affects the block count.
+            count = this.header.count.value();
         }
         this.header.count.value(count + 1);
         this.header.write(this.file, 0);

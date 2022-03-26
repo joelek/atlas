@@ -39,6 +39,7 @@ class CachedFile extends File {
     read(buffer, offset) {
         if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
+        buffer.fill(0);
         let current = offset;
         let bytes = 0;
         let end = offset + buffer.length;
@@ -318,6 +319,7 @@ class DurableFile extends File {
     read(buffer, offset) {
         if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, offset);
+        buffer.fill(0);
         let current = offset;
         let bytes = 0;
         let end = offset + buffer.length;

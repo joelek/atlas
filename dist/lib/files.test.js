@@ -155,6 +155,15 @@ for (let key in constructors) {
     assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 0, 1, 2, 2));
     assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 2, 2));
 });
+(0, test_1.test)(`It should support writing overlapping the beginning and the end of a cached range (CachedFile).`, async (assert) => {
+    let file = new files.VirtualFile(10);
+    let cached = new files.CachedFile(file);
+    cached.read(new Uint8Array(4), 3);
+    file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
+    cached.write(Uint8Array.of(2, 2, 2, 2, 2, 2), 2);
+    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 2, 2, 2, 2, 1, 1));
+    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 2, 2, 2, 2, 1, 1));
+});
 (0, test_1.test)(`It should not store shallow copies when reading from the file (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(3);
     let cached = new files.CachedFile(file);
