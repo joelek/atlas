@@ -3,7 +3,7 @@ import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
     filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Promise<Array<C>>;
-    lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
+    lookup(keysRecord: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 }
 export declare type ReadableLinks<A> = {
     [B in keyof A]: A[B] extends ReadableLink<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : A[B];
@@ -40,7 +40,7 @@ export declare class LinkManager<A extends Record, B extends RequiredKeys<A>, C 
     getParent(): StoreManager<A, B>;
     getChild(): StoreManager<C, D>;
     filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Array<C>;
-    lookup(record: C | Pick<C, E[B[number]]>): A | undefined;
+    lookup(keysRecord: C | Pick<C, E[B[number]]>): A | undefined;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>): LinkManager<A, B, C, D, E>;
 }
 export declare type LinkManagers<A> = {

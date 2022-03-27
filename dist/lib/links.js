@@ -45,17 +45,17 @@ class LinkManager {
         }
         return this.child.filter(filters, this.orders, anchor, limit);
     }
-    lookup(record) {
-        let keysRecord = {};
+    lookup(keysRecord) {
+        let parentKeysRecord = {};
         for (let key in this.keysRecordMap) {
             let keyOne = key;
             let keyTwo = this.keysRecordMap[keyOne];
-            if (record[keyTwo] === null) {
+            if (keysRecord[keyTwo] === null) {
                 return;
             }
-            keysRecord[keyOne] = record[keyTwo];
+            parentKeysRecord[keyOne] = keysRecord[keyTwo];
         }
-        return this.parent.lookup(keysRecord);
+        return this.parent.lookup(parentKeysRecord);
     }
     static construct(parent, child, recordKeysMap, orders) {
         return new LinkManager(parent, child, recordKeysMap, orders);
