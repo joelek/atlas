@@ -5,7 +5,7 @@ import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys } from ".
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
     length(): Promise<number>;
     lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 }

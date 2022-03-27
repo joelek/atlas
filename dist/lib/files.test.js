@@ -182,3 +182,26 @@ for (let key in constructors) {
     buffer.set(Uint8Array.of(1, 1, 1), 0);
     assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
 });
+(0, test_1.test)(`It should fill the entire buffer when reading from the file (CachedFile).`, async (assert) => {
+    let file = new files.VirtualFile(3);
+    let cached = new files.CachedFile(file);
+    cached.resize(4);
+    cached.write(Uint8Array.of(1), 1);
+    let buffer = new Uint8Array(1);
+    assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0));
+    assert.binary.equals(cached.read(buffer, 1), Uint8Array.of(1));
+    assert.binary.equals(cached.read(buffer, 2), Uint8Array.of(0));
+    assert.binary.equals(cached.read(buffer, 3), Uint8Array.of(0));
+});
+(0, test_1.test)(`It should fill the entire buffer when reading from the file (DurableFile).`, async (assert) => {
+    let bin = new files.VirtualFile(0);
+    let log = new files.VirtualFile(0);
+    let durable = new files.DurableFile(bin, log);
+    durable.resize(4);
+    durable.write(Uint8Array.of(1), 1);
+    let buffer = new Uint8Array(1);
+    assert.binary.equals(durable.read(buffer, 0), Uint8Array.of(0));
+    assert.binary.equals(durable.read(buffer, 1), Uint8Array.of(1));
+    assert.binary.equals(durable.read(buffer, 2), Uint8Array.of(0));
+    assert.binary.equals(durable.read(buffer, 3), Uint8Array.of(0));
+});
