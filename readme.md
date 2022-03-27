@@ -267,6 +267,8 @@ Transactions with read access are executed in `parallel` whereas transactions wi
 
 ### Stores
 
+#### Insert
+
 Records may be inserted using the `insert()` method.
 
 ```ts
@@ -276,6 +278,8 @@ insert(
 ```
 
 * The `record` argument must be used to specify the record in question.
+
+#### Filter
 
 Records matching certain criteria may be retrieved using the `filter()` method. The method will return all records inserted into the store when invoked without arguments. Stores are usually not filtered directly but instead through the corresponding `filter()` methods for links and queries.
 
@@ -293,12 +297,17 @@ filter(
 * The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum batch of records to return.
 
+#### Length
+
 The number of records inserted into a store may be checked using the `length()` method.
 
 ```ts
 length(
+
 ): Promise<number>;
 ```
+
+#### Lookup
 
 Records may be looked up using the `lookup()` method. The method will throw an error if the corresponding record cannot be found.
 
@@ -310,6 +319,8 @@ lookup(
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
 
+#### Remove
+
 Records may be removed using the `remove()` method.
 
 ```ts
@@ -319,6 +330,8 @@ remove(
 ```
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
+
+#### Update
 
 Records may be updated using the `update()` method.
 
@@ -331,6 +344,8 @@ update(
 * The `record` argument must be used to specify the record in question.
 
 ### Links
+
+#### Filter
 
 Child records matching certain criteria may be retrieved using the `filter()` method. The method will return all orphaned child records when invoked without arguments.
 
@@ -346,6 +361,8 @@ filter(
 * The `anchor` argument may be used to specify the identifying fields of the last child record seen. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum batch of records to return.
 
+#### Lookup
+
 Parent records may be looked up using the `lookup()` method. The method will return undefined if the corresponding child record is orphaned.
 
 ```ts
@@ -357,6 +374,8 @@ lookup(
 * The `keysRecord` argument must be used to specify the identifying fields of the child record in question.
 
 ### Queries
+
+#### Filter
 
 Records matching certain criteria may be retrieved using the `filter()` method.
 
