@@ -46,7 +46,6 @@ export class CachedFile extends File {
 
 	read(buffer: Uint8Array, offset: number): Uint8Array {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, offset);
-		buffer.fill(0);
 		let current = offset;
 		let bytes = 0;
 		let end = offset + buffer.length;
@@ -342,7 +341,6 @@ export class DurableFile extends File {
 
 	read(buffer: Uint8Array, offset: number): Uint8Array {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, offset);
-		buffer.fill(0);
 		let current = offset;
 		let bytes = 0;
 		let end = offset + buffer.length;
@@ -365,6 +363,7 @@ export class DurableFile extends File {
 			let gap = entry.key - current;
 			if (gap > 0) {
 				let redo = buffer.subarray(bytes, bytes + gap);
+				redo.fill(0);
 				let distance = this.bin.size() - current;
 				if (distance > 0) {
 					this.bin.read(redo.subarray(0, distance), current);
@@ -381,6 +380,7 @@ export class DurableFile extends File {
 		let gap = end - current;
 		if (gap > 0) {
 			let redo = buffer.subarray(bytes, bytes + gap);
+			redo.fill(0);
 			let distance = this.bin.size() - current;
 			if (distance > 0) {
 				this.bin.read(redo.subarray(0, distance), current);
