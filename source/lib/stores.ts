@@ -9,7 +9,7 @@ import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
 export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 };

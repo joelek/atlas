@@ -6,7 +6,7 @@ import { RequiredKeys, Record, Keys, Key, KeysRecord } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 
 export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	filter(parameters: C, anchor?: KeysRecord<A, B>): Promise<Array<A>>;
+	filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 };
 
 export type ReadableQueries<A> = {
