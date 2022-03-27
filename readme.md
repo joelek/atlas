@@ -268,13 +268,35 @@ Transactions with read access are executed in `parallel` whereas transactions wi
 ### Stores
 
 ```ts
-interface TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
-	insert(record: A): Promise<void>;
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
-	length(): Promise<number>;
-	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
-	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
-	update(record: A): Promise<void>;
+interface TransactionalStore<
+	A extends Record,
+	B extends RequiredKeys<A>
+> {
+	insert(
+		record: A
+	): Promise<void>;
+
+	filter(
+		filters?: FilterMap<A>,
+		orders?: OrderMap<A>,
+		anchor?: KeysRecord<A, B>,
+		limit?: number
+	): Promise<Array<A>>;
+
+	length(
+	): Promise<number>;
+
+	lookup(
+		keysRecord: KeysRecord<A, B>
+	): Promise<A>;
+
+	remove(
+		keysRecord: KeysRecord<A, B>
+	): Promise<void>;
+
+	update(
+		record: A
+	): Promise<void>;
 };
 ```
 
@@ -306,9 +328,22 @@ Records may be updated using the `update()` method.
 ### Links
 
 ```ts
-interface TransactionalLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Promise<Array<C>>;
-	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
+interface TransactionalLink<
+	A extends Record,
+	B extends RequiredKeys<A>,
+	C extends Record,
+	D extends RequiredKeys<C>,
+	E extends KeysRecordMap<A, B, C>
+> {
+	filter(
+		keysRecord?: KeysRecord<A, B>,
+		anchor?: KeysRecord<C, D>,
+		limit?: number
+	): Promise<Array<C>>;
+
+	lookup(
+		record: C | Pick<C, E[B[number]]>
+	): Promise<A | undefined>;
 };
 ```
 
@@ -325,8 +360,17 @@ Parent records may be looked up using the `lookup()` method. The method will ret
 ### Queries
 
 ```ts
-interface TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
+interface TransactionalQuery<
+	A extends Record,
+	B extends RequiredKeys<A>,
+	C extends SubsetOf<A, C>,
+	D extends SubsetOf<A, D>
+> {
+	filter(
+		parameters: C,
+		anchor?: KeysRecord<A, B>,
+		limit?: number
+	): Promise<Array<A>>;
 };
 ```
 
