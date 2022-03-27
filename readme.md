@@ -17,7 +17,6 @@ let { transactionManager } = context.createTransactionManager("./private/db", {
 	users
 });
 
-// All types for the transaction are fully inferred and checked at compile-time.
 await transactionManager.enqueueWritableTransaction(async (queue, { users }) => {
 	return users.insert({
 		user_id: Uint8Array.of(1),
@@ -26,7 +25,6 @@ await transactionManager.enqueueWritableTransaction(async (queue, { users }) => 
 	});
 });
 
-// All types for the transaction are fully inferred and checked at compile-time.
 let user = await transactionManager.enqueueReadableTransaction(async (queue, { users }) => {
 	return users.lookup({
 		user_id: Uint8Array.of(1)
@@ -212,7 +210,7 @@ let getUserByName = context.createQuery(users, {
 
 Atlas defines the index entity as a store coupled with a list of keys specifying the indexed fields. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Indices are not defined explicitly but rather implicitly through the store, link and query entities.
 
-### Transactions
+## API
 
 All database operations are performed in the context of an associated transaction. Transactions are short-lived constructs with either read or write access that should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
 
@@ -263,6 +261,60 @@ let user = await transactionManager.enqueueReadableTransaction(async (queue, {
 		user_id: Uint8Array.of(1)
 	});
 });
+```
+
+### Stores
+
+```ts
+interface TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
+	insert(record: A): Promise<void>;
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
+	length(): Promise<number>;
+	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
+	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
+	update(record: A): Promise<void>;
+};
+```
+
+Records may be inserted using the `insert()` method.
+
+* The `record` argument must be used to specify the record in question.
+
+Stores may be filtered using the `filter()` method. The method does not require any arguments and will return all records inserted into the store when invoked without arguments. Multiple optional arguments may be passed to the store. Stores are usually not filtered directly but instead through links and queries.
+
+* The `filters` argument may be used to specify conditions that must be met for the records returned.
+* The `orders` argument may be used to specify the desired order of the records returned.
+* The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum batch of records to return.
+
+The number of records inserted into a store may be checked using the `length()` method. The method does not require any arguments.
+
+A record may be looked up using the `lookup()` method.
+
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question.
+
+A record may be removed using the `remove()` method.
+
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question.
+
+Inserted records may be updated using the `update()` method.
+
+* The `record` argument must be used to specify the record in question.
+
+### Links
+
+```ts
+interface TransactionalLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
+	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Promise<Array<C>>;
+	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
+};
+```
+### Queries
+
+```ts
+interface TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
+	filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
+};
 ```
 
 Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
