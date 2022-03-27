@@ -263,6 +263,8 @@ let user = await transactionManager.enqueueReadableTransaction(async (queue, {
 });
 ```
 
+Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
+
 ### Stores
 
 ```ts
@@ -280,24 +282,24 @@ Records may be inserted using the `insert()` method.
 
 * The `record` argument must be used to specify the record in question.
 
-Stores may be filtered using the `filter()` method. The method does not require any arguments and will return all records inserted into the store when invoked without arguments. Multiple optional arguments may be passed to the store. Stores are usually not filtered directly but instead through links and queries.
+Records matching certain criteria may be retrieved using the `filter()` method. The method will return all records inserted into the store when invoked without arguments. Stores are usually not filtered directly but instead through the corresponding `filter()` methods for links and queries.
 
 * The `filters` argument may be used to specify conditions that must be met for the records returned.
 * The `orders` argument may be used to specify the desired order of the records returned.
 * The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum batch of records to return.
 
-The number of records inserted into a store may be checked using the `length()` method. The method does not require any arguments.
+The number of records inserted into a store may be checked using the `length()` method.
 
-A record may be looked up using the `lookup()` method.
-
-* The `keysRecord` argument must be used to specify the identifying fields of the record in question.
-
-A record may be removed using the `remove()` method.
+Records may be looked up using the `lookup()` method. The method will throw an error if the corresponding record cannot be found.
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
 
-Inserted records may be updated using the `update()` method.
+Records may be removed using the `remove()` method.
+
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question.
+
+Records may be updated using the `update()` method.
 
 * The `record` argument must be used to specify the record in question.
 
@@ -309,6 +311,17 @@ interface TransactionalLink<A extends Record, B extends RequiredKeys<A>, C exten
 	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 ```
+
+Child records matching certain criteria may be retrieved using the `filter()` method. The method will return all orphaned child records when invoked without arguments.
+
+* The `keysRecord` argument may be used to specify the identifying fields of the parent record in question.
+* The `anchor` argument may be used to specify the identifying fields of the last child record seen. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum batch of records to return.
+
+Parent records may be looked up using the `lookup()` method. The method will return undefined if the corresponding child record is orphaned.
+
+* The `keysRecord` argument must be used to specify the identifying fields of the child record in question.
+
 ### Queries
 
 ```ts
@@ -317,7 +330,11 @@ interface TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C exte
 };
 ```
 
-Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
+Records matching certain criteria may be retrieved using the `filter()` method.
+
+* The `parameters` argument must be used to specify the parameter values for the query.
+* The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum batch of records to return.
 
 ## Schema migration
 
