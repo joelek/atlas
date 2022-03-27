@@ -267,44 +267,26 @@ Transactions with read access are executed in `parallel` whereas transactions wi
 
 ### Stores
 
-```ts
-interface TransactionalStore<
-	A extends Record,
-	B extends RequiredKeys<A>
-> {
-	insert(
-		record: A
-	): Promise<void>;
-
-	filter(
-		filters?: FilterMap<A>,
-		orders?: OrderMap<A>,
-		anchor?: KeysRecord<A, B>,
-		limit?: number
-	): Promise<Array<A>>;
-
-	length(
-	): Promise<number>;
-
-	lookup(
-		keysRecord: KeysRecord<A, B>
-	): Promise<A>;
-
-	remove(
-		keysRecord: KeysRecord<A, B>
-	): Promise<void>;
-
-	update(
-		record: A
-	): Promise<void>;
-};
-```
-
 Records may be inserted using the `insert()` method.
+
+```ts
+insert(
+	record: A
+): Promise<void>;
+```
 
 * The `record` argument must be used to specify the record in question.
 
 Records matching certain criteria may be retrieved using the `filter()` method. The method will return all records inserted into the store when invoked without arguments. Stores are usually not filtered directly but instead through the corresponding `filter()` methods for links and queries.
+
+```ts
+filter(
+	filters?: FilterMap<A>,
+	orders?: OrderMap<A>,
+	anchor?: KeysRecord<A, B>,
+	limit?: number
+): Promise<Array<A>>;
+```
 
 * The `filters` argument may be used to specify conditions that must be met for the records returned.
 * The `orders` argument may be used to specify the desired order of the records returned.
@@ -313,41 +295,52 @@ Records matching certain criteria may be retrieved using the `filter()` method. 
 
 The number of records inserted into a store may be checked using the `length()` method.
 
+```ts
+length(
+): Promise<number>;
+```
+
 Records may be looked up using the `lookup()` method. The method will throw an error if the corresponding record cannot be found.
+
+```ts
+lookup(
+	keysRecord: KeysRecord<A, B>
+): Promise<A>;
+```
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
 
 Records may be removed using the `remove()` method.
 
+```ts
+remove(
+	keysRecord: KeysRecord<A, B>
+): Promise<void>;
+```
+
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
 
 Records may be updated using the `update()` method.
+
+```ts
+update(
+	record: A
+): Promise<void>;
+```
 
 * The `record` argument must be used to specify the record in question.
 
 ### Links
 
-```ts
-interface TransactionalLink<
-	A extends Record,
-	B extends RequiredKeys<A>,
-	C extends Record,
-	D extends RequiredKeys<C>,
-	E extends KeysRecordMap<A, B, C>
-> {
-	filter(
-		keysRecord?: KeysRecord<A, B>,
-		anchor?: KeysRecord<C, D>,
-		limit?: number
-	): Promise<Array<C>>;
-
-	lookup(
-		record: C | Pick<C, E[B[number]]>
-	): Promise<A | undefined>;
-};
-```
-
 Child records matching certain criteria may be retrieved using the `filter()` method. The method will return all orphaned child records when invoked without arguments.
+
+```ts
+filter(
+	keysRecord?: KeysRecord<A, B>,
+	anchor?: KeysRecord<C, D>,
+	limit?: number
+): Promise<Array<C>>;
+```
 
 * The `keysRecord` argument may be used to specify the identifying fields of the parent record in question.
 * The `anchor` argument may be used to specify the identifying fields of the last child record seen. The first record returned will be the record located directly after the anchor.
@@ -355,26 +348,25 @@ Child records matching certain criteria may be retrieved using the `filter()` me
 
 Parent records may be looked up using the `lookup()` method. The method will return undefined if the corresponding child record is orphaned.
 
+```ts
+lookup(
+	keysRecord: C | Pick<C, E[B[number]]>
+): Promise<A | undefined>;
+```
+
 * The `keysRecord` argument must be used to specify the identifying fields of the child record in question.
 
 ### Queries
 
-```ts
-interface TransactionalQuery<
-	A extends Record,
-	B extends RequiredKeys<A>,
-	C extends SubsetOf<A, C>,
-	D extends SubsetOf<A, D>
-> {
-	filter(
-		parameters: C,
-		anchor?: KeysRecord<A, B>,
-		limit?: number
-	): Promise<Array<A>>;
-};
-```
-
 Records matching certain criteria may be retrieved using the `filter()` method.
+
+```ts
+filter(
+	parameters: C,
+	anchor?: KeysRecord<A, B>,
+	limit?: number
+): Promise<Array<A>>;
+```
 
 * The `parameters` argument must be used to specify the parameter values for the query.
 * The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
