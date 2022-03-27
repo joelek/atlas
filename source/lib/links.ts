@@ -5,7 +5,7 @@ import { Index, Store, StoreManager } from "./stores";
 
 export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Promise<Array<C>>;
-	lookup(record: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
+	lookup(keysRecord: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
 };
 
 export type ReadableLinks<A> = {
@@ -83,17 +83,17 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 		return this.child.filter(filters, this.orders, anchor, limit);
 	}
 
-	lookup(record: C | Pick<C, E[B[number]]>): A | undefined {
-		let keysRecord = {} as KeysRecord<A, B>;
+	lookup(keysRecord: C | Pick<C, E[B[number]]>): A | undefined {
+		let parentKeysRecord = {} as KeysRecord<A, B>;
 		for (let key in this.keysRecordMap) {
 			let keyOne = key as any as B[number];
 			let keyTwo = this.keysRecordMap[keyOne];
-			if (record[keyTwo] === null) {
+			if (keysRecord[keyTwo] === null) {
 				return;
 			}
-			keysRecord[keyOne] = record[keyTwo] as any;
+			parentKeysRecord[keyOne] = keysRecord[keyTwo] as any;
 		}
-		return this.parent.lookup(keysRecord);
+		return this.parent.lookup(parentKeysRecord);
 	}
 
 	static construct<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>): LinkManager<A, B, C, D, E> {
