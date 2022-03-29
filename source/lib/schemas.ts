@@ -745,8 +745,10 @@ export class SchemaManager {
 				}
 				this.deleteIndex(blockManager, indexSchema, oldSchema.fields);
 			}
+			let orders = this.createKeyOrders(blockManager, store.orders);
 			return {
 				...oldSchema,
+				orders,
 				indices
 			};
 		} else {
