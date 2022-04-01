@@ -610,3 +610,108 @@ function getKeyFromString(string) {
     tree.remove([]);
     assert.true(tree.lookup([]) == null);
 });
+(0, test_1.test)(`It should support inserting values with a key already inserted being a prefix for the key.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("ab")], 2);
+    let observed = Array.from(tree);
+    let expected = [1, 2];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support inserting values with the key being a prefix for a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("ab")], 1);
+    tree.insert([getKeyFromString("a")], 2);
+    let observed = Array.from(tree);
+    let expected = [2, 1];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support inserting values with the key being indentical to a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("a")], 2);
+    let observed = Array.from(tree);
+    let expected = [2];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support inserting values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("b")], 1);
+    tree.insert([getKeyFromString("a")], 2);
+    let observed = Array.from(tree);
+    let expected = [2, 1];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support inserting values with the key being a greater sibling of a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("b")], 2);
+    let observed = Array.from(tree);
+    let expected = [1, 2];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support removing values with a key already inserted being a prefix for the key.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("ab")], 2);
+    tree.remove([getKeyFromString("ab")]);
+    let observed = Array.from(tree);
+    let expected = [1];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support removing values with the key being a prefix for a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("ab")], 1);
+    tree.insert([getKeyFromString("a")], 2);
+    tree.remove([getKeyFromString("a")]);
+    let observed = Array.from(tree);
+    let expected = [1];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support removing values with the key being indentical to a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("a")], 2);
+    tree.remove([getKeyFromString("a")]);
+    let observed = Array.from(tree);
+    let expected = [];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support removing values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("b")], 1);
+    tree.insert([getKeyFromString("a")], 2);
+    tree.remove([getKeyFromString("a")]);
+    let observed = Array.from(tree);
+    let expected = [1];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support removing values with the key being a greater sibling of a key already inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("a")], 1);
+    tree.insert([getKeyFromString("b")], 2);
+    tree.remove([getKeyFromString("b")]);
+    let observed = Array.from(tree);
+    let expected = [1];
+    assert.array.equals(observed, expected);
+});

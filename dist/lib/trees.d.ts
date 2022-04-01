@@ -10,10 +10,10 @@ export declare class NodeHead extends Chunk {
     constructor(buffer?: Uint8Array);
     prefix(value?: Array<number>): Array<number>;
     resident(value?: number): number;
-    parent(value?: number): number;
     subtree(value?: number): number;
     total(value?: number): number;
     static readonly LENGTH = 32;
+    static readonly MAX_PREFIX_NIBBLES: number;
 }
 export declare class NodeBody extends Chunk {
     constructor(buffer?: Uint8Array);
@@ -40,19 +40,19 @@ export declare class RadixTreeWalker {
 export declare class RadixTree {
     private blockManager;
     private blockIndex;
-    private updateChildParents;
-    private createNodes;
-    private locateNode;
-    private updateTotal;
     private doDelete;
+    private doInsert;
+    private doLocate;
+    private doRemove;
+    private locate;
     constructor(blockManager: BlockManager, blockIndex: number);
     [Symbol.iterator](): Iterator<number>;
-    branch(key: Array<Uint8Array>): RadixTree | undefined;
+    branch(keys: Array<Uint8Array>): RadixTree | undefined;
     delete(): void;
-    filter(relationship: Relationship, key: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number>;
-    insert(key: Array<Uint8Array>, value: number): boolean;
+    filter(relationship: Relationship, keys: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number>;
+    insert(keys: Array<Uint8Array>, value: number): boolean;
     length(): number;
-    lookup(key: Array<Uint8Array>): number | undefined;
-    remove(key: Array<Uint8Array>): boolean;
+    lookup(keys: Array<Uint8Array>): number | undefined;
+    remove(keys: Array<Uint8Array>): boolean;
     static readonly INITIAL_SIZE = 32;
 }
