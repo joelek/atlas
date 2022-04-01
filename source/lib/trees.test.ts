@@ -753,6 +753,16 @@ test(`It should support inserting values with the key being a greater sibling of
 	assert.array.equals(observed, expected);
 });
 
+test(`It should support inserting long values.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([getKeyFromString("01234566789abcdef")], 1);
+	let observed = Array.from(tree);
+	let expected = [1];
+	assert.array.equals(observed, expected);
+});
+
 test(`It should support removing values with a key already inserted being a prefix for the key.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
@@ -810,5 +820,16 @@ test(`It should support removing values with the key being a greater sibling of 
 	tree.remove([getKeyFromString("b")]);
 	let observed = Array.from(tree);
 	let expected = [1];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should support removing long values.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([getKeyFromString("01234566789abcdef")], 1);
+	tree.remove([getKeyFromString("01234566789abcdef")]);
+	let observed = Array.from(tree);
+	let expected = [] as Array<number>;
 	assert.array.equals(observed, expected);
 });

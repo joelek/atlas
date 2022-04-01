@@ -45,20 +45,16 @@ export function getBytesFromNibbles(nibbles: Array<number>): Uint8Array {
 export class NodeHead extends Chunk {
 	private nibbles(offset: number, length: number, value?: Array<number>): Array<number> {
 		if (value != null) {
-			if (DEBUG) IntegerAssert.between(0, value.length, (length - 1) * 2);
-			let nibbles = [value.length, ...value];
-			if ((nibbles.length % 2) === 1) {
-				nibbles.push(0);
-			}
-			let bytes = getBytesFromNibbles(nibbles);
-			if (DEBUG) IntegerAssert.between(0, bytes.length, length);
+			if (DEBUG) IntegerAssert.between(0, value.length, length * 2);
+			let bytes = getBytesFromNibbles(value.length % 2 === 1 ? [...value, 0] : value);
+			this.prefixLength(value.length);
 			this.buffer.set(bytes, offset);
 			this.buffer.fill(0, offset + bytes.length, offset + length);
 			return value;
 		} else {
 			let bytes = this.buffer.subarray(offset, offset + length);
 			let nibbles = getNibblesFromBytes(bytes);
-			return nibbles.slice(1, 1 + nibbles[0]);
+			return nibbles.slice(0, this.prefixLength());
 		}
 	}
 
@@ -67,8 +63,12 @@ export class NodeHead extends Chunk {
 		if (DEBUG) IntegerAssert.exactly(this.buffer.length, NodeHead.LENGTH);
 	}
 
+	prefixLength(value?: number): number {
+		return Binary.unsigned(this.buffer, 0, 1, value);
+	}
+
 	prefix(value?: Array<number>): Array<number> {
-		return this.nibbles(0, 14, value);
+		return this.nibbles(1, NodeHead.MAX_PREFIX_BYTES, value);
 	}
 
 	resident(value?: number): number {
@@ -84,7 +84,8 @@ export class NodeHead extends Chunk {
 	}
 
 	static readonly LENGTH = 32;
-	static readonly MAX_PREFIX_NIBBLES = (14 - 1) * 2;
+	static readonly MAX_PREFIX_BYTES = 13;
+	static readonly MAX_PREFIX_NIBBLES = NodeHead.MAX_PREFIX_BYTES * 2;
 };
 
 export class NodeBody extends Chunk {
