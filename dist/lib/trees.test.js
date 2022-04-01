@@ -660,6 +660,15 @@ function getKeyFromString(string) {
     let expected = [1, 2];
     assert.array.equals(observed, expected);
 });
+(0, test_1.test)(`It should support inserting long values.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("01234566789abcdef")], 1);
+    let observed = Array.from(tree);
+    let expected = [1];
+    assert.array.equals(observed, expected);
+});
 (0, test_1.test)(`It should support removing values with a key already inserted being a prefix for the key.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
@@ -713,5 +722,15 @@ function getKeyFromString(string) {
     tree.remove([getKeyFromString("b")]);
     let observed = Array.from(tree);
     let expected = [1];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should support removing long values.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([getKeyFromString("01234566789abcdef")], 1);
+    tree.remove([getKeyFromString("01234566789abcdef")]);
+    let observed = Array.from(tree);
+    let expected = [];
     assert.array.equals(observed, expected);
 });

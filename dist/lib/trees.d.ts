@@ -8,11 +8,13 @@ export declare function getBytesFromNibbles(nibbles: Array<number>): Uint8Array;
 export declare class NodeHead extends Chunk {
     private nibbles;
     constructor(buffer?: Uint8Array);
+    prefixLength(value?: number): number;
     prefix(value?: Array<number>): Array<number>;
     resident(value?: number): number;
     subtree(value?: number): number;
     total(value?: number): number;
     static readonly LENGTH = 32;
+    static readonly MAX_PREFIX_BYTES = 13;
     static readonly MAX_PREFIX_NIBBLES: number;
 }
 export declare class NodeBody extends Chunk {

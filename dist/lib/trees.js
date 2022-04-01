@@ -49,14 +49,9 @@ class NodeHead extends chunks_1.Chunk {
     nibbles(offset, length, value) {
         if (value != null) {
             if (variables_1.DEBUG)
-                asserts_1.IntegerAssert.between(0, value.length, (length - 1) * 2);
-            let nibbles = [value.length, ...value];
-            if ((nibbles.length % 2) === 1) {
-                nibbles.push(0);
-            }
-            let bytes = getBytesFromNibbles(nibbles);
-            if (variables_1.DEBUG)
-                asserts_1.IntegerAssert.between(0, bytes.length, length);
+                asserts_1.IntegerAssert.between(0, value.length, length * 2);
+            let bytes = getBytesFromNibbles(value.length % 2 === 1 ? [...value, 0] : value);
+            this.prefixLength(value.length);
             this.buffer.set(bytes, offset);
             this.buffer.fill(0, offset + bytes.length, offset + length);
             return value;
@@ -64,7 +59,7 @@ class NodeHead extends chunks_1.Chunk {
         else {
             let bytes = this.buffer.subarray(offset, offset + length);
             let nibbles = getNibblesFromBytes(bytes);
-            return nibbles.slice(1, 1 + nibbles[0]);
+            return nibbles.slice(0, this.prefixLength());
         }
     }
     constructor(buffer) {
@@ -72,8 +67,11 @@ class NodeHead extends chunks_1.Chunk {
         if (variables_1.DEBUG)
             asserts_1.IntegerAssert.exactly(this.buffer.length, NodeHead.LENGTH);
     }
+    prefixLength(value) {
+        return utils_1.Binary.unsigned(this.buffer, 0, 1, value);
+    }
     prefix(value) {
-        return this.nibbles(0, 14, value);
+        return this.nibbles(1, NodeHead.MAX_PREFIX_BYTES, value);
     }
     resident(value) {
         return utils_1.Binary.unsigned(this.buffer, 14, 6, value);
@@ -85,7 +83,8 @@ class NodeHead extends chunks_1.Chunk {
         return utils_1.Binary.unsigned(this.buffer, 26, 6, value);
     }
     static LENGTH = 32;
-    static MAX_PREFIX_NIBBLES = (14 - 1) * 2;
+    static MAX_PREFIX_BYTES = 13;
+    static MAX_PREFIX_NIBBLES = NodeHead.MAX_PREFIX_BYTES * 2;
 }
 exports.NodeHead = NodeHead;
 ;
