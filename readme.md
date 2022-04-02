@@ -411,3 +411,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Improve heuristic for index selector.
 * Allow undefined values instead of nulls.
 * Implement enum types.
+* Implement structure for stores with many to many relationships.
