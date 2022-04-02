@@ -269,107 +269,60 @@ Transactions with read access are executed in `parallel` whereas transactions wi
 
 #### Insert
 
-Records may be inserted using the `insert()` method.
+Records may be inserted using the `insert(record)` method.
 
-```ts
-insert(
-	record: A
-): Promise<void>;
-```
-
-* The `record` argument must be used to specify the record in question.
+* The `record` argument must be used to specify the full record in question.
 
 #### Filter
 
-Records matching certain criteria may be retrieved using the `filter()` method. The method will return all records inserted into the store when invoked without arguments. Stores are usually not filtered directly but instead through the corresponding `filter()` methods for links and queries.
-
-```ts
-filter(
-	filters?: FilterMap<A>,
-	orders?: OrderMap<A>,
-	anchor?: KeysRecord<A, B>,
-	limit?: number
-): Promise<Array<A>>;
-```
+Records matching certain criteria may be retrieved using the `filter(filters, orders, anchor, limit)` method.
 
 * The `filters` argument may be used to specify conditions that must be met for the records returned.
 * The `orders` argument may be used to specify the desired order of the records returned.
 * The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum batch of records to return.
+* The `limit` argument may be used to specify the maximum number of records to return.
+
+The method will return all records inserted into the store when invoked without arguments.
+
+Stores are usually not filtered directly but rather indirectly through links and queries.
 
 #### Length
 
 The number of records inserted into a store may be checked using the `length()` method.
 
-```ts
-length(
-
-): Promise<number>;
-```
-
 #### Lookup
 
-Records may be looked up using the `lookup()` method. The method will throw an error if the corresponding record cannot be found.
-
-```ts
-lookup(
-	keysRecord: KeysRecord<A, B>
-): Promise<A>;
-```
+Records may be looked up using the `lookup(keysRecord)` method. The method will throw an error if the corresponding record cannot be found.
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
 
 #### Remove
 
-Records may be removed using the `remove()` method.
-
-```ts
-remove(
-	keysRecord: KeysRecord<A, B>
-): Promise<void>;
-```
+Records may be removed using the `remove(keysRecord)` method.
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question.
 
 #### Update
 
-Records may be updated using the `update()` method.
+Records may be updated using the `update(record)` method.
 
-```ts
-update(
-	record: A
-): Promise<void>;
-```
-
-* The `record` argument must be used to specify the record in question.
+* The `record` argument must be used to specify the full record in question.
 
 ### Links
 
 #### Filter
 
-Child records matching certain criteria may be retrieved using the `filter()` method. The method will return all orphaned child records when invoked without arguments.
-
-```ts
-filter(
-	keysRecord?: KeysRecord<A, B>,
-	anchor?: KeysRecord<C, D>,
-	limit?: number
-): Promise<Array<C>>;
-```
+Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchor, limit)` method.
 
 * The `keysRecord` argument may be used to specify the identifying fields of the parent record in question.
 * The `anchor` argument may be used to specify the identifying fields of the last child record seen. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum batch of records to return.
+* The `limit` argument may be used to specify the maximum number of records to return.
+
+The method will return all orphaned child records when invoked without arguments.
 
 #### Lookup
 
-Parent records may be looked up using the `lookup()` method. The method will return undefined if the corresponding child record is orphaned.
-
-```ts
-lookup(
-	keysRecord: C | Pick<C, E[B[number]]>
-): Promise<A | undefined>;
-```
+Parent records may be looked up using the `lookup(keysRecord)` method. The method will return undefined if the corresponding child record is orphaned.
 
 * The `keysRecord` argument must be used to specify the identifying fields of the child record in question.
 
@@ -377,19 +330,11 @@ lookup(
 
 #### Filter
 
-Records matching certain criteria may be retrieved using the `filter()` method.
-
-```ts
-filter(
-	parameters: C,
-	anchor?: KeysRecord<A, B>,
-	limit?: number
-): Promise<Array<A>>;
-```
+Records matching certain criteria may be retrieved using the `filter(parameters, anchor, limit)` method.
 
 * The `parameters` argument must be used to specify the parameter values for the query.
 * The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum batch of records to return.
+* The `limit` argument may be used to specify the maximum number of records to return.
 
 ## Schema migration
 
