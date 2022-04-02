@@ -275,14 +275,12 @@ Records may be inserted using the `insert(record)` method.
 
 #### Filter
 
-Records matching certain criteria may be retrieved using the `filter(filters, orders, anchor, limit)` method.
+Records matching certain criteria may be retrieved using the `filter(filters, orders, anchor, limit)` method. The method will return all records inserted into the store when invoked without arguments.
 
 * The `filters` argument may be used to specify conditions that must be met for the records returned.
 * The `orders` argument may be used to specify the desired order of the records returned.
 * The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum number of records to return.
-
-The method will return all records inserted into the store when invoked without arguments.
 
 Stores are usually not filtered directly but rather indirectly through links and queries.
 
@@ -312,13 +310,11 @@ Records may be updated using the `update(record)` method.
 
 #### Filter
 
-Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchor, limit)` method.
+Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchor, limit)` method. The method will return all orphaned child records when invoked without arguments.
 
 * The `keysRecord` argument may be used to specify the identifying fields of the parent record in question.
 * The `anchor` argument may be used to specify the identifying fields of the last child record seen. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum number of records to return.
-
-The method will return all orphaned child records when invoked without arguments.
 
 #### Lookup
 
