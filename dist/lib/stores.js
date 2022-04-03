@@ -149,6 +149,7 @@ class IndexManager {
                     return [];
                 }
                 delete filters[indexKey];
+                delete orders[indexKey];
                 keysConsumed.push(keysRemaining.shift());
                 tree = branch;
             }
