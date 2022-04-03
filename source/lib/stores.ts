@@ -200,6 +200,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 					return [];
 				}
 				delete filters[indexKey];
+				delete orders[indexKey];
 				keysConsumed.push(keysRemaining.shift() as Key<A>);
 				tree = branch;
 			}
