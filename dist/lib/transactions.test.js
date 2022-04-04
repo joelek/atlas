@@ -121,10 +121,10 @@ async function delay(ms) {
     let manager = new transactions_1.TransactionManager(file, {
         dummy
     }, {}, {});
-    let stores = await manager.enqueueWritableTransaction(async (queue, stores) => {
-        return stores;
+    let queue = await manager.enqueueWritableTransaction(async (queue) => {
+        return queue;
     });
     await assert.throws(async () => {
-        stores.dummy.length();
+        await queue.enqueueReadableOperation(() => 1);
     });
 });

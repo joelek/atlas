@@ -9,7 +9,6 @@ const records_1 = require("./records");
 const trees_1 = require("./trees");
 const sorters_1 = require("../mod/sorters");
 ;
-;
 class WritableStoreManager {
     storeManager;
     constructor(storeManager) {

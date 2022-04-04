@@ -4,7 +4,6 @@ exports.OverridableWritableLink = exports.Link = exports.LinkManager = exports.W
 const filters_1 = require("./filters");
 const stores_1 = require("./stores");
 ;
-;
 class WritableLinkManager {
     linkManager;
     constructor(linkManager) {

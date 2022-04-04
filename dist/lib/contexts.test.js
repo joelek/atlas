@@ -33,23 +33,26 @@ const contexts_1 = require("./contexts");
     }, {
         query
     });
-    await transactionManager.enqueueWritableTransaction(async (queue, { users, posts }, { userPosts }, { query }) => {
-        users.insert({
+    let stores = transactionManager.createTransactionalStores();
+    let links = transactionManager.createTransactionalLinks();
+    let queries = transactionManager.createTransactionalQueries();
+    await transactionManager.enqueueWritableTransaction(async (queue) => {
+        stores.users.insert(queue, {
             user_id: "User 1",
             name: "Joel Ek",
             age: 38
         });
-        posts.insert({
+        stores.posts.insert(queue, {
             post_id: "Post 1",
             user_id: "User 1",
             title: "Some title."
         });
     });
-    let observed = await transactionManager.enqueueReadableTransaction(async (queue, { users, posts }, { userPosts }, { query }) => {
-        let allUserPosts = await userPosts.filter({
+    let observed = await transactionManager.enqueueReadableTransaction(async (queue) => {
+        let allUserPosts = await links.userPosts.filter(queue, {
             user_id: "User 1"
         });
-        return users.lookup({
+        return stores.users.lookup(queue, {
             user_id: "User 1"
         });
     });

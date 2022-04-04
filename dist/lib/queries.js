@@ -4,7 +4,6 @@ exports.OverridableWritableQuery = exports.Query = exports.QueryManager = export
 const operators_1 = require("./operators");
 const stores_1 = require("./stores");
 ;
-;
 class WritableQueryManager {
     queryManager;
     constructor(queryManager) {
