@@ -17,16 +17,18 @@ let { transactionManager } = context.createTransactionManager("./private/db", {
 	users
 });
 
-await transactionManager.enqueueWritableTransaction(async (queue, { users }) => {
-	return users.insert({
+let stores = transactionManager.createTransactionalStores();
+
+await transactionManager.enqueueWritableTransaction(async (queue) => {
+	return stores.users.insert(queue, {
 		user_id: Uint8Array.of(1),
 		name: "Joel Ek",
 		age: 38
 	});
 });
 
-let user = await transactionManager.enqueueReadableTransaction(async (queue, { users }) => {
-	return users.lookup({
+let user = await transactionManager.enqueueReadableTransaction(async (queue) => {
+	return stores.users.lookup(queue, {
 		user_id: Uint8Array.of(1)
 	});
 });
@@ -225,20 +227,17 @@ let { transactionManager } = context.createTransactionManager("./private/db", {
 }, {
 	getUsersByName
 });
+
+let stores = transactionManager.createTransactionalStores();
+let links = transactionManager.createTransactionalLinks();
+let queries = transactionManager.createTransactionalQueries();
 ```
 
 A transaction with write access will be provided with write access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file if and only if all operations complete successfully.
 
 ```ts
-await transactionManager.enqueueWritableTransaction(async (queue, {
-	users,
-	posts
-}, {
-	userPosts
-}, {
-	getUsersByName
-}) => {
-	return users.insert({
+await transactionManager.enqueueWritableTransaction(async (queue) => {
+	return stores.users.insert(queue, {
 		user_id: Uint8Array.of(1),
 		name: "Joel Ek",
 		age: 38
@@ -249,15 +248,8 @@ await transactionManager.enqueueWritableTransaction(async (queue, {
 A transaction with read access will be provided with read access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue.
 
 ```ts
-let user = await transactionManager.enqueueReadableTransaction(async (queue, {
-	users,
-	posts
-}, {
-	userPosts
-}, {
-	getUsersByName
-}) => {
-	return users.lookup({
+let user = await transactionManager.enqueueReadableTransaction(async (queue) => {
+	return stores.users.lookup(queue, {
 		user_id: Uint8Array.of(1)
 	});
 });

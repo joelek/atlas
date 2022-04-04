@@ -5,24 +5,8 @@ import { OrderMap, Orders } from "./orders";
 import { RequiredKeys, Record, Keys, Key, KeysRecord } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 
-export interface ReadableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
+export interface WritableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
 	filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
-};
-
-export type ReadableQueries<A> = {
-	[B in keyof A]: A[B] extends ReadableQuery<infer C, infer D, infer E, infer F> ? ReadableQuery<C, D, E, F> : A[B];
-};
-
-export type ReadableQueriesFromQueries<A extends Queries<any>> = {
-	[B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? ReadableQuery<C, D, E, F> : never;
-};
-
-export type QueriesFromReadableQueries<A extends ReadableQueries<any>> = {
-	[B in keyof A]: A[B] extends ReadableQuery<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
-};
-
-export interface WritableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> extends ReadableQuery<A, B, C, D> {
-
 };
 
 export type WritableQueries<A> = {

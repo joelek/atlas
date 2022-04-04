@@ -123,10 +123,10 @@ test(`It should throw an error when using transaction objects outside of the tra
 	let manager = new TransactionManager(file, {
 		dummy
 	}, {}, {});
-	let stores = await manager.enqueueWritableTransaction(async (queue, stores) => {
-		return stores;
+	let queue = await manager.enqueueWritableTransaction(async (queue) => {
+		return queue;
 	});
 	await assert.throws(async () => {
-		stores.dummy.length();
+		await queue.enqueueReadableOperation(() => 1);
 	});
 });

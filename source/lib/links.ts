@@ -3,25 +3,9 @@ import { OrderMap } from "./orders";
 import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 
-export interface ReadableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
+export interface WritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Promise<Array<C>>;
 	lookup(keysRecord: C | Pick<C, E[B[number]]>): Promise<A | undefined>;
-};
-
-export type ReadableLinks<A> = {
-	[B in keyof A]: A[B] extends ReadableLink<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : A[B];
-};
-
-export type ReadableLinksFromLinks<A extends Links<any>> = {
-	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? ReadableLink<C, D, E, F, G> : never;
-};
-
-export type LinksFromReadableLinks<A extends ReadableLinks<any>> = {
-	[B in keyof A]: A[B] extends ReadableLink<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : never;
-};
-
-export interface WritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> extends ReadableLink<A, B, C, D, E> {
-
 };
 
 export type WritableLinks<A> = {

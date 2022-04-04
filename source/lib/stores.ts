@@ -8,26 +8,11 @@ import { SubsetOf } from "./inference";
 import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 
-export interface ReadableStore<A extends Record, B extends RequiredKeys<A>> {
+export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
+	insert(record: A): Promise<void>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
-};
-
-export type ReadableStores<A> = {
-	[B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? ReadableStore<C, D> : A[B];
-};
-
-export type ReadableStoresFromStores<A extends Stores<any>> = {
-	[B in keyof A]: A[B] extends Store<infer C, infer D> ? ReadableStore<C, D> : never;
-};
-
-export type StoresFromReadableStores<A extends ReadableStores<any>> = {
-	[B in keyof A]: A[B] extends ReadableStore<infer C, infer D> ? Store<C, D> : never;
-};
-
-export interface WritableStore<A extends Record, B extends RequiredKeys<A>> extends ReadableStore<A, B> {
-	insert(record: A): Promise<void>;
 	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
 	update(keysRecord: KeysRecord<A, B>): Promise<void>;
 };
