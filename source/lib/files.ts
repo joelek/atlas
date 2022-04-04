@@ -465,11 +465,13 @@ export class DurableFile extends File {
 
 export class PhysicalFile extends File {
 	private fd: number;
+	private currentSize: number;
 
 	constructor(filename: string, clear?: boolean) {
 		super();
 		libfs.mkdirSync(libpath.dirname(filename), { recursive: true });
 		this.fd = libfs.openSync(filename, libfs.existsSync(filename) ? "r+" : "w+");
+		this.currentSize = libfs.fstatSync(this.fd).size;
 		if (clear) {
 			this.resize(0);
 		}
@@ -480,7 +482,7 @@ export class PhysicalFile extends File {
 	}
 
 	persist(): void {
-		return libfs.fsyncSync(this.fd);
+		libfs.fsyncSync(this.fd);
 	}
 
 	read(buffer: Uint8Array, offset: number): Uint8Array {
@@ -496,11 +498,12 @@ export class PhysicalFile extends File {
 
 	resize(size: number): void {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, size);
-		return libfs.ftruncateSync(this.fd, size);
+		libfs.ftruncateSync(this.fd, size);
+		this.currentSize = size;
 	}
 
 	size(): number {
-		return libfs.fstatSync(this.fd).size;
+		return this.currentSize;
 	}
 
 	write(buffer: Uint8Array, offset: number): Uint8Array {
@@ -509,6 +512,7 @@ export class PhysicalFile extends File {
 		if (bytesWritten !== buffer.length) {
 			throw `Expected to write ${buffer.length} bytes but ${bytesWritten} bytes were written!`;
 		}
+		this.currentSize = Math.max(this.currentSize, offset + buffer.length);
 		return buffer;
 	}
 };
