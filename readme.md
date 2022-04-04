@@ -292,19 +292,19 @@ The number of records inserted into a store may be checked using the `length()` 
 
 Records may be looked up using the `lookup(keysRecord)` method. The method will throw an error if the corresponding record cannot be found.
 
-* The `keysRecord` argument must be used to specify the identifying fields of the record in question.
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
 
 #### Remove
 
 Records may be removed using the `remove(keysRecord)` method.
 
-* The `keysRecord` argument must be used to specify the identifying fields of the record in question.
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
 
 #### Update
 
-Records may be updated using the `update(record)` method.
+Records may be updated using the `update(keysRecord)` method. The method will insert a default record if the corresponding record cannot be found. Metadata fields not specified in the update will retain their previously stored values.
 
-* The `record` argument must be used to specify the full record in question.
+* The `keysRecord` argument must be used to specify the identifying fields of the record at minimum.
 
 ### Links
 
@@ -312,15 +312,15 @@ Records may be updated using the `update(record)` method.
 
 Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchor, limit)` method. The method will return all orphaned child records when invoked without arguments.
 
-* The `keysRecord` argument may be used to specify the identifying fields of the parent record in question.
-* The `anchor` argument may be used to specify the identifying fields of the last child record seen. The first record returned will be the record located directly after the anchor.
+* The `keysRecord` argument may be used to specify the identifying fields of the parent record in question at minimum.
+* The `anchor` argument may be used to specify the identifying fields of the last child record seen at minimum. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum number of records to return.
 
 #### Lookup
 
 Parent records may be looked up using the `lookup(keysRecord)` method. The method will return undefined if the corresponding child record is orphaned.
 
-* The `keysRecord` argument must be used to specify the identifying fields of the child record in question.
+* The `keysRecord` argument must be used to specify the identifying fields of the child record in question at minimum.
 
 ### Queries
 

@@ -365,6 +365,41 @@ test(`It should support updating a record not previously inserted.`, async (asse
 	assert.true(users.lookup({ key: "A" }).name === "One");
 });
 
+test(`It should support partially updating a record previously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField(""),
+			name: new StringField("")
+		},
+		keys: ["key"]
+	});
+	users.update({
+		key: "A"
+	});
+	assert.true(users.lookup({ key: "A" }).name === "");
+	users.update({
+		key: "A",
+		name: "Two"
+	});
+	assert.true(users.lookup({ key: "A" }).name === "Two");
+});
+
+test(`It should support partially updating a record not previously inserted.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField(""),
+			name: new StringField("")
+		},
+		keys: ["key"]
+	});
+	users.update({
+		key: "A"
+	});
+	assert.true(users.lookup({ key: "A" }).name === "");
+});
+
 test(`It should create the correct index for a store without orders.`, async (assert) => {
 	let users = new Store({
 		user_id: new StringField(""),

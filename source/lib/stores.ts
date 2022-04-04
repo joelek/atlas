@@ -29,7 +29,7 @@ export type StoresFromReadableStores<A extends ReadableStores<any>> = {
 export interface WritableStore<A extends Record, B extends RequiredKeys<A>> extends ReadableStore<A, B> {
 	insert(record: A): Promise<void>;
 	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
-	update(record: A): Promise<void>;
+	update(keysRecord: KeysRecord<A, B>): Promise<void>;
 };
 
 export type WritableStores<A> = {
@@ -250,6 +250,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private table: Table;
 	private indexManagers: Array<IndexManager<A, Keys<A>>>;
 
+	private getDefaultRecord(): A {
+		let record = {} as A;
+		for (let key in this.fields) {
+			record[key] = this.fields[key].getDefaultValue();
+		}
+		return record;
+	}
+
 	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>) {
 		this.blockManager = blockManager;
 		this.fields = fields;
@@ -346,7 +354,17 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 	}
 
-	update(record: A): void {
+	update(keysRecord: KeysRecord<A, B>): void {
+		let record = {
+			...this.getDefaultRecord(),
+			...keysRecord
+		};
+		try {
+			record = {
+				...this.lookup(keysRecord),
+				...keysRecord
+			};
+		} catch (error) {}
 		return this.insert(record);
 	}
 
