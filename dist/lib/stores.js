@@ -197,6 +197,13 @@ class StoreManager {
     recordManager;
     table;
     indexManagers;
+    getDefaultRecord() {
+        let record = {};
+        for (let key in this.fields) {
+            record[key] = this.fields[key].getDefaultValue();
+        }
+        return record;
+    }
     constructor(blockManager, fields, keys, orders, table, indexManagers) {
         this.blockManager = blockManager;
         this.fields = fields;
@@ -286,7 +293,18 @@ class StoreManager {
             }
         }
     }
-    update(record) {
+    update(keysRecord) {
+        let record = {
+            ...this.getDefaultRecord(),
+            ...keysRecord
+        };
+        try {
+            record = {
+                ...this.lookup(keysRecord),
+                ...keysRecord
+            };
+        }
+        catch (error) { }
         return this.insert(record);
     }
     static construct(blockManager, options) {

@@ -21,7 +21,7 @@ export declare type StoresFromReadableStores<A extends ReadableStores<any>> = {
 export interface WritableStore<A extends Record, B extends RequiredKeys<A>> extends ReadableStore<A, B> {
     insert(record: A): Promise<void>;
     remove(keysRecord: KeysRecord<A, B>): Promise<void>;
-    update(record: A): Promise<void>;
+    update(keysRecord: KeysRecord<A, B>): Promise<void>;
 }
 export declare type WritableStores<A> = {
     [B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? WritableStore<C, D> : A[B];
@@ -76,6 +76,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private recordManager;
     private table;
     private indexManagers;
+    private getDefaultRecord;
     constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>);
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
@@ -84,7 +85,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     length(): number;
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
-    update(record: A): void;
+    update(keysRecord: KeysRecord<A, B>): void;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
         fields: Fields<A>;
         keys: [...B];

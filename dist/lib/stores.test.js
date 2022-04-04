@@ -349,6 +349,39 @@ const tables_1 = require("./tables");
     });
     assert.true(users.lookup({ key: "A" }).name === "One");
 });
+(0, test_1.test)(`It should support partially updating a record previously inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField(""),
+            name: new records_1.StringField("")
+        },
+        keys: ["key"]
+    });
+    users.update({
+        key: "A"
+    });
+    assert.true(users.lookup({ key: "A" }).name === "");
+    users.update({
+        key: "A",
+        name: "Two"
+    });
+    assert.true(users.lookup({ key: "A" }).name === "Two");
+});
+(0, test_1.test)(`It should support partially updating a record not previously inserted.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField(""),
+            name: new records_1.StringField("")
+        },
+        keys: ["key"]
+    });
+    users.update({
+        key: "A"
+    });
+    assert.true(users.lookup({ key: "A" }).name === "");
+});
 (0, test_1.test)(`It should create the correct index for a store without orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
