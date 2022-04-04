@@ -60,6 +60,7 @@ export declare class DurableFile extends File {
 }
 export declare class PhysicalFile extends File {
     private fd;
+    private currentSize;
     constructor(filename: string, clear?: boolean);
     discard(): void;
     persist(): void;

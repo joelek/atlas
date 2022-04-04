@@ -442,10 +442,12 @@ exports.DurableFile = DurableFile;
 ;
 class PhysicalFile extends File {
     fd;
+    currentSize;
     constructor(filename, clear) {
         super();
         libfs.mkdirSync(libpath.dirname(filename), { recursive: true });
         this.fd = libfs.openSync(filename, libfs.existsSync(filename) ? "r+" : "w+");
+        this.currentSize = libfs.fstatSync(this.fd).size;
         if (clear) {
             this.resize(0);
         }
@@ -454,7 +456,7 @@ class PhysicalFile extends File {
         throw `Expected discard() to be delegated to another implementation!`;
     }
     persist() {
-        return libfs.fsyncSync(this.fd);
+        libfs.fsyncSync(this.fd);
     }
     read(buffer, offset) {
         if (variables_1.DEBUG)
@@ -470,10 +472,11 @@ class PhysicalFile extends File {
     resize(size) {
         if (variables_1.DEBUG)
             asserts.IntegerAssert.atLeast(0, size);
-        return libfs.ftruncateSync(this.fd, size);
+        libfs.ftruncateSync(this.fd, size);
+        this.currentSize = size;
     }
     size() {
-        return libfs.fstatSync(this.fd).size;
+        return this.currentSize;
     }
     write(buffer, offset) {
         if (variables_1.DEBUG)
@@ -482,6 +485,7 @@ class PhysicalFile extends File {
         if (bytesWritten !== buffer.length) {
             throw `Expected to write ${buffer.length} bytes but ${bytesWritten} bytes were written!`;
         }
+        this.currentSize = Math.max(this.currentSize, offset + buffer.length);
         return buffer;
     }
 }
