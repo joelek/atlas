@@ -414,3 +414,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement structure for stores with many to many relationships.
 * Implement partial updating of records.
 * Implement distinct ordered filtering.
+* Implement removal of all records for a given store.
