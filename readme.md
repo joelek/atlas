@@ -415,3 +415,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement partial updating of records.
 * Implement distinct ordered filtering.
 * Implement removal of all records for a given store.
+* Only recreate stores when referenced fields are altered, else update records.
