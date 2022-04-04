@@ -404,7 +404,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Allow undefined values instead of nulls.
 * Implement enum types.
 * Implement structure for stores with many to many relationships.
-* Implement partial updating of records.
 * Implement distinct ordered filtering.
 * Implement removal of all records for a given store.
 * Only recreate stores when referenced fields are altered, else update records.
