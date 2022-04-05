@@ -205,3 +205,30 @@ for (let key in constructors) {
     assert.binary.equals(durable.read(buffer, 2), Uint8Array.of(0));
     assert.binary.equals(durable.read(buffer, 3), Uint8Array.of(0));
 });
+(0, test_1.test)(`It should endure through multiple transactions and thousands of operations (DurableFile).`, async (assert) => {
+    let bin = new files.CachedFile(new files.PhysicalFile("./private/endurance.bin"), 64);
+    let log = new files.CachedFile(new files.PhysicalFile("./private/endurance.log"), 64);
+    let durable = new files.DurableFile(bin, log);
+    for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 10000; j++) {
+            let action = Math.floor(Math.random() * 3);
+            if (action === 0) {
+                let length = Math.floor(Math.random() * durable.size());
+                let buffer = new Uint8Array(length);
+                let offset = Math.floor(Math.random() * (durable.size() - length));
+                durable.read(buffer, offset);
+            }
+            else if (action === 1) {
+                let length = Math.floor(Math.random() * 64);
+                let buffer = new Uint8Array(length);
+                let offset = Math.floor(Math.random() * durable.size());
+                durable.write(buffer, offset);
+            }
+            else {
+                let size = Math.floor(Math.random() * 1024);
+                durable.resize(size);
+            }
+        }
+        durable.persist();
+    }
+});
