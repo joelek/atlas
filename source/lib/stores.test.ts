@@ -777,19 +777,15 @@ test(`It should prevent identical records from being re-indexed.`, async (assert
 	});
 	let index = new IndexManager(recordManager, blockManager, ["user_id"]);
 	let users = new StoreManager(blockManager, fields, keys, {}, table, [index]);
-	users.insert({
+	let record = {
 		user_id: "User 1",
-		name: "Name"
-	});
+		name: "Name2"
+	};
+	assert.true(!Number.isInteger(Math.log2(recordManager.encode(record).length)));
+	users.insert(record);
 	assert.array.equals(Array.from(index).map((user) => user.user_id), ["User 1"]);
-	index.remove({
-		user_id: "User 1",
-		name: "Name"
-	});
+	index.remove(record);
 	assert.array.equals(Array.from(index).map((user) => user.user_id), []);
-	users.insert({
-		user_id: "User 1",
-		name: "Name"
-	});
+	users.insert(record);
 	assert.array.equals(Array.from(index).map((user) => user.user_id), []);
 });

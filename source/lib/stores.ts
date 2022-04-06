@@ -297,7 +297,8 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			this.table.insert(key, index);
 		} else {
 			let buffer = this.blockManager.readBlock(index);
-			if (compareBuffers([encoded], [buffer]) === 0) {
+			// Bedrock encodes records with a payload length prefix making it sufficient to compare the encoded record to the prefix of the block.
+			if (compareBuffers([encoded], [buffer.subarray(0, encoded.length)]) === 0) {
 				return;
 			}
 			let oldRecord = this.recordManager.decode(buffer);
