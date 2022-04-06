@@ -254,7 +254,7 @@ class StoreManager {
         }
         else {
             let buffer = this.blockManager.readBlock(index);
-            if ((0, tables_1.compareBuffers)([encoded], [buffer]) === 0) {
+            if ((0, tables_1.compareBuffers)([encoded], [buffer.subarray(0, encoded.length)]) === 0) {
                 return;
             }
             let oldRecord = this.recordManager.decode(buffer);

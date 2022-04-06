@@ -746,19 +746,15 @@ const tables_1 = require("./tables");
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["user_id"]);
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index]);
-    users.insert({
+    let record = {
         user_id: "User 1",
-        name: "Name"
-    });
+        name: "Name2"
+    };
+    assert.true(!Number.isInteger(Math.log2(recordManager.encode(record).length)));
+    users.insert(record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), ["User 1"]);
-    index.remove({
-        user_id: "User 1",
-        name: "Name"
-    });
+    index.remove(record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), []);
-    users.insert({
-        user_id: "User 1",
-        name: "Name"
-    });
+    users.insert(record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), []);
 });
