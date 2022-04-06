@@ -297,6 +297,9 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			this.table.insert(key, index);
 		} else {
 			let buffer = this.blockManager.readBlock(index);
+			if (compareBuffers([encoded], [buffer]) === 0) {
+				return;
+			}
 			let oldRecord = this.recordManager.decode(buffer);
 			this.blockManager.resizeBlock(index, encoded.length);
 			this.blockManager.writeBlock(index, encoded);

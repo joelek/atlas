@@ -759,3 +759,37 @@ test(`It should perform significantly better with a suitable index.`, async (ass
 	});
 	assert.true(averageOne * 100 < averageTwo);
 });
+
+test(`It should prevent identical records from being re-indexed.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new StringField("")
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let index = new IndexManager(recordManager, blockManager, ["user_id"]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [index]);
+	users.insert({
+		user_id: "User 1",
+		name: "Name"
+	});
+	assert.array.equals(Array.from(index).map((user) => user.user_id), ["User 1"]);
+	index.remove({
+		user_id: "User 1",
+		name: "Name"
+	});
+	assert.array.equals(Array.from(index).map((user) => user.user_id), []);
+	users.insert({
+		user_id: "User 1",
+		name: "Name"
+	});
+	assert.array.equals(Array.from(index).map((user) => user.user_id), []);
+});
