@@ -254,6 +254,7 @@ class StoreManager {
         }
         else {
             let buffer = this.blockManager.readBlock(index);
+            // Bedrock encodes records with a payload length prefix making it sufficient to compare the encoded record to the prefix of the block.
             if ((0, tables_1.compareBuffers)([encoded], [buffer.subarray(0, encoded.length)]) === 0) {
                 return;
             }
