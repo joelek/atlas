@@ -185,6 +185,15 @@ class IndexManager {
         let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
         this.tree.remove(keys);
     }
+    update(oldKeysRecord, newKeysRecord, bid) {
+        let oldKeys = this.recordManager.encodeKeys(this.keys, oldKeysRecord);
+        let newKeys = this.recordManager.encodeKeys(this.keys, newKeysRecord);
+        if ((0, tables_1.compareBuffers)(oldKeys, newKeys) === 0) {
+            return;
+        }
+        this.tree.remove(oldKeys);
+        this.tree.insert(newKeys, bid);
+    }
 }
 exports.IndexManager = IndexManager;
 ;
@@ -251,6 +260,9 @@ class StoreManager {
             index = this.blockManager.createBlock(encoded.length);
             this.blockManager.writeBlock(index, encoded);
             this.table.insert(key, index);
+            for (let indexManager of this.indexManagers) {
+                indexManager.insert(record, index);
+            }
         }
         else {
             let buffer = this.blockManager.readBlock(index);
@@ -262,11 +274,8 @@ class StoreManager {
             this.blockManager.resizeBlock(index, encoded.length);
             this.blockManager.writeBlock(index, encoded);
             for (let indexManager of this.indexManagers) {
-                indexManager.remove(oldRecord);
+                indexManager.update(oldRecord, record, index);
             }
-        }
-        for (let indexManager of this.indexManagers) {
-            indexManager.insert(record, index);
         }
     }
     length() {

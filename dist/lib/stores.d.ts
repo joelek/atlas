@@ -56,6 +56,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): Array<FilteredStore<A>>;
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;
     remove(keysRecord: KeysRecord<A, B>): void;
+    update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void;
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
