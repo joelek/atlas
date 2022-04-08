@@ -224,6 +224,16 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		let keys = this.recordManager.encodeKeys<Keys<A>>(this.keys, keysRecord);
 		this.tree.remove(keys);
 	}
+
+	update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void {
+		let oldKeys = this.recordManager.encodeKeys<Keys<A>>(this.keys, oldKeysRecord);
+		let newKeys = this.recordManager.encodeKeys<Keys<A>>(this.keys, newKeysRecord);
+		if (compareBuffers(oldKeys, newKeys) === 0) {
+			return;
+		}
+		this.tree.remove(oldKeys);
+		this.tree.insert(newKeys, bid);
+	}
 };
 
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
@@ -295,6 +305,9 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			index = this.blockManager.createBlock(encoded.length);
 			this.blockManager.writeBlock(index, encoded);
 			this.table.insert(key, index);
+			for (let indexManager of this.indexManagers) {
+				indexManager.insert(record, index);
+			}
 		} else {
 			let buffer = this.blockManager.readBlock(index);
 			// Bedrock encodes records with a payload length prefix making it sufficient to compare the encoded record to the prefix of the block.
@@ -305,11 +318,8 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			this.blockManager.resizeBlock(index, encoded.length);
 			this.blockManager.writeBlock(index, encoded);
 			for (let indexManager of this.indexManagers) {
-				indexManager.remove(oldRecord);
+				indexManager.update(oldRecord, record, index);
 			}
-		}
-		for (let indexManager of this.indexManagers) {
-			indexManager.insert(record, index);
 		}
 	}
 
