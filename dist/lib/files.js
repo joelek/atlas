@@ -200,7 +200,7 @@ class DurableFile extends File {
     bin;
     log;
     header;
-    tree; // TODO: Store offset and length.
+    tree;
     readDelta(offset) {
         let header = new LogDeltaHeader();
         header.read(this.log, offset);
@@ -299,8 +299,7 @@ class DurableFile extends File {
         }
     }
     discard() {
-        // TODO: Improve since length() has linear complexity.
-        if (this.tree.length() > 0) {
+        if (this.log.size() > LogHeader.LENGTH) {
             this.log.resize(0);
             this.header.redoSize(this.bin.size());
             this.header.undoSize(this.bin.size());
@@ -310,8 +309,7 @@ class DurableFile extends File {
         }
     }
     persist() {
-        // TODO: Improve since length() has linear complexity.
-        if (this.tree.length() > 0) {
+        if (this.log.size() > LogHeader.LENGTH) {
             this.header.write(this.log, 0);
             this.log.persist();
             this.redo();
