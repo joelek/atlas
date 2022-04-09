@@ -409,3 +409,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Only recreate stores when referenced fields are altered, else update records.
 * Only recreate indices when referenced fields are altered.
 * Prevent transaction from storing identical redo and undo blocks.
+* Improve DurableFile by keeping all log entry headers in memory.
