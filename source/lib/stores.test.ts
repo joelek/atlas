@@ -548,7 +548,7 @@ test(`It should use the optimal index when filtering with filters.`, async (asse
 		user_id: "User 1",
 		name: "Name"
 	});
-	let indexTwo = new IndexManager(recordManager, blockManager, ["name"]);
+	let indexTwo = new IndexManager(recordManager, blockManager, ["name", "user_id"]);
 	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo]);
 	usersTwo.insert({
 		user_id: "User 2",
@@ -559,7 +559,7 @@ test(`It should use the optimal index when filtering with filters.`, async (asse
 		name: new EqualityFilter("Name")
 	});
 	let observed = Array.from(iterable).map((record) => record.user_id);
-	let expected = ["User 1"] as Array<string>;
+	let expected = ["User 2"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
 

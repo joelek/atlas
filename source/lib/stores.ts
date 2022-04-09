@@ -165,7 +165,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		this.tree.delete();
 	}
 
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): Array<FilteredStore<A>> {
+	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined {
 		filters = filters ?? {};
 		orders = orders ?? {};
 		filters = { ...filters };
@@ -182,7 +182,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				let encodedValue = filter.getEncodedValue();
 				let branch = tree.branch([encodedValue]);
 				if (branch == null) {
-					return [];
+					return;
 				}
 				delete filters[indexKey];
 				delete orders[indexKey];
@@ -210,9 +210,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			keys = this.recordManager.encodeKeys(keysRemaining, anchor);
 		}
 		let iterable = tree.filter(relationship, keys, directions);
-		return [
-			new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders)
-		];
+		return new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders);
 	}
 
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
@@ -285,9 +283,15 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			}
 		}
 		let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
-		let filteredStores = this.indexManagers.flatMap((indexManager) => {
-			return indexManager.filter(filters, orders, anchor);
-		});
+		let filteredStores = [] as Array<FilteredStore<A>>;
+		for (let indexManager of this.indexManagers) {
+			let filteredStore = indexManager.filter(filters, orders, anchor);
+			if (filteredStore == null) {
+				// We can exit early as the index manager has signaled that there are no matching records.
+				return [];
+			}
+			filteredStores.push(filteredStore);
+		}
 		filteredStores.push(new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
 		let iterable = StreamIterable.of(filteredStore)
