@@ -264,7 +264,6 @@ export class DurableFile extends File {
 		this.tree.insert(offset, this.log.size());
 		this.writeDelta(delta, this.log.size());
 		this.header.redoSize(Math.max(this.header.redoSize(), offset + redo.length));
-		this.header.write(this.log, 0);
 	}
 
 	private redo(): void {
@@ -334,6 +333,7 @@ export class DurableFile extends File {
 
 	persist(): void {
 		if (this.tree.length() > 0) {
+			this.header.write(this.log, 0);
 			this.log.persist();
 			this.redo();
 		}
@@ -413,7 +413,6 @@ export class DurableFile extends File {
 			this.tree.remove(entry.key);
 		}
 		this.header.redoSize(size);
-		this.header.write(this.log, 0);
 	}
 
 	size(): number {
