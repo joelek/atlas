@@ -53,7 +53,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     });
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): Array<FilteredStore<A>>;
+    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined;
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void;

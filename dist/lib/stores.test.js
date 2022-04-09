@@ -524,7 +524,7 @@ const tables_1 = require("./tables");
         user_id: "User 1",
         name: "Name"
     });
-    let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
+    let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name", "user_id"]);
     let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo]);
     usersTwo.insert({
         user_id: "User 2",
@@ -535,7 +535,7 @@ const tables_1 = require("./tables");
         name: new filters_1.EqualityFilter("Name")
     });
     let observed = Array.from(iterable).map((record) => record.user_id);
-    let expected = ["User 1"];
+    let expected = ["User 2"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should use the optimal index when filtering with filters and orders`, async (assert) => {

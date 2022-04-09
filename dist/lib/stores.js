@@ -145,7 +145,7 @@ class IndexManager {
                 let encodedValue = filter.getEncodedValue();
                 let branch = tree.branch([encodedValue]);
                 if (branch == null) {
-                    return [];
+                    return;
                 }
                 delete filters[indexKey];
                 delete orders[indexKey];
@@ -173,9 +173,7 @@ class IndexManager {
             keys = this.recordManager.encodeKeys(keysRemaining, anchor);
         }
         let iterable = tree.filter(relationship, keys, directions);
-        return [
-            new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders)
-        ];
+        return new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders);
     }
     insert(keysRecord, bid) {
         let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
@@ -241,9 +239,15 @@ class StoreManager {
             }
         }
         let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
-        let filteredStores = this.indexManagers.flatMap((indexManager) => {
-            return indexManager.filter(filters, orders, anchor);
-        });
+        let filteredStores = [];
+        for (let indexManager of this.indexManagers) {
+            let filteredStore = indexManager.filter(filters, orders, anchor);
+            if (filteredStore == null) {
+                // We can exit early as the index manager has signaled that there are no matching records.
+                return [];
+            }
+            filteredStores.push(filteredStore);
+        }
         filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
         let filteredStore = FilteredStore.getOptimal(filteredStores);
         let iterable = streams_1.StreamIterable.of(filteredStore);
