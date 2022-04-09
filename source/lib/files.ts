@@ -346,11 +346,12 @@ export class DurableFile extends File {
 		let end = offset + buffer.length;
 		let entry = this.tree.locate({ operator: "<=", key: offset });
 		if (entry != null) {
-			let delta = this.readDelta(entry.value);
-			let distance = current - delta.header.offset();
-			let overlap = Math.min(delta.header.length() - distance, buffer.length);
+			let header = new LogDeltaHeader();
+			header.read(this.log, entry.value);
+			let distance = current - entry.key;
+			let overlap = Math.min(header.length() - distance, buffer.length);
 			if (overlap > 0) {
-				buffer.set(delta.redo.subarray(distance, distance + overlap), bytes);
+				this.log.read(buffer.subarray(bytes, bytes + overlap), entry.value + LogDeltaHeader.LENGTH + distance);
 				current += overlap;
 				bytes += overlap;
 			}
@@ -371,9 +372,10 @@ export class DurableFile extends File {
 				current += gap;
 				bytes += gap;
 			}
-			let delta = this.readDelta(entry.value);
-			let overlap = Math.min(delta.header.length(), end - current);
-			buffer.set(delta.redo.subarray(0, overlap), bytes);
+			let header = new LogDeltaHeader();
+			header.read(this.log, entry.value);
+			let overlap = Math.min(header.length(), end - current);
+			this.log.read(buffer.subarray(bytes, bytes + overlap), entry.value + LogDeltaHeader.LENGTH + 0);
 			current += overlap;
 			bytes += overlap;
 		}
@@ -395,12 +397,14 @@ export class DurableFile extends File {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, size);
 		let entry = this.tree.locate({ operator: "<", key: size });
 		if (entry != null) {
-			let delta = this.readDelta(entry.value);
-			let distance = size - delta.header.offset();
-			let overlap = delta.header.length() - distance;
+			let header = new LogDeltaHeader();
+			header.read(this.log, entry.value);
+			let distance = size - entry.key;
+			let overlap = header.length() - distance;
 			if (overlap > 0) {
 				this.tree.remove(entry.key);
-				let redo = delta.redo.subarray(0, distance);
+				let redo = new Uint8Array(distance);
+				this.log.read(redo, entry.value + LogDeltaHeader.LENGTH + 0);
 				this.appendRedo(redo, entry.key);
 			}
 		}
@@ -423,12 +427,12 @@ export class DurableFile extends File {
 		let end = offset + buffer.length;
 		let entry = this.tree.locate({ operator: "<=", key: offset });
 		if (entry != null) {
-			let delta = this.readDelta(entry.value);
-			let distance = current - delta.header.offset();
-			let overlap = Math.min(delta.header.length() - distance, buffer.length);
+			let header = new LogDeltaHeader();
+			header.read(this.log, entry.value);
+			let distance = current - entry.key;
+			let overlap = Math.min(header.length() - distance, buffer.length);
 			if (overlap > 0) {
-				delta.redo.set(buffer.subarray(bytes, bytes + overlap), distance);
-				this.writeDelta(delta, entry.value);
+				this.log.write(buffer.subarray(bytes, bytes + overlap), entry.value + LogDeltaHeader.LENGTH + distance);
 				current += overlap;
 				bytes += overlap;
 			}
@@ -445,10 +449,10 @@ export class DurableFile extends File {
 				current += gap;
 				bytes += gap;
 			}
-			let delta = this.readDelta(entry.value);
-			let overlap = Math.min(delta.header.length(), end - current);
-			delta.redo.set(buffer.subarray(bytes, bytes + overlap), 0);
-			this.writeDelta(delta, entry.value);
+			let header = new LogDeltaHeader();
+			header.read(this.log, entry.value);
+			let overlap = Math.min(header.length(), end - current);
+			this.log.write(buffer.subarray(bytes, bytes + overlap), entry.value + LogDeltaHeader.LENGTH + 0);
 			current += overlap;
 			bytes += overlap;
 		}
