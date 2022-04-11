@@ -298,6 +298,10 @@ Records may be updated using the `update(keysRecord)` method. The method will in
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record at minimum.
 
+#### Vacate
+
+All records inserted into a store may be vacated using the `vacate()` method.
+
 ### Links
 
 #### Filter
