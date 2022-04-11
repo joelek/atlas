@@ -29,6 +29,13 @@ function createUsersPostsAndComments() {
 		},
 		keys: ["comment_id"]
 	});
+	let metas = StoreManager.construct(blockManager, {
+		fields: {
+			meta_id: new StringField(""),
+			meta_user_id: new NullableStringField(null)
+		},
+		keys: ["meta_id"]
+	});
 	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	});
@@ -38,24 +45,59 @@ function createUsersPostsAndComments() {
 	let userComments = LinkManager.construct(users, comments, {
 		user_id: "comment_user_id"
 	});
+	let userMetas = LinkManager.construct(users, metas, {
+		user_id: "meta_user_id"
+	});
 	let databaseManager = new DatabaseManager({
 		users,
 		posts,
-		comments
+		comments,
+		metas
 	}, {
 		userPosts,
 		postComments,
-		userComments
+		userComments,
+		userMetas
 	}, {});
 	return {
 		storeManagers: {
 			users,
 			posts,
-			comments
+			comments,
+			metas
 		},
 		writableStores: databaseManager.createWritableStores()
 	};
 };
+
+test(`It should support vacating records for referencing links.`, async (assert) => {
+	let { storeManagers, writableStores } = createUsersPostsAndComments();
+	storeManagers.users.insert({
+		user_id: "User 0"
+	});
+	storeManagers.posts.insert({
+		post_id: "Post 0",
+		post_user_id: "User 0"
+	});
+	storeManagers.comments.insert({
+		comment_id: "Comment 0",
+		comment_post_id: "Post 0",
+		comment_user_id: "User 0"
+	});
+	storeManagers.metas.insert({
+		meta_id: "Meta 0",
+		meta_user_id: null
+	});
+	storeManagers.metas.insert({
+		meta_id: "Meta 1",
+		meta_user_id: "User 0"
+	});
+	await writableStores.users.vacate();
+	assert.array.equals(Array.from(storeManagers.users).map((record) => record.user_id), []);
+	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.post_id), []);
+	assert.array.equals(Array.from(storeManagers.comments).map((record) => record.comment_id), []);
+	assert.array.equals(Array.from(storeManagers.metas).map((record) => record.meta_id), ["Meta 0"]);
+});
 
 test(`It should support inserting records for referencing links.`, async (assert) => {
 	let { storeManagers, writableStores } = createUsersPostsAndComments();
@@ -160,6 +202,20 @@ function createDirectories() {
 		writableStores: databaseManager.createWritableStores()
 	};
 };
+
+test(`It should support vacating records for self-referencing links.`, async (assert) => {
+	let { storeManagers, writableStores } = createDirectories();
+	await writableStores.directories.insert({
+		directory_id: "Directory 0",
+		parent_directory_id: null
+	});
+	await writableStores.directories.insert({
+		directory_id: "Directory 1",
+		parent_directory_id: "Directory 0"
+	});
+	await writableStores.directories.vacate();
+	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.directory_id), []);
+});
 
 test(`It should support inserting records for self-referencing links.`, async (assert) => {
 	let { storeManagers, writableStores } = createDirectories();

@@ -15,6 +15,7 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
 	update(keysRecord: KeysRecord<A, B>): Promise<void>;
+	vacate(): Promise<void>;
 };
 
 export type WritableStores<A> = {
@@ -58,6 +59,10 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
 		return this.storeManager.update(...parameters);
+	}
+
+	async vacate(...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]> {
+		return this.storeManager.vacate(...parameters);
 	}
 };
 
@@ -232,6 +237,10 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		this.tree.remove(oldKeys);
 		this.tree.insert(newKeys, bid);
 	}
+
+	vacate(): void {
+		this.tree.vacate();
+	}
 };
 
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
@@ -371,6 +380,16 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return this.insert(record);
 	}
 
+	vacate(): void {
+		for (let bid of this.table) {
+			this.blockManager.deleteBlock(bid);
+		}
+		for (let indexManager of this.indexManagers) {
+			indexManager.vacate();
+		}
+		this.table.vacate();
+	}
+
 	static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
 		fields: Fields<A>,
 		keys: [...B],
@@ -505,5 +524,9 @@ export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
 		return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
+	}
+
+	async vacate(...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]> {
+		return this.overrides.vacate?.(...parameters) ?? this.storeManager.vacate(...parameters);
 	}
 };

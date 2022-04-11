@@ -621,6 +621,30 @@ export class RadixTree {
 		}
 	}
 
+	private doVacate(bid: number): void {
+		let head = new NodeHead();
+		this.blockManager.readBlock(bid, head.buffer, 0);
+		if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+			for (let i = 0; i < 16; i++) {
+				let child = body.child(i);
+				if (child !== 0) {
+					this.doVacate(child);
+				}
+			}
+		}
+		let subtree = head.subtree();
+		if (subtree !== 0) {
+			this.doVacate(subtree);
+		}
+		if (bid === this.blockIndex) {
+			this.blockManager.clearBlock(bid);
+		} else {
+			this.blockManager.deleteBlock(bid);
+		}
+	}
+
 	private locate(keys: Array<Uint8Array>): number | undefined {
 		let nibbles = keys.map(getNibblesFromBytes);
 		return this.doLocate(nibbles.slice(1), this.blockIndex, nibbles[0] ?? []);
@@ -688,6 +712,10 @@ export class RadixTree {
 	remove(keys: Array<Uint8Array>): boolean {
 		let nibbles = keys.map(getNibblesFromBytes);
 		return this.doRemove(nibbles.slice(1), this.blockIndex, nibbles[0] ?? []) != null;
+	}
+
+	vacate(): void {
+		this.doVacate(this.blockIndex);
 	}
 
 	static readonly INITIAL_SIZE = NodeHead.LENGTH;

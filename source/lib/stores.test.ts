@@ -789,3 +789,26 @@ test(`It should prevent identical records from being re-indexed.`, async (assert
 	users.insert(record);
 	assert.array.equals(Array.from(index).map((user) => user.user_id), []);
 });
+
+test(`It should support vacating.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "B"
+	});
+	users.vacate();
+	let observed = Array.from(users).map((entry) => entry.key);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});

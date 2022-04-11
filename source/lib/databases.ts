@@ -50,6 +50,18 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		}
 	}
 
+	private doVacate<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, orphans: Array<C>): void {
+		if (storeManager.length() > 0) {
+			storeManager.vacate();
+			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+				this.doVacate(linkManager.getChild(), linkManager.filter());
+			}
+		}
+		for (let orphan of orphans) {
+			storeManager.insert(orphan);
+		}
+	}
+
 	private getLinksWhereStoreIsParent(storeManager: StoreManager<any, any>): Set<LinkManager<any, any, any, any, any>> {
 		let set = this.linksWhereStoreIsParent.get(storeManager);
 		if (set == null) {
@@ -103,7 +115,8 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			let storeManager = this.storeManagers[key];
 			writableStores[key] = new OverridableWritableStore(storeManager, {
 				insert: async (record) => this.doInsert(storeManager, [record]),
-				remove: async (record) => this.doRemove(storeManager, [record])
+				remove: async (record) => this.doRemove(storeManager, [record]),
+				vacate: async () => this.doVacate(storeManager, [])
 			});
 		}
 		return writableStores;

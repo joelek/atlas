@@ -239,12 +239,6 @@ export class Table {
 		}
 	}
 
-	clear(): void {
-		this.blockManager.clearBlock(this.header.table.value());
-		this.header.count.value(0);
-		this.header.write(this.blockManager.makeWritable(this.bid), 0);
-	}
-
 	delete(): void {
 		this.blockManager.deleteBlock(this.header.table.value());
 		this.blockManager.deleteBlock(this.bid);
@@ -287,6 +281,12 @@ export class Table {
 		this.propagateBackwards(slotIndex);
 		this.resizeIfNecessary();
 		return true;
+	}
+
+	vacate(): void {
+		this.blockManager.clearBlock(this.header.table.value());
+		this.header.count.value(0);
+		this.header.write(this.blockManager.makeWritable(this.bid), 0);
 	}
 
 	static LENGTH = HashTableHeader.LENGTH;

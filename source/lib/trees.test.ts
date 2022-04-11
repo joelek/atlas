@@ -625,6 +625,9 @@ test(`It should throw errors when used after deletion.`, async (assert) => {
 	await assert.throws(async () => {
 		Array.from(tree.filter("=", []));
 	});
+	await assert.throws(async () => {
+		tree.vacate();
+	});
 });
 
 test(`It should support inserting values not prevously inserted.`, async (assert) => {
@@ -696,6 +699,18 @@ test(`It should support removing values prevously inserted.`, async (assert) => 
 	assert.true(tree.lookup([]) === 1);
 	tree.remove([]);
 	assert.true(tree.lookup([]) == null);
+});
+
+test(`It should support vacating.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	blockManager.createBlock(256);
+	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
+	tree.insert([], 1);
+	tree.insert([], 2);
+	tree.vacate();
+	let observed = Array.from(tree).sort();
+	let expected = [] as Array<number>;
+	assert.array.equals(observed, expected);
 });
 
 test(`It should support inserting values with a key already inserted being a prefix for the key.`, async (assert) => {
