@@ -32,6 +32,9 @@ class WritableStoreManager {
     async update(...parameters) {
         return this.storeManager.update(...parameters);
     }
+    async vacate(...parameters) {
+        return this.storeManager.vacate(...parameters);
+    }
 }
 exports.WritableStoreManager = WritableStoreManager;
 ;
@@ -192,6 +195,9 @@ class IndexManager {
         this.tree.remove(oldKeys);
         this.tree.insert(newKeys, bid);
     }
+    vacate() {
+        this.tree.vacate();
+    }
 }
 exports.IndexManager = IndexManager;
 ;
@@ -323,6 +329,15 @@ class StoreManager {
         catch (error) { }
         return this.insert(record);
     }
+    vacate() {
+        for (let bid of this.table) {
+            this.blockManager.deleteBlock(bid);
+        }
+        for (let indexManager of this.indexManagers) {
+            indexManager.vacate();
+        }
+        this.table.vacate();
+    }
     static construct(blockManager, options) {
         let fields = options.fields;
         let keys = options.keys;
@@ -427,6 +442,9 @@ class OverridableWritableStore {
     }
     async update(...parameters) {
         return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
+    }
+    async vacate(...parameters) {
+        return this.overrides.vacate?.(...parameters) ?? this.storeManager.vacate(...parameters);
     }
 }
 exports.OverridableWritableStore = OverridableWritableStore;

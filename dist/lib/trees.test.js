@@ -545,6 +545,9 @@ function getKeyFromString(string) {
     await assert.throws(async () => {
         Array.from(tree.filter("=", []));
     });
+    await assert.throws(async () => {
+        tree.vacate();
+    });
 });
 (0, test_1.test)(`It should support inserting values not prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -609,6 +612,17 @@ function getKeyFromString(string) {
     assert.true(tree.lookup([]) === 1);
     tree.remove([]);
     assert.true(tree.lookup([]) == null);
+});
+(0, test_1.test)(`It should support vacating.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    blockManager.createBlock(256);
+    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    tree.insert([], 1);
+    tree.insert([], 2);
+    tree.vacate();
+    let observed = Array.from(tree).sort();
+    let expected = [];
+    assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support inserting values with a key already inserted being a prefix for the key.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));

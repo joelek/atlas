@@ -11,6 +11,7 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
     lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
     remove(keysRecord: KeysRecord<A, B>): Promise<void>;
     update(keysRecord: KeysRecord<A, B>): Promise<void>;
+    vacate(): Promise<void>;
 }
 export declare type WritableStores<A> = {
     [B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? WritableStore<C, D> : A[B];
@@ -30,6 +31,7 @@ export declare class WritableStoreManager<A extends Record, B extends RequiredKe
     lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]>;
     remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]>;
     update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]>;
+    vacate(...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]>;
 }
 export declare class FilteredStore<A extends Record> {
     private recordManager;
@@ -57,6 +59,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void;
+    vacate(): void;
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
@@ -76,6 +79,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(keysRecord: KeysRecord<A, B>): void;
+    vacate(): void;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
         fields: Fields<A>;
         keys: [...B];
@@ -119,4 +123,5 @@ export declare class OverridableWritableStore<A extends Record, B extends Requir
     lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]>;
     remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]>;
     update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]>;
+    vacate(...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]>;
 }

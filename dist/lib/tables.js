@@ -220,11 +220,6 @@ class Table {
             }
         }
     }
-    clear() {
-        this.blockManager.clearBlock(this.header.table.value());
-        this.header.count.value(0);
-        this.header.write(this.blockManager.makeWritable(this.bid), 0);
-    }
     delete() {
         this.blockManager.deleteBlock(this.header.table.value());
         this.blockManager.deleteBlock(this.bid);
@@ -264,6 +259,11 @@ class Table {
         this.propagateBackwards(slotIndex);
         this.resizeIfNecessary();
         return true;
+    }
+    vacate() {
+        this.blockManager.clearBlock(this.header.table.value());
+        this.header.count.value(0);
+        this.header.write(this.blockManager.makeWritable(this.bid), 0);
     }
     static LENGTH = HashTableHeader.LENGTH;
 }

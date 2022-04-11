@@ -758,3 +758,25 @@ const tables_1 = require("./tables");
     users.insert(record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), []);
 });
+(0, test_1.test)(`It should support vacating.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField("")
+        },
+        keys: ["key"],
+        indices: [
+            new stores_1.Index(["key"])
+        ]
+    });
+    users.insert({
+        key: "A"
+    });
+    users.insert({
+        key: "B"
+    });
+    users.vacate();
+    let observed = Array.from(users).map((entry) => entry.key);
+    let expected = [];
+    assert.array.equals(observed, expected);
+});

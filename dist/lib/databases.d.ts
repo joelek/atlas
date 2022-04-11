@@ -12,6 +12,7 @@ export declare class DatabaseManager<A extends StoreManagers<any>, B extends Lin
     private linksWhereStoreIsChild;
     private doInsert;
     private doRemove;
+    private doVacate;
     private getLinksWhereStoreIsParent;
     private getLinksWhereStoreIsChild;
     constructor(storeManagers: A, linkManagers: B, queryManagers: C);

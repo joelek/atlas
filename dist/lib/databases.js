@@ -47,6 +47,17 @@ class DatabaseManager {
             }
         }
     }
+    doVacate(storeManager, orphans) {
+        if (storeManager.length() > 0) {
+            storeManager.vacate();
+            for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+                this.doVacate(linkManager.getChild(), linkManager.filter());
+            }
+        }
+        for (let orphan of orphans) {
+            storeManager.insert(orphan);
+        }
+    }
     getLinksWhereStoreIsParent(storeManager) {
         let set = this.linksWhereStoreIsParent.get(storeManager);
         if (set == null) {
@@ -96,7 +107,8 @@ class DatabaseManager {
             let storeManager = this.storeManagers[key];
             writableStores[key] = new stores_1.OverridableWritableStore(storeManager, {
                 insert: async (record) => this.doInsert(storeManager, [record]),
-                remove: async (record) => this.doRemove(storeManager, [record])
+                remove: async (record) => this.doRemove(storeManager, [record]),
+                vacate: async () => this.doVacate(storeManager, [])
             });
         }
         return writableStores;

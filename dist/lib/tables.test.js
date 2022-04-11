@@ -56,7 +56,7 @@ const DETAIL = {
     let expected = [1, 2];
     assert.array.equals(observed, expected);
 });
-(0, test_1.test)(`It should support clearing.`, async (assert) => {
+(0, test_1.test)(`It should support vacating.`, async (assert) => {
     let file = new files.VirtualFile(0);
     let blockManager = new blocks.BlockManager(file);
     let ht = new hash.Table(blockManager, DETAIL, {
@@ -64,7 +64,7 @@ const DETAIL = {
     });
     ht.insert(DETAIL.getKeyFromValue(1), 1);
     ht.insert(DETAIL.getKeyFromValue(2), 2);
-    ht.clear();
+    ht.vacate();
     let observed = Array.from(ht).sort();
     let expected = [];
     assert.array.equals(observed, expected);
@@ -100,6 +100,17 @@ const DETAIL = {
     ht.delete();
     await assert.throws(async () => {
         ht.remove(DETAIL.getKeyFromValue(1));
+    });
+});
+(0, test_1.test)(`It should throw an error when attempting to vacate after deletion.`, async (assert) => {
+    let file = new files.VirtualFile(0);
+    let blockManager = new blocks.BlockManager(file);
+    let ht = new hash.Table(blockManager, DETAIL, {
+        minimumCapacity: 2
+    });
+    ht.delete();
+    await assert.throws(async () => {
+        ht.vacate();
     });
 });
 (0, test_1.test)(`It should support inserting value one.`, async (assert) => {

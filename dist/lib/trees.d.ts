@@ -46,6 +46,7 @@ export declare class RadixTree {
     private doInsert;
     private doLocate;
     private doRemove;
+    private doVacate;
     private locate;
     constructor(blockManager: BlockManager, blockIndex: number);
     [Symbol.iterator](): Iterator<number>;
@@ -56,5 +57,6 @@ export declare class RadixTree {
     length(): number;
     lookup(keys: Array<Uint8Array>): number | undefined;
     remove(keys: Array<Uint8Array>): boolean;
+    vacate(): void;
     static readonly INITIAL_SIZE = 32;
 }

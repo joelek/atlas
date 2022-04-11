@@ -34,11 +34,11 @@ export declare class Table {
     private propagateBackwards;
     private resizeIfNecessary;
     [Symbol.iterator](): Iterator<number>;
-    clear(): void;
     delete(): void;
     insert(key: Array<Uint8Array>, value: number): boolean;
     length(): number;
     lookup(key: Array<Uint8Array>): number | undefined;
     remove(key: Array<Uint8Array>): boolean;
+    vacate(): void;
     static LENGTH: number;
 }
