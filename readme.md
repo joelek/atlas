@@ -408,7 +408,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Allow undefined values instead of nulls.
 * Implement enum types.
 * Implement structure for stores with many to many relationships.
-* Implement distinct ordered filtering.
 * Only recreate stores when referenced fields are altered, else update records.
 * Only recreate indices when referenced fields are altered.
 * Prevent transaction from storing identical redo and undo blocks.
