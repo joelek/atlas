@@ -261,3 +261,62 @@ for (let key in constructors) {
         console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
         console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`); */
 });
+(0, test_1.test)(`It should support reading with different overlaps (PagedFile).`, async (assert) => {
+    let virtual = new files.VirtualFile(0);
+    virtual.write(Uint8Array.of(1, 2, 3, 4, 5), 0);
+    for (let i = 0; i < 3; i++) {
+        let paged = new files.PagedFile(virtual, 2, i);
+        assert.binary.equals(paged.read(new Uint8Array(1), 0), Uint8Array.of(1));
+        assert.binary.equals(paged.read(new Uint8Array(1), 1), Uint8Array.of(2));
+        assert.binary.equals(paged.read(new Uint8Array(1), 2), Uint8Array.of(3));
+        assert.binary.equals(paged.read(new Uint8Array(1), 3), Uint8Array.of(4));
+        assert.binary.equals(paged.read(new Uint8Array(1), 4), Uint8Array.of(5));
+        assert.binary.equals(paged.read(new Uint8Array(2), 0), Uint8Array.of(1, 2));
+        assert.binary.equals(paged.read(new Uint8Array(2), 1), Uint8Array.of(2, 3));
+        assert.binary.equals(paged.read(new Uint8Array(2), 2), Uint8Array.of(3, 4));
+        assert.binary.equals(paged.read(new Uint8Array(2), 3), Uint8Array.of(4, 5));
+        assert.binary.equals(paged.read(new Uint8Array(3), 0), Uint8Array.of(1, 2, 3));
+        assert.binary.equals(paged.read(new Uint8Array(3), 1), Uint8Array.of(2, 3, 4));
+        assert.binary.equals(paged.read(new Uint8Array(3), 2), Uint8Array.of(3, 4, 5));
+        assert.binary.equals(paged.read(new Uint8Array(4), 0), Uint8Array.of(1, 2, 3, 4));
+        assert.binary.equals(paged.read(new Uint8Array(4), 1), Uint8Array.of(2, 3, 4, 5));
+        assert.binary.equals(paged.read(new Uint8Array(5), 0), Uint8Array.of(1, 2, 3, 4, 5));
+    }
+});
+(0, test_1.test)(`It should support writing with different overlaps (PagedFile).`, async (assert) => {
+    let virtual = new files.VirtualFile(0);
+    virtual.write(Uint8Array.of(1, 2, 3, 4, 5), 0);
+    for (let i = 0; i < 3; i++) {
+        let paged = new files.PagedFile(virtual, 2, i);
+        paged.write(Uint8Array.of(11), 0);
+        assert.binary.equals(paged.read(new Uint8Array(1), 0), Uint8Array.of(11));
+        paged.write(Uint8Array.of(12), 1);
+        assert.binary.equals(paged.read(new Uint8Array(1), 1), Uint8Array.of(12));
+        paged.write(Uint8Array.of(13), 2);
+        assert.binary.equals(paged.read(new Uint8Array(1), 2), Uint8Array.of(13));
+        paged.write(Uint8Array.of(14), 3);
+        assert.binary.equals(paged.read(new Uint8Array(1), 3), Uint8Array.of(14));
+        paged.write(Uint8Array.of(15), 4);
+        assert.binary.equals(paged.read(new Uint8Array(1), 4), Uint8Array.of(15));
+        paged.write(Uint8Array.of(21, 22), 0);
+        assert.binary.equals(paged.read(new Uint8Array(2), 0), Uint8Array.of(21, 22));
+        paged.write(Uint8Array.of(22, 23), 1);
+        assert.binary.equals(paged.read(new Uint8Array(2), 1), Uint8Array.of(22, 23));
+        paged.write(Uint8Array.of(23, 24), 2);
+        assert.binary.equals(paged.read(new Uint8Array(2), 2), Uint8Array.of(23, 24));
+        paged.write(Uint8Array.of(24, 25), 3);
+        assert.binary.equals(paged.read(new Uint8Array(2), 3), Uint8Array.of(24, 25));
+        paged.write(Uint8Array.of(31, 32, 33), 0);
+        assert.binary.equals(paged.read(new Uint8Array(3), 0), Uint8Array.of(31, 32, 33));
+        paged.write(Uint8Array.of(32, 33, 34), 1);
+        assert.binary.equals(paged.read(new Uint8Array(3), 1), Uint8Array.of(32, 33, 34));
+        paged.write(Uint8Array.of(33, 34, 35), 2);
+        assert.binary.equals(paged.read(new Uint8Array(3), 2), Uint8Array.of(33, 34, 35));
+        paged.write(Uint8Array.of(41, 42, 43, 44), 0);
+        assert.binary.equals(paged.read(new Uint8Array(4), 0), Uint8Array.of(41, 42, 43, 44));
+        paged.write(Uint8Array.of(42, 43, 44, 45), 1);
+        assert.binary.equals(paged.read(new Uint8Array(4), 1), Uint8Array.of(42, 43, 44, 45));
+        paged.write(Uint8Array.of(51, 52, 53, 54, 55), 0);
+        assert.binary.equals(paged.read(new Uint8Array(5), 0), Uint8Array.of(51, 52, 53, 54, 55));
+    }
+});
