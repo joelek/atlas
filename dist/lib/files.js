@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VirtualFile = exports.PhysicalFile = exports.DurableFile = exports.LogDeltaHeader = exports.LogHeader = exports.CachedFile = exports.File = void 0;
+exports.VirtualFile = exports.PhysicalFile = exports.PagedFile = exports.DurableFile = exports.LogDeltaHeader = exports.LogHeader = exports.CachedFile = exports.File = void 0;
 const stdlib = require("@joelek/ts-stdlib");
 const libfs = require("fs");
 const libpath = require("path");
@@ -30,8 +30,6 @@ class CachedFile extends File {
     }
     discard() {
         this.file.discard();
-        this.tree.clear();
-        this.cache.clear();
     }
     persist() {
         this.file.persist();
@@ -48,6 +46,7 @@ class CachedFile extends File {
             let overlap = Math.min(entry.value.length - distance, buffer.length);
             if (overlap > 0) {
                 buffer.set(entry.value.subarray(distance, distance + overlap), bytes);
+                this.cache.insert(entry.key, entry.value);
                 current += overlap;
                 bytes += overlap;
             }
@@ -70,6 +69,7 @@ class CachedFile extends File {
             }
             let overlap = Math.min(entry.value.length, end - current);
             buffer.set(entry.value.subarray(0, overlap), bytes);
+            this.cache.insert(entry.key, entry.value);
             current += overlap;
             bytes += overlap;
         }
@@ -120,6 +120,7 @@ class CachedFile extends File {
             let overlap = Math.min(entry.value.length - distance, buffer.length);
             if (overlap > 0) {
                 entry.value.set(buffer.subarray(bytes, bytes + overlap), distance);
+                this.cache.insert(entry.key, entry.value);
                 current += overlap;
                 bytes += overlap;
             }
@@ -138,6 +139,7 @@ class CachedFile extends File {
             }
             let overlap = Math.min(entry.value.length, end - current);
             entry.value.set(buffer.subarray(bytes, bytes + overlap), 0);
+            this.cache.insert(entry.key, entry.value);
             current += overlap;
             bytes += overlap;
         }
@@ -443,6 +445,115 @@ class DurableFile extends File {
 }
 exports.DurableFile = DurableFile;
 ;
+class PagedFile extends File {
+    file;
+    pageSizeLog2;
+    pageSize;
+    cache;
+    constructor(file, pageSizeLog2, maxPageCount) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, pageSizeLog2);
+        super();
+        this.file = file;
+        this.pageSizeLog2 = pageSizeLog2;
+        this.pageSize = 2 ** pageSizeLog2;
+        this.cache = new caches_1.Cache(undefined, maxPageCount);
+    }
+    discard() {
+        this.file.discard();
+    }
+    persist() {
+        this.file.persist();
+    }
+    read(buffer, offset) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, offset);
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(0, buffer.length, this.size() - offset);
+        if (buffer.length === 0) {
+            return buffer;
+        }
+        let firstByte = offset;
+        let lastByte = offset + buffer.length - 1;
+        let firstPageIndex = firstByte >> this.pageSizeLog2;
+        let lastPageIndex = lastByte >> this.pageSizeLog2;
+        let firstPageOffset = firstByte & (this.pageSize - 1);
+        let lastPageOffset = (lastByte & (this.pageSize - 1)) + 1;
+        let bytes = 0;
+        for (let pageIndex = firstPageIndex; pageIndex <= lastPageIndex; pageIndex++) {
+            let pageOffset = pageIndex === firstPageIndex ? firstPageOffset : 0;
+            let pageLength = (pageIndex === lastPageIndex ? lastPageOffset : this.pageSize) - pageOffset;
+            let page = this.cache.lookup(pageIndex);
+            if (page == null) {
+                let readOffset = pageIndex << this.pageSizeLog2;
+                let readLength = Math.min(this.size() - readOffset, this.pageSize);
+                page = new Uint8Array(readLength);
+                this.file.read(page, readOffset);
+            }
+            this.cache.insert(pageIndex, page);
+            buffer.set(page.subarray(pageOffset, pageOffset + pageLength), bytes);
+            bytes += pageLength;
+        }
+        return buffer;
+    }
+    resize(size) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, size);
+        let currentSize = this.size();
+        if (size === currentSize) {
+            return;
+        }
+        this.file.resize(size);
+        if (size === 0) {
+            this.cache.clear();
+            return;
+        }
+        let firstByte = Math.min(size, currentSize);
+        let lastByte = Math.max(size, currentSize) - 1;
+        let firstPageIndex = firstByte >> this.pageSizeLog2;
+        let lastPageIndex = lastByte >> this.pageSizeLog2;
+        for (let pageIndex = firstPageIndex; pageIndex <= lastPageIndex; pageIndex++) {
+            this.cache.remove(pageIndex);
+        }
+    }
+    size() {
+        return this.file.size();
+    }
+    write(buffer, offset) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, offset);
+        if (buffer.length === 0) {
+            return buffer;
+        }
+        this.file.write(buffer, offset);
+        let firstByte = offset;
+        let lastByte = offset + buffer.length - 1;
+        let firstPageIndex = firstByte >> this.pageSizeLog2;
+        let lastPageIndex = lastByte >> this.pageSizeLog2;
+        let firstPageOffset = firstByte & (this.pageSize - 1);
+        let lastPageOffset = (lastByte & (this.pageSize - 1)) + 1;
+        let bytes = 0;
+        for (let pageIndex = firstPageIndex; pageIndex <= lastPageIndex; pageIndex++) {
+            let pageOffset = pageIndex === firstPageIndex ? firstPageOffset : 0;
+            let pageLength = (pageIndex === lastPageIndex ? lastPageOffset : this.pageSize) - pageOffset;
+            let page = this.cache.lookup(pageIndex);
+            if (page != null) {
+                let readOffset = pageIndex << this.pageSizeLog2;
+                let readLength = Math.min(this.size() - readOffset, this.pageSize);
+                if (page.length !== readLength) {
+                    page = new Uint8Array(readLength);
+                    this.file.read(page, readOffset);
+                }
+                page.set(buffer.subarray(bytes, bytes + pageLength), pageOffset);
+                this.cache.insert(pageIndex, page);
+            }
+            bytes += pageLength;
+        }
+        return buffer;
+    }
+}
+exports.PagedFile = PagedFile;
+;
 class PhysicalFile extends File {
     fd;
     currentSize;
@@ -457,6 +568,12 @@ class PhysicalFile extends File {
     }
     discard() {
         throw `Expected discard() to be delegated to another implementation!`;
+    }
+    hint() {
+        let pageSizeLog2 = Math.log2(libfs.fstatSync(this.fd).blksize);
+        return {
+            pageSizeLog2
+        };
     }
     persist() {
         libfs.fsyncSync(this.fd);

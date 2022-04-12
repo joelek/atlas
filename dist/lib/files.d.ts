@@ -58,11 +58,27 @@ export declare class DurableFile extends File {
     size(): number;
     write(buffer: Uint8Array, offset: number): Uint8Array;
 }
+export declare class PagedFile extends File {
+    private file;
+    private pageSizeLog2;
+    private pageSize;
+    private cache;
+    constructor(file: File, pageSizeLog2: number, maxPageCount?: number);
+    discard(): void;
+    persist(): void;
+    read(buffer: Uint8Array, offset: number): Uint8Array;
+    resize(size: number): void;
+    size(): number;
+    write(buffer: Uint8Array, offset: number): Uint8Array;
+}
 export declare class PhysicalFile extends File {
     private fd;
     private currentSize;
     constructor(filename: string, clear?: boolean);
     discard(): void;
+    hint(): {
+        pageSizeLog2: number;
+    };
     persist(): void;
     read(buffer: Uint8Array, offset: number): Uint8Array;
     resize(size: number): void;
