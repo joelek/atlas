@@ -3,7 +3,7 @@ import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from 
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
-import { CachedFile, DurableFile, File, PhysicalFile } from "./files";
+import { DurableFile, File, PagedFile, PhysicalFile } from "./files";
 import { Database, DatabaseManager } from "./databases";
 import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
@@ -128,9 +128,9 @@ export class Context {
 	}
 
 	private createFile(path: string): File {
-		let bin = new CachedFile(new PhysicalFile(`${path}.bin`), 64 * 1024 * 1024);
-		let log = new CachedFile(new PhysicalFile(`${path}.log`), 64 * 1024 * 1024);
-		let file = new DurableFile(bin, log);
+		let bin = new PhysicalFile(`${path}.bin`);
+		let log = new PhysicalFile(`${path}.log`);
+		let file = new DurableFile(new PagedFile(bin, bin.hint().pageSizeLog2, 16384), new PagedFile(log, log.hint().pageSizeLog2, 16384));
 		return file;
 	}
 
