@@ -596,6 +596,13 @@ export class PhysicalFile extends File {
 		throw `Expected discard() to be delegated to another implementation!`;
 	}
 
+	hint(): { pageSizeLog2: number } {
+		let pageSizeLog2 = Math.log2(libfs.fstatSync(this.fd).blksize);
+		return {
+			pageSizeLog2
+		};
+	}
+
 	persist(): void {
 		libfs.fsyncSync(this.fd);
 	}
