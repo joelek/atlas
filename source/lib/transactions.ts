@@ -58,6 +58,10 @@ export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
 	update(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
 		return queue.enqueueWritableOperation(() => this.store.update(...parameters));
 	}
+
+	vacate(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]> {
+		return queue.enqueueWritableOperation(() => this.store.vacate(...parameters));
+	}
 };
 
 export type TransactionalStoresFromWritableStores<A extends WritableStores<any>> = {
