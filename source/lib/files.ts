@@ -53,6 +53,7 @@ export class CachedFile extends File {
 			let overlap = Math.min(entry.value.length - distance, buffer.length);
 			if (overlap > 0) {
 				buffer.set(entry.value.subarray(distance, distance + overlap), bytes);
+				this.cache.insert(entry.key, entry.value);
 				current += overlap;
 				bytes += overlap;
 			}
@@ -75,6 +76,7 @@ export class CachedFile extends File {
 			}
 			let overlap = Math.min(entry.value.length, end - current);
 			buffer.set(entry.value.subarray(0, overlap), bytes);
+			this.cache.insert(entry.key, entry.value);
 			current += overlap;
 			bytes += overlap;
 		}
@@ -126,6 +128,7 @@ export class CachedFile extends File {
 			let overlap = Math.min(entry.value.length - distance, buffer.length);
 			if (overlap > 0) {
 				entry.value.set(buffer.subarray(bytes, bytes + overlap), distance);
+				this.cache.insert(entry.key, entry.value);
 				current += overlap;
 				bytes += overlap;
 			}
@@ -144,6 +147,7 @@ export class CachedFile extends File {
 			}
 			let overlap = Math.min(entry.value.length, end - current);
 			entry.value.set(buffer.subarray(bytes, bytes + overlap), 0);
+			this.cache.insert(entry.key, entry.value);
 			current += overlap;
 			bytes += overlap;
 		}
