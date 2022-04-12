@@ -36,8 +36,6 @@ export class CachedFile extends File {
 
 	discard(): void {
 		this.file.discard();
-		this.tree.clear();
-		this.cache.clear();
 	}
 
 	persist(): void {
