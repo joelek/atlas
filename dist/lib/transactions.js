@@ -46,6 +46,9 @@ class TransactionalStore {
     update(queue, ...parameters) {
         return queue.enqueueWritableOperation(() => this.store.update(...parameters));
     }
+    vacate(queue, ...parameters) {
+        return queue.enqueueWritableOperation(() => this.store.vacate(...parameters));
+    }
 }
 exports.TransactionalStore = TransactionalStore;
 ;
