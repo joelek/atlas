@@ -228,27 +228,55 @@ test(`It should fill the entire buffer when reading from the file (DurableFile).
 });
 
 test(`It should endure through multiple transactions and thousands of operations (DurableFile).`, async (assert) => {
-	let bin = new files.CachedFile(new files.PhysicalFile("./private/endurance.bin"), 64);
-	let log = new files.CachedFile(new files.PhysicalFile("./private/endurance.log"), 64);
+	let bin = new files.PagedFile(new files.PhysicalFile("./private/endurance.bin"), Math.log2(4096), 4);
+	let log = new files.PagedFile(new files.PhysicalFile("./private/endurance.log"), Math.log2(4096), 4);
 	let durable = new files.DurableFile(bin, log);
+	let readTime = 0;
+	let timesRead = 0;
+	let writeTime = 0;
+	let timesWritten = 0;
+	let resizeTime = 0;
+	let timesResized = 0;
+	let persistTime = 0;
+	let timesPersisted = 0;
 	for (let i = 0; i < 2; i++) {
 		for (let j = 0; j < 10000; j++) {
 			let action = Math.floor(Math.random() * 3);
 			if (action === 0) {
-				let length = Math.floor(Math.random() * durable.size());
+				let length = Math.floor(Math.random() * Math.min(durable.size(), 128));
 				let buffer = new Uint8Array(length);
 				let offset = Math.floor(Math.random() * (durable.size() - length));
+				let t0 = process.hrtime.bigint();
 				durable.read(buffer, offset);
+				let t1 = process.hrtime.bigint();
+				readTime += Number(t1 - t0) / 1000 / 1000;
+				timesRead += 1;
 			} else if (action === 1) {
-				let length = Math.floor(Math.random() * 64);
+				let length = Math.floor(Math.random() * 128);
 				let buffer = new Uint8Array(length);
 				let offset = Math.floor(Math.random() * durable.size());
+				let t0 = process.hrtime.bigint();
 				durable.write(buffer, offset);
+				let t1 = process.hrtime.bigint();
+				writeTime += Number(t1 - t0) / 1000 / 1000;
+				timesWritten += 1;
 			} else {
-				let size = Math.floor(Math.random() * 1024);
+				let size = Math.floor(Math.random() * 65536);
+				let t0 = process.hrtime.bigint();
 				durable.resize(size);
+				let t1 = process.hrtime.bigint();
+				resizeTime += Number(t1 - t0) / 1000 / 1000;
+				timesResized += 1;
 			}
 		}
+		let t0 = process.hrtime.bigint();
 		durable.persist();
+		let t1 = process.hrtime.bigint();
+		persistTime += Number(t1 - t0) / 1000 / 1000;
+		timesPersisted += 1;
 	}
+/* 	console.log(`Read: ${(readTime/timesRead).toFixed(3)} ms`);
+	console.log(`Write: ${(writeTime/timesWritten).toFixed(3)} ms`);
+	console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
+	console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`); */
 });
