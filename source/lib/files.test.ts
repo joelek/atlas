@@ -4,6 +4,7 @@ import { test } from "./test";
 const constructors = {
 	CachedFile: () => new files.CachedFile(new files.VirtualFile(0)),
 	DurableFile: () => new files.DurableFile(new files.VirtualFile(0), new files.VirtualFile(0)),
+	PagedFile: () => new files.PagedFile(new files.VirtualFile(0), Math.log2(4096)),
 	PhysicalFile: () => new files.PhysicalFile("./private/test.bin", true),
 	VirtualFile: () => new files.VirtualFile(0)
 };
