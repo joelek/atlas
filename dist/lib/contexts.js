@@ -91,9 +91,9 @@ class Context {
         return order;
     }
     createFile(path) {
-        let bin = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.bin`), 64 * 1024 * 1024);
-        let log = new files_1.CachedFile(new files_1.PhysicalFile(`${path}.log`), 64 * 1024 * 1024);
-        let file = new files_1.DurableFile(bin, log);
+        let bin = new files_1.PhysicalFile(`${path}.bin`);
+        let log = new files_1.PhysicalFile(`${path}.log`);
+        let file = new files_1.DurableFile(new files_1.PagedFile(bin, bin.hint().pageSizeLog2, 16384), new files_1.PagedFile(log, log.hint().pageSizeLog2, 16384));
         return file;
     }
     constructor() {
