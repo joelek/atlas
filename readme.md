@@ -412,3 +412,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Only recreate indices when referenced fields are altered.
 * Prevent transaction from storing identical redo and undo blocks.
 * Improve DurableFile by keeping all log entry headers in memory.
+* Consider making WAL page-based.
