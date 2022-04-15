@@ -257,7 +257,7 @@ let links = transactionManager.createTransactionalLinks();
 let queries = transactionManager.createTransactionalQueries();
 ```
 
-A transaction with write access will be provided with write access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file if and only if all operations complete successfully.
+A transaction with write access will be provided with write access to all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file if and only if all operations complete successfully.
 
 ```ts
 await transactionManager.enqueueWritableTransaction(async (queue) => {
@@ -269,7 +269,7 @@ await transactionManager.enqueueWritableTransaction(async (queue) => {
 });
 ```
 
-A transaction with read access will be provided with read access objects for all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue.
+A transaction with read access will be provided with read access to all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue.
 
 ```ts
 let user = await transactionManager.enqueueReadableTransaction(async (queue) => {
@@ -279,7 +279,7 @@ let user = await transactionManager.enqueueReadableTransaction(async (queue) => 
 });
 ```
 
-Transactions with read access are executed in `parallel` whereas transactions with write access are executed in `serial`. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
+Transactions with read access are executed in parallel whereas transactions with write access are executed in serial. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
 
 ### Stores
 
