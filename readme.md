@@ -103,7 +103,7 @@ context.createIncreasingOrder();
 
 ### Stores
 
-Atlas defines the store entity as an associative collection of fields coupled with a tuple of keys specifying which of those fields identify a unique record. The tuple may specify zero, one or several identifying fields and they must all be non-nullable. All fields not specified as identifying are considered metadata fields.
+Atlas defines the store entity as an associative collection of fields coupled with a sequence of keys specifying which of those fields identify a unique record. The sequence may specify zero, one or several identifying fields and they must all be non-nullable. All fields not specified as identifying are considered metadata fields.
 
 ```ts
 let users = context.createStore({
@@ -113,7 +113,9 @@ let users = context.createStore({
 }, ["user_id"]);
 ```
 
-Stores will be ordered by the identifying fields in increasing order unless explicitly specified when creating the store.
+In the example above, a store for storing user objects is created. Unique user objects will be identified through the "user_id" field whereas the "name" and "age" fields are considered metadata fields.
+
+The default order of the records in a store may be specified when the store is created.
 
 ```ts
 let users = context.createStore({
@@ -125,15 +127,19 @@ let users = context.createStore({
 });
 ```
 
+In the example above, the default order is specified as the "name" metadata field in increasing order.
+
+The default order of the records in a store will be set to the identifying fields in increasing order when left unspecified. Custom orders may be specified during operation but may result in reduced performance. It is therefore advised to use the default order whenever possible.
+
 ### Links
 
 Atlas defines the link entity as a link between a parent and a child store as well as how the keys of the parent store map to the keys of the child store. Links may be used to filter child stores for the corresponding records linked to a specific record in the parent store. Links may also be used to to lookup the parent record corresponding to a specific record in the child store.
 
-Links are used to maintain data-consistency and can be configured to allow or forbid `orphans`. Orphans are allowed only when the keys of the parent store map to nullable fields in the child store.
+Links are used to maintain data-consistency for `one to many` relationships and can be configured to allow or forbid `orphans`. Orphans are allowed only when the keys of the parent store map to nullable fields in the child store.
 
-A record that is about to be inserted into a child store is checked against its links. Insertion will be prevented whenever there is at least one link not allowing orphans and when there is no corresponding parent record in the parent store. Conversely, a record that is about to be removed from a parent store is checked against its links. Links that do not allow orphans will cause removal of all child records linked to the parent record in question. This behaviour is referred to as `cascading delete` in database terminology. Please make sure that you understand the implications of this behaviour before using Atlas in production environments.
+A record that is about to be inserted into a child store is checked against the links specified for the child store. Insertion will be prevented whenever there is at least one link not allowing orphans and when there is no corresponding parent record in the parent store. Conversely, a record that is about to be removed from a parent store is checked against the links specified for the parent store. Links that do not allow orphans will cause removal of all child records linked to the parent record in question. This behaviour is referred to as `cascading delete` in database terminology. Please make sure that you understand the implications of this behaviour before using Atlas in production environments.
 
-A link is `referencing` when the parent and child stores correspond to separate stores. A referencing link is created as shown below.
+A link is `referencing` when the parent and child stores correspond to separate stores.
 
 ```ts
 let users = context.createStore({
@@ -153,6 +159,26 @@ let userPosts = context.createLink(users, posts, {
 });
 ```
 
+In the example above, three entities are created. A store for storing user objects, a store for storing post objects and a referencing link between the two stores.
+
+A referencing link is created between the two stores as there is a one to many relationship where every user object may be linked to multiple post objects. The "users" store acts as the parent store and the "posts" store acts as the child store. The "user_id" field in the "users" store is mapped to the "post_user_id" field in the "posts" store.
+
+The link will forbid orphans as the "post_user_id" field is specified as non-nullable in the "posts" store. This implies that post objects may not be stored in the "posts" store unless there is a corresponding user object already stored in the "users" store. Furthermore, all post objects linked to a specific user object will be removed when the user object in question is removed. The removal of post objects will in turn trigger subsequent removals in stores acting as child stores with respect to the "posts" store.
+
+The default order of the child records in a link may be specified when the link is created.
+
+```ts
+let userPosts = context.createLink(users, posts, {
+	user_id: "post_user_id"
+}, {
+	title: context.createIncreasingOrder()
+});
+```
+
+In the example above, the default order is specified as the "title" metadata field in increasing order.
+
+The default order of the child records in a link will be set to the identifying fields of the child store in increasing order when left unspecified. Custom orders may be specified during operation but may result in reduced performance. It is therefore advised to use the default order whenever possible.
+
 A link is `self-referencing` when the parent and child stores correspond to the same store. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records at all into the store.
 
 ```ts
@@ -166,15 +192,9 @@ let childDirectories = context.createLink(directories, directories, {
 });
 ```
 
-The records retrieved when filtering a link will be ordered by the order of the child store unless explicitly specified.
+In the example above, two entities are created. A store for storing directory objects and a self-referencing link for the store.
 
-```ts
-let userPosts = context.createLink(users, posts, {
-	user_id: "post_user_id"
-}, {
-	title: context.createIncreasingOrder()
-});
-```
+A self-referencing link is created for the store as there is a one to many relationship where every directory object may be linked to multiple directory objects. The "directory_id" field is mapped to the "parent_directory_id" field.
 
 ### Operators
 
@@ -198,7 +218,7 @@ let getUsersByName = context.createQuery(users, {
 });
 ```
 
-The records retrieved when filtering a query will be ordered by the order of the store unless explicitly specified.
+The default order of the records in a query may be specified when the query is created.
 
 ```ts
 let getUserByName = context.createQuery(users, {
@@ -207,6 +227,10 @@ let getUserByName = context.createQuery(users, {
 	age: context.createIncreasingOrder()
 });
 ```
+
+In the example above, the default order is specified as the "age" metadata field in increasing order.
+
+The default order of the records in a query will be set to the identifying fields of the store in increasing order when left unspecified. Custom orders may be specified during operation but may result in reduced performance. It is therefore advised to use the default order whenever possible.
 
 ### Indices
 
