@@ -113,3 +113,15 @@ export class PromiseQueue {
 		}
 	}
 };
+
+export class Tokenizer {
+	private constructor() {}
+
+	static tokenize(value: string): Array<string> {
+		let normalized = value;
+		normalized = normalized.toLowerCase();
+		normalized = normalized.normalize("NFC");
+		normalized = normalized.replace(/['"`´]+/g, "");
+		return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []);
+	}
+};
