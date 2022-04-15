@@ -44,7 +44,7 @@ export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends
 		this.orders = orders;
 	}
 
-	filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Array<A> {
+	filter(parameters: C, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A> {
 		let filters = {} as FilterMap<A>;
 		for (let key in this.operators) {
 			filters[key] = this.operators[key].createFilter(parameters[key]) as any;
@@ -53,7 +53,7 @@ export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends
 		for (let key in this.orders) {
 			orders[key] = this.orders[key] as any;
 		}
-		return this.storeManager.filter(filters, orders, anchor, limit);
+		return this.storeManager.filter(filters, orders, anchorKeysRecord, limit);
 	}
 };
 

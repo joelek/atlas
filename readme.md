@@ -291,11 +291,11 @@ Records may be inserted using the `insert(record)` method.
 
 #### Filter
 
-Records matching certain criteria may be retrieved using the `filter(filters, orders, anchor, limit)` method. The method will return all records inserted into the store when invoked without arguments.
+Records matching certain criteria may be retrieved using the `filter(filters, orders, anchorKeysRecord, limit)` method. The method will return all records inserted into the store when invoked without arguments.
 
 * The `filters` argument may be used to specify conditions that must be met for the records returned.
 * The `orders` argument may be used to specify the desired order of the records returned.
-* The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum number of records to return.
 
 Stores are usually not filtered directly but rather indirectly through links and queries.
@@ -330,10 +330,10 @@ All records inserted into a store may be vacated using the `vacate()` method.
 
 #### Filter
 
-Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchor, limit)` method. The method will return all orphaned child records when invoked without arguments.
+Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchorKeysRecord, limit)` method. The method will return all orphaned child records when invoked without arguments.
 
 * The `keysRecord` argument may be used to specify the identifying fields of the parent record in question at minimum.
-* The `anchor` argument may be used to specify the identifying fields of the last child record seen at minimum. The first record returned will be the record located directly after the anchor.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last child record seen at minimum. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum number of records to return.
 
 #### Lookup
@@ -346,10 +346,10 @@ Parent records may be looked up using the `lookup(keysRecord)` method. The metho
 
 #### Filter
 
-Records matching certain criteria may be retrieved using the `filter(parameters, anchor, limit)` method.
+Records matching certain criteria may be retrieved using the `filter(parameters, anchorKeysRecord, limit)` method.
 
 * The `parameters` argument must be used to specify the parameter values for the query.
-* The `anchor` argument may be used to specify the identifying fields of the last record seen. The first record returned will be the record located directly after the anchor.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
 * The `limit` argument may be used to specify the maximum number of records to return.
 
 ## Schema migration
