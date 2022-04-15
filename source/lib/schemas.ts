@@ -150,7 +150,6 @@ export const IndicesSchema = bedrock.codecs.Array.of(IndexSchema);
 
 export type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
 
-
 export const EqualityOperatorSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("EqualityOperator")
 });

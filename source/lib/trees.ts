@@ -650,9 +650,9 @@ export class RadixTree {
 		return this.doLocate(nibbles.slice(1), this.blockIndex, nibbles[0] ?? []);
 	}
 
-	constructor(blockManager: BlockManager, blockIndex: number) {
+	constructor(blockManager: BlockManager, blockIndex?: number) {
 		this.blockManager = blockManager;
-		this.blockIndex = blockIndex;
+		this.blockIndex = blockIndex ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
 	}
 
 	* [Symbol.iterator](): Iterator<number> {

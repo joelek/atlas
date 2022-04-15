@@ -147,19 +147,16 @@ export class FilteredStore<A extends Record> {
 export class IndexManager<A extends Record, B extends Keys<A>> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
-	private bid: number;
 	private keys: [...B];
 	private tree: RadixTree;
 
 	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: [...B], options?: {
 		bid?: number
 	}) {
-		let bid = options?.bid ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
 		this.recordManager = recordManager;
 		this.blockManager = blockManager;
-		this.bid = bid;
 		this.keys = keys;
-		this.tree = new RadixTree(blockManager, bid);
+		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
