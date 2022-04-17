@@ -129,7 +129,7 @@ let users = context.createStore({
 
 In the example above, the default order is specified as the "name" metadata field in increasing order.
 
-The default order of the records in a store will be set to the identifying fields in increasing order when left unspecified. Custom orders may be specified during operation but may result in reduced performance. It is therefore advised to use the default order whenever possible.
+The default order of the records in a store will be set to the identifying fields in increasing order when left unspecified. Custom orders may be used during operation but can result in reduced performance when involving other fields. It is advised to use the default order whenever possible.
 
 ### Links
 
@@ -138,6 +138,8 @@ Atlas defines the link entity as a link between a parent and a child store as we
 Links are used to maintain data-consistency for `one to many` relationships and can be configured to allow or forbid `orphans`. Orphans are allowed only when the keys of the parent store map to nullable fields in the child store.
 
 A record that is about to be inserted into a child store is checked against the links specified for the child store. Insertion will be prevented whenever there is at least one link not allowing orphans and when there is no corresponding parent record in the parent store. Conversely, a record that is about to be removed from a parent store is checked against the links specified for the parent store. Links that do not allow orphans will cause removal of all child records linked to the parent record in question. This behaviour is referred to as `cascading delete` in database terminology. Please make sure that you understand the implications of this behaviour before using Atlas in production environments.
+
+#### Referencing links
 
 A link is `referencing` when the parent and child stores correspond to separate stores.
 
@@ -177,7 +179,9 @@ let userPosts = context.createLink(users, posts, {
 
 In the example above, the default order is specified as the "title" metadata field in increasing order.
 
-The default order of the child records in a link will be set to the identifying fields of the child store in increasing order when left unspecified. Custom orders may be specified during operation but may result in reduced performance. It is therefore advised to use the default order whenever possible.
+The default order of the child records in a link will be set to the identifying fields of the child store in increasing order when left unspecified. Custom orders may be used during operation but can result in reduced performance when involving other fields. It is advised to use the default order whenever possible.
+
+#### Self-referencing links
 
 A link is `self-referencing` when the parent and child stores correspond to the same store. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records at all into the store.
 
@@ -230,7 +234,7 @@ let getUserByName = context.createQuery(users, {
 
 In the example above, the default order is specified as the "age" metadata field in increasing order.
 
-The default order of the records in a query will be set to the identifying fields of the store in increasing order when left unspecified. Custom orders may be specified during operation but may result in reduced performance. It is therefore advised to use the default order whenever possible.
+The default order of the records in a query will be set to the identifying fields of the store in increasing order when left unspecified. Custom orders may be used during operation but can result in reduced performance when involving other fields. It is advised to use the default order whenever possible.
 
 ### Indices
 
