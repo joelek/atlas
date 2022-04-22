@@ -458,7 +458,7 @@ test(`It should update indices on insert.`, async (assert) => {
 		}
 	});
 	let index = new IndexManager(recordManager, blockManager, ["name"]);
-	let users = new StoreManager(blockManager, fields, keys, {}, table, [index]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [index], []);
 	users.insert({
 		user_id: "User 1",
 		name: "Name 1"
@@ -484,7 +484,7 @@ test(`It should update indices on update.`, async (assert) => {
 		}
 	});
 	let index = new IndexManager(recordManager, blockManager, ["name"]);
-	let users = new StoreManager(blockManager, fields, keys, {}, table, [index]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [index], []);
 	users.insert({
 		user_id: "User 1",
 		name: "Name 1"
@@ -514,7 +514,7 @@ test(`It should update indices on remove.`, async (assert) => {
 		}
 	});
 	let index = new IndexManager(recordManager, blockManager, ["name"]);
-	let users = new StoreManager(blockManager, fields, keys, {}, table, [index]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [index], []);
 	users.insert({
 		user_id: "User 1",
 		name: "Name 1"
@@ -543,18 +543,18 @@ test(`It should use the optimal index when filtering with filters.`, async (asse
 		}
 	});
 	let indexOne = new IndexManager(recordManager, blockManager, ["user_id"]);
-	let usersOne = new StoreManager(blockManager, fields, keys, {}, table, [indexOne]);
+	let usersOne = new StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
 	usersOne.insert({
 		user_id: "User 1",
 		name: "Name"
 	});
 	let indexTwo = new IndexManager(recordManager, blockManager, ["name", "user_id"]);
-	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo]);
+	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
 	usersTwo.insert({
 		user_id: "User 2",
 		name: "Name"
 	});
-	let users = new StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
 	let iterable = users.filter({
 		name: new EqualityFilter("Name")
 	});
@@ -579,18 +579,18 @@ test(`It should use the optimal index when filtering with filters and orders`, a
 		}
 	});
 	let indexOne = new IndexManager(recordManager, blockManager, ["user_id"]);
-	let usersOne = new StoreManager(blockManager, fields, keys, {}, table, [indexOne]);
+	let usersOne = new StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
 	usersOne.insert({
 		user_id: "User 1",
 		name: "Name"
 	});
 	let indexTwo = new IndexManager(recordManager, blockManager, ["name", "user_id"]);
-	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo]);
+	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
 	usersTwo.insert({
 		user_id: "User 2",
 		name: "Name"
 	});
-	let users = new StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
 	let iterable = users.filter({
 		name: new EqualityFilter("Name")
 	});
@@ -776,7 +776,7 @@ test(`It should prevent identical records from being re-indexed.`, async (assert
 		}
 	});
 	let index = new IndexManager(recordManager, blockManager, ["user_id"]);
-	let users = new StoreManager(blockManager, fields, keys, {}, table, [index]);
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [index], []);
 	let record = {
 		user_id: "User 1",
 		name: "Name2"

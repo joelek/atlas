@@ -385,7 +385,7 @@ export class SchemaManager {
 		let indexManagers = oldSchema.indices.map((indexSchema) => {
 			return this.loadIndexManager(recordManager, blockManager, indexSchema);
 		});
-		return new StoreManager(blockManager, fields, keys, orders, storage, indexManagers);
+		return new StoreManager(blockManager, fields, keys, orders, storage, indexManagers, []);
 	}
 
 	private loadLinkManager(blockManager: BlockManager, linkSchema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
