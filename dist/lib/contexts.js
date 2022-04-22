@@ -165,15 +165,15 @@ class Context {
         this.fields.set(reference, field);
         return reference;
     }
-    createStringField() {
+    createStringField(options) {
         let reference = new FieldReference();
-        let field = new records_1.StringField("");
+        let field = new records_1.StringField("", options?.searchable);
         this.fields.set(reference, field);
         return reference;
     }
-    createNullableStringField() {
+    createNullableStringField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableStringField(null);
+        let field = new records_1.NullableStringField(null, options?.searchable);
         this.fields.set(reference, field);
         return reference;
     }

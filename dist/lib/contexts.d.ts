@@ -77,8 +77,12 @@ export declare class Context {
     createNullableIntegerField(): FieldReference<NullableIntegerField>;
     createNumberField(): FieldReference<NumberField>;
     createNullableNumberField(): FieldReference<NullableNumberField>;
-    createStringField(): FieldReference<StringField>;
-    createNullableStringField(): FieldReference<NullableStringField>;
+    createStringField(options?: {
+        searchable: boolean;
+    }): FieldReference<StringField>;
+    createNullableStringField(options?: {
+        searchable: boolean;
+    }): FieldReference<NullableStringField>;
     createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E>;
     createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B>;
     createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>, orderReferences?: OrderReferences<D>): QueryReference<A, B, C, D>;

@@ -14,3 +14,7 @@ export declare class PromiseQueue {
     close(): void;
     enqueue<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A>;
 }
+export declare class Tokenizer {
+    private constructor();
+    static tokenize(value: string): Array<string>;
+}

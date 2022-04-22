@@ -678,7 +678,7 @@ class RadixTree {
     }
     constructor(blockManager, blockIndex) {
         this.blockManager = blockManager;
-        this.blockIndex = blockIndex;
+        this.blockIndex = blockIndex ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
     }
     *[Symbol.iterator]() {
         yield* this.filter("^=", []);

@@ -25,7 +25,7 @@ export declare class QueryManager<A extends Record, B extends RequiredKeys<A>, C
     private operators;
     private orders;
     constructor(storeManager: StoreManager<A, B>, operators: Operators<C>, orders: Orders<D>);
-    filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Array<A>;
+    filter(parameters: C, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
 }
 export declare type QueryManagers<A> = {
     [B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? QueryManager<C, D, E, F> : A[B];

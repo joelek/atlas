@@ -18,9 +18,11 @@ export declare type KeysRecordMap<A extends Record, B extends Keys<A>, C extends
 export declare abstract class Field<A extends Value> {
     protected codec: bedrock.codecs.Codec<A>;
     protected defaultValue: A;
-    constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A);
+    protected searchable?: boolean;
+    constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A, searchable?: boolean);
     getCodec(): bedrock.codecs.Codec<A>;
     getDefaultValue(): A;
+    getSearchable(): boolean | undefined;
 }
 export declare type Fields<A extends Record> = {
     [B in keyof A]: Field<A[B]>;
@@ -56,10 +58,10 @@ export declare class NullableNumberField extends Field<number | null> {
     constructor(defaultValue: number | null);
 }
 export declare class StringField extends Field<string> {
-    constructor(defaultValue: string);
+    constructor(defaultValue: string, searchable?: boolean);
 }
 export declare class NullableStringField extends Field<string | null> {
-    constructor(defaultValue: string | null);
+    constructor(defaultValue: string | null, searchable?: boolean);
 }
 export declare class RecordManager<A extends Record> {
     private fields;

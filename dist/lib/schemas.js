@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.SearchIndicesSchema = exports.SearchIndexSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const databases_1 = require("./databases");
 const tables_1 = require("./tables");
@@ -55,10 +55,14 @@ exports.NullableNumberFieldSchema = bedrock.codecs.Object.of({
 exports.StringFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("StringField"),
     defaultValue: bedrock.codecs.String
+}, {
+    searchable: bedrock.codecs.Boolean
 });
 exports.NullableStringFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("NullableStringField"),
     defaultValue: bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null)
+}, {
+    searchable: bedrock.codecs.Boolean
 });
 exports.FieldSchema = bedrock.codecs.Union.of(exports.BigIntFieldSchema, exports.NullableBigIntFieldSchema, exports.BinaryFieldSchema, exports.NullableBinaryFieldSchema, exports.BooleanFieldSchema, exports.NullableBooleanFieldSchema, exports.IntegerFieldSchema, exports.NullableIntegerFieldSchema, exports.NumberFieldSchema, exports.NullableNumberFieldSchema, exports.StringFieldSchema, exports.NullableStringFieldSchema);
 exports.FieldsSchema = bedrock.codecs.Record.of(exports.FieldSchema);
@@ -90,13 +94,19 @@ exports.KeyOrderSchema = bedrock.codecs.Object.of({
 });
 exports.KeyOrdersSchema = bedrock.codecs.Array.of(exports.KeyOrderSchema);
 exports.KeysMapSchema = bedrock.codecs.Record.of(bedrock.codecs.String);
+exports.SearchIndexSchema = bedrock.codecs.Object.of({
+    key: bedrock.codecs.String,
+    bid: bedrock.codecs.Integer
+});
+exports.SearchIndicesSchema = bedrock.codecs.Array.of(exports.SearchIndexSchema);
 exports.StoreSchema = bedrock.codecs.Object.of({
     version: bedrock.codecs.Integer,
     fields: exports.FieldsSchema,
     keys: exports.KeysSchema,
     orders: exports.KeyOrdersSchema,
     indices: exports.IndicesSchema,
-    storageBid: bedrock.codecs.Integer
+    storageBid: bedrock.codecs.Integer,
+    searchIndices: exports.SearchIndicesSchema
 });
 exports.StoresSchema = bedrock.codecs.Record.of(exports.StoreSchema);
 exports.LinkSchema = bedrock.codecs.Object.of({
@@ -180,10 +190,10 @@ class SchemaManager {
             return new records_1.NullableNumberField(fieldSchema.defaultValue);
         }
         if (isSchemaCompatible(exports.StringFieldSchema, fieldSchema)) {
-            return new records_1.StringField(fieldSchema.defaultValue);
+            return new records_1.StringField(fieldSchema.defaultValue, fieldSchema.searchable);
         }
         if (isSchemaCompatible(exports.NullableStringFieldSchema, fieldSchema)) {
-            return new records_1.NullableStringField(fieldSchema.defaultValue);
+            return new records_1.NullableStringField(fieldSchema.defaultValue, fieldSchema.searchable);
         }
         throw `Expected code to be unreachable!`;
     }
@@ -205,6 +215,11 @@ class SchemaManager {
     loadIndexManager(recordManager, blockManager, indexSchema) {
         return new stores_1.IndexManager(recordManager, blockManager, indexSchema.keys, {
             bid: indexSchema.bid
+        });
+    }
+    loadSearchIndexManager(recordManager, blockManager, searchIndexSchema) {
+        return new stores_1.SearchIndexManagerV1(recordManager, blockManager, searchIndexSchema.key, {
+            bid: searchIndexSchema.bid
         });
     }
     loadRecordManager(blockManager, fieldsSchema) {
@@ -237,7 +252,10 @@ class SchemaManager {
         let indexManagers = oldSchema.indices.map((indexSchema) => {
             return this.loadIndexManager(recordManager, blockManager, indexSchema);
         });
-        return new stores_1.StoreManager(blockManager, fields, keys, orders, storage, indexManagers);
+        let searchIndexManagers = oldSchema.searchIndices.map((searchIndexSchema) => {
+            return this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema);
+        });
+        return new stores_1.StoreManager(blockManager, fields, keys, orders, storage, indexManagers, searchIndexManagers);
     }
     loadLinkManager(blockManager, linkSchema, storeManagers) {
         let parent = storeManagers[linkSchema.parent];
@@ -410,6 +428,9 @@ class SchemaManager {
     compareIndex(index, oldSchema) {
         return this.compareKeys(oldSchema.keys, index.keys);
     }
+    compareSearchIndex(searchIndex, oldSchema) {
+        return oldSchema.key === searchIndex.key;
+    }
     compareStore(store, oldSchema) {
         if (!this.compareKeys(store.keys, oldSchema.keys)) {
             return false;
@@ -502,13 +523,15 @@ class SchemaManager {
         if (field instanceof records_1.StringField) {
             return {
                 type: "StringField",
-                defaultValue: field.getDefaultValue()
+                defaultValue: field.getDefaultValue(),
+                searchable: field.getSearchable()
             };
         }
         if (field instanceof records_1.NullableStringField) {
             return {
                 type: "NullableStringField",
-                defaultValue: field.getDefaultValue()
+                defaultValue: field.getDefaultValue(),
+                searchable: field.getSearchable()
             };
         }
         throw `Expected code to be unreachable!`;
@@ -516,6 +539,13 @@ class SchemaManager {
     createIndex(blockManager, index) {
         let schema = {
             keys: index.keys,
+            bid: blockManager.createBlock(trees_1.RadixTree.INITIAL_SIZE)
+        };
+        return schema;
+    }
+    createSearchIndex(blockManager, searchIndex) {
+        let schema = {
+            key: searchIndex.key,
             bid: blockManager.createBlock(trees_1.RadixTree.INITIAL_SIZE)
         };
         return schema;
@@ -532,12 +562,17 @@ class SchemaManager {
         for (let index of store.indices) {
             indices.push(this.createIndex(blockManager, index));
         }
+        let searchIndices = [];
+        for (let searchIndex of store.searchIndices) {
+            searchIndices.push(this.createSearchIndex(blockManager, searchIndex));
+        }
         let schema = {
             version,
             fields,
             keys,
             orders,
             indices,
+            searchIndices,
             storageBid: blockManager.createBlock(tables_1.Table.LENGTH)
         };
         return schema;
@@ -548,6 +583,10 @@ class SchemaManager {
     deleteIndex(blockManager, indexSchema, fieldsSchema) {
         let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
         this.loadIndexManager(recordManager, blockManager, indexSchema).delete();
+    }
+    deleteSearchIndex(blockManager, searchIndexSchema, fieldsSchema) {
+        let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
+        this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema).delete();
     }
     updateStore(blockManager, store, oldSchema) {
         if (this.compareStore(store, oldSchema)) {
@@ -586,11 +625,47 @@ class SchemaManager {
                 }
                 this.deleteIndex(blockManager, indexSchema, oldSchema.fields);
             }
+            let searchIndices = [];
+            newIndices: for (let searchIndex of store.searchIndices) {
+                oldIndices: for (let searchIndexSchema of oldSchema.searchIndices) {
+                    if (this.compareSearchIndex(searchIndex, searchIndexSchema)) {
+                        searchIndices.push(searchIndexSchema);
+                        continue newIndices;
+                    }
+                }
+                let recordManager = this.loadRecordManager(blockManager, oldSchema.fields);
+                let searchIndexSchema = this.createSearchIndex(blockManager, searchIndex);
+                let searchIndexManager = this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema);
+                let storage = new tables_1.Table(blockManager, {
+                    getKeyFromValue: (value) => {
+                        let buffer = blockManager.readBlock(value);
+                        let record = recordManager.decode(buffer);
+                        return recordManager.encodeKeys(oldSchema.keys, record);
+                    }
+                }, {
+                    bid: oldSchema.storageBid
+                });
+                for (let bid of storage) {
+                    let buffer = blockManager.readBlock(bid);
+                    let record = recordManager.decode(buffer);
+                    searchIndexManager.insert(record, bid);
+                }
+                searchIndices.push(searchIndexSchema);
+            }
+            oldIndices: for (let searchIndexSchema of oldSchema.searchIndices) {
+                newIndices: for (let searchIndex of store.searchIndices) {
+                    if (this.compareSearchIndex(searchIndex, searchIndexSchema)) {
+                        continue oldIndices;
+                    }
+                }
+                this.deleteSearchIndex(blockManager, searchIndexSchema, oldSchema.fields);
+            }
             let orders = this.createKeyOrders(blockManager, store.orders);
             return {
                 ...oldSchema,
                 orders,
-                indices
+                indices,
+                searchIndices
             };
         }
         else {

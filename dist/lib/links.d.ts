@@ -28,7 +28,7 @@ export declare class LinkManager<A extends Record, B extends RequiredKeys<A>, C 
     constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>);
     getParent(): StoreManager<A, B>;
     getChild(): StoreManager<C, D>;
-    filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Array<C>;
+    filter(keysRecord?: KeysRecord<A, B>, anchorKeysRecord?: KeysRecord<C, D>, limit?: number): Array<C>;
     lookup(keysRecord: C | Pick<C, E[B[number]]>): A | undefined;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>): LinkManager<A, B, C, D, E>;
 }

@@ -43,6 +43,9 @@ class TransactionalStore {
     remove(queue, ...parameters) {
         return queue.enqueueWritableOperation(() => this.store.remove(...parameters));
     }
+    search(queue, ...parameters) {
+        return queue.enqueueReadableOperation(() => this.store.search(...parameters));
+    }
     update(queue, ...parameters) {
         return queue.enqueueWritableOperation(() => this.store.update(...parameters));
     }

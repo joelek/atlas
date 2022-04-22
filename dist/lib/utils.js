@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PromiseQueue = exports.Binary = void 0;
+exports.Tokenizer = exports.PromiseQueue = exports.Binary = void 0;
 const bedrock = require("@joelek/bedrock");
 const asserts = require("../mod/asserts");
 const variables_1 = require("./variables");
@@ -122,4 +122,16 @@ class PromiseQueue {
     }
 }
 exports.PromiseQueue = PromiseQueue;
+;
+class Tokenizer {
+    constructor() { }
+    static tokenize(value) {
+        let normalized = value;
+        normalized = normalized.toLowerCase();
+        normalized = normalized.normalize("NFC");
+        normalized = normalized.replace(/['"`´]+/g, "");
+        return Array.from(new Set(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []));
+    }
+}
+exports.Tokenizer = Tokenizer;
 ;

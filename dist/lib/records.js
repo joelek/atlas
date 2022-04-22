@@ -5,15 +5,20 @@ const bedrock = require("@joelek/bedrock");
 class Field {
     codec;
     defaultValue;
-    constructor(codec, defaultValue) {
+    searchable;
+    constructor(codec, defaultValue, searchable) {
         this.codec = codec;
         this.defaultValue = defaultValue;
+        this.searchable = searchable;
     }
     getCodec() {
         return this.codec;
     }
     getDefaultValue() {
         return this.defaultValue;
+    }
+    getSearchable() {
+        return this.searchable;
     }
 }
 exports.Field = Field;
@@ -89,15 +94,15 @@ class NullableNumberField extends Field {
 exports.NullableNumberField = NullableNumberField;
 ;
 class StringField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.String, defaultValue);
+    constructor(defaultValue, searchable) {
+        super(bedrock.codecs.String, defaultValue, searchable);
     }
 }
 exports.StringField = StringField;
 ;
 class NullableStringField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null), defaultValue);
+    constructor(defaultValue, searchable) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null), defaultValue, searchable);
     }
 }
 exports.NullableStringField = NullableStringField;

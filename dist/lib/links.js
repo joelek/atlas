@@ -35,14 +35,14 @@ class LinkManager {
     getChild() {
         return this.child;
     }
-    filter(keysRecord, anchor, limit) {
+    filter(keysRecord, anchorKeysRecord, limit) {
         let filters = {};
         for (let key in this.keysRecordMap) {
             let keyOne = key;
             let keyTwo = this.keysRecordMap[keyOne];
             filters[keyTwo] = new filters_1.EqualityFilter(keysRecord?.[keyOne] ?? null);
         }
-        return this.child.filter(filters, this.orders, anchor, limit);
+        return this.child.filter(filters, this.orders, anchorKeysRecord, limit);
     }
     lookup(keysRecord) {
         let parentKeysRecord = {};
