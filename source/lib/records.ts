@@ -18,10 +18,12 @@ export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record>
 export abstract class Field<A extends Value> {
 	protected codec: bedrock.codecs.Codec<A>;
 	protected defaultValue: A;
+	protected searchable?: boolean;
 
-	constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A) {
+	constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A, searchable?: boolean) {
 		this.codec = codec;
 		this.defaultValue = defaultValue;
+		this.searchable = searchable;
 	}
 
 	getCodec(): bedrock.codecs.Codec<A> {
@@ -30,6 +32,10 @@ export abstract class Field<A extends Value> {
 
 	getDefaultValue(): A {
 		return this.defaultValue;
+	}
+
+	getSearchable(): boolean | undefined {
+		return this.searchable;
 	}
 };
 
@@ -113,17 +119,17 @@ export class NullableNumberField extends Field<number | null> {
 };
 
 export class StringField extends Field<string> {
-	constructor(defaultValue: string) {
-		super(bedrock.codecs.String, defaultValue);
+	constructor(defaultValue: string, searchable?: boolean) {
+		super(bedrock.codecs.String, defaultValue, searchable);
 	}
 };
 
 export class NullableStringField extends Field<string | null> {
-	constructor(defaultValue: string | null) {
+	constructor(defaultValue: string | null, searchable?: boolean) {
 		super(bedrock.codecs.Union.of(
 			bedrock.codecs.String,
 			bedrock.codecs.Null
-		), defaultValue);
+		), defaultValue, searchable);
 	}
 };
 

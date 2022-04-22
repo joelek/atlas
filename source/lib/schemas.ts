@@ -100,6 +100,8 @@ export type NullableNumberFieldSchema = ReturnType<typeof NullableNumberFieldSch
 export const StringFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("StringField"),
 	defaultValue: bedrock.codecs.String
+}, {
+	searchable: bedrock.codecs.Boolean
 });
 
 export type StringFieldSchema = ReturnType<typeof StringFieldSchema["decode"]>;
@@ -110,6 +112,8 @@ export const NullableStringFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.String,
 		bedrock.codecs.Null
 	)
+}, {
+	searchable: bedrock.codecs.Boolean
 });
 
 export type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
@@ -319,10 +323,10 @@ export class SchemaManager {
 			return new NullableNumberField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
-			return new StringField(fieldSchema.defaultValue);
+			return new StringField(fieldSchema.defaultValue, fieldSchema.searchable);
 		}
 		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
-			return new NullableStringField(fieldSchema.defaultValue);
+			return new NullableStringField(fieldSchema.defaultValue, fieldSchema.searchable);
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -655,13 +659,15 @@ export class SchemaManager {
 		if (field instanceof StringField) {
 			return {
 				type: "StringField",
-				defaultValue: (field as StringField).getDefaultValue()
+				defaultValue: (field as StringField).getDefaultValue(),
+				searchable: field.getSearchable()
 			};
 		}
 		if (field instanceof NullableStringField) {
 			return {
 				type: "NullableStringField",
-				defaultValue: (field as NullableStringField).getDefaultValue()
+				defaultValue: (field as NullableStringField).getDefaultValue(),
+				searchable: field.getSearchable()
 			};
 		}
 		throw `Expected code to be unreachable!`;

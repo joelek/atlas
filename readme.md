@@ -92,6 +92,13 @@ context.createStringField();
 context.createNullableStringField();
 ```
 
+String fields may be created with a "searchable" hint that instructs Atlas to include the corresponding fields when searching the database.
+
+```ts
+context.createStringField({ searchable: true });
+context.createNullableStringField({ searchable: true });
+```
+
 ### Orders
 
 Atlas defines the order entity as an ordering scheme using the sort-order provided by [Bedrock](https://github.com/joelek/bedrock).

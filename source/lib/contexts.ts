@@ -214,16 +214,16 @@ export class Context {
 		return reference;
 	}
 
-	createStringField(): FieldReference<StringField> {
+	createStringField(options?: { searchable: boolean }): FieldReference<StringField> {
 		let reference = new FieldReference();
-		let field = new StringField("");
+		let field = new StringField("", options?.searchable);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableStringField(): FieldReference<NullableStringField> {
+	createNullableStringField(options?: { searchable: boolean }): FieldReference<NullableStringField> {
 		let reference = new FieldReference();
-		let field = new NullableStringField(null);
+		let field = new NullableStringField(null, options?.searchable);
 		this.fields.set(reference, field);
 		return reference;
 	}
