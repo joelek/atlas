@@ -1,4 +1,4 @@
-import { Index, IndexManager, Store, StoreManager } from "./stores";
+import { Index, IndexManager, SearchIndexManagerV1, Store, StoreManager } from "./stores";
 import { IntegerField, RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
@@ -810,5 +810,473 @@ test(`It should support vacating.`, async (assert) => {
 	users.vacate();
 	let observed = Array.from(users).map((entry) => entry.key);
 	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+function makeUsersSearchIndex() {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new StringField("")
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let index = new SearchIndexManagerV1(recordManager, blockManager, "name");
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [], [index]);
+	return {
+		users,
+		index
+	};
+};
+
+test(`It should update search indices on insert.`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	let observed = Array.from(index).map((record) => record.record.name);
+	let expected = ["Name 1"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should update search indices on update.`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Name 2"
+	});
+	let observed = Array.from(index).map((record) => record.record.name);
+	let expected = ["Name 2"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should update search indices on remove.`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	users.remove({
+		user_id: "User 1"
+	});
+	let observed = Array.from(index).map((record) => record.record.name);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Ek"] and query is "".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Ek"
+	});
+	let observed = users.search("").map((record) => record.record.user_id);
+	let expected = ["User 1"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Ek"] and query is "e".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Ek"
+	});
+	let observed = users.search("e").map((record) => record.record.user_id);
+	let expected = ["User 1"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Ek"] and query is "ek".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Ek"
+	});
+	let observed = users.search("ek").map((record) => record.record.user_id);
+	let expected = ["User 1"];
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Ek"] and query is "eks".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Ek"
+	});
+	let observed = users.search("eks").map((record) => record.record.user_id);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "e".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("e").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "ek".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("ek").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "eks".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("eks").map((record) => record.record.user_id);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "joel".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("joel").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "joel ek".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("joel ek").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "ek joel".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("ek joel").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "joel eks".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("joel eks").map((record) => record.record.user_id);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel Ek"] and query is "joels ek".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	let observed = users.search("joels ek").map((record) => record.record.user_id);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0", "User 2"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "e".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("e").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "ek".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("ek").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "eks".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("eks").map((record) => record.record.user_id);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("joel").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0", "User 2"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel e".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("joel e").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel ek".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("joel ek").map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel eks".`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Joel A Z"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Joel Ek"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "Joel A Z"
+	});
+	let observed = users.search("joel eks").map((record) => record.record.user_id);
+	let expected = [] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+
+test(`It should support anchored searches.`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "A"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "B"
+	});
+	users.insert({
+		user_id: "User 2",
+		name: "C"
+	});
+	let observed = users.search("", { user_id: "User 1" }).map((record) => record.record.user_id);
+	let expected = ["User 2"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Aa Ab", "Aa"] and query is "a"`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Aa Ab"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Aa"
+	});
+	let observed = users.search("a").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Aa Az", "Aa"] and query is "a"`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Aa Az"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Aa"
+	});
+	let observed = users.search("a").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Aa Ab", "Ab"] and query is "a"`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Aa Ab"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Ab"
+	});
+	let observed = users.search("a").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Aa Az", "Ab"] and query is "a"`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Aa Az"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Ab"
+	});
+	let observed = users.search("a").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Aa Ab", "Az"] and query is "a"`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Aa Ab"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Az"
+	});
+	let observed = users.search("a").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
+
+test(`It should return the correct search results when names are ["Aa Az", "Az"] and query is "a"`, async (assert) => {
+	let { users, index } = { ...makeUsersSearchIndex() };
+	users.insert({
+		user_id: "User 0",
+		name: "Aa Az"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Az"
+	});
+	let observed = users.search("a").map((record) => record.record.user_id);
+	let expected = ["User 1", "User 0"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
