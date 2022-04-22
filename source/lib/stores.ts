@@ -927,7 +927,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 
 	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-		let iterable = StreamIterable.of(this.searchIndexManagers[0].search(query, anchorBid));
+		let iterable = StreamIterable.of(SearchIndexManagerV1.search(this.searchIndexManagers, query, anchorBid));
 		if (limit != null) {
 			iterable = iterable.limit(limit);
 		}
