@@ -122,6 +122,6 @@ export class Tokenizer {
 		normalized = normalized.toLowerCase();
 		normalized = normalized.normalize("NFC");
 		normalized = normalized.replace(/['"`´]+/g, "");
-		return Array.from(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []);
+		return Array.from(new Set(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []));
 	}
 };
