@@ -327,6 +327,14 @@ Records may be removed using the `remove(keysRecord)` method.
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
 
+#### Search
+
+Records may be searched using the `search(query, anchorKeysRecord, limit)` method. The method efficiently searches the store for matching records and returns the results ordered by relevance with respect to the given query. Fields must be created with the "searchable" hint to be considered by the search algorithm.
+
+* The `query` argument must be used to specify the search query.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum number of records to return.
+
 #### Update
 
 Records may be updated using the `update(keysRecord)` method. The method will insert a default record if the corresponding record cannot be found. Metadata fields not specified in the update will retain their previously stored values.
@@ -436,7 +444,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Allow BlockManager to keep track of the exact stored size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Add type-safety checks for keys during schema deserialization.
-* Implement search support using RadixTree.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
 * Improve heuristic for index selector.
