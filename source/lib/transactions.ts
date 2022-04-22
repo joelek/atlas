@@ -55,6 +55,10 @@ export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
 		return queue.enqueueWritableOperation(() => this.store.remove(...parameters));
 	}
 
+	search(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
+		return queue.enqueueReadableOperation(() => this.store.search(...parameters));
+	}
+
 	update(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
 		return queue.enqueueWritableOperation(() => this.store.update(...parameters));
 	}

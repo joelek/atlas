@@ -16,6 +16,7 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
+	search(query: string, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 	update(keysRecord: KeysRecord<A, B>): Promise<void>;
 	vacate(): Promise<void>;
 };
@@ -57,6 +58,10 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 
 	async remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
 		return this.storeManager.remove(...parameters);
+	}
+
+	async search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
+		return this.storeManager.search(...parameters).map((entry) => entry.record);
 	}
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
@@ -1108,6 +1113,10 @@ export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A
 
 	async remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
 		return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
+	}
+
+	async search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
+		return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => entry.record);
 	}
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
