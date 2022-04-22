@@ -5,7 +5,7 @@ import { Table } from "./tables";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
-import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager } from "./stores";
+import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager, SearchIndex, SearchIndexManagerV1 } from "./stores";
 import { BlockManager } from "./blocks";
 import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries } from "./queries";
 import { EqualityOperator, Operator, OperatorMap, Operators } from "./operators";
@@ -211,13 +211,25 @@ export const KeysMapSchema = bedrock.codecs.Record.of(bedrock.codecs.String);
 
 export type KeyMapSchema = ReturnType<typeof KeysMapSchema["decode"]>;
 
+export const SearchIndexSchema = bedrock.codecs.Object.of({
+	key: bedrock.codecs.String,
+	bid: bedrock.codecs.Integer
+});
+
+export type SearchIndexSchema = ReturnType<typeof SearchIndexSchema["decode"]>;
+
+export const SearchIndicesSchema = bedrock.codecs.Array.of(SearchIndexSchema);
+
+export type SearchIndicesSchema = ReturnType<typeof SearchIndicesSchema["decode"]>;
+
 export const StoreSchema = bedrock.codecs.Object.of({
 	version: bedrock.codecs.Integer,
 	fields: FieldsSchema,
 	keys: KeysSchema,
 	orders: KeyOrdersSchema,
 	indices: IndicesSchema,
-	storageBid: bedrock.codecs.Integer
+	storageBid: bedrock.codecs.Integer,
+	searchIndices: SearchIndicesSchema
 });
 
 export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
@@ -354,6 +366,12 @@ export class SchemaManager {
 		});
 	}
 
+	private loadSearchIndexManager(recordManager: RecordManager<any>, blockManager: BlockManager, searchIndexSchema: SearchIndexSchema): SearchIndexManagerV1<any, any> {
+		return new SearchIndexManagerV1(recordManager, blockManager, searchIndexSchema.key, {
+			bid: searchIndexSchema.bid
+		});
+	}
+
 	private loadRecordManager(blockManager: BlockManager, fieldsSchema: FieldsSchema): RecordManager<any> {
 		let fields = {} as Fields<any>;
 		for (let key in fieldsSchema) {
@@ -385,7 +403,10 @@ export class SchemaManager {
 		let indexManagers = oldSchema.indices.map((indexSchema) => {
 			return this.loadIndexManager(recordManager, blockManager, indexSchema);
 		});
-		return new StoreManager(blockManager, fields, keys, orders, storage, indexManagers, []);
+		let searchIndexManagers = oldSchema.searchIndices.map((searchIndexSchema) => {
+			return this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema);
+		});
+		return new StoreManager(blockManager, fields, keys, orders, storage, indexManagers, searchIndexManagers);
 	}
 
 	private loadLinkManager(blockManager: BlockManager, linkSchema: LinkSchema, storeManagers: StoreManagers<any>): LinkManager<any, any, any, any, any> {
@@ -565,6 +586,10 @@ export class SchemaManager {
 		return this.compareKeys(oldSchema.keys, index.keys);
 	}
 
+	private compareSearchIndex<A extends Record>(searchIndex: SearchIndex<A>, oldSchema: SearchIndexSchema): boolean {
+		return oldSchema.key === searchIndex.key;
+	}
+
 	private compareStore<A extends Record, B extends RequiredKeys<A>>(store: Store<A, B>, oldSchema: StoreSchema): boolean {
 		if (!this.compareKeys(store.keys, oldSchema.keys)) {
 			return false;
@@ -681,6 +706,14 @@ export class SchemaManager {
 		return schema;
 	}
 
+	private createSearchIndex<A extends Record>(blockManager: BlockManager, searchIndex: SearchIndex<A>): SearchIndexSchema {
+		let schema: SearchIndexSchema = {
+			key: searchIndex.key,
+			bid: blockManager.createBlock(RadixTree.INITIAL_SIZE)
+		};
+		return schema;
+	}
+
 	private createStore<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, store: Store<A, B>): StoreSchema {
 		let version = 0;
 		let fields: FieldsSchema = {};
@@ -693,12 +726,17 @@ export class SchemaManager {
 		for (let index of store.indices) {
 			indices.push(this.createIndex(blockManager, index));
 		}
+		let searchIndices: SearchIndicesSchema = [];
+		for (let searchIndex of store.searchIndices) {
+			searchIndices.push(this.createSearchIndex(blockManager, searchIndex));
+		}
 		let schema: StoreSchema = {
 			version,
 			fields,
 			keys,
 			orders,
 			indices,
+			searchIndices,
 			storageBid: blockManager.createBlock(Table.LENGTH)
 		};
 		return schema;
@@ -711,6 +749,11 @@ export class SchemaManager {
 	private deleteIndex(blockManager: BlockManager, indexSchema: IndexSchema, fieldsSchema: FieldsSchema): void {
 		let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
 		this.loadIndexManager(recordManager, blockManager, indexSchema).delete();
+	}
+
+	private deleteSearchIndex(blockManager: BlockManager, searchIndexSchema: SearchIndexSchema, fieldsSchema: FieldsSchema): void {
+		let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
+		this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema).delete();
 	}
 
 	private updateStore<A extends Record, B extends RequiredKeys<A>>(blockManager: BlockManager, store: Store<A, B>, oldSchema: StoreSchema): StoreSchema {
@@ -750,11 +793,47 @@ export class SchemaManager {
 				}
 				this.deleteIndex(blockManager, indexSchema, oldSchema.fields);
 			}
+			let searchIndices: SearchIndicesSchema = [];
+			newIndices: for (let searchIndex of store.searchIndices) {
+				oldIndices: for (let searchIndexSchema of oldSchema.searchIndices) {
+					if (this.compareSearchIndex(searchIndex, searchIndexSchema)) {
+						searchIndices.push(searchIndexSchema);
+						continue newIndices;
+					}
+				}
+				let recordManager = this.loadRecordManager(blockManager, oldSchema.fields);
+				let searchIndexSchema = this.createSearchIndex(blockManager, searchIndex);
+				let searchIndexManager = this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema);
+				let storage = new Table(blockManager, {
+					getKeyFromValue: (value) => {
+						let buffer = blockManager.readBlock(value);
+						let record = recordManager.decode(buffer);
+						return recordManager.encodeKeys(oldSchema.keys, record);
+					}
+				}, {
+					bid: oldSchema.storageBid
+				});
+				for (let bid of storage) {
+					let buffer = blockManager.readBlock(bid);
+					let record = recordManager.decode(buffer);
+					searchIndexManager.insert(record, bid);
+				}
+				searchIndices.push(searchIndexSchema);
+			}
+			oldIndices: for (let searchIndexSchema of oldSchema.searchIndices) {
+				newIndices: for (let searchIndex of store.searchIndices) {
+					if (this.compareSearchIndex(searchIndex, searchIndexSchema)) {
+						continue oldIndices;
+					}
+				}
+				this.deleteSearchIndex(blockManager, searchIndexSchema, oldSchema.fields);
+			}
 			let orders = this.createKeyOrders(blockManager, store.orders);
 			return {
 				...oldSchema,
 				orders,
-				indices
+				indices,
+				searchIndices
 			};
 		} else {
 			let newSchema = this.createStore(blockManager, store);
