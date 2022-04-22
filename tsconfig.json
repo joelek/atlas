@@ -13,6 +13,9 @@
 	"include": [],
 	"references": [
 		{
+			"path": "./source/bench/"
+		},
+		{
 			"path": "./source/mod/"
 		},
 		{
