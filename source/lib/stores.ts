@@ -257,6 +257,16 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return record;
 	}
 
+	private lookupBlockIndex(keysRecord: KeysRecord<A, B>): number {
+		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
+		let index = this.table.lookup(key);
+		if (index == null) {
+			let key = this.keys.map((key) => keysRecord[key]).join(", ");
+			throw `Expected a matching record for key ${key}!`;
+		}
+		return index;
+	}
+
 	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>) {
 		this.blockManager = blockManager;
 		this.fields = fields;
@@ -338,12 +348,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	lookup(keysRecord: KeysRecord<A, B>): A {
-		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
-		let index = this.table.lookup(key);
-		if (index == null) {
-			let key = this.keys.map((key) => keysRecord[key]).join(", ");
-			throw `Expected a matching record for key ${key}!`;
-		}
+		let index = this.lookupBlockIndex(keysRecord);
 		let buffer = this.blockManager.readBlock(index);
 		let record = this.recordManager.decode(buffer);
 		return record;
