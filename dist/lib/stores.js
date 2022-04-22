@@ -833,7 +833,7 @@ class StoreManager {
     }
     search(query, anchorKeysRecord, limit) {
         let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-        let iterable = streams_1.StreamIterable.of(this.searchIndexManagers[0].search(query, anchorBid));
+        let iterable = streams_1.StreamIterable.of(SearchIndexManagerV1.search(this.searchIndexManagers, query, anchorBid));
         if (limit != null) {
             iterable = iterable.limit(limit);
         }
