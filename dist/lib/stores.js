@@ -235,18 +235,18 @@ class SearchIndexManagerV1 {
         }
         return this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
     }
-    getNextPrefixMatch(prefix, relationship, previousResult) {
+    getNextMatch(token, relationship, prefix, previousResult) {
         let keys = [
             bedrock.codecs.Integer.encodePayload(1),
-            bedrock.codecs.String.encodePayload(prefix)
+            bedrock.codecs.String.encodePayload(token)
         ];
         if (previousResult != null) {
-            // Prefix tokens need to be completed in order to correctly locate the previous entry in the tree.
-            let firstCompletion = getFirstCompletion(prefix, previousResult.tokens);
+            // Tokens need to be completed in order to correctly locate the previous entry in the tree.
+            let firstCompletion = getFirstCompletion(token, previousResult.tokens);
             if (firstCompletion == null) {
                 keys = [
                     bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + 1),
-                    bedrock.codecs.String.encodePayload(prefix)
+                    bedrock.codecs.String.encodePayload(token)
                 ];
             }
             else {
@@ -262,12 +262,12 @@ class SearchIndexManagerV1 {
             inner: for (let bid of bids) {
                 let record = this.readRecord(bid);
                 let tokens = this.tokenizeRecord(record);
+                let firstCompletion = getFirstCompletion(token, tokens);
                 // False matches will eventually be produced when traversing the tree.
-                let firstCompletion = getFirstCompletion(prefix, tokens);
-                if (firstCompletion == null) {
+                if (firstCompletion == null || (!prefix && !tokens.includes(token))) {
                     keys = [
                         bedrock.codecs.Integer.encodePayload(tokens.length + 1),
-                        bedrock.codecs.String.encodePayload(prefix)
+                        bedrock.codecs.String.encodePayload(token)
                     ];
                     bids = this.tree.filter(relationship, keys);
                     continue outer;
@@ -278,51 +278,8 @@ class SearchIndexManagerV1 {
                     bedrock.codecs.Integer.encodePayload(bid)
                 ];
                 let comparison = (0, tables_1.compareBuffers)(recordKeys, keys);
-                // Prefix tokens may produce duplicate matches when traversing the tree.
+                // Tokens may produce duplicate matches when traversing the tree.
                 if ((relationship === ">" && comparison <= 0) || (relationship === ">=" && comparison < 0)) {
-                    continue inner;
-                }
-                let rank = 1;
-                return {
-                    bid,
-                    record,
-                    tokens,
-                    rank
-                };
-            }
-            break;
-        }
-    }
-    getNextTokenMatch(token, relationship, previousResult) {
-        let keys = [];
-        if (previousResult != null) {
-            keys = [
-                bedrock.codecs.Integer.encodePayload(previousResult.tokens.length),
-                bedrock.codecs.String.encodePayload(token),
-                bedrock.codecs.Integer.encodePayload(previousResult.bid)
-            ];
-        }
-        else {
-            keys = [
-                bedrock.codecs.Integer.encodePayload(1),
-                bedrock.codecs.String.encodePayload(token)
-            ];
-        }
-        let bids = this.tree.filter(relationship, keys);
-        outer: while (true) {
-            inner: for (let bid of bids) {
-                let record = this.readRecord(bid);
-                let tokens = this.tokenizeRecord(record);
-                // False matches will eventually be produced when traversing the tree.
-                if (!tokens.includes(token)) {
-                    keys = [
-                        bedrock.codecs.Integer.encodePayload(tokens.length + 1),
-                        bedrock.codecs.String.encodePayload(token)
-                    ];
-                    bids = this.tree.filter(relationship, keys);
-                    continue outer;
-                }
-                if (relationship === ">" && bid === previousResult?.bid) {
                     continue inner;
                 }
                 let rank = 1;
@@ -403,7 +360,7 @@ class SearchIndexManagerV1 {
         let lastQueryToken = queryTokens.pop() ?? "";
         if (queryTokens.length === 0) {
             while (true) {
-                let prefixCandidate = this.getNextPrefixMatch(lastQueryToken, ">", previousResult);
+                let prefixCandidate = this.getNextMatch(lastQueryToken, ">", true, previousResult);
                 if (prefixCandidate == null) {
                     return;
                 }
@@ -416,7 +373,7 @@ class SearchIndexManagerV1 {
             while (true) {
                 let tokenCandidates = [];
                 for (let queryToken of queryTokens) {
-                    let nextTokenResult = this.getNextTokenMatch(queryToken, relationship, previousResult);
+                    let nextTokenResult = this.getNextMatch(queryToken, relationship, false, previousResult);
                     if (nextTokenResult == null) {
                         return;
                     }
@@ -427,7 +384,7 @@ class SearchIndexManagerV1 {
                 let maximumTokenCandidate = tokenCandidates[tokenCandidates.length - 1];
                 previousResult = maximumTokenCandidate;
                 if (minimumTokenCandidate.bid === maximumTokenCandidate.bid) {
-                    let prefixCandidate = this.getNextPrefixMatch(lastQueryToken, ">=", maximumTokenCandidate);
+                    let prefixCandidate = this.getNextMatch(lastQueryToken, ">=", true, maximumTokenCandidate);
                     if (prefixCandidate == null) {
                         return;
                     }

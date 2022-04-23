@@ -76,8 +76,7 @@ export declare class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
     private tree;
     private computeRank;
     private computeRecordRank;
-    private getNextPrefixMatch;
-    private getNextTokenMatch;
+    private getNextMatch;
     private insertToken;
     private removeToken;
     private readRecord;

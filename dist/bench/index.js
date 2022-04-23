@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const atlas = require("../lib");
 const libfs = require("fs");
 const test_1 = require("../lib/test");
-let json = JSON.parse(libfs.readFileSync("./private/test.json", "utf-8"));
+let json = JSON.parse(libfs.readFileSync("./private/testdata.json", "utf-8"));
 let context = atlas.createContext();
 let records = context.createStore({
     id: context.createStringField(),
