@@ -2,7 +2,7 @@ import * as atlas from "../lib";
 import * as libfs from "fs";
 import { benchmark } from "../lib/test";
 
-let json = JSON.parse(libfs.readFileSync("./private/test.json", "utf-8")) as Array<{ id: string, title: string }>;
+let json = JSON.parse(libfs.readFileSync("./private/testdata.json", "utf-8")) as Array<{ id: string, title: string }>;
 let context = atlas.createContext();
 let records = context.createStore({
 	id: context.createStringField(),
