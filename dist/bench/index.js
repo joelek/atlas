@@ -9,7 +9,7 @@ let records = context.createStore({
     id: context.createStringField(),
     title: context.createStringField({ searchable: true })
 }, ["id"]);
-let { transactionManager } = context.createTransactionManager("./private/test", {
+let { transactionManager } = context.createTransactionManager("./private/search", {
     records
 });
 let stores = transactionManager.createTransactionalStores();

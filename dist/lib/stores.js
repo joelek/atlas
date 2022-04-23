@@ -304,7 +304,7 @@ class SearchIndexManagerV1 {
         }
         else {
             keys = [
-                bedrock.codecs.Integer.encodePayload(0),
+                bedrock.codecs.Integer.encodePayload(1),
                 bedrock.codecs.String.encodePayload(token)
             ];
         }
@@ -515,7 +515,7 @@ class SearchIndexManagerV2 {
             bedrock.codecs.Integer.encodePayload(bid)
         ], bid);
         let codePoints = [...token];
-        for (let i = 1; i < codePoints.length + 1; i++) {
+        for (let i = 0; i < codePoints.length + 1; i++) {
             this.tree.insert([
                 bedrock.codecs.Boolean.encodePayload(true),
                 bedrock.codecs.String.encodePayload(codePoints.slice(0, i).join("")),
@@ -532,7 +532,7 @@ class SearchIndexManagerV2 {
             bedrock.codecs.Integer.encodePayload(bid)
         ]);
         let codePoints = [...token];
-        for (let i = 1; i < codePoints.length + 1; i++) {
+        for (let i = 0; i < codePoints.length + 1; i++) {
             this.tree.remove([
                 bedrock.codecs.Boolean.encodePayload(true),
                 bedrock.codecs.String.encodePayload(codePoints.slice(0, i).join("")),

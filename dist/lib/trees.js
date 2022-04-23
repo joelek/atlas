@@ -198,6 +198,7 @@ class RadixTreeWalker {
                 if (subtree !== 0) {
                     iterables.push(this.doTraverse(subtree, depth + 1));
                 }
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: false, subtree: false, children: true }));
             }
         }
         else if (relationship === ">=") {
@@ -211,6 +212,7 @@ class RadixTreeWalker {
                 if (subtree !== 0) {
                     iterables.push(this.doTraverse(subtree, depth + 1));
                 }
+                iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: false, subtree: false, children: true }));
             }
         }
         else if (relationship === "<") {
