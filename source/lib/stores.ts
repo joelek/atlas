@@ -356,7 +356,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 			];
 		} else {
 			keys = [
-				bedrock.codecs.Integer.encodePayload(0),
+				bedrock.codecs.Integer.encodePayload(1),
 				bedrock.codecs.String.encodePayload(token)
 			];
 		}
