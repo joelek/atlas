@@ -585,7 +585,7 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 			bedrock.codecs.Integer.encodePayload(bid)
 		], bid);
 		let codePoints = [...token];
-		for (let i = 1; i < codePoints.length + 1; i++) {
+		for (let i = 0; i < codePoints.length + 1; i++) {
 			this.tree.insert([
 				bedrock.codecs.Boolean.encodePayload(true),
 				bedrock.codecs.String.encodePayload(codePoints.slice(0, i).join("")),
@@ -603,7 +603,7 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 			bedrock.codecs.Integer.encodePayload(bid)
 		]);
 		let codePoints = [...token];
-		for (let i = 1; i < codePoints.length + 1; i++) {
+		for (let i = 0; i < codePoints.length + 1; i++) {
 			this.tree.remove([
 				bedrock.codecs.Boolean.encodePayload(true),
 				bedrock.codecs.String.encodePayload(codePoints.slice(0, i).join("")),
