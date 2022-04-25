@@ -294,17 +294,25 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 			bedrock.codecs.String.encodePayload(token)
 		];
 		if (previousResult != null) {
-			// Tokens need to be completed in order to correctly locate the previous entry in the tree.
-			let firstCompletion = getFirstCompletion(token, previousResult.tokens);
-			if (firstCompletion == null) {
-				keys = [
-					bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + 1),
-					bedrock.codecs.String.encodePayload(token)
-				];
+			if (prefix) {
+				// Tokens need to be completed in order to correctly locate the previous entry in the tree.
+				let firstCompletion = getFirstCompletion(token, previousResult.tokens);
+				if (firstCompletion != null) {
+					keys = [
+						bedrock.codecs.Integer.encodePayload(previousResult.tokens.length),
+						bedrock.codecs.String.encodePayload(firstCompletion),
+						bedrock.codecs.Integer.encodePayload(previousResult.bid)
+					];
+				} else {
+					keys = [
+						bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + 1),
+						bedrock.codecs.String.encodePayload(token)
+					];
+				}
 			} else {
 				keys = [
 					bedrock.codecs.Integer.encodePayload(previousResult.tokens.length),
-					bedrock.codecs.String.encodePayload(firstCompletion),
+					bedrock.codecs.String.encodePayload(token),
 					bedrock.codecs.Integer.encodePayload(previousResult.bid)
 				];
 			}
