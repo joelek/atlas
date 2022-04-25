@@ -16,5 +16,5 @@ export declare class PromiseQueue {
 }
 export declare class Tokenizer {
     private constructor();
-    static tokenize(value: string): Array<string>;
+    static tokenize(value: string, maxTokenCount?: number): Array<string>;
 }

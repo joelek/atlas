@@ -125,12 +125,12 @@ exports.PromiseQueue = PromiseQueue;
 ;
 class Tokenizer {
     constructor() { }
-    static tokenize(value) {
+    static tokenize(value, maxTokenCount = 20) {
         let normalized = value;
         normalized = normalized.toLowerCase();
         normalized = normalized.normalize("NFC");
         normalized = normalized.replace(/['"`´]+/g, "");
-        return Array.from(new Set(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? []));
+        return Array.from(new Set(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? [])).slice(0, maxTokenCount);
     }
 }
 exports.Tokenizer = Tokenizer;
