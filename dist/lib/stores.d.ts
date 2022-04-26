@@ -69,6 +69,7 @@ export declare type SearchResult<A extends Record> = {
     rank: number;
 };
 export declare function getFirstCompletion(prefix: string, tokens: Array<string>): string | undefined;
+export declare function getFirstTokenBefore(prefix: string, tokens: Array<string>): string | undefined;
 export declare class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
     private recordManager;
     private blockManager;

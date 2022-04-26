@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableStore = exports.Store = exports.SearchIndex = exports.Index = exports.StoreManager = exports.SearchIndexManagerV2 = exports.SearchIndexManagerV1 = exports.getFirstCompletion = exports.IndexManager = exports.FilteredStore = exports.WritableStoreManager = void 0;
+exports.OverridableWritableStore = exports.Store = exports.SearchIndex = exports.Index = exports.StoreManager = exports.SearchIndexManagerV2 = exports.SearchIndexManagerV1 = exports.getFirstTokenBefore = exports.getFirstCompletion = exports.IndexManager = exports.FilteredStore = exports.WritableStoreManager = void 0;
 const bedrock = require("@joelek/bedrock");
 const streams_1 = require("./streams");
 const filters_1 = require("./filters");
@@ -213,6 +213,17 @@ function getFirstCompletion(prefix, tokens) {
 }
 exports.getFirstCompletion = getFirstCompletion;
 ;
+function getFirstTokenBefore(prefix, tokens) {
+    let encodedPrefix = bedrock.codecs.String.encodePayload(prefix);
+    return tokens
+        .map((token) => bedrock.codecs.String.encodePayload(token))
+        .filter((token) => bedrock.utils.Chunk.comparePrefixes(token, encodedPrefix) < 0)
+        .sort(bedrock.utils.Chunk.comparePrefixes)
+        .map((buffer) => bedrock.codecs.String.decodePayload(buffer))
+        .shift();
+}
+exports.getFirstTokenBefore = getFirstTokenBefore;
+;
 class SearchIndexManagerV1 {
     recordManager;
     blockManager;
@@ -252,8 +263,9 @@ class SearchIndexManagerV1 {
                     ];
                 }
                 else {
+                    let firstTokenBefore = getFirstTokenBefore(token, previousResult.tokens);
                     keys = [
-                        bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + 1),
+                        bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + (firstTokenBefore != null ? 0 : 1)),
                         bedrock.codecs.String.encodePayload(token)
                     ];
                 }
@@ -274,10 +286,29 @@ class SearchIndexManagerV1 {
                 let firstCompletion = getFirstCompletion(token, tokens);
                 // False matches will eventually be produced when traversing the tree.
                 if (firstCompletion == null || (!prefix && !tokens.includes(token))) {
-                    keys = [
-                        bedrock.codecs.Integer.encodePayload(tokens.length + 1),
-                        bedrock.codecs.String.encodePayload(token)
-                    ];
+                    let category = bedrock.codecs.Integer.decodePayload(keys[0]);
+                    let recordCategory = tokens.length;
+                    if (recordCategory === category) {
+                        keys = [
+                            bedrock.codecs.Integer.encodePayload(recordCategory + 1),
+                            bedrock.codecs.String.encodePayload(token)
+                        ];
+                    }
+                    else {
+                        let firstTokenBefore = getFirstTokenBefore(token, tokens);
+                        if (firstTokenBefore != null) {
+                            keys = [
+                                bedrock.codecs.Integer.encodePayload(recordCategory),
+                                bedrock.codecs.String.encodePayload(token)
+                            ];
+                        }
+                        else {
+                            keys = [
+                                bedrock.codecs.Integer.encodePayload(recordCategory + 1),
+                                bedrock.codecs.String.encodePayload(token)
+                            ];
+                        }
+                    }
                     bids = this.tree.filter(relationship, keys);
                     continue outer;
                 }

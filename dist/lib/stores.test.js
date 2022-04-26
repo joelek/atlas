@@ -1216,3 +1216,21 @@ function makeUsersSearchIndex() {
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
+(0, test_1.test)(`It should not skip the entire category branch when the first candidate occurs before the first result in the same category.`, async (assert) => {
+    let { users, index } = { ...makeUsersSearchIndex() };
+    users.insert({
+        user_id: "User 0",
+        name: "a c"
+    });
+    users.insert({
+        user_id: "User 1",
+        name: "a b"
+    });
+    users.insert({
+        user_id: "User 2",
+        name: "a c"
+    });
+    let observed = users.search("b").map((record) => record.record.user_id);
+    let expected = ["User 1"];
+    assert.array.equals(observed, expected);
+});
