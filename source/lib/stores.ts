@@ -263,6 +263,16 @@ export function getFirstCompletion(prefix: string, tokens: Array<string>): strin
 		.shift();
 };
 
+export function getFirstTokenBefore(prefix: string, tokens: Array<string>): string | undefined {
+	let encodedPrefix = bedrock.codecs.String.encodePayload(prefix);
+	return tokens
+		.map((token) => bedrock.codecs.String.encodePayload(token))
+		.filter((token) => bedrock.utils.Chunk.comparePrefixes(token, encodedPrefix) < 0)
+		.sort(bedrock.utils.Chunk.comparePrefixes)
+		.map((buffer) => bedrock.codecs.String.decodePayload(buffer))
+		.shift();
+};
+
 export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
@@ -304,8 +314,9 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 						bedrock.codecs.Integer.encodePayload(previousResult.bid)
 					];
 				} else {
+					let firstTokenBefore = getFirstTokenBefore(token, previousResult.tokens);
 					keys = [
-						bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + 1),
+						bedrock.codecs.Integer.encodePayload(previousResult.tokens.length + (firstTokenBefore != null ? 0 : 1)),
 						bedrock.codecs.String.encodePayload(token)
 					];
 				}
@@ -325,10 +336,27 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 				let firstCompletion = getFirstCompletion(token, tokens);
 				// False matches will eventually be produced when traversing the tree.
 				if (firstCompletion == null || (!prefix && !tokens.includes(token))) {
-					keys = [
-						bedrock.codecs.Integer.encodePayload(tokens.length + 1),
-						bedrock.codecs.String.encodePayload(token)
-					];
+					let category = bedrock.codecs.Integer.decodePayload(keys[0]);
+					let recordCategory = tokens.length;
+					if (recordCategory === category) {
+						keys = [
+							bedrock.codecs.Integer.encodePayload(recordCategory + 1),
+							bedrock.codecs.String.encodePayload(token)
+						];
+					} else {
+						let firstTokenBefore = getFirstTokenBefore(token, tokens);
+						if (firstTokenBefore != null) {
+							keys = [
+								bedrock.codecs.Integer.encodePayload(recordCategory),
+								bedrock.codecs.String.encodePayload(token)
+							];
+						} else {
+							keys = [
+								bedrock.codecs.Integer.encodePayload(recordCategory + 1),
+								bedrock.codecs.String.encodePayload(token)
+							];
+						}
+					}
 					bids = this.tree.filter(relationship, keys);
 					continue outer;
 				}
