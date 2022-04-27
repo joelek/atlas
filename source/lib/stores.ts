@@ -298,9 +298,9 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		return this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
 	}
 
-	private getNextMatch(token: string, relationship: Relationship, prefix: boolean, previousResult?: SearchResult<A>): SearchResult<A> | undefined {
+	private getNextMatch(category: number, token: string, relationship: Relationship, prefix: boolean, previousResult?: SearchResult<A>): SearchResult<A> | undefined {
 		let keys = [
-			bedrock.codecs.Integer.encodePayload(1),
+			bedrock.codecs.Integer.encodePayload(category),
 			bedrock.codecs.String.encodePayload(token)
 		];
 		if (previousResult != null) {
@@ -460,7 +460,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		let lastQueryToken = queryTokens.pop() ?? "";
 		if (queryTokens.length === 0) {
 			while (true) {
-				let prefixCandidate = this.getNextMatch(lastQueryToken, ">", true, previousResult);
+				let prefixCandidate = this.getNextMatch(queryTokens.length + 1, lastQueryToken, ">", true, previousResult);
 				if (prefixCandidate == null) {
 					return;
 				}
@@ -472,7 +472,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 			while (true) {
 				let tokenCandidates = [] as Array<SearchResult<A>>;
 				for (let queryToken of queryTokens) {
-					let nextTokenResult = this.getNextMatch(queryToken, relationship, false, previousResult);
+					let nextTokenResult = this.getNextMatch(queryTokens.length + 1, queryToken, relationship, false, previousResult);
 					if (nextTokenResult == null) {
 						return;
 					}
@@ -486,7 +486,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 				let maximumTokenCandidate = tokenCandidates[tokenCandidates.length - 1];
 				previousResult = maximumTokenCandidate;
 				if (minimumTokenCandidate.bid === maximumTokenCandidate.bid) {
-					let prefixCandidate = this.getNextMatch(lastQueryToken, ">=", true, maximumTokenCandidate);
+					let prefixCandidate = this.getNextMatch(queryTokens.length + 1, lastQueryToken, ">=", true, maximumTokenCandidate);
 					if (prefixCandidate == null) {
 						return;
 					}
