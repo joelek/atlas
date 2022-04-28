@@ -807,7 +807,7 @@ class SearchIndexManagerV3 {
     *search(query, bid) {
         let queryTokens = utils_1.Tokenizer.tokenize(query);
         if (queryTokens.length === 0) {
-            return;
+            queryTokens.push("");
         }
         let queryCategory = queryTokens.length;
         let firstCategory = queryCategory;

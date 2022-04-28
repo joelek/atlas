@@ -169,7 +169,7 @@ function intersection(iterables, collator) {
         let entries = [];
         let maxCandidate = value;
         for (let iterable of iterables) {
-            let candidate = iterable.seek(maxCandidate);
+            let candidate = value != null ? iterable.seek(value) : iterable.next();
             if (candidate == null) {
                 return;
             }
@@ -245,7 +245,7 @@ function union(iterables, collator) {
     function* makeIterable(value) {
         let entries = [];
         for (let iterable of iterables) {
-            let candidate = iterable.seek(value);
+            let candidate = value != null ? iterable.seek(value) : iterable.next();
             if (candidate == null) {
                 continue;
             }
