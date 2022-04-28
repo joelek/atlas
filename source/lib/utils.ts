@@ -164,7 +164,7 @@ export function intersection<A>(iterables: Iterable<SeekableIterable<A>>, collat
 		let entries = [] as Array<{ iterable: SeekableIterable<A>, candidate: A }>;
 		let maxCandidate = value;
 		for (let iterable of iterables) {
-			let candidate = iterable.seek(maxCandidate);
+			let candidate = value != null ? iterable.seek(value) : iterable.next();
 			if (candidate == null) {
 				return;
 			}
@@ -238,7 +238,7 @@ export function union<A>(iterables: Iterable<SeekableIterable<A>>, collator: Col
 	function * makeIterable(value: A | undefined): Iterable<A> {
 		let entries = [] as Array<{ iterable: SeekableIterable<A>, candidate: A }>;
 		for (let iterable of iterables) {
-			let candidate = iterable.seek(value);
+			let candidate = value != null ? iterable.seek(value) : iterable.next();
 			if (candidate == null) {
 				continue;
 			}
