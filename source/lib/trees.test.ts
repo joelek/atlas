@@ -3,6 +3,7 @@ import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { RadixTree } from "./trees";
 import { test } from "./test";
+import { StreamIterable } from "./streams";
 
 function getKeyFromString(string: string): Uint8Array {
 	return bedrock.utils.Chunk.fromString(string, "utf-8");
@@ -455,15 +456,15 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("two"), getKeyFromString("a")], 5);
 	tree.insert([getKeyFromString("two"), getKeyFromString("b")], 6);
 
-	test(`It should return the correct branch for an existing key.`, async (assert) => {
-		let results = tree.branch([getKeyFromString("one")]);
+	test(`It should return the correct branch for an existing key in "=" mode.`, async (assert) => {
+		let results = StreamIterable.of(tree.branch("=", [getKeyFromString("one")])).shift();
 		let observed = Array.from(results ?? []);
 		let expected = [2, 3];
 		assert.array.equals(observed, expected);
 	});
 
-	test(`It should return the correct branch for a non-existing key.`, async (assert) => {
-		let results = tree.branch([getKeyFromString("three")]);
+	test(`It should return the correct branch for a non-existing key in "=" mode.`, async (assert) => {
+		let results = StreamIterable.of(tree.branch("=", [getKeyFromString("three")])).shift();
 		let observed = Array.from(results ?? []);
 		let expected = [] as Array<number>;
 		assert.array.equals(observed, expected);
@@ -605,7 +606,7 @@ test(`It should throw errors when used after deletion.`, async (assert) => {
 		Array.from(tree);
 	});
 	await assert.throws(async () => {
-		tree.branch([]);
+		Array.from(tree.branch("=", []));
 	});
 	await assert.throws(async () => {
 		tree.delete();

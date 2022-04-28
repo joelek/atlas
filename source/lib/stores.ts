@@ -189,7 +189,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			}
 			if (filter instanceof EqualityFilter) {
 				let encodedValue = filter.getEncodedValue();
-				let branch = tree.branch([encodedValue]);
+				let branch = StreamIterable.of(tree.branch("=", [encodedValue])).shift();
 				if (branch == null) {
 					return;
 				}
@@ -669,19 +669,19 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 		let relationship = previousResult != null ? ">" : ">=" as Relationship;
 		let trees = [] as Array<RadixTree>;
 		for (let queryToken of queryTokens) {
-			let tree = this.tree.branch([
+			let tree = StreamIterable.of(this.tree.branch("=", [
 				bedrock.codecs.Boolean.encodePayload(false),
 				bedrock.codecs.String.encodePayload(queryToken)
-			]);
+			])).shift();
 			if (tree == null) {
 				return;
 			}
 			trees.push(tree);
 		}
-		let tree = this.tree.branch([
+		let tree = StreamIterable.of(this.tree.branch("=", [
 			bedrock.codecs.Boolean.encodePayload(true),
 			bedrock.codecs.String.encodePayload(lastQueryToken)
-		]);
+		])).shift();
 		if (tree == null) {
 			return;
 		}
