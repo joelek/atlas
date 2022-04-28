@@ -29,9 +29,27 @@ transactionManager.enqueueReadableTransaction(async (queue) => {
 	for (let i = 1; i < words.length + 1; i++) {
 		let query = words.slice(0, i).join(" ");
 		let ms = await benchmark(() => stores.records.search(queue, query, undefined, 1));
-		console.log(`top result for "${query}"`, ms.toFixed(2), "ms");
+		console.log(`query "${query}"`, ms.toFixed(2), "ms");
+		console.log(await stores.records.search(queue, query, undefined, 1));
 	}
-	let query = "the for of an a in";
-	let ms = await benchmark(() => stores.records.search(queue, query, undefined, 1));
-	console.log(`stop words "${query}"`, ms.toFixed(2), "ms");
+	for (let limit of [1, 10]) {
+		{
+			let query = "the for of an a in";
+			let ms = await benchmark(() => stores.records.search(queue, query, undefined, limit));
+			console.log(`query "${query}"`, ms.toFixed(2), "ms");
+			console.log(await stores.records.search(queue, query, undefined, limit));
+		}
+		{
+			let query = "s";
+			let ms = await benchmark(() => stores.records.search(queue, query, undefined, limit));
+			console.log(`query "${query}"`, ms.toFixed(2), "ms");
+			console.log(await stores.records.search(queue, query, undefined, limit));
+		}
+		{
+			let query = "the s";
+			let ms = await benchmark(() => stores.records.search(queue, query, undefined, limit));
+			console.log(`query "${query}"`, ms.toFixed(2), "ms");
+			console.log(await stores.records.search(queue, query, undefined, limit));
+		}
+	}
 });
