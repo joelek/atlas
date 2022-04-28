@@ -898,7 +898,7 @@ export class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
 	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
 		let queryTokens = Tokenizer.tokenize(query);
 		if (queryTokens.length === 0) {
-			return;
+			queryTokens.push("");
 		}
 		let queryCategory = queryTokens.length;
 		let firstCategory = queryCategory;

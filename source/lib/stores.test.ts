@@ -1171,7 +1171,6 @@ test(`It should return the correct search results when names are ["Joel A Z", "J
 	assert.array.equals(observed, expected);
 });
 
-
 test(`It should support anchored searches.`, async (assert) => {
 	let { users, index } = { ...makeUsersSearchIndex() };
 	users.insert({
