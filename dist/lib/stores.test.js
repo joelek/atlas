@@ -795,7 +795,7 @@ function makeUsersSearchIndex() {
             return recordManager.encodeKeys(keys, record);
         }
     });
-    let index = new stores_1.SearchIndexManagerV1(recordManager, blockManager, "name");
+    let index = new stores_1.SearchIndexManagerV3(recordManager, blockManager, "name");
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], [index]);
     return {
         users,

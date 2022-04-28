@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Tokenizer = exports.PromiseQueue = exports.Binary = void 0;
+exports.union = exports.intersection = exports.makeSeekableIterable = exports.Tokenizer = exports.PromiseQueue = exports.Binary = void 0;
 const bedrock = require("@joelek/bedrock");
 const asserts = require("../mod/asserts");
 const variables_1 = require("./variables");
@@ -134,4 +134,168 @@ class Tokenizer {
     }
 }
 exports.Tokenizer = Tokenizer;
+;
+;
+function makeSeekableIterable(source, collator) {
+    let array = Array.from(source).sort(collator);
+    function makeIterable(value) {
+        if (value != null) {
+            return array.filter((item) => collator(item, value) >= 0);
+        }
+        else {
+            return array;
+        }
+    }
+    let iterable = makeIterable(undefined);
+    let iterator = iterable[Symbol.iterator]();
+    return {
+        [Symbol.iterator]() {
+            return iterable[Symbol.iterator]();
+        },
+        next() {
+            return iterator.next().value;
+        },
+        seek(value) {
+            iterable = makeIterable(value);
+            iterator = iterable[Symbol.iterator]();
+            return this.next();
+        }
+    };
+}
+exports.makeSeekableIterable = makeSeekableIterable;
+;
+function intersection(iterables, collator) {
+    function* makeIterable(value) {
+        let entries = [];
+        let maxCandidate = value;
+        for (let iterable of iterables) {
+            let candidate = iterable.seek(maxCandidate);
+            if (candidate == null) {
+                return;
+            }
+            if (maxCandidate == null || collator(candidate, maxCandidate) > 0) {
+                maxCandidate = candidate;
+            }
+            entries.push({
+                iterable,
+                candidate
+            });
+        }
+        while (true) {
+            let minEntry;
+            let maxEntry;
+            for (let entry of entries) {
+                if (minEntry == null || collator(entry.candidate, minEntry.candidate) < 0) {
+                    minEntry = entry;
+                }
+                if (maxEntry == null || collator(entry.candidate, maxEntry.candidate) > 0) {
+                    maxEntry = entry;
+                }
+            }
+            if (maxEntry == null || minEntry == null) {
+                break;
+            }
+            let match = collator(minEntry.candidate, maxEntry.candidate) === 0;
+            let maxCandidate = maxEntry.candidate;
+            if (match) {
+                yield maxCandidate;
+            }
+            let nextEntries = [];
+            for (let entry of entries) {
+                let candidate = entry.candidate;
+                if (match) {
+                    candidate = entry.iterable.next();
+                }
+                else {
+                    if (collator(entry.candidate, maxCandidate) < 0) {
+                        candidate = entry.iterable.seek(maxCandidate);
+                    }
+                }
+                if (candidate == null) {
+                    return;
+                }
+                if (maxCandidate == null || collator(candidate, maxCandidate) > 0) {
+                    maxCandidate = candidate;
+                }
+                entry.candidate = candidate;
+                nextEntries.push(entry);
+            }
+            entries = nextEntries;
+        }
+    }
+    let iterable = makeIterable(undefined);
+    let iterator = iterable[Symbol.iterator]();
+    return {
+        [Symbol.iterator]() {
+            return iterable[Symbol.iterator]();
+        },
+        next() {
+            return iterator.next().value;
+        },
+        seek(value) {
+            iterable = makeIterable(value);
+            iterator = iterable[Symbol.iterator]();
+            return this.next();
+        }
+    };
+}
+exports.intersection = intersection;
+;
+function union(iterables, collator) {
+    function* makeIterable(value) {
+        let entries = [];
+        for (let iterable of iterables) {
+            let candidate = iterable.seek(value);
+            if (candidate == null) {
+                continue;
+            }
+            entries.push({
+                iterable,
+                candidate
+            });
+        }
+        while (true) {
+            let minEntry;
+            for (let entry of entries) {
+                if (minEntry == null || collator(entry.candidate, minEntry.candidate) < 0) {
+                    minEntry = entry;
+                }
+            }
+            if (minEntry == null) {
+                break;
+            }
+            let minCandidate = minEntry.candidate;
+            yield minCandidate;
+            let nextEntries = [];
+            for (let entry of entries) {
+                let candidate = entry.candidate;
+                if (collator(entry.candidate, minCandidate) === 0) {
+                    candidate = entry.iterable.next();
+                }
+                if (candidate == null) {
+                    continue;
+                }
+                entry.candidate = candidate;
+                nextEntries.push(entry);
+            }
+            entries = nextEntries;
+        }
+    }
+    let iterable = makeIterable(undefined);
+    let iterator = iterable[Symbol.iterator]();
+    return {
+        [Symbol.iterator]() {
+            return iterable[Symbol.iterator]();
+        },
+        next() {
+            return iterator.next().value;
+        },
+        seek(value) {
+            iterable = makeIterable(value);
+            iterator = iterable[Symbol.iterator]();
+            return this.next();
+        }
+    };
+}
+exports.union = union;
 ;

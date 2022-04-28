@@ -39,6 +39,26 @@ export declare class RadixTreeWalker {
     constructor(blockManager: BlockManager, relationship: Relationship, keys: Array<Array<number>>, directions: Array<Direction>);
     traverse(bid: number): Iterable<number>;
 }
+export declare abstract class RadixTreeTraverser {
+    protected blockManager: BlockManager;
+    protected bid: number;
+    protected abstract doTraverse(bid: number, keys: Array<Array<number>>, key: Array<number>): Iterable<number>;
+    protected traverseUnconditionally(bid: number): Iterable<number>;
+    constructor(blockManager: BlockManager, bid: number);
+    traverse(keys: Array<Array<number>>): Iterable<number>;
+}
+export declare class RadixTreeTraverserAt extends RadixTreeTraverser {
+    protected doTraverse(bid: number, keys: Array<Array<number>>, keyNibbles: Array<number>): Iterable<number>;
+    constructor(blockManager: BlockManager, bid: number);
+}
+export declare class RadixTreeTraverserPrefix extends RadixTreeTraverser {
+    protected doTraverse(bid: number, keys: Array<Array<number>>, keyNibbles: Array<number>): Iterable<number>;
+    constructor(blockManager: BlockManager, bid: number);
+}
+export declare class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
+    protected doTraverse(bid: number, keys: Array<Array<number>>, keyNibbles: Array<number>): Iterable<number>;
+    constructor(blockManager: BlockManager, bid: number);
+}
 export declare class RadixTree {
     private blockManager;
     private blockIndex;
@@ -47,10 +67,10 @@ export declare class RadixTree {
     private doLocate;
     private doRemove;
     private doVacate;
-    private locate;
+    private traverse;
     constructor(blockManager: BlockManager, blockIndex?: number);
     [Symbol.iterator](): Iterator<number>;
-    branch(keys: Array<Uint8Array>): RadixTree | undefined;
+    branch(relationship: Relationship, keys: Array<Uint8Array>): Iterable<RadixTree>;
     delete(): void;
     filter(relationship: Relationship, keys: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number>;
     insert(keys: Array<Uint8Array>, value: number): boolean;

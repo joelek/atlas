@@ -18,3 +18,11 @@ export declare class Tokenizer {
     private constructor();
     static tokenize(value: string, maxTokenCount?: number): Array<string>;
 }
+export interface SeekableIterable<A> extends Iterable<A> {
+    next(): A | undefined;
+    seek(value: A | undefined): A | undefined;
+}
+export declare type Collator<A> = (one: A, two: A) => number;
+export declare function makeSeekableIterable<A>(source: Iterable<A>, collator: Collator<A>): SeekableIterable<A>;
+export declare function intersection<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A>;
+export declare function union<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A>;

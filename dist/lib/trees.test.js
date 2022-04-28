@@ -5,6 +5,7 @@ const blocks_1 = require("./blocks");
 const files_1 = require("./files");
 const trees_1 = require("./trees");
 const test_1 = require("./test");
+const streams_1 = require("./streams");
 function getKeyFromString(string) {
     return bedrock.utils.Chunk.fromString(string, "utf-8");
 }
@@ -393,14 +394,14 @@ function getKeyFromString(string) {
     tree.insert([getKeyFromString("two")], 4);
     tree.insert([getKeyFromString("two"), getKeyFromString("a")], 5);
     tree.insert([getKeyFromString("two"), getKeyFromString("b")], 6);
-    (0, test_1.test)(`It should return the correct branch for an existing key.`, async (assert) => {
-        let results = tree.branch([getKeyFromString("one")]);
+    (0, test_1.test)(`It should return the correct branch for an existing key in "=" mode.`, async (assert) => {
+        let results = streams_1.StreamIterable.of(tree.branch("=", [getKeyFromString("one")])).shift();
         let observed = Array.from(results ?? []);
         let expected = [2, 3];
         assert.array.equals(observed, expected);
     });
-    (0, test_1.test)(`It should return the correct branch for a non-existing key.`, async (assert) => {
-        let results = tree.branch([getKeyFromString("three")]);
+    (0, test_1.test)(`It should return the correct branch for a non-existing key in "=" mode.`, async (assert) => {
+        let results = streams_1.StreamIterable.of(tree.branch("=", [getKeyFromString("three")])).shift();
         let observed = Array.from(results ?? []);
         let expected = [];
         assert.array.equals(observed, expected);
@@ -525,7 +526,7 @@ function getKeyFromString(string) {
         Array.from(tree);
     });
     await assert.throws(async () => {
-        tree.branch([]);
+        Array.from(tree.branch("=", []));
     });
     await assert.throws(async () => {
         tree.delete();

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadixTree = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
+exports.RadixTree = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
 const asserts_1 = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const utils_1 = require("./utils");
@@ -391,6 +391,219 @@ class RadixTreeWalker {
 }
 exports.RadixTreeWalker = RadixTreeWalker;
 ;
+class RadixTreeTraverser {
+    blockManager;
+    bid;
+    *traverseUnconditionally(bid) {
+        yield bid;
+        if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+            for (let i = 0; i < 16; i++) {
+                let child = body.child(i);
+                if (child !== 0) {
+                    yield* this.traverseUnconditionally(child);
+                }
+            }
+        }
+    }
+    constructor(blockManager, bid) {
+        this.blockManager = blockManager;
+        this.bid = bid;
+    }
+    traverse(keys) {
+        return this.doTraverse(this.bid, keys.slice(1), keys[0] ?? []);
+    }
+}
+exports.RadixTreeTraverser = RadixTreeTraverser;
+;
+class RadixTreeTraverserAt extends RadixTreeTraverser {
+    *doTraverse(bid, keys, keyNibbles) {
+        let head = new NodeHead();
+        this.blockManager.readBlock(bid, head.buffer, 0);
+        let nodeNibbles = head.prefix();
+        let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
+        let nextNodeNibble = nodeNibbles[commonPrefixLength];
+        let nextKeyNibble = keyNibbles[commonPrefixLength];
+        if (nextKeyNibble == null) {
+            if (nextNodeNibble == null) {
+                // Key ("ab") is identical to node ("ab").
+                if (keys.length === 0) {
+                    yield bid;
+                }
+                else {
+                    let subtree = head.subtree();
+                    if (subtree !== 0) {
+                        yield* this.doTraverse(subtree, keys.slice(1), keys[0]);
+                    }
+                }
+            }
+            else {
+                // Key ("a") is prefix to node ("ab").
+                return;
+            }
+        }
+        else {
+            if (nextNodeNibble == null) {
+                // Node ("a") is prefix to key ("ab").
+                if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
+                    return;
+                }
+                let body = new NodeBody();
+                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let child = body.child(nextKeyNibble);
+                if (child !== 0) {
+                    yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
+                }
+            }
+            else {
+                if (nextKeyNibble < nextNodeNibble) {
+                    // Key ("aa") is sibling before node ("ab").
+                    return;
+                }
+                else {
+                    // Key ("ac") is sibling after node ("ab").
+                    return;
+                }
+            }
+        }
+    }
+    constructor(blockManager, bid) {
+        super(blockManager, bid);
+    }
+}
+exports.RadixTreeTraverserAt = RadixTreeTraverserAt;
+;
+class RadixTreeTraverserPrefix extends RadixTreeTraverser {
+    *doTraverse(bid, keys, keyNibbles) {
+        let head = new NodeHead();
+        this.blockManager.readBlock(bid, head.buffer, 0);
+        let nodeNibbles = head.prefix();
+        let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
+        let nextNodeNibble = nodeNibbles[commonPrefixLength];
+        let nextKeyNibble = keyNibbles[commonPrefixLength];
+        if (nextKeyNibble == null) {
+            if (nextNodeNibble == null) {
+                // Key ("ab") is identical to node ("ab").
+                if (keys.length === 0) {
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    let subtree = head.subtree();
+                    if (subtree !== 0) {
+                        yield* this.doTraverse(subtree, keys.slice(1), keys[0]);
+                    }
+                }
+            }
+            else {
+                // Key ("a") is prefix to node ("ab").
+                if (keys.length === 0) {
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    return;
+                }
+            }
+        }
+        else {
+            if (nextNodeNibble == null) {
+                // Node ("a") is prefix to key ("ab").
+                if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
+                    return;
+                }
+                let body = new NodeBody();
+                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let child = body.child(nextKeyNibble);
+                if (child !== 0) {
+                    yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
+                }
+            }
+            else {
+                if (nextKeyNibble < nextNodeNibble) {
+                    // Key ("aa") is sibling before node ("ab").
+                    return;
+                }
+                else {
+                    // Key ("ac") is sibling after node ("ab").
+                    return;
+                }
+            }
+        }
+    }
+    constructor(blockManager, bid) {
+        super(blockManager, bid);
+    }
+}
+exports.RadixTreeTraverserPrefix = RadixTreeTraverserPrefix;
+;
+class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
+    *doTraverse(bid, keys, keyNibbles) {
+        let head = new NodeHead();
+        this.blockManager.readBlock(bid, head.buffer, 0);
+        let nodeNibbles = head.prefix();
+        let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
+        let nextNodeNibble = nodeNibbles[commonPrefixLength];
+        let nextKeyNibble = keyNibbles[commonPrefixLength];
+        if (nextKeyNibble == null) {
+            if (nextNodeNibble == null) {
+                // Key ("ab") is identical to node ("ab").
+                if (keys.length === 0) {
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    let subtree = head.subtree();
+                    if (subtree !== 0) {
+                        yield* this.doTraverse(subtree, keys.slice(1), keys[0]);
+                    }
+                }
+            }
+            else {
+                // Key ("a") is prefix to node ("ab").
+                if (keys.length === 0) {
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    yield* this.traverseUnconditionally(bid);
+                }
+            }
+        }
+        else {
+            if (nextNodeNibble == null) {
+                // Node ("a") is prefix to key ("ab").
+                if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
+                    return;
+                }
+                let body = new NodeBody();
+                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let child = body.child(nextKeyNibble);
+                if (child !== 0) {
+                    yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
+                }
+                for (let i = nextKeyNibble + 1; i < 16; i++) {
+                    let child = body.child(i);
+                    if (child !== 0) {
+                        yield* this.traverseUnconditionally(child);
+                    }
+                }
+            }
+            else {
+                if (nextKeyNibble < nextNodeNibble) {
+                    // Key ("aa") is sibling before node ("ab").
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    // Key ("ac") is sibling after node ("ab").
+                    return;
+                }
+            }
+        }
+    }
+    constructor(blockManager, bid) {
+        super(blockManager, bid);
+    }
+}
+exports.RadixTreeTraverserAtOrAfter = RadixTreeTraverserAtOrAfter;
+;
 class RadixTree {
     blockManager;
     blockIndex;
@@ -674,9 +887,21 @@ class RadixTree {
             this.blockManager.deleteBlock(bid);
         }
     }
-    locate(keys) {
+    traverse(relationship, keys) {
         let nibbles = keys.map(getNibblesFromBytes);
-        return this.doLocate(nibbles.slice(1), this.blockIndex, nibbles[0] ?? []);
+        if (relationship === "=") {
+            return new RadixTreeTraverserAt(this.blockManager, this.blockIndex)
+                .traverse(nibbles);
+        }
+        if (relationship === "^=") {
+            return new RadixTreeTraverserPrefix(this.blockManager, this.blockIndex)
+                .traverse(nibbles);
+        }
+        if (relationship === ">=") {
+            return new RadixTreeTraverserAtOrAfter(this.blockManager, this.blockIndex)
+                .traverse(nibbles);
+        }
+        throw "Expected code to be unreachable!";
     }
     constructor(blockManager, blockIndex) {
         this.blockManager = blockManager;
@@ -685,18 +910,17 @@ class RadixTree {
     *[Symbol.iterator]() {
         yield* this.filter("^=", []);
     }
-    branch(keys) {
-        let bid = this.locate(keys);
-        if (bid == null) {
-            return;
+    *branch(relationship, keys) {
+        let bids = this.traverse(relationship, keys);
+        for (let bid of bids) {
+            let head = new NodeHead();
+            this.blockManager.readBlock(bid, head.buffer, 0);
+            let subtree = head.subtree();
+            if (subtree === 0) {
+                continue;
+            }
+            yield new RadixTree(this.blockManager, subtree);
         }
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
-        let subtree = head.subtree();
-        if (subtree === 0) {
-            return;
-        }
-        return new RadixTree(this.blockManager, subtree);
     }
     delete() {
         this.doDelete(this.blockIndex);
@@ -718,17 +942,16 @@ class RadixTree {
         return head.total();
     }
     lookup(keys) {
-        let bid = this.locate(keys);
-        if (bid == null) {
-            return;
+        let bids = this.traverse("=", keys);
+        for (let bid of bids) {
+            let head = new NodeHead();
+            this.blockManager.readBlock(bid, head.buffer, 0);
+            let resident = head.resident();
+            if (resident === 0) {
+                return;
+            }
+            return resident;
         }
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
-        let resident = head.resident();
-        if (resident === 0) {
-            return;
-        }
-        return resident;
     }
     remove(keys) {
         let nibbles = keys.map(getNibblesFromBytes);

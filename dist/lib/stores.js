@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableStore = exports.Store = exports.SearchIndex = exports.Index = exports.StoreManager = exports.SearchIndexManagerV2 = exports.SearchIndexManagerV1 = exports.getFirstTokenBefore = exports.getFirstCompletion = exports.IndexManager = exports.FilteredStore = exports.WritableStoreManager = void 0;
+exports.OverridableWritableStore = exports.Store = exports.SearchIndex = exports.Index = exports.StoreManager = exports.SearchIndexManagerV3 = exports.makeSeekableIterable = exports.SearchIndexManagerV2 = exports.SearchIndexManagerV1 = exports.getFirstTokenBefore = exports.getFirstCompletion = exports.IndexManager = exports.FilteredStore = exports.WritableStoreManager = void 0;
 const bedrock = require("@joelek/bedrock");
 const streams_1 = require("./streams");
 const filters_1 = require("./filters");
@@ -148,7 +148,7 @@ class IndexManager {
             }
             if (filter instanceof filters_1.EqualityFilter) {
                 let encodedValue = filter.getEncodedValue();
-                let branch = tree.branch([encodedValue]);
+                let branch = streams_1.StreamIterable.of(tree.branch("=", [encodedValue])).shift();
                 if (branch == null) {
                     return;
                 }
@@ -246,9 +246,9 @@ class SearchIndexManagerV1 {
         }
         return this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
     }
-    getNextMatch(token, relationship, prefix, previousResult) {
+    getNextMatch(category, token, relationship, prefix, previousResult) {
         let keys = [
-            bedrock.codecs.Integer.encodePayload(1),
+            bedrock.codecs.Integer.encodePayload(category),
             bedrock.codecs.String.encodePayload(token)
         ];
         if (previousResult != null) {
@@ -400,7 +400,7 @@ class SearchIndexManagerV1 {
         let lastQueryToken = queryTokens.pop() ?? "";
         if (queryTokens.length === 0) {
             while (true) {
-                let prefixCandidate = this.getNextMatch(lastQueryToken, ">", true, previousResult);
+                let prefixCandidate = this.getNextMatch(queryTokens.length + 1, lastQueryToken, ">", true, previousResult);
                 if (prefixCandidate == null) {
                     return;
                 }
@@ -413,7 +413,7 @@ class SearchIndexManagerV1 {
             while (true) {
                 let tokenCandidates = [];
                 for (let queryToken of queryTokens) {
-                    let nextTokenResult = this.getNextMatch(queryToken, relationship, false, previousResult);
+                    let nextTokenResult = this.getNextMatch(queryTokens.length + 1, queryToken, relationship, false, previousResult);
                     if (nextTokenResult == null) {
                         return;
                     }
@@ -424,7 +424,7 @@ class SearchIndexManagerV1 {
                 let maximumTokenCandidate = tokenCandidates[tokenCandidates.length - 1];
                 previousResult = maximumTokenCandidate;
                 if (minimumTokenCandidate.bid === maximumTokenCandidate.bid) {
-                    let prefixCandidate = this.getNextMatch(lastQueryToken, ">=", true, maximumTokenCandidate);
+                    let prefixCandidate = this.getNextMatch(queryTokens.length + 1, lastQueryToken, ">=", true, maximumTokenCandidate);
                     if (prefixCandidate == null) {
                         return;
                     }
@@ -592,19 +592,19 @@ class SearchIndexManagerV2 {
         let relationship = previousResult != null ? ">" : ">=";
         let trees = [];
         for (let queryToken of queryTokens) {
-            let tree = this.tree.branch([
+            let tree = streams_1.StreamIterable.of(this.tree.branch("=", [
                 bedrock.codecs.Boolean.encodePayload(false),
                 bedrock.codecs.String.encodePayload(queryToken)
-            ]);
+            ])).shift();
             if (tree == null) {
                 return;
             }
             trees.push(tree);
         }
-        let tree = this.tree.branch([
+        let tree = streams_1.StreamIterable.of(this.tree.branch("=", [
             bedrock.codecs.Boolean.encodePayload(true),
             bedrock.codecs.String.encodePayload(lastQueryToken)
-        ]);
+        ])).shift();
         if (tree == null) {
             return;
         }
@@ -695,6 +695,199 @@ class SearchIndexManagerV2 {
     }
 }
 exports.SearchIndexManagerV2 = SearchIndexManagerV2;
+;
+function makeSeekableIterable(tree, value) {
+    function makeIterable(value, skip) {
+        if (value != null) {
+            if (skip) {
+                return tree.filter(">", [
+                    bedrock.codecs.Integer.encodePayload(value)
+                ]);
+            }
+            else {
+                return tree.filter(">=", [
+                    bedrock.codecs.Integer.encodePayload(value)
+                ]);
+            }
+        }
+        else {
+            return tree;
+        }
+    }
+    let iterable = makeIterable(value, true);
+    let iterator = iterable[Symbol.iterator]();
+    return {
+        [Symbol.iterator]() {
+            return iterable[Symbol.iterator]();
+        },
+        next() {
+            return iterator.next().value;
+        },
+        seek(value) {
+            iterable = makeIterable(value, false);
+            iterator = iterable[Symbol.iterator]();
+            return this.next();
+        }
+    };
+}
+exports.makeSeekableIterable = makeSeekableIterable;
+;
+class SearchIndexManagerV3 {
+    recordManager;
+    blockManager;
+    key;
+    tree;
+    computeRank(recordTokens, queryTokens) {
+        return queryTokens.length - recordTokens.length;
+    }
+    computeRecordRank(record, query) {
+        let recordTokens = this.tokenizeRecord(record);
+        let queryTokens = utils_1.Tokenizer.tokenize(query);
+        let lastQueryToken = queryTokens.pop() ?? "";
+        for (let queryToken of queryTokens) {
+            if (recordTokens.find((recordToken) => recordToken === queryToken) == null) {
+                return;
+            }
+        }
+        if (recordTokens.find((recordToken) => recordToken.startsWith(lastQueryToken)) == null) {
+            return;
+        }
+        return this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
+    }
+    insertToken(token, category, bid) {
+        this.tree.insert([
+            bedrock.codecs.Integer.encodePayload(category),
+            bedrock.codecs.String.encodePayload(token),
+            bedrock.codecs.Integer.encodePayload(bid)
+        ], bid);
+    }
+    removeToken(token, category, bid) {
+        this.tree.remove([
+            bedrock.codecs.Integer.encodePayload(category),
+            bedrock.codecs.String.encodePayload(token),
+            bedrock.codecs.Integer.encodePayload(bid)
+        ]);
+    }
+    readRecord(bid) {
+        let buffer = this.blockManager.readBlock(bid);
+        let record = this.recordManager.decode(buffer);
+        return record;
+    }
+    tokenizeRecord(record) {
+        let value = record[this.key];
+        if (typeof value === "string") {
+            return utils_1.Tokenizer.tokenize(value);
+        }
+        return [];
+    }
+    constructor(recordManager, blockManager, key, options) {
+        this.recordManager = recordManager;
+        this.blockManager = blockManager;
+        this.key = key;
+        this.tree = new trees_1.RadixTree(blockManager, options?.bid);
+    }
+    *[Symbol.iterator]() {
+        yield* streams_1.StreamIterable.of(this.search(""));
+    }
+    delete() {
+        this.tree.delete();
+    }
+    insert(record, bid) {
+        let tokens = this.tokenizeRecord(record);
+        for (let token of tokens) {
+            this.insertToken(token, tokens.length, bid);
+        }
+    }
+    remove(record, bid) {
+        let tokens = this.tokenizeRecord(record);
+        for (let token of tokens) {
+            this.removeToken(token, tokens.length, bid);
+        }
+    }
+    *search(query, bid) {
+        let queryTokens = utils_1.Tokenizer.tokenize(query);
+        if (queryTokens.length === 0) {
+            return;
+        }
+        let queryCategory = queryTokens.length;
+        let firstCategory = queryCategory;
+        if (bid != null) {
+            let record = this.readRecord(bid);
+            let recordTokens = this.tokenizeRecord(record);
+            let recordCategory = recordTokens.length;
+            if (recordCategory < queryCategory) {
+                return;
+            }
+            firstCategory = recordCategory;
+        }
+        let encodedQueryTokens = queryTokens.map((queryToken) => {
+            return bedrock.codecs.String.encodePayload(queryToken);
+        });
+        let categoryBranches = this.tree.branch(">=", [
+            bedrock.codecs.Integer.encodePayload(firstCategory)
+        ]);
+        let firstBidInCategory = bid ?? 0;
+        for (let categoryBranch of categoryBranches) {
+            let tokenBranches = encodedQueryTokens.map((encodedQueryToken, index) => {
+                return categoryBranch.branch(index < encodedQueryTokens.length - 1 ? "=" : "^=", [
+                    encodedQueryToken
+                ]);
+            });
+            let iterables = tokenBranches.map((tokenBranch) => {
+                let iterables = Array.from(tokenBranch)
+                    .map((tree) => makeSeekableIterable(tree, firstBidInCategory));
+                return (0, utils_1.union)(iterables, (one, two) => one - two);
+            });
+            let iterable = (0, utils_1.intersection)(iterables, (one, two) => one - two);
+            for (let bid of iterable) {
+                let record = this.readRecord(bid);
+                let recordTokens = this.tokenizeRecord(record);
+                let rank = this.computeRank(recordTokens, queryTokens);
+                yield {
+                    bid,
+                    record,
+                    tokens: recordTokens,
+                    rank
+                };
+            }
+            firstBidInCategory = 0;
+        }
+    }
+    update(oldRecord, newRecord, bid) {
+        this.remove(oldRecord, bid);
+        this.insert(newRecord, bid);
+    }
+    vacate() {
+        this.tree.vacate();
+    }
+    static *search(searchIndexManagers, query, bid) {
+        let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
+        let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
+        let searchResults = iterators.map((iterator) => iterator.next().value);
+        outer: while (true) {
+            let candidates = searchResults
+                .map((searchResult, index) => ({ searchResult, index }))
+                .filter((candidate) => candidate.searchResult != null)
+                .sort((one, two) => {
+                return one.searchResult.rank - two.searchResult.rank;
+            });
+            let candidate = candidates.pop();
+            if (candidate == null) {
+                break;
+            }
+            inner: for (let searchIndexManager of searchIndexManagers) {
+                let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
+                if (rank != null && rank > candidate.searchResult.rank) {
+                    searchResults[candidate.index] = iterators[candidate.index].next().value;
+                    continue outer;
+                }
+            }
+            yield candidate.searchResult;
+            searchResults[candidate.index] = iterators[candidate.index].next().value;
+        }
+    }
+}
+exports.SearchIndexManagerV3 = SearchIndexManagerV3;
 ;
 class StoreManager {
     blockManager;
@@ -830,7 +1023,7 @@ class StoreManager {
     }
     search(query, anchorKeysRecord, limit) {
         let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-        let iterable = streams_1.StreamIterable.of(SearchIndexManagerV1.search(this.searchIndexManagers, query, anchorBid));
+        let iterable = streams_1.StreamIterable.of(SearchIndexManagerV3.search(this.searchIndexManagers, query, anchorBid));
         if (limit != null) {
             iterable = iterable.limit(limit);
         }
@@ -877,7 +1070,7 @@ class StoreManager {
             }
         });
         let indexManagers = indices.map((index) => new IndexManager(recordManager, blockManager, index.keys));
-        let searchIndexManagers = searchIndices.map((index) => new SearchIndexManagerV1(recordManager, blockManager, index.key));
+        let searchIndexManagers = searchIndices.map((index) => new SearchIndexManagerV3(recordManager, blockManager, index.key));
         let manager = new StoreManager(blockManager, fields, keys, orders, storage, indexManagers, searchIndexManagers);
         return manager;
     }

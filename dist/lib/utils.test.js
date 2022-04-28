@@ -179,3 +179,21 @@ async function delay(ms) {
     events.push("E");
     assert.array.equals(events, ["S", "1S", "1E", "2S", "2E", "E"]);
 });
+(0, test_1.test)(`It should generate unions.`, async (assert) => {
+    let a = index.makeSeekableIterable([100, 101], (one, two) => one - two);
+    let b = index.makeSeekableIterable([99, 100, 101], (one, two) => one - two);
+    let c = index.makeSeekableIterable([99, 100], (one, two) => one - two);
+    let union = index.union([a, b, c], (one, two) => one - two);
+    let observed = Array.from(union);
+    let expected = [99, 100, 101];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should generate intersections.`, async (assert) => {
+    let a = index.makeSeekableIterable([100, 101], (one, two) => one - two);
+    let b = index.makeSeekableIterable([99, 100, 101], (one, two) => one - two);
+    let c = index.makeSeekableIterable([99, 100], (one, two) => one - two);
+    let intersection = index.intersection([a, b, c], (one, two) => one - two);
+    let observed = Array.from(intersection);
+    let expected = [100];
+    assert.array.equals(observed, expected);
+});

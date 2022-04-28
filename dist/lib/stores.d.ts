@@ -4,6 +4,8 @@ import { OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
+import { RadixTree } from "./trees";
+import { SeekableIterable } from "./utils";
 export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
     insert(record: A): Promise<void>;
@@ -117,6 +119,30 @@ export declare class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
     vacate(): void;
     static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV2<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>>;
 }
+export declare function makeSeekableIterable(tree: RadixTree, value: number): SeekableIterable<number>;
+export declare class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
+    private recordManager;
+    private blockManager;
+    private key;
+    private tree;
+    private computeRank;
+    private computeRecordRank;
+    private insertToken;
+    private removeToken;
+    private readRecord;
+    private tokenizeRecord;
+    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
+        bid?: number;
+    });
+    [Symbol.iterator](): Iterator<SearchResult<A>>;
+    delete(): void;
+    insert(record: A, bid: number): void;
+    remove(record: A, bid: number): void;
+    search(query: string, bid?: number): Iterable<SearchResult<A>>;
+    update(oldRecord: A, newRecord: A, bid: number): void;
+    vacate(): void;
+    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>>;
+}
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
     private fields;
@@ -128,7 +154,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private searchIndexManagers;
     private getDefaultRecord;
     private lookupBlockIndex;
-    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManagerV1<A, Key<A>>>);
+    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>);
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
