@@ -125,3 +125,168 @@ export class Tokenizer {
 		return Array.from(new Set(normalized.match(/(\p{L}+|\p{N}+)/gu) ?? [])).slice(0, maxTokenCount);
 	}
 };
+
+export interface SeekableIterable<A> extends Iterable<A> {
+	next(): A | undefined;
+	seek(value: A | undefined): A | undefined;
+};
+
+export type Collator<A> = (one: A, two: A) => number;
+
+export function makeSeekableIterable<A>(source: Iterable<A>, collator: Collator<A>): SeekableIterable<A> {
+	let array = Array.from(source).sort(collator);
+	function makeIterable(value: A | undefined): Iterable<A> {
+		if (value != null) {
+			return array.filter((item) => collator(item, value) >= 0);
+		} else {
+			return array;
+		}
+	}
+	let iterable = makeIterable(undefined);
+	let iterator = iterable[Symbol.iterator]();
+	return {
+		[Symbol.iterator]() {
+			return iterable[Symbol.iterator]();
+		},
+		next() {
+			return iterator.next().value;
+		},
+		seek(value) {
+			iterable = makeIterable(value);
+			iterator = iterable[Symbol.iterator]();
+			return this.next();
+		}
+	};
+};
+
+export function intersection<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A> {
+	function * makeIterable(value: A | undefined): Iterable<A> {
+		let entries = [] as Array<{ iterable: SeekableIterable<A>, candidate: A }>;
+		let maxCandidate = value;
+		for (let iterable of iterables) {
+			let candidate = iterable.seek(maxCandidate);
+			if (candidate == null) {
+				return;
+			}
+			if (maxCandidate == null || collator(candidate, maxCandidate) > 0) {
+				maxCandidate = candidate;
+			}
+			entries.push({
+				iterable,
+				candidate
+			});
+		}
+		while (true) {
+			let minEntry: { iterable: SeekableIterable<A>, candidate: A } | undefined;
+			let maxEntry: { iterable: SeekableIterable<A>, candidate: A } | undefined;
+			for (let entry of entries) {
+				if (minEntry == null || collator(entry.candidate, minEntry.candidate) < 0) {
+					minEntry = entry;
+				}
+				if (maxEntry == null || collator(entry.candidate, maxEntry.candidate) > 0) {
+					maxEntry = entry;
+				}
+			}
+			if (maxEntry == null || minEntry == null) {
+				break;
+			}
+			let match = collator(minEntry.candidate, maxEntry.candidate) === 0;
+			let maxCandidate = maxEntry.candidate;
+			if (match) {
+				yield maxCandidate;
+			}
+			let nextEntries = [] as Array<{ iterable: SeekableIterable<A>, candidate: A }>;
+			for (let entry of entries) {
+				let candidate = entry.candidate as A | undefined;
+				if (match) {
+					candidate = entry.iterable.next();
+				} else {
+					if (collator(entry.candidate, maxCandidate) < 0) {
+						candidate = entry.iterable.seek(maxCandidate);
+					}
+				}
+				if (candidate == null) {
+					return;
+				}
+				if (maxCandidate == null || collator(candidate, maxCandidate) > 0) {
+					maxCandidate = candidate;
+				}
+				entry.candidate = candidate;
+				nextEntries.push(entry);
+			}
+			entries = nextEntries;
+		}
+	}
+	let iterable = makeIterable(undefined);
+	let iterator = iterable[Symbol.iterator]();
+	return {
+		[Symbol.iterator]() {
+			return iterable[Symbol.iterator]();
+		},
+		next() {
+			return iterator.next().value;
+		},
+		seek(value) {
+			iterable = makeIterable(value);
+			iterator = iterable[Symbol.iterator]();
+			return this.next();
+		}
+	};
+};
+
+export function union<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A> {
+	function * makeIterable(value: A | undefined): Iterable<A> {
+		let entries = [] as Array<{ iterable: SeekableIterable<A>, candidate: A }>;
+		for (let iterable of iterables) {
+			let candidate = iterable.seek(value);
+			if (candidate == null) {
+				continue;
+			}
+			entries.push({
+				iterable,
+				candidate
+			});
+		}
+		while (true) {
+			let minEntry: { iterable: SeekableIterable<A>, candidate: A } | undefined;
+			for (let entry of entries) {
+				if (minEntry == null || collator(entry.candidate, minEntry.candidate) < 0) {
+					minEntry = entry;
+				}
+			}
+			if (minEntry == null) {
+				break;
+			}
+			let minCandidate = minEntry.candidate;
+			yield minCandidate;
+			let nextEntries = [] as Array<{ iterable: SeekableIterable<A>, candidate: A }>;
+			for (let entry of entries) {
+				let candidate = entry.candidate as A | undefined;
+				if (collator(entry.candidate, minCandidate) === 0) {
+					candidate = entry.iterable.next();
+				}
+				if (candidate == null) {
+					continue;
+				}
+				entry.candidate = candidate;
+				nextEntries.push(entry);
+			}
+			entries = nextEntries;
+		}
+	}
+	let iterable = makeIterable(undefined);
+	let iterator = iterable[Symbol.iterator]();
+	return {
+		[Symbol.iterator]() {
+			return iterable[Symbol.iterator]();
+		},
+		next() {
+			return iterator.next().value;
+		},
+		seek(value) {
+			iterable = makeIterable(value);
+			iterator = iterable[Symbol.iterator]();
+			return this.next();
+		}
+	};
+};
