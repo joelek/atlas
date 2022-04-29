@@ -1191,7 +1191,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private recordManager: RecordManager<A>;
 	private table: Table;
 	private indexManagers: Array<IndexManager<A, Keys<A>>>;
-	private searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>;
+	private searchIndexManagers: Array<SearchIndexManagerV4<A, Key<A>>>;
 
 	private getDefaultRecord(): A {
 		let record = {} as A;
@@ -1211,7 +1211,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return index;
 	}
 
-	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>) {
+	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManagerV4<A, Key<A>>>) {
 		this.blockManager = blockManager;
 		this.fields = fields;
 		this.keys = keys;
@@ -1327,7 +1327,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 
 	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-		let iterable = StreamIterable.of(SearchIndexManagerV3.search(this.searchIndexManagers, query, anchorBid));
+		let iterable = StreamIterable.of(SearchIndexManagerV4.search(this.searchIndexManagers, query, anchorBid));
 		if (limit != null) {
 			iterable = iterable.limit(limit);
 		}
@@ -1382,7 +1382,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			}
 		});
 		let indexManagers = indices.map((index) => new IndexManager<A, Keys<A>>(recordManager, blockManager, index.keys));
-		let searchIndexManagers = searchIndices.map((index) => new SearchIndexManagerV3<A, Key<A>>(recordManager, blockManager, index.key));
+		let searchIndexManagers = searchIndices.map((index) => new SearchIndexManagerV4<A, Key<A>>(recordManager, blockManager, index.key));
 		let manager = new StoreManager(blockManager, fields, keys, orders, storage, indexManagers, searchIndexManagers);
 		return manager;
 	}

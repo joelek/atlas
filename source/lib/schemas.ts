@@ -5,7 +5,7 @@ import { Table } from "./tables";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
-import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager, SearchIndex, SearchIndexManagerV3 } from "./stores";
+import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager, SearchIndex, SearchIndexManagerV4 } from "./stores";
 import { BlockManager } from "./blocks";
 import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries } from "./queries";
 import { EqualityOperator, Operator, OperatorMap, Operators } from "./operators";
@@ -366,8 +366,8 @@ export class SchemaManager {
 		});
 	}
 
-	private loadSearchIndexManager(recordManager: RecordManager<any>, blockManager: BlockManager, searchIndexSchema: SearchIndexSchema): SearchIndexManagerV3<any, any> {
-		return new SearchIndexManagerV3(recordManager, blockManager, searchIndexSchema.key, {
+	private loadSearchIndexManager(recordManager: RecordManager<any>, blockManager: BlockManager, searchIndexSchema: SearchIndexSchema): SearchIndexManagerV4<any, any> {
+		return new SearchIndexManagerV4(recordManager, blockManager, searchIndexSchema.key, {
 			bid: searchIndexSchema.bid
 		});
 	}
