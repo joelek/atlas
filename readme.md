@@ -456,3 +456,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Improve DurableFile by keeping all log entry headers in memory.
 * Consider making WAL page-based.
 * Investigate caching of tree branches for quick traversal.
+* Make prefix searches optional.
