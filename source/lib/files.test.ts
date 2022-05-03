@@ -275,10 +275,10 @@ test(`It should endure through multiple transactions and thousands of operations
 		persistTime += Number(t1 - t0) / 1000 / 1000;
 		timesPersisted += 1;
 	}
-/* 	console.log(`Read: ${(readTime/timesRead).toFixed(3)} ms`);
-	console.log(`Write: ${(writeTime/timesWritten).toFixed(3)} ms`);
-	console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
-	console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`); */
+	//console.log(`Read: ${(readTime/timesRead).toFixed(3)} ms`);
+	//console.log(`Write: ${(writeTime/timesWritten).toFixed(3)} ms`);
+	//console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
+	//console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`);
 });
 
 test(`It should support reading with different overlaps (PagedFile).`, async (assert) => {
