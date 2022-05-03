@@ -50,8 +50,11 @@ export class BlockHeader extends Chunk {
 
 	static getLength(category: number): number {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, category);
-		let length = Math.pow(2, category);
-		return length;
+		if (category <= 31) {
+			return (1 << category) >>> 0;
+		} else {
+			return Math.pow(2, category);
+		}
 	}
 
 	static readonly LENGTH = 8;
