@@ -334,7 +334,7 @@ export class DurableFile extends File {
 	}
 
 	persist(): void {
-		if (this.log.size() > LogHeader.LENGTH) {
+		if (this.log.size() > LogHeader.LENGTH || this.bin.size() !== this.header.redoSize()) {
 			this.header.write(this.log, 0);
 			this.log.persist();
 			this.redo();
