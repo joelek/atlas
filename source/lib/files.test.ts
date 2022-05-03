@@ -67,6 +67,22 @@ for (let key in constructors) {
 		assert.true(buffer[1] === 2);
 		assert.true(buffer[2] === 3);
 	});
+
+	test(`It should persist data written (${key}).`, async (assert) => {
+		let file = constructor();
+		file.write(Uint8Array.of(1), 1);
+		file.persist();
+		assert.binary.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(1));
+	});
+
+	test(`It should discard truncated data (${key}).`, async (assert) => {
+		let file = constructor();
+		file.write(Uint8Array.of(1), 1);
+		file.persist();
+		file.resize(0);
+		file.resize(2);
+		assert.binary.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(0));
+	});
 }
 
 test(`It should not persist truncated data (DurableFile).`, async (assert) => {
@@ -75,6 +91,7 @@ test(`It should not persist truncated data (DurableFile).`, async (assert) => {
 	let file = new files.DurableFile(bin, log);
 	file.write(Uint8Array.of(1, 2), 0);
 	file.resize(1);
+	file.persist();
 	file.resize(2);
 	file.persist();
 	let buffer = bin.read(new Uint8Array(2), 0);
