@@ -4,7 +4,7 @@ import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, 
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { File, PagedDurableFile, PagedFile, PhysicalFile } from "./files";
-import { Database, DatabaseManager } from "./databases";
+import { Database } from "./databases";
 import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
