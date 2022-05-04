@@ -2,7 +2,7 @@ import { Cache } from "./caches";
 import { test } from "./test";
 
 test(`It should support iteration.`, async (assert) => {
-	let cache = new Cache<number, {}>({
+	let cache = new Cache<{}>({
 		getWeightForValue: (value) => 1
 	});
 	cache.insert(1, {});
@@ -13,7 +13,7 @@ test(`It should support iteration.`, async (assert) => {
 });
 
 test(`It should support clearing the cache of all inserted values.`, async (assert) => {
-	let cache = new Cache<number, {}>({
+	let cache = new Cache<{}>({
 		getWeightForValue: (value) => 1
 	});
 	cache.insert(1, {});
@@ -25,7 +25,7 @@ test(`It should support clearing the cache of all inserted values.`, async (asse
 });
 
 test(`It should support inserting and looking up an inserted value.`, async (assert) => {
-	let cache = new Cache<number, {}>({
+	let cache = new Cache<{}>({
 		getWeightForValue: (value) => 1
 	});
 	let one = {};
@@ -37,7 +37,7 @@ test(`It should support inserting and looking up an inserted value.`, async (ass
 });
 
 test(`It should keep track of the number of values inserted.`, async (assert) => {
-	let cache = new Cache<number, {}>({
+	let cache = new Cache<{}>({
 		getWeightForValue: (value) => 1
 	});
 	assert.true(cache.length() == 0);
@@ -52,7 +52,7 @@ test(`It should keep track of the number of values inserted.`, async (assert) =>
 });
 
 test(`It should support removing an inserted value.`, async (assert) => {
-	let cache = new Cache<number, {}>({
+	let cache = new Cache<{}>({
 		getWeightForValue: (value) => 1
 	});
 	let one = {};
@@ -74,7 +74,7 @@ test(`It should support removing an inserted value.`, async (assert) => {
 });
 
 test(`It should purge the cache when necessary.`, async (assert) => {
-	let cache = new Cache<number, {}>({
+	let cache = new Cache<{}>({
 		getWeightForValue: (value) => 1
 	}, 1);
 	let one = {};

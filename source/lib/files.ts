@@ -21,13 +21,13 @@ export abstract class File {
 export class CachedFile extends File {
 	private file: File;
 	private tree: stdlib.collections.avl.Tree<Uint8Array>;
-	private cache: Cache<number, Uint8Array>;
+	private cache: Cache<Uint8Array>;
 
 	constructor(file: File, maxWeight?: number) {
 		super();
 		this.file = file;
 		this.tree = new stdlib.collections.avl.Tree<Uint8Array>();
-		this.cache = new Cache<number, Uint8Array>({
+		this.cache = new Cache<Uint8Array>({
 			getWeightForValue: (value) => 64 + value.length,
 			onInsert: (key, value) => this.tree.insert(key, value),
 			onRemove: (key) => this.tree.remove(key)
@@ -472,7 +472,7 @@ export class PagedFile extends File {
 	private file: File;
 	private pageSizeLog2: number;
 	private pageSize: number;
-	private cache: Cache<number, Uint8Array>;
+	private cache: Cache<Uint8Array>;
 
 	constructor(file: File, pageSizeLog2: number, maxPageCount?: number) {
 		if (DEBUG) asserts.IntegerAssert.atLeast(0, pageSizeLog2);
@@ -480,7 +480,7 @@ export class PagedFile extends File {
 		this.file = file;
 		this.pageSizeLog2 = pageSizeLog2;
 		this.pageSize = 2 ** pageSizeLog2;
-		this.cache = new Cache<number, Uint8Array>(undefined, maxPageCount);
+		this.cache = new Cache<Uint8Array>(undefined, maxPageCount);
 	}
 
 	discard(): void {
