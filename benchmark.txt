@@ -131,9 +131,9 @@ search index v2: query "the s", limit 10 [ms]: [OK]
 100 000  4.41 (category 2)
 
 search index v3: insert time [ms/entry]: [OK]
- 10 000  2.04
- 50 000  3.98 (cache limit hit)
-100 000  4.27 (cache limit hit)
+ 10 000  1.26
+ 50 000  1.36
+100 000  1.30
 
 search index v3: database size [KiB/entry]: [OK]
  10 000  0.65
@@ -141,44 +141,44 @@ search index v3: database size [KiB/entry]: [OK]
 100 000  0.53
 
 search index v3: query "hopeless case of a kid in denial", limit 1 [ms]: [OK]
- 10 000  0.27  0.69  0.85  2.41  0.85  0.93  0.64
- 50 000  0.25  0.71  0.83  2.51  0.85  0.96  0.64
-100 000  0.26  0.68  0.89  2.69  0.80  1.04  0.60
+ 10 000  0.27  0.73  0.93  2.40  0.77  0.98  0.57
+ 50 000  0.29  0.67  0.86  2.59  0.85  0.98  0.61
+100 000  0.27  0.69  0.82  2.48  0.81  0.97  0.58
 
 search index v3: query "the for of an a in", limit 1 [ms]: [OK]
- 10 000   5.09
- 50 000  13.54
-100 000  26.07
+ 10 000   5.15
+ 50 000  15.01
+100 000  25.83
 
 search index v3: query "s", limit 1 [ms]: [OK]
- 10 000  3.66
- 50 000  3.70
-100 000  3.43
+ 10 000  3.51
+ 50 000  3.31
+100 000  3.16
 
 search index v3: query "the s", limit 1 [ms]: [OK]
- 10 000  10.73
- 50 000  14.10
-100 000  15.52
+ 10 000  10.99
+ 50 000  15.44
+100 000  15.08
 
 search index v3: query "the for of an a in", limit 10 [ms]: [OK]
- 10 000   5.09
- 50 000  14.57
-100 000  25.98
+ 10 000   5.07
+ 50 000  13.56
+100 000  23.45
 
 search index v3: query "s", limit 10 [ms]: [OK]
- 10 000   3.85 (category 1)
- 50 000   3.83 (category 1)
-100 000   4.16 (category 1)
+ 10 000   3.78 (category 1)
+ 50 000   3.95 (category 1)
+100 000   3.83 (category 1)
 
 search index v3: query "the s", limit 10 [ms]: [OK]
- 10 000  114.99 (category 2 and 3)
- 50 000   24.14 (category 2)
-100 000   24.83 (category 2)
+ 10 000  112.34 (category 2 and 3)
+ 50 000   23.06 (category 2)
+100 000   24.40 (category 2)
 
 search index v4: insert time [ms/entry]: [OK]
- 10 000  17.17 (cache limit hit)
- 50 000  18.86 (cache limit hit)
-100 000  19.04 (cache limit hit)
+ 10 000   5.98
+ 50 000   5.94
+100 000   6.26
 
 search index v4: database size [KiB/entry]: [OK]
  10 000  2.83
@@ -186,36 +186,36 @@ search index v4: database size [KiB/entry]: [OK]
 100 000  2.05
 
 search index v4: query "hopeless case of a kid in denial", limit 1 [ms]: [OK]
- 10 000  0.30  0.74  0.97  0.90  0.85  0.83  0.60
- 50 000  0.31  0.75  0.96  0.93  0.84  0.76  0.63
-100 000  0.32  0.77  0.93  0.96  1.06  0.76  0.59
+ 10 000  0.35  0.76  0.94  1.01  0.90  0.81  0.63
+ 50 000  0.32  0.83  0.93  0.94  0.99  0.79  0.62
+100 000  0.32  0.77  1.00  0.95  0.88  0.88  0.62
 
 search index v4: query "the for of an a in", limit 1 [ms]: [OK]
- 10 000   5.40
- 50 000  11.63
-100 000  18.27
+ 10 000   5.91
+ 50 000  13.17
+100 000  20.50
 
 search index v4: query "s", limit 1 [ms]: [OK]
  10 000  0.11
- 50 000  0.14
-100 000  0.13
+ 50 000  0.11
+100 000  0.12
 
 search index v4: query "the s", limit 1 [ms]: [OK]
- 10 000  0.29
- 50 000  0.33
-100 000  0.32
+ 10 000  0.28
+ 50 000  0.31
+100 000  0.30
 
 search index v4: query "the for of an a in", limit 10 [ms]: [OK]
- 10 000   5.66
- 50 000  12.11
-100 000  17.74
+ 10 000   5.84
+ 50 000  12.71
+100 000  21.09
 
 search index v4: query "s", limit 10 [ms]: [OK]
  10 000  0.30 (category 1)
- 50 000  0.34 (category 1)
-100 000  0.35 (category 1)
+ 50 000  0.31 (category 1)
+100 000  0.31 (category 1)
 
 search index v4: query "the s", limit 10 [ms]: [OK]
- 10 000  2.91 (category 2 and 3)
- 50 000  0.80 (category 2)
-100 000  0.68 (category 2)
+ 10 000  2.95 (category 2 and 3)
+ 50 000  0.79 (category 2)
+100 000  0.70 (category 2)
