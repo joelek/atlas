@@ -60,7 +60,11 @@ export class Cache<B> {
 	}
 
 	insert(key: number, value: B): void {
-		this.remove(key);
+		let oldValue = this.map.lookup(key);
+		if (oldValue != null) {
+			this.status.weight -= this.detail.getWeightForValue(oldValue);
+			this.detail.onRemove?.(key);
+		}
 		this.map.insert(key, value);
 		this.status.weight += this.detail.getWeightForValue(value);
 		this.detail.onInsert?.(key, value);
