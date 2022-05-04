@@ -1183,6 +1183,226 @@ export class SearchIndexManagerV4<A extends Record, B extends Key<A>> {
 	}
 };
 
+export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
+	private recordManager: RecordManager<A>;
+	private blockManager: BlockManager;
+	private key: B;
+	private tree: RadixTree;
+
+	private computeRank(recordTokens: Array<string>, queryTokens: Array<string>): number {
+		return queryTokens.length - recordTokens.length;
+	}
+
+	private computeRecordRank(record: A, query: string): number | undefined {
+		let recordTokens = this.tokenizeRecord(record);
+		let queryTokens = Tokenizer.tokenize(query);
+		let lastQueryToken = queryTokens.pop() ?? "";
+		for (let queryToken of queryTokens) {
+			if (recordTokens.find((recordToken) => recordToken === queryToken) == null) {
+				return;
+			}
+		}
+		if (recordTokens.find((recordToken) => recordToken.startsWith(lastQueryToken)) == null) {
+			return;
+		}
+		return this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
+	}
+
+	private insertToken(token: string, category: number, bid: number): void {
+		this.tree.insert([
+			bedrock.codecs.Integer.encodePayload(category),
+			bedrock.codecs.String.encodePayload(token),
+			bedrock.codecs.Integer.encodePayload(bid)
+		], bid);
+	}
+
+	private removeToken(token: string, category: number, bid: number): void {
+		this.tree.remove([
+			bedrock.codecs.Integer.encodePayload(category),
+			bedrock.codecs.String.encodePayload(token),
+			bedrock.codecs.Integer.encodePayload(bid)
+		]);
+	}
+
+	private readRecord(bid: number): A {
+		let buffer = this.blockManager.readBlock(bid);
+		let record = this.recordManager.decode(buffer);
+		return record;
+	}
+
+	private tokenizeRecord(record: A): Array<string> {
+		let value = record[this.key];
+		if (typeof value === "string") {
+			return Tokenizer.tokenize(value);
+		}
+		return [];
+	}
+
+	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
+		bid?: number
+	}) {
+		this.recordManager = recordManager;
+		this.blockManager = blockManager;
+		this.key = key;
+		this.tree = new RadixTree(blockManager, options?.bid);
+	}
+
+	* [Symbol.iterator](): Iterator<SearchResult<A>> {
+		yield * StreamIterable.of(this.search(""));
+	}
+
+	delete(): void {
+		this.tree.delete();
+	}
+
+	insert(record: A, bid: number): void {
+		let tokens = this.tokenizeRecord(record);
+		for (let token of tokens) {
+			this.insertToken(token, tokens.length, bid);
+		}
+	}
+
+	remove(record: A, bid: number): void {
+		let tokens = this.tokenizeRecord(record);
+		for (let token of tokens) {
+			this.removeToken(token, tokens.length, bid);
+		}
+	}
+
+	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
+		let queryTokens = Tokenizer.tokenize(query);
+		if (queryTokens.length === 0) {
+			queryTokens.push("");
+		}
+		let queryCategory = queryTokens.length;
+		let lastQueryToken = queryTokens.pop() as string;
+		let firstCategory = queryCategory;
+		let firstTokenInCategory = lastQueryToken;
+		if (bid != null) {
+			let record = this.readRecord(bid);
+			let recordTokens = this.tokenizeRecord(record);
+			let recordCategory = recordTokens.length;
+			if (recordCategory < queryCategory) {
+				return;
+			}
+			firstCategory = recordCategory;
+			let firstCompletion = getFirstCompletion(lastQueryToken, recordTokens);
+			if (firstCompletion == null) {
+				return;
+			}
+			firstTokenInCategory = firstCompletion;
+		}
+		let categoryBranches = this.tree.branch(">=", [
+			bedrock.codecs.Integer.encodePayload(firstCategory)
+		]);
+		if (queryTokens.length === 0) {
+			let firstBidInCategory = bid ?? 0;
+			for (let categoryBranch of categoryBranches) {
+				let keys = [
+					bedrock.codecs.String.encodePayload(firstTokenInCategory),
+					bedrock.codecs.Integer.encodePayload(firstBidInCategory)
+				];
+				let bids = categoryBranch.filter(">", keys);
+				for (let bid of bids) {
+					let record = this.readRecord(bid);
+					let recordTokens = this.tokenizeRecord(record);
+					let firstCompletion = getFirstCompletion(lastQueryToken, recordTokens);
+					if (firstCompletion == null) {
+						break;
+					}
+					let recordKeys = [
+						bedrock.codecs.String.encodePayload(firstCompletion),
+						bedrock.codecs.Integer.encodePayload(bid)
+					];
+					if (compareBuffers(recordKeys, keys) <= 0) {
+						continue;
+					}
+					keys = recordKeys;
+					let rank = this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
+					yield {
+						bid,
+						record,
+						tokens: recordTokens,
+						rank
+					};
+				}
+				firstTokenInCategory = lastQueryToken;
+				firstBidInCategory = 0;
+			}
+		} else {
+			let firstBidInCategory = bid ?? 0;
+			let encodedQueryTokens = queryTokens.map((queryToken) => {
+				return bedrock.codecs.String.encodePayload(queryToken);
+			});
+			for (let categoryBranch of categoryBranches) {
+				let tokenBranches = encodedQueryTokens.map((encodedQueryToken) => {
+					return categoryBranch.branch("=", [
+						encodedQueryToken
+					]);
+				});
+				let iterables = tokenBranches.map((tokenBranch) => {
+					let iterables = Array.from(tokenBranch)
+						.map((tree) => makeSeekableIterable(tree, firstBidInCategory));
+					return union(iterables, (one, two) => one - two);
+				});
+				let iterable = intersection(iterables, (one, two) => one - two);
+				for (let bid of iterable) {
+					let record = this.readRecord(bid);
+					let recordTokens = this.tokenizeRecord(record);
+					let tokensLeft = recordTokens.filter((recordToken) => !queryTokens.includes(recordToken));
+					if (tokensLeft.find((token) => token.startsWith(lastQueryToken)) == null) {
+						continue;
+					}
+					let rank = this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
+					yield {
+						bid,
+						record,
+						tokens: recordTokens,
+						rank
+					};
+				}
+				firstBidInCategory = 0;
+			}
+		}
+	}
+
+	update(oldRecord: A, newRecord: A, bid: number): void {
+		this.remove(oldRecord, bid);
+		this.insert(newRecord, bid);
+	}
+
+	vacate(): void {
+		this.tree.vacate();
+	}
+
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
+		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
+		outer: while (true) {
+			let candidates = searchResults
+				.map((searchResult, index) => ({ searchResult, index }))
+				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
+				.sort((one, two) => {
+					return one.searchResult.rank - two.searchResult.rank;
+				});
+			let candidate = candidates.pop();
+			if (candidate == null) {
+				break;
+			}
+			inner: for (let searchIndexManager of searchIndexManagers) {
+				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
+				if (rank != null && rank > candidate.searchResult.rank) {
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					continue outer;
+				}
+			}
+			yield candidate.searchResult;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+		}
+	}
+};
+
 export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private blockManager: BlockManager;
 	private fields: Fields<A>;
