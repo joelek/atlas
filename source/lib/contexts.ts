@@ -77,7 +77,6 @@ export class Context {
 	private queries: Map<QueryReference<any, any, any, any>, Query<any, any, any, any>>;
 	private operators: Map<OperatorReference<any>, Operator<any>>;
 	private orders: Map<OrderReference<any>, Order<any>>;
-	private databaseManagers: Map<string, DatabaseManager<any, any, any>>;
 
 	private getField<A extends Field<any>>(reference: FieldReference<A>): A {
 		let field = this.fields.get(reference);
@@ -141,7 +140,6 @@ export class Context {
 		this.queries = new Map();
 		this.operators = new Map();
 		this.orders = new Map();
-		this.databaseManagers = new Map();
 	}
 
 	createBigIntField(): FieldReference<BigIntField> {
@@ -300,9 +298,6 @@ export class Context {
 	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): {
 			transactionManager: TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>
 		} {
-		if (this.databaseManagers.has(path)) {
-			throw `Expected given storage to not be in use by another database!`;
-		}
 		let file = this.createFile(path);
 		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
@@ -319,7 +314,6 @@ export class Context {
 		let schemaManager = new SchemaManager();
 		let database = new Database(stores, links, queries);
 		let databaseManager = schemaManager.createDatabaseManager(file, database);
-		this.databaseManagers.set(path, databaseManager);
 		let transactionManager = databaseManager.createTransactionManager(file);
 		return {
 			transactionManager
