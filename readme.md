@@ -5,30 +5,30 @@ Lightweight embedded database manager for NodeJS with advanced type inference an
 ```ts
 import * as atlas from "@joelek/atlas";
 
-let context = atlas.createContext();
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let users = context.createStore({
+		user_id: context.createBinaryField(),
+		name: context.createStringField(),
+		age: context.createIntegerField()
+	}, ["user_id"]);
 
-let users = context.createStore({
-	user_id: context.createBinaryField(),
-	name: context.createStringField(),
-	age: context.createIntegerField()
-}, ["user_id"]);
-
-let { transactionManager } = context.createTransactionManager("./private/db", {
-	users
+	return {
+		stores: {
+			users
+		}
+	};
 });
 
-let stores = transactionManager.createTransactionalStores();
-
-await transactionManager.enqueueWritableTransaction(async (queue) => {
-	return stores.users.insert(queue, {
+await tm.enqueueWritableTransaction(async (queue) => {
+	return tm.stores.users.insert(queue, {
 		user_id: Uint8Array.of(1),
 		name: "Joel Ek",
 		age: 38
 	});
 });
 
-let user = await transactionManager.enqueueReadableTransaction(async (queue) => {
-	return stores.users.lookup(queue, {
+let user = await tm.enqueueReadableTransaction(async (queue) => {
+	return tm.stores.users.lookup(queue, {
 		user_id: Uint8Array.of(1)
 	});
 });
@@ -36,15 +36,15 @@ let user = await transactionManager.enqueueReadableTransaction(async (queue) => 
 
 ## Background
 
-Databases are used when structured and frequently changing data needs to be persistently stored. They can be used by single applications or, when using adequate management software, as a component shared by multiple applications in a system.
+Databases are used when structured and frequently changing data needs to be stored persistently. Databases can be used by single applications or, when using adequate management software, as a component shared by multiple applications in a system.
 
-Database mangement software is implemented using either an embedded architecture or a client/server architecture. Embedded management software is, just as the name suggests, embedded in the application in contrast to separate from the application in the client/server architecture.
+Database mangement software is implemented using either an embedded architecture or a client/server architecture. Embedded management software is, just as the name suggests, embedded into the application in contrast to separate from the application in the client/server architecture.
 
 While the client/server architecture enables the database to be shared by multiple applications, the architecture does come with a set of drawbacks. Since the database is shared, all applications must be updated whenever the structure of the database changes in a significant way. Conversely, the database must be updated whenever either of the applications change in a significant way. These problems are exacerbated for distributed applications and for applications with separate environments for its different development stages.
 
 For management software using the client/server architecture, the interconnectedness can act as a limiting factor on the development of a single application in the system. For complex systems, there is also the issue of not knowing which applications use which parts of the data, often resulting in data being kept around in case some application still uses it.
 
-Embedded management software provides mitigation for these issues at the trade-off of only allowing the database to be used by a single application. The database may be tightly integrated which reduces the risk of unforseen errors. It may also be updated as needed as the requirements of the application change.
+Embedded management software provides mitigation for these issues with the trade-off of only allowing the database to be used by a single application. The database may be tightly integrated which reduces the risk of unforseen errors. It may also be updated as needed when the requirements of the application change.
 
 Applications using embedded management software also benefit from not depending on an external dependency to provide the application with the database. Since there is no external dependency, the risk of unforseen errors is minimized.
 
@@ -52,15 +52,28 @@ The future of the Internet will be built on decentralized and distributed applic
 
 ## Overview
 
-Atlas is initialized by creating a context for the database using `atlas.createContext()`. The context is subsequently used to define all database entities and the way in which they connect to each other.
+An Atlas database is managed through the transaction manager created via `atlas.createTransactionManager(path, schemaProvider)`.
+
+The `path` argument is used to specify the path to the directory where the database files are to be stored.
+The `schemaProvider` argument is used to specify the desired database schema using a callback to which a context will be provided. The context is used to define the database entities and the way in which they relate to each other.
 
 ```ts
 import * as atlas from "@joelek/atlas";
 
-let context = atlas.createContext();
-```
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let users = context.createStore({
+		user_id: context.createBinaryField(),
+		name: context.createStringField(),
+		age: context.createIntegerField()
+	}, ["user_id"]);
 
-The context will utimately produce a transaction manager that is used to transact with the database.
+	return {
+		stores: {
+			users
+		}
+	};
+});
+```
 
 ### Data types
 
@@ -75,7 +88,7 @@ Atlas supports all non-composite data types defined by [Bedrock](https://github.
 
 ### Fields
 
-Atlas defines the field entity as one of the data types supported by Atlas coupled with data related to its specific occurence such as constraints or default values. Fields may be created as non-nullable or nullable as shown below.
+Atlas defines the field entity as one of the data types supported by Atlas coupled with data related to its specific instance such as constraints or default values. Fields may be created as non-nullable or nullable as shown below.
 
 ```ts
 context.createBigIntField();
@@ -92,7 +105,7 @@ context.createStringField();
 context.createNullableStringField();
 ```
 
-String fields may be created with a "searchable" hint that instructs Atlas to include the corresponding fields when searching the database.
+String fields may be created with a "searchable" hint that instructs Atlas to include the corresponding fields when performing searches in the database.
 
 ```ts
 context.createStringField({ searchable: true });
@@ -110,7 +123,7 @@ context.createIncreasingOrder();
 
 ### Stores
 
-Atlas defines the store entity as an associative collection of fields coupled with a sequence of keys specifying which of those fields identify a unique record. The sequence may specify zero, one or several identifying fields and they must all be non-nullable. All fields not specified as identifying are considered metadata fields.
+Atlas defines the store entity as an associative collection of fields coupled with a sequence of keys specifying which of those fields identify a unique record. The sequence may specify zero, one or several `identifying fields` and they must all be non-nullable. All fields not specified as identifying are considered `metadata fields`.
 
 ```ts
 let users = context.createStore({
@@ -247,32 +260,19 @@ The default order of the records in a query will be set to the identifying field
 
 Atlas defines the index entity as a store coupled with a list of keys specifying the indexed fields. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Indices are not defined explicitly but rather implicitly through the store, link and query entities.
 
-## API
+### Search Indices
 
-All database operations are performed in the context of an associated transaction. Transactions are short-lived constructs with either read or write access that should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
+Atlas defines the search index entity as a store coupled with a key specifying the indexed field. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Search indices are not defined explicitly but rather implicitly through the store itself.
 
-The transaction manager is created with a path specifying where the database files should be stored as well as all stores, links and queries that should be present in the database.
+## Transactions
 
-```ts
-let { transactionManager } = context.createTransactionManager("./private/db", {
-	users,
-	posts
-}, {
-	userPosts
-}, {
-	getUsersByName
-});
+All database operations are executed as part of an associated transaction. Transactions are short-lived constructs with either read or write access and should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
 
-let stores = transactionManager.createTransactionalStores();
-let links = transactionManager.createTransactionalLinks();
-let queries = transactionManager.createTransactionalQueries();
-```
-
-A transaction with write access will be provided with write access to all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue that persist all changes to the underlying file if and only if all operations complete successfully.
+A writable transaction will be provided with a writable queue that grants write access to all entities in the database. The writable queue will persist all changes made to the database if and only if all operations complete successfully.
 
 ```ts
-await transactionManager.enqueueWritableTransaction(async (queue) => {
-	return stores.users.insert(queue, {
+await tm.enqueueWritableTransaction(async (queue) => {
+	return tm.stores.users.insert(queue, {
 		user_id: Uint8Array.of(1),
 		name: "Joel Ek",
 		age: 38
@@ -280,17 +280,17 @@ await transactionManager.enqueueWritableTransaction(async (queue) => {
 });
 ```
 
-A transaction with read access will be provided with read access to all stores, links and queries that are present in the database. All operations are performed through a transaction-specific queue.
+A readable transaction will be provided with a readable queue that grants read access to all entities in the database.
 
 ```ts
-let user = await transactionManager.enqueueReadableTransaction(async (queue) => {
-	return stores.users.lookup(queue, {
+let user = await tm.enqueueReadableTransaction(async (queue) => {
+	return tm.stores.users.lookup(queue, {
 		user_id: Uint8Array.of(1)
 	});
 });
 ```
 
-Transactions with read access are executed in parallel whereas transactions with write access are executed in serial. Only create transactions with write access when absolutely needed as write access reduces transaction throughput!
+Readable transactions are executed in parallel whereas writable transactions are executed in serial. Only create writable transactions when absolutely needed as write access reduces transaction throughput!
 
 ### Stores
 
@@ -317,9 +317,11 @@ The number of records inserted into a store may be checked using the `length()` 
 
 #### Lookup
 
-Records may be looked up using the `lookup(keysRecord)` method. The method will throw an error if the corresponding record cannot be found.
+Records may be looked up using the `lookup(keysRecord)` method.
 
 * The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
+
+The method will throw an error if the corresponding record cannot be found.
 
 #### Remove
 
@@ -373,7 +375,7 @@ Records matching certain criteria may be retrieved using the `filter(parameters,
 
 ## Schema migration
 
-Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema implied by the stores, links and queries specified when creating the transaction manager. This is done by determining the differences between the new and the existing schema.
+Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema defined by the stores, links and queries specified when creating the transaction manager. This is done by determining the differences between the new and the existing schema.
 
 Please make sure that you understand how Atlas handles automatic schema migration before you use Atlas in production environments.
 
