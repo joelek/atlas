@@ -8,10 +8,10 @@ let records = context.createStore({
 	id: context.createStringField(),
 	title: context.createStringField({ searchable: true })
 }, ["id"]);
-let { transactionManager } = context.createTransactionManager("./private/search", {
+let transactionManager = context.createTransactionManager("./private/search", {
 	records
 });
-let stores = transactionManager.createTransactionalStores();
+let { stores } = { ...transactionManager };
 let n = 10000;
 transactionManager.enqueueWritableTransaction(async (queue) => {
 	let t0 = process.hrtime.bigint();

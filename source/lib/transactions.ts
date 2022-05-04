@@ -116,41 +116,41 @@ export class TransactionManager<A extends WritableStores<any>, B extends Writabl
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
-	private writableStores: A;
-	private writableLinks: B;
-	private writableQueries: C;
+	readonly stores: Readonly<TransactionalStoresFromWritableStores<A>>;
+	readonly links: Readonly<TransactionalLinksFromWritableLinks<B>>;
+	readonly queries: Readonly<TransactionalQueriesFromWritableQueries<C>>;
+
+	private createTransactionalStores(writableStores: A): TransactionalStoresFromWritableStores<A> {
+		let transactionalStores = {} as TransactionalStoresFromWritableStores<any>;
+		for (let key in writableStores) {
+			transactionalStores[key] = new TransactionalStore(writableStores[key]);
+		}
+		return transactionalStores;
+	}
+
+	private createTransactionalLinks(writableLinks: B): TransactionalLinksFromWritableLinks<B> {
+		let transactionalLinks = {} as TransactionalLinksFromWritableLinks<any>;
+		for (let key in writableLinks) {
+			transactionalLinks[key] = new TransactionalLink(writableLinks[key]);
+		}
+		return transactionalLinks;
+	}
+
+	private createTransactionalQueries(writableQueries: C): TransactionalQueriesFromWritableQueries<C> {
+		let transactionalQueries = {} as TransactionalQueriesFromWritableQueries<any>;
+		for (let key in writableQueries) {
+			transactionalQueries[key] = new TransactionalQuery(writableQueries[key]);
+		}
+		return transactionalQueries;
+	}
 
 	constructor(file: File, writableStores: A, writableLinks: B, writableQueries: C) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
-		this.writableStores = writableStores;
-		this.writableLinks = writableLinks;
-		this.writableQueries = writableQueries;
-	}
-
-	createTransactionalStores(): TransactionalStoresFromWritableStores<A> {
-		let transactionalStores = {} as TransactionalStoresFromWritableStores<any>;
-		for (let key in this.writableStores) {
-			transactionalStores[key] = new TransactionalStore(this.writableStores[key]);
-		}
-		return transactionalStores;
-	}
-
-	createTransactionalLinks(): TransactionalLinksFromWritableLinks<B> {
-		let transactionalLinks = {} as TransactionalLinksFromWritableLinks<any>;
-		for (let key in this.writableLinks) {
-			transactionalLinks[key] = new TransactionalLink(this.writableLinks[key]);
-		}
-		return transactionalLinks;
-	}
-
-	createTransactionalQueries(): TransactionalQueriesFromWritableQueries<C> {
-		let transactionalQueries = {} as TransactionalQueriesFromWritableQueries<any>;
-		for (let key in this.writableQueries) {
-			transactionalQueries[key] = new TransactionalQuery(this.writableQueries[key]);
-		}
-		return transactionalQueries;
+		this.stores = this.createTransactionalStores(writableStores);
+		this.links = this.createTransactionalLinks(writableLinks);
+		this.queries = this.createTransactionalQueries(writableQueries);
 	}
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D> {

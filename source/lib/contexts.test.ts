@@ -24,7 +24,7 @@ test(`It should work.`, async (assert) => {
 		name: context.createEqualityOperator(),
 		age: context.createEqualityOperator()
 	});
-	let { transactionManager } = context.createTransactionManager("./private/atlas", {
+	let transactionManager = context.createTransactionManager("./private/atlas", {
 		users,
 		posts
 	}, {
@@ -32,9 +32,7 @@ test(`It should work.`, async (assert) => {
 	}, {
 		query
 	});
-	let stores = transactionManager.createTransactionalStores();
-	let links = transactionManager.createTransactionalLinks();
-	let queries = transactionManager.createTransactionalQueries();
+	let { stores, links, queries } = { ...transactionManager };
 	await transactionManager.enqueueWritableTransaction(async (queue) => {
 		stores.users.insert(queue, {
 			user_id: "User 1",
