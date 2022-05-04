@@ -5,7 +5,8 @@ const test_1 = require("./test");
 const constructors = {
     CachedFile: () => new files.CachedFile(new files.VirtualFile(0)),
     DurableFile: () => new files.DurableFile(new files.VirtualFile(0), new files.VirtualFile(0)),
-    PagedFile: () => new files.PagedFile(new files.VirtualFile(0), Math.log2(4096)),
+    PagedDurableFile: () => new files.PagedDurableFile(new files.VirtualFile(0), new files.VirtualFile(0), Math.log2(2)),
+    PagedFile: () => new files.PagedFile(new files.VirtualFile(0), Math.log2(2)),
     PhysicalFile: () => new files.PhysicalFile("./private/test.bin", true),
     VirtualFile: () => new files.VirtualFile(0)
 };
@@ -62,13 +63,85 @@ for (let key in constructors) {
         assert.true(buffer[1] === 2);
         assert.true(buffer[2] === 3);
     });
+    (0, test_1.test)(`It should persist data written (${key}).`, async (assert) => {
+        let file = constructor();
+        file.write(Uint8Array.of(1), 1);
+        file.persist();
+        assert.binary.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(1));
+    });
+    (0, test_1.test)(`It should discard truncated data (${key}).`, async (assert) => {
+        let file = constructor();
+        file.write(Uint8Array.of(1), 1);
+        file.persist();
+        file.resize(0);
+        file.resize(2);
+        assert.binary.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(0));
+    });
 }
+(0, test_1.test)(`It should behave consistently (PagedDurableFile).`, async (assert) => {
+    let virtual = new files.VirtualFile(0);
+    let file = new files.PagedDurableFile(new files.VirtualFile(0), new files.VirtualFile(0), Math.log2(2));
+    for (let i = 0; i < 10000; i++) {
+        let action = Math.floor(Math.random() * 4);
+        if (action === 0) {
+            let length = Math.floor(Math.random() * Math.min(file.size(), 2));
+            let buffer1 = new Uint8Array(length);
+            let offset = Math.floor(Math.random() * (file.size() - length));
+            let buffer2 = new Uint8Array(length);
+            file.read(buffer1, offset);
+            virtual.read(buffer2, offset);
+            assert.binary.equals(buffer1, buffer2);
+        }
+        else if (action === 1) {
+            let length = Math.floor(Math.random() * 2);
+            let buffer1 = new Uint8Array(length);
+            for (let i = 0; i < buffer1.length; i++) {
+                buffer1[i] = Math.floor(Math.random() * 256);
+            }
+            let buffer2 = buffer1.slice();
+            let offset = Math.floor(Math.random() * file.size());
+            file.write(buffer1, offset);
+            virtual.write(buffer2, offset);
+        }
+        else if (action === 2) {
+            let size = Math.floor(Math.random() * 64);
+            file.resize(size);
+            virtual.resize(size);
+        }
+        else {
+            if (!(file instanceof files.PhysicalFile)) {
+                file.persist();
+                virtual.persist();
+            }
+        }
+        assert.true(file.size() === virtual.size());
+        let buffer1 = new Uint8Array(file.size());
+        let buffer2 = new Uint8Array(virtual.size());
+        file.read(buffer1, 0);
+        file.read(buffer2, 0);
+        assert.binary.equals(buffer1, buffer2);
+    }
+});
 (0, test_1.test)(`It should not persist truncated data (DurableFile).`, async (assert) => {
     let bin = new files.VirtualFile(0);
     let log = new files.VirtualFile(0);
     let file = new files.DurableFile(bin, log);
     file.write(Uint8Array.of(1, 2), 0);
     file.resize(1);
+    file.persist();
+    file.resize(2);
+    file.persist();
+    let buffer = bin.read(new Uint8Array(2), 0);
+    assert.true(buffer[0] === 1);
+    assert.true(buffer[1] === 0);
+});
+(0, test_1.test)(`It should not persist truncated data (PagedDurableFile).`, async (assert) => {
+    let bin = new files.VirtualFile(0);
+    let log = new files.VirtualFile(0);
+    let file = new files.PagedDurableFile(bin, log, 2);
+    file.write(Uint8Array.of(1, 2), 0);
+    file.resize(1);
+    file.persist();
     file.resize(2);
     file.persist();
     let buffer = bin.read(new Uint8Array(2), 0);
@@ -206,6 +279,18 @@ for (let key in constructors) {
     assert.binary.equals(durable.read(buffer, 2), Uint8Array.of(0));
     assert.binary.equals(durable.read(buffer, 3), Uint8Array.of(0));
 });
+(0, test_1.test)(`It should fill the entire buffer when reading from the file (PagedDurableFile).`, async (assert) => {
+    let bin = new files.VirtualFile(0);
+    let log = new files.VirtualFile(0);
+    let durable = new files.PagedDurableFile(bin, log, 4);
+    durable.resize(4);
+    durable.write(Uint8Array.of(1), 1);
+    let buffer = new Uint8Array(1);
+    assert.binary.equals(durable.read(buffer, 0), Uint8Array.of(0));
+    assert.binary.equals(durable.read(buffer, 1), Uint8Array.of(1));
+    assert.binary.equals(durable.read(buffer, 2), Uint8Array.of(0));
+    assert.binary.equals(durable.read(buffer, 3), Uint8Array.of(0));
+});
 (0, test_1.test)(`It should endure through multiple transactions and thousands of operations (DurableFile).`, async (assert) => {
     let bin = new files.PagedFile(new files.PhysicalFile("./private/endurance.bin"), Math.log2(4096), 4);
     let log = new files.PagedFile(new files.PhysicalFile("./private/endurance.log"), Math.log2(4096), 4);
@@ -256,10 +341,10 @@ for (let key in constructors) {
         persistTime += Number(t1 - t0) / 1000 / 1000;
         timesPersisted += 1;
     }
-    /* 	console.log(`Read: ${(readTime/timesRead).toFixed(3)} ms`);
-        console.log(`Write: ${(writeTime/timesWritten).toFixed(3)} ms`);
-        console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
-        console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`); */
+    //console.log(`Read: ${(readTime/timesRead).toFixed(3)} ms`);
+    //console.log(`Write: ${(writeTime/timesWritten).toFixed(3)} ms`);
+    //console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
+    //console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`);
 });
 (0, test_1.test)(`It should support reading with different overlaps (PagedFile).`, async (assert) => {
     let virtual = new files.VirtualFile(0);

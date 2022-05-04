@@ -93,7 +93,7 @@ class Context {
     createFile(path) {
         let bin = new files_1.PhysicalFile(`${path}.bin`);
         let log = new files_1.PhysicalFile(`${path}.log`);
-        let file = new files_1.DurableFile(new files_1.PagedFile(bin, bin.hint().pageSizeLog2, 16384), new files_1.PagedFile(log, log.hint().pageSizeLog2, 16384));
+        let file = new files_1.PagedDurableFile(new files_1.PagedFile(bin, bin.hint().pageSizeLog2, 16384), new files_1.PagedFile(log, log.hint().pageSizeLog2, 16384), bin.hint().pageSizeLog2);
         return file;
     }
     constructor() {

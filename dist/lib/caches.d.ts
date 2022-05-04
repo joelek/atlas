@@ -12,16 +12,16 @@ export declare type CacheEntry<A extends Primitive, B> = {
     key: A;
     value: B;
 };
-export declare class Cache<A extends Primitive, B> {
+export declare class Cache<B> {
     private detail;
     private map;
     private status;
     private purgeIfNecessary;
-    constructor(detail?: CacheDetail<A, B>, maxWeight?: number);
-    [Symbol.iterator](): Iterator<CacheEntry<A, B>>;
+    constructor(detail?: CacheDetail<number, B>, maxWeight?: number);
+    [Symbol.iterator](): Iterator<CacheEntry<number, B>>;
     clear(): void;
-    insert(key: A, value: B): void;
+    insert(key: number, value: B): void;
     length(): number;
-    lookup(key: A): B | undefined;
-    remove(key: A): B | undefined;
+    lookup(key: number): B | undefined;
+    remove(key: number): B | undefined;
 }

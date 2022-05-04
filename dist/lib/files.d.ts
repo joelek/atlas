@@ -40,6 +40,28 @@ export declare type LogDelta = {
     redo: Uint8Array;
     undo: Uint8Array;
 };
+export declare class PagedDurableFile extends File {
+    private bin;
+    private log;
+    private header;
+    private pageSizeLog2;
+    private pageSize;
+    private logOffsets;
+    private readRedo;
+    private writeRedo;
+    private readDelta;
+    private writeDelta;
+    private appendRedo;
+    private redo;
+    private undo;
+    constructor(bin: File, log: File, pageSizeLog2: number);
+    discard(): void;
+    persist(): void;
+    read(buffer: Uint8Array, offset: number): Uint8Array;
+    resize(size: number): void;
+    size(): number;
+    write(buffer: Uint8Array, offset: number): Uint8Array;
+}
 export declare class DurableFile extends File {
     private bin;
     private log;

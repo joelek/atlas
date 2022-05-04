@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VirtualFile = exports.PhysicalFile = exports.PagedFile = exports.DurableFile = exports.LogDeltaHeader = exports.LogHeader = exports.CachedFile = exports.File = void 0;
+exports.VirtualFile = exports.PhysicalFile = exports.PagedFile = exports.DurableFile = exports.PagedDurableFile = exports.LogDeltaHeader = exports.LogHeader = exports.CachedFile = exports.File = void 0;
 const stdlib = require("@joelek/ts-stdlib");
 const libfs = require("fs");
 const libpath = require("path");
@@ -198,6 +198,270 @@ class LogDeltaHeader extends chunks_1.Chunk {
 }
 exports.LogDeltaHeader = LogDeltaHeader;
 ;
+class PagedDurableFile extends File {
+    bin;
+    log;
+    header;
+    pageSizeLog2;
+    pageSize;
+    logOffsets;
+    readRedo(logOffset, buffer, offset) {
+        let header = new LogDeltaHeader();
+        header.read(this.log, logOffset);
+        logOffset += LogDeltaHeader.LENGTH;
+        let length = header.length();
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(0, offset, length);
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(0, buffer.length, length - offset);
+        this.log.read(buffer, logOffset + offset);
+    }
+    writeRedo(logOffset, buffer, offset) {
+        let header = new LogDeltaHeader();
+        header.read(this.log, logOffset);
+        logOffset += LogDeltaHeader.LENGTH;
+        let length = header.length();
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(0, offset, length);
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(0, buffer.length, length - offset);
+        this.log.write(buffer, logOffset + offset);
+    }
+    readDelta(offset) {
+        let header = new LogDeltaHeader();
+        header.read(this.log, offset);
+        offset += LogDeltaHeader.LENGTH;
+        let length = header.length();
+        let redo = new Uint8Array(length);
+        this.log.read(redo, offset);
+        offset += length;
+        let undo = new Uint8Array(length);
+        this.log.read(undo, offset);
+        offset += length;
+        let delta = {
+            header,
+            redo,
+            undo
+        };
+        return delta;
+    }
+    writeDelta(delta, offset) {
+        delta.header.write(this.log, offset);
+        offset += LogDeltaHeader.LENGTH;
+        this.log.write(delta.redo, offset);
+        offset += delta.redo.length;
+        this.log.write(delta.undo, offset);
+        offset += delta.undo.length;
+    }
+    appendRedo(redo, offset, activeBytes) {
+        activeBytes = activeBytes ?? redo.length;
+        let header = new LogDeltaHeader();
+        header.offset(offset);
+        header.length(redo.length);
+        let undo = new Uint8Array(redo.length);
+        let distance = this.bin.size() - offset;
+        if (distance > 0) {
+            this.bin.read(undo.subarray(0, distance), offset);
+        }
+        let delta = {
+            header,
+            undo,
+            redo
+        };
+        this.logOffsets.set(offset, this.log.size());
+        this.writeDelta(delta, this.log.size());
+        this.header.redoSize(Math.max(this.header.redoSize(), offset + activeBytes));
+    }
+    redo() {
+        let redoSize = this.header.redoSize();
+        for (let [key, value] of this.logOffsets) {
+            if (key >= redoSize) {
+                continue;
+            }
+            let delta = this.readDelta(value);
+            this.bin.write(delta.redo, key);
+        }
+        this.bin.resize(redoSize);
+        this.bin.persist();
+        this.discard();
+    }
+    undo() {
+        let undoSize = this.header.undoSize();
+        for (let [key, value] of this.logOffsets) {
+            if (key >= undoSize) {
+                continue;
+            }
+            let delta = this.readDelta(value);
+            this.bin.write(delta.undo, key);
+        }
+        this.bin.resize(undoSize);
+        this.bin.persist();
+        this.discard();
+    }
+    constructor(bin, log, pageSizeLog2) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, pageSizeLog2);
+        super();
+        this.bin = bin;
+        this.log = log;
+        this.header = new LogHeader();
+        this.header.redoSize(this.bin.size());
+        this.header.undoSize(this.bin.size());
+        this.pageSizeLog2 = pageSizeLog2;
+        this.pageSize = 2 ** pageSizeLog2;
+        this.logOffsets = new Map();
+        if (log.size() === 0) {
+            this.header.write(this.log, 0);
+        }
+        else {
+            let offset = 0;
+            this.header.read(this.log, offset);
+            offset += LogHeader.LENGTH;
+            // A corrupted log should be discarded since it is persisted before and after bin is persisted.
+            try {
+                while (offset < this.log.size()) {
+                    let header = new LogDeltaHeader();
+                    header.read(this.log, offset);
+                    this.logOffsets.set(header.offset(), offset);
+                    let length = header.length();
+                    offset += LogDeltaHeader.LENGTH + length + length;
+                }
+                this.undo();
+            }
+            catch (error) {
+                this.discard();
+            }
+        }
+    }
+    discard() {
+        if (this.log.size() > LogHeader.LENGTH) {
+            this.log.resize(0);
+            this.header.redoSize(this.bin.size());
+            this.header.undoSize(this.bin.size());
+            this.header.write(this.log, 0);
+            this.log.persist();
+            this.logOffsets.clear();
+        }
+    }
+    persist() {
+        if (this.log.size() > LogHeader.LENGTH || this.bin.size() !== this.header.redoSize()) {
+            this.header.write(this.log, 0);
+            this.log.persist();
+            this.redo();
+        }
+    }
+    read(buffer, offset) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, offset);
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(0, buffer.length, this.size() - offset);
+        if (buffer.length === 0) {
+            return buffer;
+        }
+        buffer.fill(0);
+        let firstByte = offset;
+        let lastByte = offset + buffer.length - 1;
+        let firstPageIndex = firstByte >> this.pageSizeLog2;
+        let lastPageIndex = lastByte >> this.pageSizeLog2;
+        let firstPageOffset = firstByte & (this.pageSize - 1);
+        let lastPageOffset = (lastByte & (this.pageSize - 1)) + 1;
+        let bytes = 0;
+        for (let pageIndex = firstPageIndex; pageIndex <= lastPageIndex; pageIndex++) {
+            let pageOffset = pageIndex === firstPageIndex ? firstPageOffset : 0;
+            let pageLength = (pageIndex === lastPageIndex ? lastPageOffset : this.pageSize) - pageOffset;
+            let binOffset = pageIndex << this.pageSizeLog2;
+            let logOffset = this.logOffsets.get(binOffset);
+            if (logOffset == null) {
+                let overlap = this.bin.size() - binOffset;
+                if (overlap > 0) {
+                    let readLength = Math.min(overlap, this.pageSize);
+                    this.bin.read(buffer.subarray(bytes, bytes + readLength), binOffset + pageOffset);
+                }
+            }
+            else {
+                this.readRedo(logOffset, buffer.subarray(bytes, bytes + pageLength), pageOffset);
+            }
+            bytes += pageLength;
+        }
+        return buffer;
+    }
+    resize(size) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, size);
+        let currentSize = this.size();
+        if (size === currentSize) {
+            return;
+        }
+        let firstByte = Math.min(size, currentSize);
+        let lastByte = Math.max(size, currentSize) - 1;
+        let firstPageIndex = firstByte >> this.pageSizeLog2;
+        let lastPageIndex = lastByte >> this.pageSizeLog2;
+        let firstPageOffset = firstByte & (this.pageSize - 1);
+        let lastPageOffset = (lastByte & (this.pageSize - 1)) + 1;
+        for (let pageIndex = firstPageIndex; pageIndex <= lastPageIndex; pageIndex++) {
+            let pageOffset = pageIndex === firstPageIndex ? firstPageOffset : 0;
+            let pageLength = (pageIndex === lastPageIndex ? lastPageOffset : this.pageSize) - pageOffset;
+            let binOffset = pageIndex << this.pageSizeLog2;
+            let logOffset = this.logOffsets.get(binOffset);
+            if (logOffset == null) {
+                let redo = new Uint8Array(this.pageSize);
+                let overlap = this.bin.size() - binOffset;
+                if (overlap > 0) {
+                    let readLength = Math.min(overlap, this.pageSize);
+                    this.bin.read(redo.subarray(0, readLength), binOffset);
+                }
+                this.appendRedo(redo, binOffset, pageOffset + pageLength);
+            }
+            else {
+                let delta = this.readDelta(logOffset);
+                delta.redo.subarray(pageOffset, pageOffset + pageLength).fill(0);
+                this.writeDelta(delta, logOffset);
+            }
+        }
+        this.header.redoSize(size);
+    }
+    size() {
+        return this.header.redoSize();
+    }
+    write(buffer, offset) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.atLeast(0, offset);
+        if (buffer.length === 0) {
+            return buffer;
+        }
+        let firstByte = offset;
+        let lastByte = offset + buffer.length - 1;
+        let firstPageIndex = firstByte >> this.pageSizeLog2;
+        let lastPageIndex = lastByte >> this.pageSizeLog2;
+        let firstPageOffset = firstByte & (this.pageSize - 1);
+        let lastPageOffset = (lastByte & (this.pageSize - 1)) + 1;
+        let bytes = 0;
+        for (let pageIndex = firstPageIndex; pageIndex <= lastPageIndex; pageIndex++) {
+            let pageOffset = pageIndex === firstPageIndex ? firstPageOffset : 0;
+            let pageLength = (pageIndex === lastPageIndex ? lastPageOffset : this.pageSize) - pageOffset;
+            let binOffset = pageIndex << this.pageSizeLog2;
+            let logOffset = this.logOffsets.get(binOffset);
+            if (logOffset == null) {
+                let redo = new Uint8Array(this.pageSize);
+                let overlap = this.bin.size() - binOffset;
+                if (overlap > 0) {
+                    let readLength = Math.min(overlap, this.pageSize);
+                    this.bin.read(redo.subarray(0, readLength), binOffset);
+                }
+                redo.set(buffer.subarray(bytes, bytes + pageLength), pageOffset);
+                this.appendRedo(redo, binOffset, pageOffset + pageLength);
+            }
+            else {
+                this.writeRedo(logOffset, buffer.subarray(bytes, bytes + pageLength), pageOffset);
+            }
+            bytes += pageLength;
+        }
+        this.header.redoSize(Math.max(this.header.redoSize(), offset + buffer.length));
+        return buffer;
+    }
+}
+exports.PagedDurableFile = PagedDurableFile;
+;
 class DurableFile extends File {
     bin;
     log;
@@ -311,7 +575,7 @@ class DurableFile extends File {
         }
     }
     persist() {
-        if (this.log.size() > LogHeader.LENGTH) {
+        if (this.log.size() > LogHeader.LENGTH || this.bin.size() !== this.header.redoSize()) {
             this.header.write(this.log, 0);
             this.log.persist();
             this.redo();
