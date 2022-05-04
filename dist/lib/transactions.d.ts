@@ -52,13 +52,13 @@ export declare class TransactionManager<A extends WritableStores<any>, B extends
     private file;
     private readableTransactionLock;
     private writableTransactionLock;
-    private writableStores;
-    private writableLinks;
-    private writableQueries;
+    readonly stores: Readonly<TransactionalStoresFromWritableStores<A>>;
+    readonly links: Readonly<TransactionalLinksFromWritableLinks<B>>;
+    readonly queries: Readonly<TransactionalQueriesFromWritableQueries<C>>;
+    private createTransactionalStores;
+    private createTransactionalLinks;
+    private createTransactionalQueries;
     constructor(file: File, writableStores: A, writableLinks: B, writableQueries: C);
-    createTransactionalStores(): TransactionalStoresFromWritableStores<A>;
-    createTransactionalLinks(): TransactionalLinksFromWritableLinks<B>;
-    createTransactionalQueries(): TransactionalQueriesFromWritableQueries<C>;
     enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D>;
     enqueueWritableTransaction<D>(transaction: WritableTransaction<D>): Promise<D>;
 }

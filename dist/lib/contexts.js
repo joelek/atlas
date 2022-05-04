@@ -47,7 +47,6 @@ class Context {
     queries;
     operators;
     orders;
-    databaseManagers;
     getField(reference) {
         let field = this.fields.get(reference);
         if (field == null) {
@@ -103,7 +102,6 @@ class Context {
         this.queries = new Map();
         this.operators = new Map();
         this.orders = new Map();
-        this.databaseManagers = new Map();
     }
     createBigIntField() {
         let reference = new FieldReference();
@@ -241,9 +239,6 @@ class Context {
         return reference;
     }
     createTransactionManager(path, storeReferences, linkReferences, queryReferences) {
-        if (this.databaseManagers.has(path)) {
-            throw `Expected given storage to not be in use by another database!`;
-        }
         let file = this.createFile(path);
         let stores = {};
         for (let key in storeReferences) {
@@ -260,11 +255,8 @@ class Context {
         let schemaManager = new schemas_1.SchemaManager();
         let database = new databases_1.Database(stores, links, queries);
         let databaseManager = schemaManager.createDatabaseManager(file, database);
-        this.databaseManagers.set(path, databaseManager);
         let transactionManager = databaseManager.createTransactionManager(file);
-        return {
-            transactionManager
-        };
+        return transactionManager;
     }
 }
 exports.Context = Context;

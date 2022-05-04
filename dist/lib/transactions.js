@@ -84,37 +84,37 @@ class TransactionManager {
     file;
     readableTransactionLock;
     writableTransactionLock;
-    writableStores;
-    writableLinks;
-    writableQueries;
+    stores;
+    links;
+    queries;
+    createTransactionalStores(writableStores) {
+        let transactionalStores = {};
+        for (let key in writableStores) {
+            transactionalStores[key] = new TransactionalStore(writableStores[key]);
+        }
+        return transactionalStores;
+    }
+    createTransactionalLinks(writableLinks) {
+        let transactionalLinks = {};
+        for (let key in writableLinks) {
+            transactionalLinks[key] = new TransactionalLink(writableLinks[key]);
+        }
+        return transactionalLinks;
+    }
+    createTransactionalQueries(writableQueries) {
+        let transactionalQueries = {};
+        for (let key in writableQueries) {
+            transactionalQueries[key] = new TransactionalQuery(writableQueries[key]);
+        }
+        return transactionalQueries;
+    }
     constructor(file, writableStores, writableLinks, writableQueries) {
         this.file = file;
         this.readableTransactionLock = Promise.resolve();
         this.writableTransactionLock = Promise.resolve();
-        this.writableStores = writableStores;
-        this.writableLinks = writableLinks;
-        this.writableQueries = writableQueries;
-    }
-    createTransactionalStores() {
-        let transactionalStores = {};
-        for (let key in this.writableStores) {
-            transactionalStores[key] = new TransactionalStore(this.writableStores[key]);
-        }
-        return transactionalStores;
-    }
-    createTransactionalLinks() {
-        let transactionalLinks = {};
-        for (let key in this.writableLinks) {
-            transactionalLinks[key] = new TransactionalLink(this.writableLinks[key]);
-        }
-        return transactionalLinks;
-    }
-    createTransactionalQueries() {
-        let transactionalQueries = {};
-        for (let key in this.writableQueries) {
-            transactionalQueries[key] = new TransactionalQuery(this.writableQueries[key]);
-        }
-        return transactionalQueries;
+        this.stores = this.createTransactionalStores(writableStores);
+        this.links = this.createTransactionalLinks(writableLinks);
+        this.queries = this.createTransactionalQueries(writableQueries);
     }
     async enqueueReadableTransaction(transaction) {
         let queue = new utils_1.PromiseQueue();

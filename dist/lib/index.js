@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createEqualityFilter = exports.createDecreasingOrder = exports.createIncreasingOrder = exports.createContext = void 0;
+exports.createEqualityFilter = exports.createDecreasingOrder = exports.createIncreasingOrder = exports.createTransactionManager = exports.createContext = void 0;
 const contexts_1 = require("./contexts");
 const orders_1 = require("./orders");
 const filters_1 = require("./filters");
@@ -8,6 +8,13 @@ function createContext() {
     return new contexts_1.Context();
 }
 exports.createContext = createContext;
+;
+function createTransactionManager(path, schemaProvider) {
+    let context = new contexts_1.Context();
+    let schema = schemaProvider(context);
+    return context.createTransactionManager(path, schema.stores, schema.links, schema.queries);
+}
+exports.createTransactionManager = createTransactionManager;
 ;
 function createIncreasingOrder() {
     return new orders_1.IncreasingOrder();

@@ -1,12 +1,20 @@
-import { Context, StoreReference } from "./contexts";
+import { Context, LinkReferences, LinksFromLinkReferences, QueriesFromQueryReferences, QueryReferences, StoreReference, StoreReferences, StoresFromStoreReferences } from "./contexts";
 import { DecreasingOrder, IncreasingOrder } from "./orders";
 import { EqualityFilter } from "./filters";
 import { Value } from "./records";
 import * as transactions from "./transactions";
+import { WritableLinksFromLinkManagers, LinkManagersFromLinks } from "./links";
+import { WritableQueriesFromQueryManagers, QueryManagersFromQueries } from "./queries";
+import { WritableStoresFromStoreManagers, StoreManagersFromStores } from "./stores";
 export declare type ReadableQueue = transactions.ReadableQueue;
 export declare type WritableQueue = transactions.WritableQueue;
 export declare type RecordOf<A> = A extends StoreReference<infer C, infer D> ? C : never;
 export declare function createContext(): Context;
+export declare function createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, schemaProvider: (context: Context) => {
+    stores?: A;
+    links?: B;
+    queries?: C;
+}): transactions.TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;
 export declare function createIncreasingOrder<A extends Value>(): IncreasingOrder<A>;
 export declare function createDecreasingOrder<A extends Value>(): DecreasingOrder<A>;
 export declare function createEqualityFilter<A extends Value>(value: A): EqualityFilter<A>;

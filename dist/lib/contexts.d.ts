@@ -58,7 +58,6 @@ export declare class Context {
     private queries;
     private operators;
     private orders;
-    private databaseManagers;
     private getField;
     private getLink;
     private getStore;
@@ -89,7 +88,5 @@ export declare class Context {
     createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>>;
     createDecreasingOrder<A extends Value>(): OrderReference<DecreasingOrder<A>>;
     createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>>;
-    createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): {
-        transactionManager: TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;
-    };
+    createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;
 }
