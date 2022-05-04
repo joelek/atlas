@@ -455,5 +455,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Only recreate stores when referenced fields are altered, else update records.
 * Only recreate indices when referenced fields are altered.
 * Investigate caching of tree branches for quick traversal.
-* Make prefix searches optional.
 * Retain last block when resizing PagedFile and only clear affected bytes.
