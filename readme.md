@@ -54,8 +54,8 @@ The future of the Internet will be built on decentralized and distributed applic
 
 An Atlas database is managed through the transaction manager created via `atlas.createTransactionManager(path, schemaProvider)`.
 
-The `path` argument is used to specify the path to the directory where the database files are to be stored.
-The `schemaProvider` argument is used to specify the desired database schema using a callback to which a context will be provided. The context is used to define the database entities and the way in which they relate to each other.
+* The `path` argument is used to specify the path to the directory where the database files are to be stored.
+* The `schemaProvider` argument is used to specify the desired database schema using a callback to which a context will be provided. The context is used to define the database entities and the way in which they relate to each other.
 
 ```ts
 import * as atlas from "@joelek/atlas";
