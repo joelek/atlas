@@ -75,6 +75,38 @@ let tm = atlas.createTransactionManager("./private/db", (context) => {
 });
 ```
 
+All database operations are executed as part of an associated transaction. Transactions are short-lived constructs with either read or write access and should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
+
+A writable transaction will be provided with a queue that grants write access to all entities in the database. The writable queue will persist all changes made to the database if and only if all operations complete successfully.
+
+```ts
+await tm.enqueueWritableTransaction(async (queue) => {
+	return tm.stores.users.insert(queue, {
+		user_id: Uint8Array.of(1),
+		name: "Joel Ek",
+		age: 38
+	});
+});
+```
+
+A readable transaction will be provided with a queue that grants read access to all entities in the database.
+
+```ts
+let user = await tm.enqueueReadableTransaction(async (queue) => {
+	return tm.stores.users.lookup(queue, {
+		user_id: Uint8Array.of(1)
+	});
+});
+```
+
+Readable transactions are executed in parallel whereas writable transactions are executed in serial. Only create writable transactions when absolutely needed as write access reduces transaction throughput!
+
+## Schemas
+
+The context is used to defined the desired database schema. Atlas will use the desired schema to perform automatic schema migration when a transaction manager is created with a path where a database already is stored. This is done by determining the differences between the desired and the existing schema.
+
+Please make sure that you understand how Atlas handles automatic schema migration by studying the migration rules before you use Atlas in production environments.
+
 ### Data types
 
 Atlas supports all non-composite data types defined by [Bedrock](https://github.com/joelek/bedrock).
@@ -264,120 +296,7 @@ Atlas defines the index entity as a store coupled with a list of keys specifying
 
 Atlas defines the search index entity as a store coupled with a key specifying the indexed field. It is used to ensure that database operations are executed optimally at the cost of requiring additional storage space. Search indices are not defined explicitly but rather implicitly through the store itself.
 
-## Transactions
-
-All database operations are executed as part of an associated transaction. Transactions are short-lived constructs with either read or write access and should be created with the minimum access required for the desired operations. Transactions are enqueued through the transaction manager.
-
-A writable transaction will be provided with a writable queue that grants write access to all entities in the database. The writable queue will persist all changes made to the database if and only if all operations complete successfully.
-
-```ts
-await tm.enqueueWritableTransaction(async (queue) => {
-	return tm.stores.users.insert(queue, {
-		user_id: Uint8Array.of(1),
-		name: "Joel Ek",
-		age: 38
-	});
-});
-```
-
-A readable transaction will be provided with a readable queue that grants read access to all entities in the database.
-
-```ts
-let user = await tm.enqueueReadableTransaction(async (queue) => {
-	return tm.stores.users.lookup(queue, {
-		user_id: Uint8Array.of(1)
-	});
-});
-```
-
-Readable transactions are executed in parallel whereas writable transactions are executed in serial. Only create writable transactions when absolutely needed as write access reduces transaction throughput!
-
-### Stores
-
-#### Insert
-
-Records may be inserted using the `insert(record)` method.
-
-* The `record` argument must be used to specify the full record in question.
-
-#### Filter
-
-Records matching certain criteria may be retrieved using the `filter(filters, orders, anchorKeysRecord, limit)` method. The method will return all records inserted into the store when invoked without arguments.
-
-* The `filters` argument may be used to specify conditions that must be met for the records returned.
-* The `orders` argument may be used to specify the desired order of the records returned.
-* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum number of records to return.
-
-Stores are usually not filtered directly but rather indirectly through links and queries.
-
-#### Length
-
-The number of records inserted into a store may be checked using the `length()` method.
-
-#### Lookup
-
-Records may be looked up using the `lookup(keysRecord)` method.
-
-* The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
-
-The method will throw an error if the corresponding record cannot be found.
-
-#### Remove
-
-Records may be removed using the `remove(keysRecord)` method.
-
-* The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
-
-#### Search
-
-Records may be searched using the `search(query, anchorKeysRecord, limit)` method. The method efficiently searches the store for matching records and returns the results ordered by relevance with respect to the given query. Fields must be created with the "searchable" hint to be considered by the search algorithm.
-
-* The `query` argument must be used to specify the search query.
-* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum number of records to return.
-
-#### Update
-
-Records may be updated using the `update(keysRecord)` method. The method will insert a default record if the corresponding record cannot be found. Metadata fields not specified in the update will retain their previously stored values.
-
-* The `keysRecord` argument must be used to specify the identifying fields of the record at minimum.
-
-#### Vacate
-
-All records inserted into a store may be vacated using the `vacate()` method.
-
-### Links
-
-#### Filter
-
-Child records matching certain criteria may be retrieved using the `filter(keysRecord, anchorKeysRecord, limit)` method. The method will return all orphaned child records when invoked without arguments.
-
-* The `keysRecord` argument may be used to specify the identifying fields of the parent record in question at minimum.
-* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last child record seen at minimum. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum number of records to return.
-
-#### Lookup
-
-Parent records may be looked up using the `lookup(keysRecord)` method. The method will return undefined if the corresponding child record is orphaned.
-
-* The `keysRecord` argument must be used to specify the identifying fields of the child record in question at minimum.
-
-### Queries
-
-#### Filter
-
-Records matching certain criteria may be retrieved using the `filter(parameters, anchorKeysRecord, limit)` method.
-
-* The `parameters` argument must be used to specify the parameter values for the query.
-* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
-* The `limit` argument may be used to specify the maximum number of records to return.
-
-## Schema migration
-
-Atlas performs automatic schema migration when a transaction manager is created with a path where a database already is stored. Atlas will ensure that the existing schema is migrated to the schema defined by the stores, links and queries specified when creating the transaction manager. This is done by determining the differences between the new and the existing schema.
-
-Please make sure that you understand how Atlas handles automatic schema migration before you use Atlas in production environments.
+## Migration Rules
 
 * Atlas removes all existing stores not referenced in the new schema. All records of the corresponding stores are removed.
 * Atlas creates new stores for all stores not referenced in the existing schema.
@@ -387,6 +306,102 @@ Please make sure that you understand how Atlas handles automatic schema migratio
 * Atlas updates all fields referenced both in the new and in the existing schemas of a given store. All records of the corresponding store will have their corresponding values set to either a default value or the existing value. The existing value is always used when the value is considered compatible with the new field. This is always the case when changing a non-nullable field into a nullable field but not guaranteed to be the case when changing a nullable field into a non-nullable field. A default value is always used when the fundamental type of a field changes.
 
 In addition to this, Atlas will enforce data-consistency for all links not referenced in the existing schema.
+
+## API
+
+### Stores
+
+#### Insert
+
+Records may be inserted using the `insert(queue, record)` method.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `record` argument must be used to specify the full record in question.
+
+#### Filter
+
+Records matching certain criteria may be retrieved using the `filter(queue, filters, orders, anchorKeysRecord, limit)` method. The method will return all records inserted into the store when invoked without arguments.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `filters` argument may be used to specify conditions that must be met for the records returned.
+* The `orders` argument may be used to specify the desired order of the records returned.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum number of records to return.
+
+Stores are usually not filtered directly but rather indirectly through links and queries.
+
+#### Length
+
+The number of records inserted into a store may be checked using the `length(queue)` method.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+
+#### Lookup
+
+Records may be looked up using the `lookup(queue, keysRecord)` method.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
+
+The method will throw an error if the corresponding record cannot be found.
+
+#### Remove
+
+Records may be removed using the `remove(queue, keysRecord)` method.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `keysRecord` argument must be used to specify the identifying fields of the record in question at minimum.
+
+#### Search
+
+Records may be searched using the `search(queue, query, anchorKeysRecord, limit)` method. The method efficiently searches the store for matching records and returns the results ordered by relevance with respect to the given query. Fields must be created with the "searchable" hint to be considered by the search algorithm.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `query` argument must be used to specify the search query.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum number of records to return.
+
+#### Update
+
+Records may be updated using the `update(queue, keysRecord)` method. The method will insert a default record if the corresponding record cannot be found. Metadata fields not specified in the update will retain their previously stored values.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `keysRecord` argument must be used to specify the identifying fields of the record at minimum.
+
+#### Vacate
+
+All records inserted into a store may be vacated using the `vacate(queue)` method.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+
+### Links
+
+#### Filter
+
+Child records matching certain criteria may be retrieved using the `filter(queue, keysRecord, anchorKeysRecord, limit)` method. The method will return all orphaned child records when invoked without arguments.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `keysRecord` argument may be used to specify the identifying fields of the parent record in question at minimum.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last child record seen at minimum. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum number of records to return.
+
+#### Lookup
+
+Parent records may be looked up using the `lookup(queue, keysRecord)` method. The method will return undefined if the corresponding child record is orphaned.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `keysRecord` argument must be used to specify the identifying fields of the child record in question at minimum.
+
+### Queries
+
+#### Filter
+
+Records matching certain criteria may be retrieved using the `filter(queue, parameters, anchorKeysRecord, limit)` method.
+
+* The `queue` argument must be used to specify the queue to which the operation is enqueued.
+* The `parameters` argument must be used to specify the parameter values for the query.
+* The `anchorKeysRecord` argument may be used to specify the identifying fields of the last record seen at minimum. The first record returned will be the record located directly after the anchor.
+* The `limit` argument may be used to specify the maximum number of records to return.
 
 ## Technical details
 
