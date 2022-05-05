@@ -32,7 +32,13 @@ class WritableStoreManager {
         return this.storeManager.remove(...parameters);
     }
     async search(...parameters) {
-        return this.storeManager.search(...parameters).map((entry) => entry.record);
+        return this.storeManager.search(...parameters).map((entry) => {
+            let { record, rank } = { ...entry };
+            return {
+                record,
+                rank
+            };
+        });
     }
     async update(...parameters) {
         return this.storeManager.update(...parameters);
@@ -1569,7 +1575,13 @@ class OverridableWritableStore {
         return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
     }
     async search(...parameters) {
-        return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => entry.record);
+        return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => {
+            let { record, rank } = { ...entry };
+            return {
+                record,
+                rank
+            };
+        });
     }
     async update(...parameters) {
         return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
