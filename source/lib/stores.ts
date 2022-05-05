@@ -10,13 +10,18 @@ import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 import { SeekableIterable, Tokenizer, union, intersection } from "./utils";
 
+export type SearchResult<A extends Record> = {
+	record: A;
+	rank: number;
+};
+
 export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 	insert(record: A): Promise<void>;
 	length(): Promise<number>;
 	lookup(keysRecord: KeysRecord<A, B>): Promise<A>;
 	remove(keysRecord: KeysRecord<A, B>): Promise<void>;
-	search(query: string, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
+	search(query: string, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<SearchResult<A>>>;
 	update(keysRecord: KeysRecord<A, B>): Promise<void>;
 	vacate(): Promise<void>;
 };
@@ -61,7 +66,13 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 	}
 
 	async search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
-		return this.storeManager.search(...parameters).map((entry) => entry.record);
+		return this.storeManager.search(...parameters).map((entry) => {
+			let { record, rank } = { ...entry };
+			return {
+				record,
+				rank
+			};
+		});
 	}
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
@@ -1736,7 +1747,13 @@ export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A
 	}
 
 	async search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
-		return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => entry.record);
+		return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => {
+			let { record, rank } = { ...entry };
+			return {
+				record,
+				rank
+			};
+		});
 	}
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
