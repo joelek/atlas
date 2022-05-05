@@ -247,7 +247,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 	}
 };
 
-export type SearchResult<A extends Record> = {
+export type SearchIndexResult<A extends Record> = {
 	bid: number;
 	record: A;
 	tokens: Array<string>;
@@ -298,7 +298,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		return this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
 	}
 
-	private getNextMatch(category: number, token: string, relationship: Relationship, prefix: boolean, previousResult?: SearchResult<A>): SearchResult<A> | undefined {
+	private getNextMatch(category: number, token: string, relationship: Relationship, prefix: boolean, previousResult?: SearchIndexResult<A>): SearchIndexResult<A> | undefined {
 		let keys = [
 			bedrock.codecs.Integer.encodePayload(category),
 			bedrock.codecs.String.encodePayload(token)
@@ -421,7 +421,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
-	* [Symbol.iterator](): Iterator<SearchResult<A>> {
+	* [Symbol.iterator](): Iterator<SearchIndexResult<A>> {
 		yield * StreamIterable.of(this.search(""));
 	}
 
@@ -443,8 +443,8 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
-		let previousResult: SearchResult<A> | undefined;
+	* search(query: string, bid?: number): Iterable<SearchIndexResult<A>> {
+		let previousResult: SearchIndexResult<A> | undefined;
 		if (bid != null) {
 			let record = this.readRecord(bid);
 			let tokens = this.tokenizeRecord(record);
@@ -470,7 +470,7 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		} else {
 			let relationship = bid != null ? ">" : ">=" as Relationship;
 			while (true) {
-				let tokenCandidates = [] as Array<SearchResult<A>>;
+				let tokenCandidates = [] as Array<SearchIndexResult<A>>;
 				for (let queryToken of queryTokens) {
 					let nextTokenResult = this.getNextMatch(queryTokens.length + 1, queryToken, relationship, false, previousResult);
 					if (nextTokenResult == null) {
@@ -517,14 +517,14 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV1<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV1<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
 		outer: while (true) {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
-				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
+				.filter((candidate): candidate is { searchResult: SearchIndexResult<A>, index: number } => candidate.searchResult != null)
 				.sort((one, two) => {
 					return one.searchResult.rank - two.searchResult.rank;
 				});
@@ -535,12 +535,12 @@ export class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
 			inner: for (let searchIndexManager of searchIndexManagers) {
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
 				if (rank != null && rank > candidate.searchResult.rank) {
-					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 					continue outer;
 				}
 			}
 			yield candidate.searchResult;
-			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 		}
 	}
 };
@@ -629,7 +629,7 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
-	* [Symbol.iterator](): Iterator<SearchResult<A>> {
+	* [Symbol.iterator](): Iterator<SearchIndexResult<A>> {
 		yield * StreamIterable.of(this.search(""));
 	}
 
@@ -651,8 +651,8 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
-		let previousResult: SearchResult<A> | undefined;
+	* search(query: string, bid?: number): Iterable<SearchIndexResult<A>> {
+		let previousResult: SearchIndexResult<A> | undefined;
 		if (bid != null) {
 			let record = this.readRecord(bid);
 			let tokens = this.tokenizeRecord(record);
@@ -700,7 +700,7 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 			}
 			let iterables = trees.map((tree) => tree.filter(relationship, keys));
 			let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-			let results = [] as Array<SearchResult<A>>;
+			let results = [] as Array<SearchIndexResult<A>>;
 			for (let iterator of iterators) {
 				let bid = iterator.next().value as number | undefined;
 				if (bid == null) {
@@ -748,14 +748,14 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV2<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV2<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
 		outer: while (true) {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
-				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
+				.filter((candidate): candidate is { searchResult: SearchIndexResult<A>, index: number } => candidate.searchResult != null)
 				.sort((one, two) => {
 					return one.searchResult.rank - two.searchResult.rank;
 				});
@@ -766,12 +766,12 @@ export class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
 			inner: for (let searchIndexManager of searchIndexManagers) {
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
 				if (rank != null && rank > candidate.searchResult.rank) {
-					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 					continue outer;
 				}
 			}
 			yield candidate.searchResult;
-			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 		}
 	}
 };
@@ -873,7 +873,7 @@ export class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
 		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
-	* [Symbol.iterator](): Iterator<SearchResult<A>> {
+	* [Symbol.iterator](): Iterator<SearchIndexResult<A>> {
 		yield * StreamIterable.of(this.search(""));
 	}
 
@@ -895,7 +895,7 @@ export class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
+	* search(query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let queryTokens = Tokenizer.tokenize(query);
 		if (queryTokens.length === 0) {
 			queryTokens.push("");
@@ -954,14 +954,14 @@ export class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
 		outer: while (true) {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
-				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
+				.filter((candidate): candidate is { searchResult: SearchIndexResult<A>, index: number } => candidate.searchResult != null)
 				.sort((one, two) => {
 					return one.searchResult.rank - two.searchResult.rank;
 				});
@@ -972,12 +972,12 @@ export class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
 			inner: for (let searchIndexManager of searchIndexManagers) {
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
 				if (rank != null && rank > candidate.searchResult.rank) {
-					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 					continue outer;
 				}
 			}
 			yield candidate.searchResult;
-			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 		}
 	}
 };
@@ -1066,7 +1066,7 @@ export class SearchIndexManagerV4<A extends Record, B extends Key<A>> {
 		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
-	* [Symbol.iterator](): Iterator<SearchResult<A>> {
+	* [Symbol.iterator](): Iterator<SearchIndexResult<A>> {
 		yield * StreamIterable.of(this.search(""));
 	}
 
@@ -1088,7 +1088,7 @@ export class SearchIndexManagerV4<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
+	* search(query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let queryTokens = Tokenizer.tokenize(query);
 		if (queryTokens.length === 0) {
 			queryTokens.push("");
@@ -1155,14 +1155,14 @@ export class SearchIndexManagerV4<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV4<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV4<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
 		outer: while (true) {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
-				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
+				.filter((candidate): candidate is { searchResult: SearchIndexResult<A>, index: number } => candidate.searchResult != null)
 				.sort((one, two) => {
 					return one.searchResult.rank - two.searchResult.rank;
 				});
@@ -1173,12 +1173,12 @@ export class SearchIndexManagerV4<A extends Record, B extends Key<A>> {
 			inner: for (let searchIndexManager of searchIndexManagers) {
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
 				if (rank != null && rank > candidate.searchResult.rank) {
-					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 					continue outer;
 				}
 			}
 			yield candidate.searchResult;
-			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 		}
 	}
 };
@@ -1247,7 +1247,7 @@ export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
 		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
-	* [Symbol.iterator](): Iterator<SearchResult<A>> {
+	* [Symbol.iterator](): Iterator<SearchIndexResult<A>> {
 		yield * StreamIterable.of(this.search(""));
 	}
 
@@ -1269,7 +1269,7 @@ export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
+	* search(query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let queryTokens = Tokenizer.tokenize(query);
 		if (queryTokens.length === 0) {
 			queryTokens.push("");
@@ -1375,14 +1375,14 @@ export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
 		outer: while (true) {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
-				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
+				.filter((candidate): candidate is { searchResult: SearchIndexResult<A>, index: number } => candidate.searchResult != null)
 				.sort((one, two) => {
 					return one.searchResult.rank - two.searchResult.rank;
 				});
@@ -1393,12 +1393,12 @@ export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
 			inner: for (let searchIndexManager of searchIndexManagers) {
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
 				if (rank != null && rank > candidate.searchResult.rank) {
-					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 					continue outer;
 				}
 			}
 			yield candidate.searchResult;
-			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
 		}
 	}
 };
@@ -1545,7 +1545,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 	}
 
-	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
+	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchIndexResult<A>> {
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
 		let iterable = StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid));
 		if (limit != null) {
