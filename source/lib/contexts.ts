@@ -312,7 +312,10 @@ export class Context {
 		let schemaManager = new SchemaManager();
 		let database = new Database(stores, links, queries);
 		let databaseManager = schemaManager.createDatabaseManager(file, database);
-		let transactionManager = databaseManager.createTransactionManager(file);
+		let writableStores = databaseManager.createWritableStores();
+		let writableLinks = databaseManager.createWritableLinks();
+		let writableQueries = databaseManager.createWritableQueries();
+		let transactionManager = new TransactionManager(file, writableStores, writableLinks, writableQueries);
 		return transactionManager;
 	}
 };

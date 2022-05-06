@@ -1,10 +1,8 @@
-import { File } from "./files";
 import { SubsetOf } from "./inference";
 import { LinkManager, LinkManagers, Links, WritableLink, WritableLinksFromLinkManagers } from "./links";
 import { Queries, QueryManager, QueryManagers, WritableQueriesFromQueryManagers, WritableQuery } from "./queries";
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
 import { StoreManager, StoreManagers, Stores, WritableStore, WritableStoresFromStoreManagers } from "./stores";
-import { TransactionManager } from "./transactions";
 
 export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
 	private storeManager: StoreManager<A, B>;
@@ -175,13 +173,6 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			this.linksWhereStoreIsParent.set(storeManager, linksWhereStoreIsParent);
 			this.linksWhereStoreIsChild.set(storeManager, linksWhereStoreIsChild);
 		}
-	}
-
-	createTransactionManager(file: File): TransactionManager<WritableStoresFromStoreManagers<A>, WritableLinksFromLinkManagers<B>, WritableQueriesFromQueryManagers<C>> {
-		let writableStores = this.createWritableStores();
-		let writableLinks = this.createWritableLinks();
-		let writableQueries = this.createWritableQueries();
-		return new TransactionManager(file, writableStores, writableLinks, writableQueries);
 	}
 
 	createWritableStores(): WritableStoresFromStoreManagers<A> {
