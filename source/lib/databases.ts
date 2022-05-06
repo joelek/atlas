@@ -46,6 +46,10 @@ export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implemen
 	}
 };
 
+export type DatabaseStoresFromStorManagers<A extends StoreManagers<any>> = {
+	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? DatabaseStore<C, D> : never;
+};
+
 export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements LinkInterface<A, B, C, D, E> {
 	private linkManager: LinkManager<A, B, C, D, E>;
 	private overrides: Partial<LinkManager<A, B, C, D, E>>;
@@ -64,6 +68,10 @@ export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends
 	}
 };
 
+export type DatabaseLinksFromLinkManagers<A extends LinkManagers<any>> = {
+	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : never;
+};
+
 export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements QueryInterface<A, B, C, D> {
 	private queryManager: QueryManager<A, B, C, D>;
 	private overrides: Partial<QueryManager<A, B, C, D>>;
@@ -76,6 +84,10 @@ export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extend
 	async filter(...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]> {
 		return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
 	}
+};
+
+export type DatabaseQueriesFromQueryManagers<A extends QueryManagers<any>> = {
+	[B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? DatabaseQuery<C, D, E, F> : never;
 };
 
 export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>, C extends QueryManagers<any>> {
@@ -175,35 +187,35 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		}
 	}
 
-	createStoreInterfaces(): StoreInterfacesFromStoreManagers<A> {
-		let storeInterfaces = {} as StoreInterfacesFromStoreManagers<any>;
+	createDatabaseStores(): DatabaseStoresFromStorManagers<A> {
+		let databaseStores = {} as DatabaseStoresFromStorManagers<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
-			storeInterfaces[key] = new DatabaseStore(storeManager, {
+			databaseStores[key] = new DatabaseStore(storeManager, {
 				insert: async (record) => this.doInsert(storeManager, [record]),
 				remove: async (record) => this.doRemove(storeManager, [record]),
 				vacate: async () => this.doVacate(storeManager, [])
 			});
 		}
-		return storeInterfaces;
+		return databaseStores;
 	}
 
-	createLinkInterfaces(): LinkInterfacesFromLinkManagers<B> {
-		let linkInterfaces = {} as LinkInterfacesFromLinkManagers<any>;
+	createDatabaseLinks(): DatabaseLinksFromLinkManagers<B> {
+		let databaseLinks = {} as DatabaseLinksFromLinkManagers<any>;
 		for (let key in this.linkManagers) {
 			let linkManager = this.linkManagers[key];
-			linkInterfaces[key] = new DatabaseLink(linkManager, {});
+			databaseLinks[key] = new DatabaseLink(linkManager, {});
 		}
-		return linkInterfaces;
+		return databaseLinks;
 	}
 
-	createQueryInterfaces(): QueryInterfacesFromQueryManagers<C> {
-		let queryInterfaces = {} as QueryInterfacesFromQueryManagers<any>;
+	createDatabaseQueries(): DatabaseQueriesFromQueryManagers<C> {
+		let databaseQueries = {} as DatabaseQueriesFromQueryManagers<any>;
 		for (let key in this.queryManagers) {
 			let queryManager = this.queryManagers[key];
-			queryInterfaces[key] = new DatabaseQuery(queryManager, {});
+			databaseQueries[key] = new DatabaseQuery(queryManager, {});
 		}
-		return queryInterfaces;
+		return databaseQueries;
 	}
 
 	enforceStoreConsistency<C extends Keys<A>>(storeNames: [...C]): void {

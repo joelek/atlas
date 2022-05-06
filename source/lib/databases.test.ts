@@ -66,12 +66,12 @@ function createUsersPostsAndComments() {
 			comments,
 			metas
 		},
-		storeInterfaces: databaseManager.createStoreInterfaces()
+		databaseStores: databaseManager.createDatabaseStores()
 	};
 };
 
 test(`It should support vacating records for referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createUsersPostsAndComments();
+	let { storeManagers, databaseStores } = createUsersPostsAndComments();
 	storeManagers.users.insert({
 		user_id: "User 0"
 	});
@@ -92,7 +92,7 @@ test(`It should support vacating records for referencing links.`, async (assert)
 		meta_id: "Meta 1",
 		meta_user_id: "User 0"
 	});
-	await storeInterfaces.users.vacate();
+	await databaseStores.users.vacate();
 	assert.array.equals(Array.from(storeManagers.users).map((record) => record.user_id), []);
 	assert.array.equals(Array.from(storeManagers.posts).map((record) => record.post_id), []);
 	assert.array.equals(Array.from(storeManagers.comments).map((record) => record.comment_id), []);
@@ -100,17 +100,17 @@ test(`It should support vacating records for referencing links.`, async (assert)
 });
 
 test(`It should support inserting records for referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createUsersPostsAndComments();
-	await storeInterfaces.users.insert({
+	let { storeManagers, databaseStores } = createUsersPostsAndComments();
+	await databaseStores.users.insert({
 		user_id: "User 0"
 	});
 	assert.array.equals(Array.from(storeManagers.users).map((record) => record.user_id), ["User 0"]);
 });
 
 test(`It should prevent inserting orphaned records for referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createUsersPostsAndComments();
+	let { storeManagers, databaseStores } = createUsersPostsAndComments();
 	await assert.throws(async () => {
-		await storeInterfaces.posts.insert({
+		await databaseStores.posts.insert({
 			post_id: "Post 0",
 			post_user_id: "User 0"
 		});
@@ -118,7 +118,7 @@ test(`It should prevent inserting orphaned records for referencing links.`, asyn
 });
 
 test(`It should remove orphaned child records for referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createUsersPostsAndComments();
+	let { storeManagers, databaseStores } = createUsersPostsAndComments();
 	storeManagers.users.insert({
 		user_id: "User 0"
 	});
@@ -126,7 +126,7 @@ test(`It should remove orphaned child records for referencing links.`, async (as
 		post_id: "Post 0",
 		post_user_id: "User 0"
 	});
-	await storeInterfaces.users.remove({
+	await databaseStores.users.remove({
 		user_id: "User 0"
 	});
 	assert.array.equals(Array.from(storeManagers.users).map((record) => record.user_id), []);
@@ -134,7 +134,7 @@ test(`It should remove orphaned child records for referencing links.`, async (as
 });
 
 test(`It should remove orphaned grandchild records for referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createUsersPostsAndComments();
+	let { storeManagers, databaseStores } = createUsersPostsAndComments();
 	storeManagers.users.insert({
 		user_id: "User 0"
 	});
@@ -147,7 +147,7 @@ test(`It should remove orphaned grandchild records for referencing links.`, asyn
 		comment_post_id: "Post 0",
 		comment_user_id: "User 0"
 	});
-	await storeInterfaces.users.remove({
+	await databaseStores.users.remove({
 		user_id: "User 0"
 	});
 	assert.array.equals(Array.from(storeManagers.users).map((record) => record.user_id), []);
@@ -156,7 +156,7 @@ test(`It should remove orphaned grandchild records for referencing links.`, asyn
 });
 
 test(`It should not remove records with parents for referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createUsersPostsAndComments();
+	let { storeManagers, databaseStores } = createUsersPostsAndComments();
 	storeManagers.users.insert({
 		user_id: "User 0"
 	});
@@ -169,7 +169,7 @@ test(`It should not remove records with parents for referencing links.`, async (
 		comment_post_id: "Post 0",
 		comment_user_id: "User 0"
 	});
-	await storeInterfaces.posts.remove({
+	await databaseStores.posts.remove({
 		post_id: "Post 0"
 	});
 	assert.array.equals(Array.from(storeManagers.users).map((record) => record.user_id), ["User 0"]);
@@ -199,27 +199,27 @@ function createDirectories() {
 			directories
 		},
 		databaseManager: databaseManager,
-		storeInterfaces: databaseManager.createStoreInterfaces()
+		databaseStores: databaseManager.createDatabaseStores()
 	};
 };
 
 test(`It should support vacating records for self-referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createDirectories();
-	await storeInterfaces.directories.insert({
+	let { storeManagers, databaseStores } = createDirectories();
+	await databaseStores.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
 	});
-	await storeInterfaces.directories.insert({
+	await databaseStores.directories.insert({
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
 	});
-	await storeInterfaces.directories.vacate();
+	await databaseStores.directories.vacate();
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.directory_id), []);
 });
 
 test(`It should support inserting records for self-referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createDirectories();
-	await storeInterfaces.directories.insert({
+	let { storeManagers, databaseStores } = createDirectories();
+	await databaseStores.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
 	});
@@ -227,9 +227,9 @@ test(`It should support inserting records for self-referencing links.`, async (a
 });
 
 test(`It should prevent inserting orphaned records for self-referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseStores } = createDirectories();
 	await assert.throws(async () => {
-		await storeInterfaces.directories.insert({
+		await databaseStores.directories.insert({
 			directory_id: "Directory 1",
 			parent_directory_id: "Directory 0"
 		});
@@ -237,7 +237,7 @@ test(`It should prevent inserting orphaned records for self-referencing links.`,
 });
 
 test(`It should remove orphaned child records for self-referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
@@ -246,14 +246,14 @@ test(`It should remove orphaned child records for self-referencing links.`, asyn
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
 	});
-	await storeInterfaces.directories.remove({
+	await databaseStores.directories.remove({
 		directory_id: "Directory 0"
 	});
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.directory_id), []);
 });
 
 test(`It should remove orphaned grandchild records for self-referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
@@ -266,14 +266,14 @@ test(`It should remove orphaned grandchild records for self-referencing links.`,
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	await storeInterfaces.directories.remove({
+	await databaseStores.directories.remove({
 		directory_id: "Directory 0"
 	});
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.directory_id), []);
 });
 
 test(`It should not remove records with parents for self-referencing links.`, async (assert) => {
-	let { storeManagers, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
@@ -286,14 +286,14 @@ test(`It should not remove records with parents for self-referencing links.`, as
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	await storeInterfaces.directories.remove({
+	await databaseStores.directories.remove({
 		directory_id: "Directory 1"
 	});
 	assert.array.equals(Array.from(storeManagers.directories).map((record) => record.directory_id), ["Directory 0"]);
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is an orphaned chain link.`, async (assert) => {
-	let { storeManagers, databaseManager, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseManager, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
@@ -307,7 +307,7 @@ test(`It should support enforcing link consistency for self-referencing links wh
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is a cyclical link.`, async (assert) => {
-	let { storeManagers, databaseManager, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseManager, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: "Directory 1"
@@ -321,7 +321,7 @@ test(`It should support enforcing link consistency for self-referencing links wh
 });
 
 test(`It should support enforcing link consistency for self-referencing links when there is a chain link.`, async (assert) => {
-	let { storeManagers, databaseManager, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseManager, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
@@ -335,7 +335,7 @@ test(`It should support enforcing link consistency for self-referencing links wh
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is an orphaned chain link.`, async (assert) => {
-	let { storeManagers, databaseManager, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseManager, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 1",
 		parent_directory_id: "Directory 0"
@@ -349,7 +349,7 @@ test(`It should support enforcing store consistency for self-referencing links w
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is a cyclical link.`, async (assert) => {
-	let { storeManagers, databaseManager, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseManager, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: "Directory 1"
@@ -363,7 +363,7 @@ test(`It should support enforcing store consistency for self-referencing links w
 });
 
 test(`It should support enforcing store consistency for self-referencing links when there is a chain link.`, async (assert) => {
-	let { storeManagers, databaseManager, storeInterfaces } = createDirectories();
+	let { storeManagers, databaseManager, databaseStores } = createDirectories();
 	storeManagers.directories.insert({
 		directory_id: "Directory 0",
 		parent_directory_id: null
