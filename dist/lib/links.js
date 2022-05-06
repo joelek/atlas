@@ -21,16 +21,16 @@ class LinkManager {
     getChild() {
         return this.child;
     }
-    filter(keysRecord, anchorKeysRecord, limit) {
+    filter(cache, keysRecord, anchorKeysRecord, limit) {
         let filters = {};
         for (let key in this.keysRecordMap) {
             let keyOne = key;
             let keyTwo = this.keysRecordMap[keyOne];
             filters[keyTwo] = new filters_1.EqualityFilter(keysRecord?.[keyOne] ?? null);
         }
-        return this.child.filter(filters, this.orders, anchorKeysRecord, limit);
+        return this.child.filter(cache, filters, this.orders, anchorKeysRecord, limit);
     }
-    lookup(keysRecord) {
+    lookup(cache, keysRecord) {
         let parentKeysRecord = {};
         for (let key in this.keysRecordMap) {
             let keyOne = key;
@@ -40,7 +40,7 @@ class LinkManager {
             }
             parentKeysRecord[keyOne] = keysRecord[keyTwo];
         }
-        return this.parent.lookup(parentKeysRecord);
+        return this.parent.lookup(cache, parentKeysRecord);
     }
     static construct(parent, child, recordKeysMap, orders) {
         return new LinkManager(parent, child, recordKeysMap, orders);

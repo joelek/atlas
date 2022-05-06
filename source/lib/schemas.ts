@@ -11,6 +11,7 @@ import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries }
 import { EqualityOperator, Operator, OperatorMap, Operators } from "./operators";
 import { SubsetOf } from "./inference";
 import { RadixTree } from "./trees";
+import { Cache } from "./caches";
 
 export const BigIntFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BigIntField"),
@@ -392,9 +393,13 @@ export class SchemaManager {
 		}
 		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
-			getKeyFromValue: (value) => {
-				let buffer = blockManager.readBlock(value);
-				let record = recordManager.decode(buffer);
+			getKeyFromValue: (value, cache) => {
+				let record = cache?.lookup(value);
+				if (record == null) {
+					let buffer = blockManager.readBlock(value);
+					record = recordManager.decode(buffer);
+					cache?.insert(value, record);
+				}
 				return recordManager.encodeKeys(keys, record);
 			}
 		}, {
@@ -743,7 +748,7 @@ export class SchemaManager {
 	}
 
 	private deleteStore(blockManager: BlockManager, oldSchema: StoreSchema): void {
-		this.loadStoreManager(blockManager, oldSchema).delete();
+		this.loadStoreManager(blockManager, oldSchema).delete(new Cache(undefined, 0));
 	}
 
 	private deleteIndex(blockManager: BlockManager, indexSchema: IndexSchema, fieldsSchema: FieldsSchema): void {
@@ -770,9 +775,13 @@ export class SchemaManager {
 				let indexSchema = this.createIndex(blockManager, index);
 				let indexManager = this.loadIndexManager(recordManager, blockManager, indexSchema);
 				let storage = new Table(blockManager, {
-					getKeyFromValue: (value) => {
-						let buffer = blockManager.readBlock(value);
-						let record = recordManager.decode(buffer);
+					getKeyFromValue: (value, cache) => {
+						let record = cache?.lookup(value);
+						if (record == null) {
+							let buffer = blockManager.readBlock(value);
+							record = recordManager.decode(buffer);
+							cache?.insert(value, record);
+						}
 						return recordManager.encodeKeys(oldSchema.keys, record);
 					}
 				}, {
@@ -805,9 +814,13 @@ export class SchemaManager {
 				let searchIndexSchema = this.createSearchIndex(blockManager, searchIndex);
 				let searchIndexManager = this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema);
 				let storage = new Table(blockManager, {
-					getKeyFromValue: (value) => {
-						let buffer = blockManager.readBlock(value);
-						let record = recordManager.decode(buffer);
+					getKeyFromValue: (value, cache) => {
+						let record = cache?.lookup(value);
+						if (record == null) {
+							let buffer = blockManager.readBlock(value);
+							record = recordManager.decode(buffer);
+							cache?.insert(value, record);
+						}
 						return recordManager.encodeKeys(oldSchema.keys, record);
 					}
 				}, {
@@ -851,10 +864,10 @@ export class SchemaManager {
 							newRecord[key] = field.getDefaultValue();
 						}
 					}
-					newManager.insert(newRecord);
+					newManager.insert(new Cache(undefined, 0), newRecord);
 				} catch (error) {}
 			}
-			oldManager.delete();
+			oldManager.delete(new Cache(undefined, 0));
 			newSchema.version = oldSchema.version + 1;
 			return newSchema;
 		}

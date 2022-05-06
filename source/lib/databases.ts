@@ -1,10 +1,11 @@
+import { Cache } from "./caches";
 import { SubsetOf } from "./inference";
 import { LinkManager, LinkManagers, Links, LinkInterface } from "./links";
 import { Queries, QueryManager, QueryManagers, QueryInterface } from "./queries";
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
 import { StoreManager, StoreManagers, Stores, StoreInterface } from "./stores";
 
-export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
+export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> {
 	private storeManager: StoreManager<A, B>;
 	private overrides: Partial<StoreManager<A, B>>;
 
@@ -13,36 +14,36 @@ export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implemen
 		this.overrides = overrides;
 	}
 
-	async filter(...parameters: Parameters<StoreInterface<A, B>["filter"]>): ReturnType<StoreInterface<A, B>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
+	async filter(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["filter"]>): ReturnType<StoreInterface<A, B>["filter"]> {
+		return this.overrides.filter?.(cache, ...parameters) ?? this.storeManager.filter(cache, ...parameters);
 	}
 
-	async insert(...parameters: Parameters<StoreInterface<A, B>["insert"]>): ReturnType<StoreInterface<A, B>["insert"]> {
-		return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
+	async insert(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["insert"]>): ReturnType<StoreInterface<A, B>["insert"]> {
+		return this.overrides.insert?.(cache, ...parameters) ?? this.storeManager.insert(cache, ...parameters);
 	}
 
-	async length(...parameters: Parameters<StoreInterface<A, B>["length"]>): ReturnType<StoreInterface<A, B>["length"]> {
-		return this.overrides.length?.(...parameters) ?? this.storeManager.length(...parameters);
+	async length(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["length"]>): ReturnType<StoreInterface<A, B>["length"]> {
+		return this.overrides.length?.(cache, ...parameters) ?? this.storeManager.length(cache, ...parameters);
 	}
 
-	async lookup(...parameters: Parameters<StoreInterface<A, B>["lookup"]>): ReturnType<StoreInterface<A, B>["lookup"]> {
-		return this.overrides.lookup?.(...parameters) ?? this.storeManager.lookup(...parameters);
+	async lookup(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["lookup"]>): ReturnType<StoreInterface<A, B>["lookup"]> {
+		return this.overrides.lookup?.(cache, ...parameters) ?? this.storeManager.lookup(cache, ...parameters);
 	}
 
-	async remove(...parameters: Parameters<StoreInterface<A, B>["remove"]>): ReturnType<StoreInterface<A, B>["remove"]> {
-		return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
+	async remove(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["remove"]>): ReturnType<StoreInterface<A, B>["remove"]> {
+		return this.overrides.remove?.(cache, ...parameters) ?? this.storeManager.remove(cache, ...parameters);
 	}
 
-	async search(...parameters: Parameters<StoreInterface<A, B>["search"]>): ReturnType<StoreInterface<A, B>["search"]> {
-		return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters);
+	async search(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["search"]>): ReturnType<StoreInterface<A, B>["search"]> {
+		return this.overrides.search?.(cache, ...parameters) ?? this.storeManager.search(cache, ...parameters);
 	}
 
-	async update(...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]> {
-		return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
+	async update(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]> {
+		return this.overrides.update?.(cache, ...parameters) ?? this.storeManager.update(cache, ...parameters);
 	}
 
-	async vacate(...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]> {
-		return this.overrides.vacate?.(...parameters) ?? this.storeManager.vacate(...parameters);
+	async vacate(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]> {
+		return this.overrides.vacate?.(cache, ...parameters) ?? this.storeManager.vacate(cache, ...parameters);
 	}
 };
 
@@ -54,7 +55,7 @@ export type DatabaseStoresFromStorManagers<A extends StoreManagers<any>> = {
 	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? DatabaseStore<C, D> : never;
 };
 
-export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements LinkInterface<A, B, C, D, E> {
+export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
 	private linkManager: LinkManager<A, B, C, D, E>;
 	private overrides: Partial<LinkManager<A, B, C, D, E>>;
 
@@ -63,12 +64,12 @@ export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends
 		this.overrides = overrides;
 	}
 
-	async filter(...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
+	async filter(cache: Cache<any>, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]> {
+		return this.overrides.filter?.(cache, ...parameters) ?? this.linkManager.filter(cache, ...parameters);
 	}
 
-	async lookup(...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]> {
-		return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);
+	async lookup(cache: Cache<any>, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]> {
+		return this.overrides.lookup?.(cache, ...parameters) ?? this.linkManager.lookup(cache, ...parameters);
 	}
 };
 
@@ -80,7 +81,7 @@ export type DatabaseLinksFromLinkManagers<A extends LinkManagers<any>> = {
 	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : never;
 };
 
-export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements QueryInterface<A, B, C, D> {
+export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
 	private queryManager: QueryManager<A, B, C, D>;
 	private overrides: Partial<QueryManager<A, B, C, D>>;
 
@@ -89,8 +90,8 @@ export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extend
 		this.overrides = overrides;
 	}
 
-	async filter(...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
+	async filter(cache: Cache<any>, ...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]> {
+		return this.overrides.filter?.(cache, ...parameters) ?? this.queryManager.filter(cache, ...parameters);
 	}
 };
 
@@ -109,16 +110,16 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 	private linksWhereStoreIsChild: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 
-	private doInsert<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
+	private doInsert<C extends Record, D extends RequiredKeys<C>>(cache: Cache<any>, storeManager: StoreManager<C, D>, records: Array<C>): void {
 		for (let record of records) {
 			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
-				linkManager.lookup(record);
+				linkManager.lookup(cache, record);
 			}
-			storeManager.insert(record);
+			storeManager.insert(cache, record);
 		}
 	}
 
-	private doRemove<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
+	private doRemove<C extends Record, D extends RequiredKeys<C>>(cache: Cache<any>, storeManager: StoreManager<C, D>, records: Array<C>): void {
 		let queue = new Array<{ storeManager: StoreManager<any, any>, records: Array<Record> }>();
 		queue.push({
 			storeManager,
@@ -127,13 +128,13 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		while (queue.length > 0) {
 			let queueEntry = queue.splice(0, 1)[0];
 			for (let record of queueEntry.records) {
-				queueEntry.storeManager.remove(record);
+				queueEntry.storeManager.remove(cache, record);
 			}
 			for (let linkManager of this.getLinksWhereStoreIsParent(queueEntry.storeManager)) {
 				let storeManager = linkManager.getChild();
 				let records = new Array<Record>();
 				for (let record of queueEntry.records) {
-					for (let childRecord of linkManager.filter(record)) {
+					for (let childRecord of linkManager.filter(cache, record)) {
 						records.push(childRecord);
 					}
 				}
@@ -147,15 +148,15 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		}
 	}
 
-	private doVacate<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, orphans: Array<C>): void {
-		if (storeManager.length() > 0) {
-			storeManager.vacate();
+	private doVacate<C extends Record, D extends RequiredKeys<C>>(cache: Cache<any>, storeManager: StoreManager<C, D>, orphans: Array<C>): void {
+		if (storeManager.length(cache) > 0) {
+			storeManager.vacate(cache);
 			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
-				this.doVacate(linkManager.getChild(), linkManager.filter());
+				this.doVacate(cache, linkManager.getChild(), linkManager.filter(cache));
 			}
 		}
 		for (let orphan of orphans) {
-			storeManager.insert(orphan);
+			storeManager.insert(cache, orphan);
 		}
 	}
 
@@ -204,9 +205,9 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
 			databaseStores[key] = new DatabaseStore(storeManager, {
-				insert: async (record) => this.doInsert(storeManager, [record]),
-				remove: async (record) => this.doRemove(storeManager, [record]),
-				vacate: async () => this.doVacate(storeManager, [])
+				insert: async (cache, record) => this.doInsert(cache, storeManager, [record]),
+				remove: async (cache, record) => this.doRemove(cache, storeManager, [record]),
+				vacate: async (cache) => this.doVacate(cache, storeManager, [])
 			});
 		}
 		return databaseStores;
@@ -231,6 +232,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	}
 
 	enforceStoreConsistency<C extends Keys<A>>(storeNames: [...C]): void {
+		let cache = new Cache<any>(undefined, 0);
 		for (let key of storeNames) {
 			let storeManager = this.storeManagers[key];
 			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
@@ -238,33 +240,35 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 				let records = [] as Array<Record>;
 				for (let childRecord of child) {
 					try {
-						linkManager.lookup(childRecord);
+						linkManager.lookup(cache, childRecord);
 					} catch (error) {
 						records.push(childRecord);
 					}
 				}
-				this.doRemove(child, records);
+				this.doRemove(cache, child, records);
 			}
 		}
 	}
 
 	enforceLinkConsistency<D extends Keys<B>>(linkNames: [...D]): void {
+		let cache = new Cache<any>(undefined, 0);
 		for (let key of linkNames) {
 			let linkManager = this.linkManagers[key];
 			let child = linkManager.getChild();
 			let records = [] as Array<Record>;
 			for (let childRecord of child) {
 				try {
-					linkManager.lookup(childRecord);
+					linkManager.lookup(cache, childRecord);
 				} catch (error) {
 					records.push(childRecord);
 				}
 			}
-			this.doRemove(child, records);
+			this.doRemove(cache, child, records);
 		}
 	}
 
 	enforceConsistency<C extends Keys<A>, D extends Keys<B>>(storeNames: [...C], linkNames: [...D]): void {
+		let cache = new Cache<any>(undefined, 0);
 		let linkManagers = new Set<LinkManager<any, any, any, any, any>>();
 		for (let key of storeNames) {
 			for (let linkManager of this.getLinksWhereStoreIsParent(this.storeManagers[key])) {
@@ -280,12 +284,12 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			let records = [] as Array<Record>;
 			for (let childRecord of child) {
 				try {
-					linkManager.lookup(childRecord);
+					linkManager.lookup(cache, childRecord);
 				} catch (error) {
 					records.push(childRecord);
 				}
 			}
-			this.doRemove(child, records);
+			this.doRemove(cache, child, records);
 		}
 	}
 

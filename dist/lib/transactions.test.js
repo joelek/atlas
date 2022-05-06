@@ -8,6 +8,7 @@ const blocks_1 = require("./blocks");
 const records_1 = require("./records");
 const databases_1 = require("./databases");
 const tables_1 = require("./tables");
+const caches_1 = require("./caches");
 async function delay(ms) {
     await new Promise((resolve, reject) => {
         setTimeout(resolve, ms);
@@ -159,7 +160,7 @@ test(`It should throw an error when using transaction objects outside of the tra
             storeManager.reload();
         }
     });
-    storeManager.insert({
+    storeManager.insert(new caches_1.Cache(), {
         key: "1"
     });
     file.persist();

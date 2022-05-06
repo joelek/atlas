@@ -5,6 +5,7 @@ import { DecreasingOrder, IncreasingOrder } from "./orders";
 import { NullableStringField, StringField } from "./records";
 import { Store, StoreManager } from "./stores";
 import { BlockManager } from "./blocks";
+import { Cache } from "./caches";
 
 function createUsersAndPosts() {
 	let blockManager = new BlockManager(new VirtualFile(0));
@@ -32,25 +33,25 @@ test(`It should support filtering without explicit ordering for a referencing li
 	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		user_id: "User 1"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		user_id: "User 2"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 1",
 		post_user_id: "User 1"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 2",
 		post_user_id: "User 1"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 3",
 		post_user_id: "User 2"
 	});
-	let iterable = userPosts.filter({
+	let iterable = userPosts.filter(new Cache(), {
 		user_id: "User 1"
 	});
 	let observed = Array.from(iterable).map((entry) => entry.post_id);
@@ -65,25 +66,25 @@ test(`It should support filtering with explicit ordering for a referencing link.
 	}, {
 		post_id: new DecreasingOrder()
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		user_id: "User 1"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		user_id: "User 2"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 1",
 		post_user_id: "User 1"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 2",
 		post_user_id: "User 1"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 3",
 		post_user_id: "User 2"
 	});
-	let iterable = userPosts.filter({
+	let iterable = userPosts.filter(new Cache(), {
 		user_id: "User 1"
 	});
 	let observed = Array.from(iterable).map((entry) => entry.post_id);
@@ -96,14 +97,14 @@ test(`It should support looking up the corresponding parent for a referencing li
 	let userPosts = LinkManager.construct(users, posts, {
 		user_id: "post_user_id"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		user_id: "User 1"
 	});
-	posts.insert({
+	posts.insert(new Cache(), {
 		post_id: "Post 1",
 		post_user_id: "User 1"
 	});
-	let observed = userPosts.lookup({
+	let observed = userPosts.lookup(new Cache(), {
 		post_user_id: "User 1"
 	}) as any;
 	let expected = {
@@ -131,19 +132,19 @@ test(`It should support filtering without explicit ordering for a self-referenci
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 1",
 		parent_directory_id: null
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 3",
 		parent_directory_id: "Directory 1"
 	});
-	let iterable = childDirectories.filter({
+	let iterable = childDirectories.filter(new Cache(), {
 		directory_id: "Directory 1"
 	});
 	let observed = Array.from(iterable).map((entry) => entry.directory_id);
@@ -158,19 +159,19 @@ test(`It should support filtering with explicit ordering for a self-referencing 
 	}, {
 		directory_id: new DecreasingOrder()
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 1",
 		parent_directory_id: null
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 3",
 		parent_directory_id: "Directory 1"
 	});
-	let iterable = childDirectories.filter({
+	let iterable = childDirectories.filter(new Cache(), {
 		directory_id: "Directory 1"
 	});
 	let observed = Array.from(iterable).map((entry) => entry.directory_id);
@@ -183,15 +184,15 @@ test(`It should support looking up the corresponding parent for a self-referenci
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 1",
 		parent_directory_id: null
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	let observed = childDirectories.lookup({
+	let observed = childDirectories.lookup(new Cache(), {
 		parent_directory_id: "Directory 1"
 	}) as any;
 	let expected = {
@@ -206,15 +207,15 @@ test(`It should support looking up absent parents for a self-referencing link.`,
 	let childDirectories = LinkManager.construct(directories, directories, {
 		directory_id: "parent_directory_id"
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 1",
 		parent_directory_id: null
 	});
-	directories.insert({
+	directories.insert(new Cache(), {
 		directory_id: "Directory 2",
 		parent_directory_id: "Directory 1"
 	});
-	let observed = childDirectories.lookup({
+	let observed = childDirectories.lookup(new Cache(), {
 		parent_directory_id: null
 	});
 	let expected = undefined;

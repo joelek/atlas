@@ -7,6 +7,7 @@ const orders_1 = require("./orders");
 const records_1 = require("./records");
 const stores_1 = require("./stores");
 const blocks_1 = require("./blocks");
+const caches_1 = require("./caches");
 function createUsersAndPosts() {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
@@ -33,25 +34,25 @@ function createUsersAndPosts() {
     let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 1",
         post_user_id: "User 1"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 2",
         post_user_id: "User 1"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 3",
         post_user_id: "User 2"
     });
-    let iterable = userPosts.filter({
+    let iterable = userPosts.filter(new caches_1.Cache(), {
         user_id: "User 1"
     });
     let observed = Array.from(iterable).map((entry) => entry.post_id);
@@ -65,25 +66,25 @@ function createUsersAndPosts() {
     }, {
         post_id: new orders_1.DecreasingOrder()
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 1",
         post_user_id: "User 1"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 2",
         post_user_id: "User 1"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 3",
         post_user_id: "User 2"
     });
-    let iterable = userPosts.filter({
+    let iterable = userPosts.filter(new caches_1.Cache(), {
         user_id: "User 1"
     });
     let observed = Array.from(iterable).map((entry) => entry.post_id);
@@ -95,14 +96,14 @@ function createUsersAndPosts() {
     let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1"
     });
-    posts.insert({
+    posts.insert(new caches_1.Cache(), {
         post_id: "Post 1",
         post_user_id: "User 1"
     });
-    let observed = userPosts.lookup({
+    let observed = userPosts.lookup(new caches_1.Cache(), {
         post_user_id: "User 1"
     });
     let expected = {
@@ -129,19 +130,19 @@ function createDirectories() {
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 1",
         parent_directory_id: null
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 2",
         parent_directory_id: "Directory 1"
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 3",
         parent_directory_id: "Directory 1"
     });
-    let iterable = childDirectories.filter({
+    let iterable = childDirectories.filter(new caches_1.Cache(), {
         directory_id: "Directory 1"
     });
     let observed = Array.from(iterable).map((entry) => entry.directory_id);
@@ -155,19 +156,19 @@ function createDirectories() {
     }, {
         directory_id: new orders_1.DecreasingOrder()
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 1",
         parent_directory_id: null
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 2",
         parent_directory_id: "Directory 1"
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 3",
         parent_directory_id: "Directory 1"
     });
-    let iterable = childDirectories.filter({
+    let iterable = childDirectories.filter(new caches_1.Cache(), {
         directory_id: "Directory 1"
     });
     let observed = Array.from(iterable).map((entry) => entry.directory_id);
@@ -179,15 +180,15 @@ function createDirectories() {
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 1",
         parent_directory_id: null
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 2",
         parent_directory_id: "Directory 1"
     });
-    let observed = childDirectories.lookup({
+    let observed = childDirectories.lookup(new caches_1.Cache(), {
         parent_directory_id: "Directory 1"
     });
     let expected = {
@@ -201,15 +202,15 @@ function createDirectories() {
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 1",
         parent_directory_id: null
     });
-    directories.insert({
+    directories.insert(new caches_1.Cache(), {
         directory_id: "Directory 2",
         parent_directory_id: "Directory 1"
     });
-    let observed = childDirectories.lookup({
+    let observed = childDirectories.lookup(new caches_1.Cache(), {
         parent_directory_id: null
     });
     let expected = undefined;

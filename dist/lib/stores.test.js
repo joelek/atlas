@@ -8,6 +8,7 @@ const filters_1 = require("./filters");
 const orders_1 = require("./orders");
 const test_1 = require("./test");
 const tables_1 = require("./tables");
+const caches_1 = require("./caches");
 (0, test_1.test)(`It should support for-of iteration of the records stored.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
@@ -16,10 +17,10 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
     let observed = [];
@@ -40,10 +41,10 @@ const tables_1 = require("./tables");
             key: new orders_1.IncreasingOrder()
         }
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
     let iterable = users;
@@ -62,10 +63,10 @@ const tables_1 = require("./tables");
             key: new orders_1.DecreasingOrder()
         }
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
     let iterable = users;
@@ -81,13 +82,13 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    let iterable = users.filter({
+    let iterable = users.filter(new caches_1.Cache(), {
         key: new filters_1.EqualityFilter("A")
     });
     let observed = Array.from(iterable).map((entry) => entry.key);
@@ -102,13 +103,13 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.IncreasingOrder()
     });
     let observed = Array.from(iterable).map((entry) => entry.key);
@@ -123,13 +124,13 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.DecreasingOrder()
     });
     let observed = Array.from(iterable).map((entry) => entry.key);
@@ -147,13 +148,13 @@ const tables_1 = require("./tables");
             new stores_1.Index(["key"])
         ]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.IncreasingOrder()
     });
     let observed = Array.from(iterable).map((entry) => entry.key);
@@ -171,13 +172,13 @@ const tables_1 = require("./tables");
             new stores_1.Index(["key"])
         ]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.DecreasingOrder()
     });
     let observed = Array.from(iterable).map((entry) => entry.key);
@@ -193,16 +194,16 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A",
         name: "One"
     });
-    assert.true(users.lookup({ key: "A" }).name === "One");
-    users.insert({
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "One");
+    users.insert(new caches_1.Cache(), {
         key: "A",
         name: "Two"
     });
-    assert.true(users.lookup({ key: "A" }).name === "Two");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "Two");
 });
 (0, test_1.test)(`It should support inserting a record not previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -213,11 +214,11 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A",
         name: "One"
     });
-    assert.true(users.lookup({ key: "A" }).name === "One");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "One");
 });
 (0, test_1.test)(`It should keep track of the number of records stored.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -227,27 +228,27 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    assert.true(users.length() === 0);
-    users.insert({
+    assert.true(users.length(new caches_1.Cache()) === 0);
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.length() === 1);
-    users.insert({
+    assert.true(users.length(new caches_1.Cache()) === 1);
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    assert.true(users.length() === 2);
-    users.insert({
+    assert.true(users.length(new caches_1.Cache()) === 2);
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.length() === 2);
-    users.remove({
+    assert.true(users.length(new caches_1.Cache()) === 2);
+    users.remove(new caches_1.Cache(), {
         key: "B"
     });
-    assert.true(users.length() === 1);
-    users.remove({
+    assert.true(users.length(new caches_1.Cache()) === 1);
+    users.remove(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.length() === 0);
+    assert.true(users.length(new caches_1.Cache()) === 0);
 });
 (0, test_1.test)(`It should support looking up records previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -257,10 +258,10 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.lookup({ key: "A" }).key === "A");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).key === "A");
 });
 (0, test_1.test)(`It should throw an error when looking up records not previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -271,7 +272,7 @@ const tables_1 = require("./tables");
         keys: ["key"]
     });
     await assert.throws(async () => {
-        users.lookup({
+        users.lookup(new caches_1.Cache(), {
             key: "A"
         });
     });
@@ -284,15 +285,15 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.lookup({ key: "A" }).key === "A");
-    users.remove({
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).key === "A");
+    users.remove(new caches_1.Cache(), {
         key: "A"
     });
     await assert.throws(async () => {
-        users.lookup({
+        users.lookup(new caches_1.Cache(), {
             key: "A"
         });
     });
@@ -305,11 +306,11 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.remove({
+    users.remove(new caches_1.Cache(), {
         key: "A"
     });
     await assert.throws(async () => {
-        users.lookup({
+        users.lookup(new caches_1.Cache(), {
             key: "A"
         });
     });
@@ -323,16 +324,16 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.update({
+    users.update(new caches_1.Cache(), {
         key: "A",
         name: "One"
     });
-    assert.true(users.lookup({ key: "A" }).name === "One");
-    users.update({
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "One");
+    users.update(new caches_1.Cache(), {
         key: "A",
         name: "Two"
     });
-    assert.true(users.lookup({ key: "A" }).name === "Two");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "Two");
 });
 (0, test_1.test)(`It should support updating a record not previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -343,11 +344,11 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.update({
+    users.update(new caches_1.Cache(), {
         key: "A",
         name: "One"
     });
-    assert.true(users.lookup({ key: "A" }).name === "One");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "One");
 });
 (0, test_1.test)(`It should support partially updating a record previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -358,15 +359,15 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.update({
+    users.update(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.lookup({ key: "A" }).name === "");
-    users.update({
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "");
+    users.update(new caches_1.Cache(), {
         key: "A",
         name: "Two"
     });
-    assert.true(users.lookup({ key: "A" }).name === "Two");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "Two");
 });
 (0, test_1.test)(`It should support partially updating a record not previously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -377,10 +378,10 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.update({
+    users.update(new caches_1.Cache(), {
         key: "A"
     });
-    assert.true(users.lookup({ key: "A" }).name === "");
+    assert.true(users.lookup(new caches_1.Cache(), { key: "A" }).name === "");
 });
 (0, test_1.test)(`It should create the correct index for a store without orders.`, async (assert) => {
     let users = new stores_1.Store({
@@ -438,7 +439,7 @@ const tables_1 = require("./tables");
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index], []);
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 1"
     });
@@ -463,11 +464,11 @@ const tables_1 = require("./tables");
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index], []);
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 1"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 2"
     });
@@ -492,11 +493,11 @@ const tables_1 = require("./tables");
     });
     let index = new stores_1.IndexManager(recordManager, blockManager, ["name"]);
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [index], []);
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 1"
     });
-    users.remove({
+    users.remove(new caches_1.Cache(), {
         user_id: "User 1"
     });
     let observed = Array.from(index).map((record) => record.name);
@@ -520,18 +521,18 @@ const tables_1 = require("./tables");
     });
     let indexOne = new stores_1.IndexManager(recordManager, blockManager, ["user_id"]);
     let usersOne = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
-    usersOne.insert({
+    usersOne.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name"
     });
     let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name", "user_id"]);
     let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
-    usersTwo.insert({
+    usersTwo.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Name"
     });
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
-    let iterable = users.filter({
+    let iterable = users.filter(new caches_1.Cache(), {
         name: new filters_1.EqualityFilter("Name")
     });
     let observed = Array.from(iterable).map((record) => record.user_id);
@@ -555,18 +556,18 @@ const tables_1 = require("./tables");
     });
     let indexOne = new stores_1.IndexManager(recordManager, blockManager, ["user_id"]);
     let usersOne = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
-    usersOne.insert({
+    usersOne.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name"
     });
     let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name", "user_id"]);
     let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
-    usersTwo.insert({
+    usersTwo.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Name"
     });
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
-    let iterable = users.filter({
+    let iterable = users.filter(new caches_1.Cache(), {
         name: new filters_1.EqualityFilter("Name")
     });
     let observed = Array.from(iterable).map((record) => record.user_id);
@@ -581,19 +582,19 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "C"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "D"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.IncreasingOrder()
     }, {
         key: "B"
@@ -613,19 +614,19 @@ const tables_1 = require("./tables");
             new stores_1.Index(["key"])
         ]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "C"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "D"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.IncreasingOrder()
     }, {
         key: "B"
@@ -642,19 +643,19 @@ const tables_1 = require("./tables");
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "C"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "D"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.DecreasingOrder()
     }, {
         key: "C"
@@ -674,19 +675,19 @@ const tables_1 = require("./tables");
             new stores_1.Index(["key"])
         ]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "C"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "D"
     });
-    let iterable = users.filter({}, {
+    let iterable = users.filter(new caches_1.Cache(), {}, {
         key: new orders_1.DecreasingOrder()
     }, {
         key: "C"
@@ -714,18 +715,18 @@ const tables_1 = require("./tables");
         indices: []
     });
     for (let key = 0; key < 1000; key++) {
-        storeOne.insert({
+        storeOne.insert(new caches_1.Cache(), {
             key
         });
-        storeTwo.insert({
+        storeTwo.insert(new caches_1.Cache(), {
             key
         });
     }
     let averageOne = await (0, test_1.benchmark)(async () => {
-        storeOne.filter(undefined, undefined, undefined, 10);
+        storeOne.filter(new caches_1.Cache(), undefined, undefined, undefined, 10);
     });
     let averageTwo = await (0, test_1.benchmark)(async () => {
-        storeTwo.filter(undefined, undefined, undefined, 10);
+        storeTwo.filter(new caches_1.Cache(), undefined, undefined, undefined, 10);
     });
     assert.true(averageOne * 100 < averageTwo);
 });
@@ -751,11 +752,11 @@ const tables_1 = require("./tables");
         name: "Name2"
     };
     assert.true(!Number.isInteger(Math.log2(recordManager.encode(record).length)));
-    users.insert(record);
+    users.insert(new caches_1.Cache(), record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), ["User 1"]);
     index.remove(record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), []);
-    users.insert(record);
+    users.insert(new caches_1.Cache(), record);
     assert.array.equals(Array.from(index).map((user) => user.user_id), []);
 });
 (0, test_1.test)(`It should support vacating.`, async (assert) => {
@@ -769,13 +770,13 @@ const tables_1 = require("./tables");
             new stores_1.Index(["key"])
         ]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "B"
     });
-    users.vacate();
+    users.vacate(new caches_1.Cache());
     let observed = Array.from(users).map((entry) => entry.key);
     let expected = [];
     assert.array.equals(observed, expected);
@@ -805,7 +806,7 @@ function makeUsersSearchIndex() {
 ;
 (0, test_1.test)(`It should update search indices on insert.`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 1"
     });
@@ -815,11 +816,11 @@ function makeUsersSearchIndex() {
 });
 (0, test_1.test)(`It should update search indices on update.`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 1"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 2"
     });
@@ -829,11 +830,11 @@ function makeUsersSearchIndex() {
 });
 (0, test_1.test)(`It should update search indices on remove.`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Name 1"
     });
-    users.remove({
+    users.remove(new caches_1.Cache(), {
         user_id: "User 1"
     });
     let observed = Array.from(index).map((record) => record.record.name);
@@ -842,395 +843,395 @@ function makeUsersSearchIndex() {
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Ek"] and query is "".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Ek"
     });
-    let observed = users.search("").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Ek"] and query is "e".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Ek"
     });
-    let observed = users.search("e").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "e").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Ek"] and query is "ek".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Ek"
     });
-    let observed = users.search("ek").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "ek").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Ek"] and query is "eks".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Ek"
     });
-    let observed = users.search("eks").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "eks").map((record) => record.record.user_id);
     let expected = [];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "e".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("e").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "e").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "ek".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("ek").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "ek").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "eks".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("eks").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "eks").map((record) => record.record.user_id);
     let expected = [];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "joel".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("joel").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "joel ek".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("joel ek").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel ek").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "ek joel".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("ek joel").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "ek joel").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "joel eks".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("joel eks").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel eks").map((record) => record.record.user_id);
     let expected = [];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel Ek"] and query is "joels ek".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    let observed = users.search("joels ek").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joels ek").map((record) => record.record.user_id);
     let expected = [];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "").map((record) => record.record.user_id);
     let expected = ["User 0", "User 1", "User 2"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "e".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("e").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "e").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "ek".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("ek").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "ek").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "eks".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("eks").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "eks").map((record) => record.record.user_id);
     let expected = [];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("joel").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0", "User 2"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel e".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("joel e").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel e").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel ek".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("joel ek").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel ek").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "joel eks".`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Joel A Z"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Joel Ek"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "Joel A Z"
     });
-    let observed = users.search("joel eks").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "joel eks").map((record) => record.record.user_id);
     let expected = [];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should support anchored searches.`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "B"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "C"
     });
-    let observed = users.search("", { user_id: "User 1" }).map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "", { user_id: "User 1" }).map((record) => record.record.user_id);
     let expected = ["User 2"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Aa Ab", "Aa"] and query is "a"`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Aa Ab"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Aa"
     });
-    let observed = users.search("a").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "a").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Aa Az", "Aa"] and query is "a"`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Aa Az"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Aa"
     });
-    let observed = users.search("a").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "a").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Aa Ab", "Ab"] and query is "a"`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Aa Ab"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Ab"
     });
-    let observed = users.search("a").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "a").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Aa Az", "Ab"] and query is "a"`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Aa Az"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Ab"
     });
-    let observed = users.search("a").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "a").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Aa Ab", "Az"] and query is "a"`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Aa Ab"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Az"
     });
-    let observed = users.search("a").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "a").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Aa Az", "Az"] and query is "a"`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "Aa Az"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "Az"
     });
-    let observed = users.search("a").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "a").map((record) => record.record.user_id);
     let expected = ["User 1", "User 0"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should not skip the entire category branch when the first candidate occurs before the first result in the same category.`, async (assert) => {
     let { users, index } = { ...makeUsersSearchIndex() };
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 0",
         name: "a c"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 1",
         name: "a b"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         user_id: "User 2",
         name: "a c"
     });
-    let observed = users.search("b").map((record) => record.record.user_id);
+    let observed = users.search(new caches_1.Cache(), "b").map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });

@@ -6,13 +6,16 @@ import { PromiseQueue } from "./utils";
 import { QueryInterface } from "./queries";
 import { SubsetOf } from "./inference";
 import { DatabaseLink, DatabaseLinks, DatabaseQueries, DatabaseQuery, DatabaseStore, DatabaseStores } from "./databases";
+import { Cache } from "./caches";
 export declare class ReadableQueue {
     protected queue: PromiseQueue;
-    constructor(queue: PromiseQueue);
+    protected cache: Cache<any>;
+    constructor(queue: PromiseQueue, cache: Cache<any>);
     enqueueReadableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A>;
+    getCache(): Cache<any>;
 }
 export declare class WritableQueue extends ReadableQueue {
-    constructor(queue: PromiseQueue);
+    constructor(queue: PromiseQueue, cache: Cache<any>);
     enqueueWritableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A>;
 }
 export declare class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
@@ -56,6 +59,7 @@ export declare class TransactionManager<A extends DatabaseStores<any>, B extends
     private file;
     private readableTransactionLock;
     private writableTransactionLock;
+    private cache;
     readonly stores: Readonly<TransactionalStoresFromDatabaseStores<A>>;
     readonly links: Readonly<TransactionalLinksFromDatabaseLinks<B>>;
     readonly queries: Readonly<TransactionalQueriesFromDatabaseQueries<C>>;

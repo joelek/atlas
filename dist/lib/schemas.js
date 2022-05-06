@@ -11,6 +11,7 @@ const stores_1 = require("./stores");
 const queries_1 = require("./queries");
 const operators_1 = require("./operators");
 const trees_1 = require("./trees");
+const caches_1 = require("./caches");
 exports.BigIntFieldSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("BigIntField"),
     defaultValue: bedrock.codecs.BigInt
@@ -240,9 +241,13 @@ class SchemaManager {
         }
         let recordManager = new records_1.RecordManager(fields);
         let storage = new tables_1.Table(blockManager, {
-            getKeyFromValue: (value) => {
-                let buffer = blockManager.readBlock(value);
-                let record = recordManager.decode(buffer);
+            getKeyFromValue: (value, cache) => {
+                let record = cache?.lookup(value);
+                if (record == null) {
+                    let buffer = blockManager.readBlock(value);
+                    record = recordManager.decode(buffer);
+                    cache?.insert(value, record);
+                }
                 return recordManager.encodeKeys(keys, record);
             }
         }, {
@@ -577,7 +582,7 @@ class SchemaManager {
         return schema;
     }
     deleteStore(blockManager, oldSchema) {
-        this.loadStoreManager(blockManager, oldSchema).delete();
+        this.loadStoreManager(blockManager, oldSchema).delete(new caches_1.Cache(undefined, 0));
     }
     deleteIndex(blockManager, indexSchema, fieldsSchema) {
         let recordManager = this.loadRecordManager(blockManager, fieldsSchema);
@@ -601,9 +606,13 @@ class SchemaManager {
                 let indexSchema = this.createIndex(blockManager, index);
                 let indexManager = this.loadIndexManager(recordManager, blockManager, indexSchema);
                 let storage = new tables_1.Table(blockManager, {
-                    getKeyFromValue: (value) => {
-                        let buffer = blockManager.readBlock(value);
-                        let record = recordManager.decode(buffer);
+                    getKeyFromValue: (value, cache) => {
+                        let record = cache?.lookup(value);
+                        if (record == null) {
+                            let buffer = blockManager.readBlock(value);
+                            record = recordManager.decode(buffer);
+                            cache?.insert(value, record);
+                        }
                         return recordManager.encodeKeys(oldSchema.keys, record);
                     }
                 }, {
@@ -636,9 +645,13 @@ class SchemaManager {
                 let searchIndexSchema = this.createSearchIndex(blockManager, searchIndex);
                 let searchIndexManager = this.loadSearchIndexManager(recordManager, blockManager, searchIndexSchema);
                 let storage = new tables_1.Table(blockManager, {
-                    getKeyFromValue: (value) => {
-                        let buffer = blockManager.readBlock(value);
-                        let record = recordManager.decode(buffer);
+                    getKeyFromValue: (value, cache) => {
+                        let record = cache?.lookup(value);
+                        if (record == null) {
+                            let buffer = blockManager.readBlock(value);
+                            record = recordManager.decode(buffer);
+                            cache?.insert(value, record);
+                        }
                         return recordManager.encodeKeys(oldSchema.keys, record);
                     }
                 }, {
@@ -684,11 +697,11 @@ class SchemaManager {
                             newRecord[key] = field.getDefaultValue();
                         }
                     }
-                    newManager.insert(newRecord);
+                    newManager.insert(new caches_1.Cache(undefined, 0), newRecord);
                 }
                 catch (error) { }
             }
-            oldManager.delete();
+            oldManager.delete(new caches_1.Cache(undefined, 0));
             newSchema.version = oldSchema.version + 1;
             return newSchema;
         }
