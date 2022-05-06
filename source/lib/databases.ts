@@ -1,8 +1,8 @@
 import { SubsetOf } from "./inference";
-import { LinkManager, LinkManagers, Links, LinkInterface, LinkInterfacesFromLinkManagers } from "./links";
-import { Queries, QueryManager, QueryManagers, QueryInterfacesFromQueryManagers, QueryInterface } from "./queries";
+import { LinkManager, LinkManagers, Links, LinkInterface } from "./links";
+import { Queries, QueryManager, QueryManagers, QueryInterface } from "./queries";
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
-import { StoreManager, StoreManagers, Stores, StoreInterface, StoreInterfacesFromStoreManagers } from "./stores";
+import { StoreManager, StoreManagers, Stores, StoreInterface } from "./stores";
 
 export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
 	private storeManager: StoreManager<A, B>;
@@ -46,6 +46,10 @@ export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implemen
 	}
 };
 
+export type DatabaseStores<A> = {
+	[B in keyof A]: A[B] extends DatabaseStore<infer C, infer D> ? DatabaseStore<C, D> : A[B];
+};
+
 export type DatabaseStoresFromStorManagers<A extends StoreManagers<any>> = {
 	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? DatabaseStore<C, D> : never;
 };
@@ -68,6 +72,10 @@ export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends
 	}
 };
 
+export type DatabaseLinks<A> = {
+	[B in keyof A]: A[B] extends DatabaseLink<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : A[B];
+};
+
 export type DatabaseLinksFromLinkManagers<A extends LinkManagers<any>> = {
 	[B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : never;
 };
@@ -84,6 +92,10 @@ export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extend
 	async filter(...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]> {
 		return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
 	}
+};
+
+export type DatabaseQueries<A> = {
+	[B in keyof A]: A[B] extends DatabaseQuery<infer C, infer D, infer E, infer F> ? DatabaseQuery<C, D, E, F> : A[B];
 };
 
 export type DatabaseQueriesFromQueryManagers<A extends QueryManagers<any>> = {

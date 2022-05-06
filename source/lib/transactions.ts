@@ -1,10 +1,11 @@
 import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
-import { LinkInterface, LinkInterfaces } from "./links";
-import { StoreInterface, StoreInterfaces } from "./stores";
+import { LinkInterface } from "./links";
+import { StoreInterface } from "./stores";
 import { PromiseQueue } from "./utils";
-import { QueryInterfaces, QueryInterface } from "./queries";
+import { QueryInterface } from "./queries";
 import { SubsetOf } from "./inference";
+import { DatabaseLink, DatabaseLinks, DatabaseQueries, DatabaseQuery, DatabaseStore, DatabaseStores } from "./databases";
 
 export class ReadableQueue {
 	protected queue: PromiseQueue;
@@ -29,9 +30,9 @@ export class WritableQueue extends ReadableQueue {
 };
 
 export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
-	protected store: StoreInterface<A, B>;
+	protected store: DatabaseStore<A, B>;
 
-	constructor(store: StoreInterface<A, B>) {
+	constructor(store: DatabaseStore<A, B>) {
 		this.store = store;
 	}
 
@@ -68,14 +69,14 @@ export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
 	}
 };
 
-export type TransactionalStoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
-	[B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? TransactionalStore<C, D> : never;
+export type TransactionalStoresFromDatabaseStores<A extends DatabaseStores<any>> = {
+	[B in keyof A]: A[B] extends DatabaseStore<infer C, infer D> ? TransactionalStore<C, D> : never;
 };
 
 export class TransactionalLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	protected link: LinkInterface<A, B, C, D, E>;
+	protected link: DatabaseLink<A, B, C, D, E>;
 
-	constructor(link: LinkInterface<A, B, C, D, E>) {
+	constructor(link: DatabaseLink<A, B, C, D, E>) {
 		this.link = link;
 	}
 
@@ -88,14 +89,14 @@ export class TransactionalLink<A extends Record, B extends RequiredKeys<A>, C ex
 	}
 };
 
-export type TransactionalLinksFromLinkInterfaces<A extends LinkInterfaces<any>> = {
-	[B in keyof A]: A[B] extends LinkInterface<infer C, infer D, infer E, infer F, infer G> ? TransactionalLink<C, D, E, F, G> : never;
+export type TransactionalLinksFromDatabaseLinks<A extends DatabaseLinks<any>> = {
+	[B in keyof A]: A[B] extends DatabaseLink<infer C, infer D, infer E, infer F, infer G> ? TransactionalLink<C, D, E, F, G> : never;
 };
 
 export class TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	protected query: QueryInterface<A, B, C, D>;
+	protected query: DatabaseQuery<A, B, C, D>;
 
-	constructor(query: QueryInterface<A, B, C, D>) {
+	constructor(query: DatabaseQuery<A, B, C, D>) {
 		this.query = query;
 	}
 
@@ -104,53 +105,53 @@ export class TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C e
 	}
 };
 
-export type TransactionalQueriesFromQueryInterfaces<A extends QueryInterfaces<any>> = {
-	[B in keyof A]: A[B] extends QueryInterface<infer C, infer D, infer E, infer F> ? TransactionalQuery<C, D, E, F> : never;
+export type TransactionalQueriesFromDatabaseQueries<A extends DatabaseQueries<any>> = {
+	[B in keyof A]: A[B] extends DatabaseQuery<infer C, infer D, infer E, infer F> ? TransactionalQuery<C, D, E, F> : never;
 };
 
 export type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
 
 export type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
 
-export class TransactionManager<A extends StoreInterfaces<any>, B extends LinkInterfaces<any>, C extends QueryInterfaces<any>> {
+export class TransactionManager<A extends DatabaseStores<any>, B extends DatabaseLinks<any>, C extends DatabaseQueries<any>> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
-	readonly stores: Readonly<TransactionalStoresFromStoreInterfaces<A>>;
-	readonly links: Readonly<TransactionalLinksFromLinkInterfaces<B>>;
-	readonly queries: Readonly<TransactionalQueriesFromQueryInterfaces<C>>;
+	readonly stores: Readonly<TransactionalStoresFromDatabaseStores<A>>;
+	readonly links: Readonly<TransactionalLinksFromDatabaseLinks<B>>;
+	readonly queries: Readonly<TransactionalQueriesFromDatabaseQueries<C>>;
 
-	private createTransactionalStores(storeInterfaces: A): TransactionalStoresFromStoreInterfaces<A> {
-		let transactionalStores = {} as TransactionalStoresFromStoreInterfaces<any>;
-		for (let key in storeInterfaces) {
-			transactionalStores[key] = new TransactionalStore(storeInterfaces[key]);
+	private createTransactionalStores(databaseStores: A): TransactionalStoresFromDatabaseStores<A> {
+		let transactionalStores = {} as TransactionalStoresFromDatabaseStores<any>;
+		for (let key in databaseStores) {
+			transactionalStores[key] = new TransactionalStore(databaseStores[key]);
 		}
 		return transactionalStores;
 	}
 
-	private createTransactionalLinks(linkInterfaces: B): TransactionalLinksFromLinkInterfaces<B> {
-		let transactionalLinks = {} as TransactionalLinksFromLinkInterfaces<any>;
-		for (let key in linkInterfaces) {
-			transactionalLinks[key] = new TransactionalLink(linkInterfaces[key]);
+	private createTransactionalLinks(databaseLinks: B): TransactionalLinksFromDatabaseLinks<B> {
+		let transactionalLinks = {} as TransactionalLinksFromDatabaseLinks<any>;
+		for (let key in databaseLinks) {
+			transactionalLinks[key] = new TransactionalLink(databaseLinks[key]);
 		}
 		return transactionalLinks;
 	}
 
-	private createTransactionalQueries(queryInterfaces: C): TransactionalQueriesFromQueryInterfaces<C> {
-		let transactionalQueries = {} as TransactionalQueriesFromQueryInterfaces<any>;
-		for (let key in queryInterfaces) {
-			transactionalQueries[key] = new TransactionalQuery(queryInterfaces[key]);
+	private createTransactionalQueries(databaseQueries: C): TransactionalQueriesFromDatabaseQueries<C> {
+		let transactionalQueries = {} as TransactionalQueriesFromDatabaseQueries<any>;
+		for (let key in databaseQueries) {
+			transactionalQueries[key] = new TransactionalQuery(databaseQueries[key]);
 		}
 		return transactionalQueries;
 	}
 
-	constructor(file: File, storeInterfaces: A, linkInterfaces: B, queryInterfaces: C) {
+	constructor(file: File, databaseStores: A, databaseLinks: B, databaseQueries: C) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
-		this.stores = this.createTransactionalStores(storeInterfaces);
-		this.links = this.createTransactionalLinks(linkInterfaces);
-		this.queries = this.createTransactionalQueries(queryInterfaces);
+		this.stores = this.createTransactionalStores(databaseStores);
+		this.links = this.createTransactionalLinks(databaseLinks);
+		this.queries = this.createTransactionalQueries(databaseQueries);
 	}
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D> {

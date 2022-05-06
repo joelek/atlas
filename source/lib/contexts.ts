@@ -4,7 +4,7 @@ import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, 
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { File, PagedDurableFile, PagedFile, PhysicalFile } from "./files";
-import { Database } from "./databases";
+import { Database, DatabaseLinksFromLinkManagers, DatabaseQueriesFromQueryManagers, DatabaseStoresFromStorManagers } from "./databases";
 import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
@@ -295,7 +295,7 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<StoreInterfacesFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, LinkInterfacesFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, QueryInterfacesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
+	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<DatabaseStoresFromStorManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, DatabaseLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, DatabaseQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
 		let file = this.createFile(path);
 		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
