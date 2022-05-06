@@ -101,17 +101,3 @@ export class Query<A extends Record, B extends RequiredKeys<A>, C extends Subset
 export type Queries<A> = {
 	[B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : A[B];
 };
-
-export class OverridableWritableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements WritableQuery<A, B, C, D> {
-	private queryManager: QueryManager<A, B, C, D>;
-	private overrides: Partial<WritableQuery<A, B, C, D>>;
-
-	constructor(queryManager: QueryManager<A, B, C, D>, overrides: Partial<WritableQuery<A, B, C, D>>) {
-		this.queryManager = queryManager;
-		this.overrides = overrides;
-	}
-
-	async filter(...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
-	}
-};

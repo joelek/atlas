@@ -124,21 +124,3 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 export type Links<A> = {
 	[B in keyof A]: A[B] extends Link<infer C, infer D, infer E, infer F, infer G> ? Link<C, D, E, F, G> : A[B];
 };
-
-export class OverridableWritableLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements WritableLink<A, B, C, D, E> {
-	private linkManager: LinkManager<A, B, C, D, E>;
-	private overrides: Partial<WritableLink<A, B, C, D, E>>;
-
-	constructor(linkManager: LinkManager<A, B, C, D, E>, overrides: Partial<WritableLink<A, B, C, D, E>>) {
-		this.linkManager = linkManager;
-		this.overrides = overrides;
-	}
-
-	async filter(...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
-		return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
-	}
-
-	async lookup(...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {
-		return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);
-	}
-};
