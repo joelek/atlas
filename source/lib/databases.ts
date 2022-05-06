@@ -4,11 +4,11 @@ import { Queries, QueryManager, QueryManagers, QueryInterfacesFromQueryManagers,
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
 import { StoreManager, StoreManagers, Stores, StoreInterface, StoreInterfacesFromStoreManagers } from "./stores";
 
-export class OverridableStoreInterface<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
+export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
 	private storeManager: StoreManager<A, B>;
-	private overrides: Partial<StoreInterface<A, B>>;
+	private overrides: Partial<StoreManager<A, B>>;
 
-	constructor(storeManager: StoreManager<A, B>, overrides: Partial<StoreInterface<A, B>>) {
+	constructor(storeManager: StoreManager<A, B>, overrides: Partial<StoreManager<A, B>>) {
 		this.storeManager = storeManager;
 		this.overrides = overrides;
 	}
@@ -46,11 +46,11 @@ export class OverridableStoreInterface<A extends Record, B extends RequiredKeys<
 	}
 };
 
-export class OverridableLinkInterface<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements LinkInterface<A, B, C, D, E> {
+export class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements LinkInterface<A, B, C, D, E> {
 	private linkManager: LinkManager<A, B, C, D, E>;
-	private overrides: Partial<LinkInterface<A, B, C, D, E>>;
+	private overrides: Partial<LinkManager<A, B, C, D, E>>;
 
-	constructor(linkManager: LinkManager<A, B, C, D, E>, overrides: Partial<LinkInterface<A, B, C, D, E>>) {
+	constructor(linkManager: LinkManager<A, B, C, D, E>, overrides: Partial<LinkManager<A, B, C, D, E>>) {
 		this.linkManager = linkManager;
 		this.overrides = overrides;
 	}
@@ -64,11 +64,11 @@ export class OverridableLinkInterface<A extends Record, B extends RequiredKeys<A
 	}
 };
 
-export class OverridableQueryInterface<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements QueryInterface<A, B, C, D> {
+export class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements QueryInterface<A, B, C, D> {
 	private queryManager: QueryManager<A, B, C, D>;
-	private overrides: Partial<QueryInterface<A, B, C, D>>;
+	private overrides: Partial<QueryManager<A, B, C, D>>;
 
-	constructor(queryManager: QueryManager<A, B, C, D>, overrides: Partial<QueryInterface<A, B, C, D>>) {
+	constructor(queryManager: QueryManager<A, B, C, D>, overrides: Partial<QueryManager<A, B, C, D>>) {
 		this.queryManager = queryManager;
 		this.overrides = overrides;
 	}
@@ -179,7 +179,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		let storeInterfaces = {} as StoreInterfacesFromStoreManagers<any>;
 		for (let key in this.storeManagers) {
 			let storeManager = this.storeManagers[key];
-			storeInterfaces[key] = new OverridableStoreInterface(storeManager, {
+			storeInterfaces[key] = new DatabaseStore(storeManager, {
 				insert: async (record) => this.doInsert(storeManager, [record]),
 				remove: async (record) => this.doRemove(storeManager, [record]),
 				vacate: async () => this.doVacate(storeManager, [])
@@ -192,7 +192,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		let linkInterfaces = {} as LinkInterfacesFromLinkManagers<any>;
 		for (let key in this.linkManagers) {
 			let linkManager = this.linkManagers[key];
-			linkInterfaces[key] = new OverridableLinkInterface(linkManager, {});
+			linkInterfaces[key] = new DatabaseLink(linkManager, {});
 		}
 		return linkInterfaces;
 	}
@@ -201,7 +201,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		let queryInterfaces = {} as QueryInterfacesFromQueryManagers<any>;
 		for (let key in this.queryManagers) {
 			let queryManager = this.queryManagers[key];
-			queryInterfaces[key] = new OverridableQueryInterface(queryManager, {});
+			queryInterfaces[key] = new DatabaseQuery(queryManager, {});
 		}
 		return queryInterfaces;
 	}
