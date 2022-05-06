@@ -66,13 +66,7 @@ export class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> i
 	}
 
 	async search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
-		return this.storeManager.search(...parameters).map((entry) => {
-			let { record, rank } = { ...entry };
-			return {
-				record,
-				rank
-			};
-		});
+		return this.storeManager.search(...parameters);
 	}
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
@@ -1556,9 +1550,16 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 	}
 
-	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchIndexResult<A>> {
+	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-		let iterable = StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid));
+		// TODO: Remove map when SearchIndexResult is removed.
+		let iterable = StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid)).map((entry) => {
+			let { record, rank } = { ...entry };
+			return {
+				record,
+				rank
+			};
+		});
 		if (limit != null) {
 			iterable = iterable.limit(limit);
 		}
@@ -1747,13 +1748,7 @@ export class OverridableWritableStore<A extends Record, B extends RequiredKeys<A
 	}
 
 	async search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
-		return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => {
-			let { record, rank } = { ...entry };
-			return {
-				record,
-				rank
-			};
-		});
+		return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters);
 	}
 
 	async update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
