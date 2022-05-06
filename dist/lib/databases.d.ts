@@ -1,20 +1,21 @@
+import { Cache } from "./caches";
 import { SubsetOf } from "./inference";
 import { LinkManager, LinkManagers, Links, LinkInterface } from "./links";
 import { Queries, QueryManager, QueryManagers, QueryInterface } from "./queries";
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
 import { StoreManager, StoreManagers, Stores, StoreInterface } from "./stores";
-export declare class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
+export declare class DatabaseStore<A extends Record, B extends RequiredKeys<A>> {
     private storeManager;
     private overrides;
     constructor(storeManager: StoreManager<A, B>, overrides: Partial<StoreManager<A, B>>);
-    filter(...parameters: Parameters<StoreInterface<A, B>["filter"]>): ReturnType<StoreInterface<A, B>["filter"]>;
-    insert(...parameters: Parameters<StoreInterface<A, B>["insert"]>): ReturnType<StoreInterface<A, B>["insert"]>;
-    length(...parameters: Parameters<StoreInterface<A, B>["length"]>): ReturnType<StoreInterface<A, B>["length"]>;
-    lookup(...parameters: Parameters<StoreInterface<A, B>["lookup"]>): ReturnType<StoreInterface<A, B>["lookup"]>;
-    remove(...parameters: Parameters<StoreInterface<A, B>["remove"]>): ReturnType<StoreInterface<A, B>["remove"]>;
-    search(...parameters: Parameters<StoreInterface<A, B>["search"]>): ReturnType<StoreInterface<A, B>["search"]>;
-    update(...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]>;
-    vacate(...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]>;
+    filter(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["filter"]>): ReturnType<StoreInterface<A, B>["filter"]>;
+    insert(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["insert"]>): ReturnType<StoreInterface<A, B>["insert"]>;
+    length(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["length"]>): ReturnType<StoreInterface<A, B>["length"]>;
+    lookup(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["lookup"]>): ReturnType<StoreInterface<A, B>["lookup"]>;
+    remove(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["remove"]>): ReturnType<StoreInterface<A, B>["remove"]>;
+    search(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["search"]>): ReturnType<StoreInterface<A, B>["search"]>;
+    update(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]>;
+    vacate(cache: Cache<any>, ...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]>;
 }
 export type DatabaseStores<A> = {
     [B in keyof A]: A[B] extends DatabaseStore<infer C, infer D> ? DatabaseStore<C, D> : A[B];
@@ -22,12 +23,12 @@ export type DatabaseStores<A> = {
 export type DatabaseStoresFromStorManagers<A extends StoreManagers<any>> = {
     [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? DatabaseStore<C, D> : never;
 };
-export declare class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements LinkInterface<A, B, C, D, E> {
+export declare class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
     private linkManager;
     private overrides;
     constructor(linkManager: LinkManager<A, B, C, D, E>, overrides: Partial<LinkManager<A, B, C, D, E>>);
-    filter(...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]>;
-    lookup(...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]>;
+    filter(cache: Cache<any>, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]>;
+    lookup(cache: Cache<any>, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]>;
 }
 export type DatabaseLinks<A> = {
     [B in keyof A]: A[B] extends DatabaseLink<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : A[B];
@@ -35,11 +36,11 @@ export type DatabaseLinks<A> = {
 export type DatabaseLinksFromLinkManagers<A extends LinkManagers<any>> = {
     [B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : never;
 };
-export declare class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements QueryInterface<A, B, C, D> {
+export declare class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
     private queryManager;
     private overrides;
     constructor(queryManager: QueryManager<A, B, C, D>, overrides: Partial<QueryManager<A, B, C, D>>);
-    filter(...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]>;
+    filter(cache: Cache<any>, ...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]>;
 }
 export type DatabaseQueries<A> = {
     [B in keyof A]: A[B] extends DatabaseQuery<infer C, infer D, infer E, infer F> ? DatabaseQuery<C, D, E, F> : A[B];

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = exports.DatabaseManager = exports.DatabaseQuery = exports.DatabaseLink = exports.DatabaseStore = void 0;
+const caches_1 = require("./caches");
 class DatabaseStore {
     storeManager;
     overrides;
@@ -8,29 +9,29 @@ class DatabaseStore {
         this.storeManager = storeManager;
         this.overrides = overrides;
     }
-    async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
+    async filter(cache, ...parameters) {
+        return this.overrides.filter?.(cache, ...parameters) ?? this.storeManager.filter(cache, ...parameters);
     }
-    async insert(...parameters) {
-        return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
+    async insert(cache, ...parameters) {
+        return this.overrides.insert?.(cache, ...parameters) ?? this.storeManager.insert(cache, ...parameters);
     }
-    async length(...parameters) {
-        return this.overrides.length?.(...parameters) ?? this.storeManager.length(...parameters);
+    async length(cache, ...parameters) {
+        return this.overrides.length?.(cache, ...parameters) ?? this.storeManager.length(cache, ...parameters);
     }
-    async lookup(...parameters) {
-        return this.overrides.lookup?.(...parameters) ?? this.storeManager.lookup(...parameters);
+    async lookup(cache, ...parameters) {
+        return this.overrides.lookup?.(cache, ...parameters) ?? this.storeManager.lookup(cache, ...parameters);
     }
-    async remove(...parameters) {
-        return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
+    async remove(cache, ...parameters) {
+        return this.overrides.remove?.(cache, ...parameters) ?? this.storeManager.remove(cache, ...parameters);
     }
-    async search(...parameters) {
-        return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters);
+    async search(cache, ...parameters) {
+        return this.overrides.search?.(cache, ...parameters) ?? this.storeManager.search(cache, ...parameters);
     }
-    async update(...parameters) {
-        return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
+    async update(cache, ...parameters) {
+        return this.overrides.update?.(cache, ...parameters) ?? this.storeManager.update(cache, ...parameters);
     }
-    async vacate(...parameters) {
-        return this.overrides.vacate?.(...parameters) ?? this.storeManager.vacate(...parameters);
+    async vacate(cache, ...parameters) {
+        return this.overrides.vacate?.(cache, ...parameters) ?? this.storeManager.vacate(cache, ...parameters);
     }
 }
 exports.DatabaseStore = DatabaseStore;
@@ -42,11 +43,11 @@ class DatabaseLink {
         this.linkManager = linkManager;
         this.overrides = overrides;
     }
-    async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
+    async filter(cache, ...parameters) {
+        return this.overrides.filter?.(cache, ...parameters) ?? this.linkManager.filter(cache, ...parameters);
     }
-    async lookup(...parameters) {
-        return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);
+    async lookup(cache, ...parameters) {
+        return this.overrides.lookup?.(cache, ...parameters) ?? this.linkManager.lookup(cache, ...parameters);
     }
 }
 exports.DatabaseLink = DatabaseLink;
@@ -58,8 +59,8 @@ class DatabaseQuery {
         this.queryManager = queryManager;
         this.overrides = overrides;
     }
-    async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
+    async filter(cache, ...parameters) {
+        return this.overrides.filter?.(cache, ...parameters) ?? this.queryManager.filter(cache, ...parameters);
     }
 }
 exports.DatabaseQuery = DatabaseQuery;
@@ -70,15 +71,15 @@ class DatabaseManager {
     queryManagers;
     linksWhereStoreIsParent;
     linksWhereStoreIsChild;
-    doInsert(storeManager, records) {
+    doInsert(cache, storeManager, records) {
         for (let record of records) {
             for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
-                linkManager.lookup(record);
+                linkManager.lookup(cache, record);
             }
-            storeManager.insert(record);
+            storeManager.insert(cache, record);
         }
     }
-    doRemove(storeManager, records) {
+    doRemove(cache, storeManager, records) {
         let queue = new Array();
         queue.push({
             storeManager,
@@ -87,13 +88,13 @@ class DatabaseManager {
         while (queue.length > 0) {
             let queueEntry = queue.splice(0, 1)[0];
             for (let record of queueEntry.records) {
-                queueEntry.storeManager.remove(record);
+                queueEntry.storeManager.remove(cache, record);
             }
             for (let linkManager of this.getLinksWhereStoreIsParent(queueEntry.storeManager)) {
                 let storeManager = linkManager.getChild();
                 let records = new Array();
                 for (let record of queueEntry.records) {
-                    for (let childRecord of linkManager.filter(record)) {
+                    for (let childRecord of linkManager.filter(cache, record)) {
                         records.push(childRecord);
                     }
                 }
@@ -106,15 +107,15 @@ class DatabaseManager {
             }
         }
     }
-    doVacate(storeManager, orphans) {
-        if (storeManager.length() > 0) {
-            storeManager.vacate();
+    doVacate(cache, storeManager, orphans) {
+        if (storeManager.length(cache) > 0) {
+            storeManager.vacate(cache);
             for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
-                this.doVacate(linkManager.getChild(), linkManager.filter());
+                this.doVacate(cache, linkManager.getChild(), linkManager.filter(cache));
             }
         }
         for (let orphan of orphans) {
-            storeManager.insert(orphan);
+            storeManager.insert(cache, orphan);
         }
     }
     getLinksWhereStoreIsParent(storeManager) {
@@ -159,9 +160,9 @@ class DatabaseManager {
         for (let key in this.storeManagers) {
             let storeManager = this.storeManagers[key];
             databaseStores[key] = new DatabaseStore(storeManager, {
-                insert: async (record) => this.doInsert(storeManager, [record]),
-                remove: async (record) => this.doRemove(storeManager, [record]),
-                vacate: async () => this.doVacate(storeManager, [])
+                insert: async (cache, record) => this.doInsert(cache, storeManager, [record]),
+                remove: async (cache, record) => this.doRemove(cache, storeManager, [record]),
+                vacate: async (cache) => this.doVacate(cache, storeManager, [])
             });
         }
         return databaseStores;
@@ -183,6 +184,7 @@ class DatabaseManager {
         return databaseQueries;
     }
     enforceStoreConsistency(storeNames) {
+        let cache = new caches_1.Cache(undefined, 0);
         for (let key of storeNames) {
             let storeManager = this.storeManagers[key];
             for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
@@ -190,33 +192,35 @@ class DatabaseManager {
                 let records = [];
                 for (let childRecord of child) {
                     try {
-                        linkManager.lookup(childRecord);
+                        linkManager.lookup(cache, childRecord);
                     }
                     catch (error) {
                         records.push(childRecord);
                     }
                 }
-                this.doRemove(child, records);
+                this.doRemove(cache, child, records);
             }
         }
     }
     enforceLinkConsistency(linkNames) {
+        let cache = new caches_1.Cache(undefined, 0);
         for (let key of linkNames) {
             let linkManager = this.linkManagers[key];
             let child = linkManager.getChild();
             let records = [];
             for (let childRecord of child) {
                 try {
-                    linkManager.lookup(childRecord);
+                    linkManager.lookup(cache, childRecord);
                 }
                 catch (error) {
                     records.push(childRecord);
                 }
             }
-            this.doRemove(child, records);
+            this.doRemove(cache, child, records);
         }
     }
     enforceConsistency(storeNames, linkNames) {
+        let cache = new caches_1.Cache(undefined, 0);
         let linkManagers = new Set();
         for (let key of storeNames) {
             for (let linkManager of this.getLinksWhereStoreIsParent(this.storeManagers[key])) {
@@ -232,13 +236,13 @@ class DatabaseManager {
             let records = [];
             for (let childRecord of child) {
                 try {
-                    linkManager.lookup(childRecord);
+                    linkManager.lookup(cache, childRecord);
                 }
                 catch (error) {
                     records.push(childRecord);
                 }
             }
-            this.doRemove(child, records);
+            this.doRemove(cache, child, records);
         }
     }
     reload() {

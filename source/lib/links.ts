@@ -1,3 +1,4 @@
+import { Cache } from "./caches";
 import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
 import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
@@ -41,17 +42,17 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 		return this.child;
 	}
 
-	filter(keysRecord?: KeysRecord<A, B>, anchorKeysRecord?: KeysRecord<C, D>, limit?: number): Array<C> {
+	filter(cache: Cache<any>, keysRecord?: KeysRecord<A, B>, anchorKeysRecord?: KeysRecord<C, D>, limit?: number): Array<C> {
 		let filters = {} as FilterMap<C>;
 		for (let key in this.keysRecordMap) {
 			let keyOne = key as any as B[number];
 			let keyTwo = this.keysRecordMap[keyOne];
 			filters[keyTwo] = new EqualityFilter(keysRecord?.[keyOne] ?? null) as any;
 		}
-		return this.child.filter(filters, this.orders, anchorKeysRecord, limit);
+		return this.child.filter(cache, filters, this.orders, anchorKeysRecord, limit);
 	}
 
-	lookup(keysRecord: C | Pick<C, E[B[number]]>): A | undefined {
+	lookup(cache: Cache<any>, keysRecord: C | Pick<C, E[B[number]]>): A | undefined {
 		let parentKeysRecord = {} as KeysRecord<A, B>;
 		for (let key in this.keysRecordMap) {
 			let keyOne = key as any as B[number];
@@ -61,7 +62,7 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 			}
 			parentKeysRecord[keyOne] = keysRecord[keyTwo] as any;
 		}
-		return this.parent.lookup(parentKeysRecord);
+		return this.parent.lookup(cache, parentKeysRecord);
 	}
 
 	static construct<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreManager<A, B>, child: StoreManager<C, D>, recordKeysMap: E, orders?: OrderMap<C>): LinkManager<A, B, C, D, E> {

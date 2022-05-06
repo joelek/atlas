@@ -6,6 +6,7 @@ import { BlockManager } from "./blocks";
 import { RecordManager, StringField } from "./records";
 import { DatabaseStore } from "./databases";
 import { Table } from "./tables";
+import { Cache } from "./caches";
 
 async function delay(ms: number): Promise<void> {
 	await new Promise((resolve, reject) => {
@@ -160,7 +161,7 @@ wtf.test(`It should reload entities with cached values when a transaction fails 
 			storeManager.reload();
 		}
 	});
-	storeManager.insert({
+	storeManager.insert(new Cache<any>(), {
 		key: "1"
 	});
 	file.persist();

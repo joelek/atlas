@@ -1,5 +1,6 @@
 import { BlockManager, BlockReference } from "./blocks";
 import { Chunk } from "./chunks";
+import { Cache } from "./caches";
 export declare function compareBuffers(one: Array<Uint8Array>, two: Array<Uint8Array>): number;
 export declare class HashTableHeader extends Chunk {
     readonly count: BlockReference;
@@ -12,7 +13,7 @@ export declare class HashTableSlot extends BlockReference {
     probeDistance(value?: number): number;
 }
 export interface TableDetail {
-    getKeyFromValue(value: number): Array<Uint8Array>;
+    getKeyFromValue(value: number, cache?: Cache<any>): Array<Uint8Array>;
 }
 export declare class Table {
     private blockManager;
@@ -37,7 +38,7 @@ export declare class Table {
     delete(): void;
     insert(key: Array<Uint8Array>, value: number): boolean;
     length(): number;
-    lookup(key: Array<Uint8Array>): number | undefined;
+    lookup(key: Array<Uint8Array>, cache?: Cache<any>): number | undefined;
     reload(): void;
     remove(key: Array<Uint8Array>): boolean;
     vacate(): void;

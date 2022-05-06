@@ -9,6 +9,7 @@ import { SubsetOf } from "./inference";
 import { Direction, RadixTree, Relationship } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 import { SeekableIterable, Tokenizer, union, intersection } from "./utils";
+import { Cache } from "./caches";
 
 export type SearchResult<A extends Record> = {
 	record: A;
@@ -39,6 +40,7 @@ export type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
 };
 
 export class FilteredStore<A extends Record> {
+	private cache: Cache<any>;
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
 	private bids: Iterable<number>;
@@ -46,7 +48,14 @@ export class FilteredStore<A extends Record> {
 	private orders: OrderMap<A>;
 	private anchor?: A;
 
-	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
+	private readRecord(bid: number): A {
+		let buffer = this.blockManager.readBlock(bid);
+		let record = this.recordManager.decode(buffer);
+		return record;
+	}
+
+	constructor(cache: Cache<any>, recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
+		this.cache = cache;
 		this.recordManager = recordManager;
 		this.blockManager = blockManager;
 		this.bids = bids;
@@ -58,8 +67,7 @@ export class FilteredStore<A extends Record> {
 	* [Symbol.iterator](): Iterator<A> {
 		let iterable = StreamIterable.of(this.bids)
 			.map((bid) => {
-				let buffer = this.blockManager.readBlock(bid);
-				let record = this.recordManager.decode(buffer);
+				let record = this.cache.lookup(bid) ?? this.readRecord(bid);
 				return record;
 			})
 			.filter((record) => {
@@ -132,14 +140,14 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
-		yield * new FilteredStore(this.recordManager, this.blockManager, this.tree, {}, {});
+		yield * new FilteredStore(new Cache(undefined, 0), this.recordManager, this.blockManager, this.tree, {}, {});
 	}
 
 	delete(): void {
 		this.tree.delete();
 	}
 
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined {
+	filter(cache: Cache<any>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined {
 		filters = filters ?? {};
 		orders = orders ?? {};
 		filters = { ...filters };
@@ -184,7 +192,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			keys = this.recordManager.encodeKeys(keysRemaining, anchor);
 		}
 		let iterable = tree.filter(relationship, keys, directions);
-		return new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders);
+		return new FilteredStore(cache, this.recordManager, this.blockManager, iterable, filters, orders);
 	}
 
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
@@ -329,7 +337,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 	}
 
 	* [Symbol.iterator](): Iterator<SearchResult<A>> {
-		yield * StreamIterable.of(this.search(""));
+		yield * StreamIterable.of(this.search(new Cache(undefined, 0), ""));
 	}
 
 	delete(): void {
@@ -350,7 +358,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
+	* search(cache: Cache<any>, query: string, bid?: number): Iterable<SearchResult<A>> {
 		let queryTokens = Tokenizer.tokenize(query);
 		if (queryTokens.length === 0) {
 			queryTokens.push("");
@@ -360,7 +368,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 		let firstCategory = queryCategory;
 		let firstTokenInCategory = lastQueryToken;
 		if (bid != null) {
-			let record = this.readRecord(bid);
+			let record = cache.lookup(bid) ?? this.readRecord(bid);
 			let recordTokens = this.tokenizeRecord(record);
 			let recordCategory = recordTokens.length;
 			if (recordCategory < queryCategory) {
@@ -385,7 +393,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 				];
 				let bids = categoryBranch.filter(">", keys);
 				for (let bid of bids) {
-					let record = this.readRecord(bid);
+					let record = cache.lookup(bid) ?? this.readRecord(bid);
 					let recordTokens = this.tokenizeRecord(record);
 					let firstCompletion = getFirstCompletion(lastQueryToken, recordTokens);
 					if (firstCompletion == null) {
@@ -426,7 +434,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 				});
 				let iterable = intersection(iterables, (one, two) => one - two);
 				for (let bid of iterable) {
-					let record = this.readRecord(bid);
+					let record = cache.lookup(bid) ?? this.readRecord(bid);
 					let recordTokens = this.tokenizeRecord(record);
 					let tokensLeft = recordTokens.filter((recordToken) => !queryTokens.includes(recordToken));
 					if (tokensLeft.find((token) => token.startsWith(lastQueryToken)) == null) {
@@ -452,8 +460,8 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
-		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
+	static * search<A extends Record>(cache: Cache<any>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
+		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(cache, query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
 		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
 		outer: while (true) {
@@ -498,14 +506,20 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return record;
 	}
 
-	private lookupBlockIndex(keysRecord: KeysRecord<A, B>): number {
+	private lookupBlockIndex(cache: Cache<any>, keysRecord: KeysRecord<A, B>): number {
 		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
-		let index = this.table.lookup(key);
+		let index = this.table.lookup(key, cache);
 		if (index == null) {
 			let key = this.keys.map((key) => keysRecord[key]).join(", ");
 			throw `Expected a matching record for key ${key}!`;
 		}
 		return index;
+	}
+
+	private readRecord(bid: number): A {
+		let buffer = this.blockManager.readBlock(bid);
+		let record = this.recordManager.decode(buffer);
+		return record;
 	}
 
 	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>) {
@@ -520,10 +534,10 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
-		yield * this.filter();
+		yield * this.filter(new Cache(undefined, 0));
 	}
 
-	delete(): void {
+	delete(cache: Cache<any>): void {
 		for (let bid of this.table) {
 			this.blockManager.deleteBlock(bid);
 		}
@@ -536,24 +550,24 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table.delete();
 	}
 
-	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A> {
+	filter(cache: Cache<any>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A> {
 		orders = orders ?? this.orders;
 		for (let key of this.keys) {
 			if (!(key in orders)) {
 				orders[key] = new IncreasingOrder();
 			}
 		}
-		let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
+		let anchor = anchorKeysRecord != null ? this.lookup(cache, anchorKeysRecord) : undefined;
 		let filteredStores = [] as Array<FilteredStore<A>>;
 		for (let indexManager of this.indexManagers) {
-			let filteredStore = indexManager.filter(filters, orders, anchor);
+			let filteredStore = indexManager.filter(cache, filters, orders, anchor);
 			if (filteredStore == null) {
 				// We can exit early as the index manager has signaled that there are no matching records.
 				return [];
 			}
 			filteredStores.push(filteredStore);
 		}
-		filteredStores.push(new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
+		filteredStores.push(new FilteredStore<any>(cache, this.recordManager, this.blockManager, this.table, filters, orders, anchor));
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
 		let iterable = StreamIterable.of(filteredStore)
 		if (limit != null) {
@@ -562,14 +576,15 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return iterable.collect();
 	}
 
-	insert(record: A): void {
+	insert(cache: Cache<any>, record: A): void {
 		let key = this.recordManager.encodeKeys(this.keys, record);
 		let encoded = this.recordManager.encode(record);
-		let index = this.table.lookup(key);
+		let index = this.table.lookup(key, cache);
 		if (index == null) {
 			index = this.blockManager.createBlock(encoded.length);
 			this.blockManager.writeBlock(index, encoded);
 			this.table.insert(key, index);
+			cache.insert(index, record);
 			for (let indexManager of this.indexManagers) {
 				indexManager.insert(record, index);
 			}
@@ -582,9 +597,10 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			if (compareBuffers([encoded], [buffer.subarray(0, encoded.length)]) === 0) {
 				return;
 			}
-			let oldRecord = this.recordManager.decode(buffer);
+			let oldRecord = cache.lookup(index) ?? this.recordManager.decode(buffer);
 			this.blockManager.resizeBlock(index, encoded.length);
 			this.blockManager.writeBlock(index, encoded);
+			cache.insert(index, record);
 			for (let indexManager of this.indexManagers) {
 				indexManager.update(oldRecord, record, index);
 			}
@@ -594,14 +610,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 	}
 
-	length(): number {
+	length(cache: Cache<any>): number {
 		return this.table.length();
 	}
 
-	lookup(keysRecord: KeysRecord<A, B>): A {
-		let index = this.lookupBlockIndex(keysRecord);
-		let buffer = this.blockManager.readBlock(index);
-		let record = this.recordManager.decode(buffer);
+	lookup(cache: Cache<any>, keysRecord: KeysRecord<A, B>): A {
+		let index = this.lookupBlockIndex(cache, keysRecord);
+		let record = cache.lookup(index) ?? this.readRecord(index);
+		cache.insert(index, record);
 		return record;
 	}
 
@@ -609,14 +625,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table.reload();
 	}
 
-	remove(keysRecord: KeysRecord<A, B>): void {
+	remove(cache: Cache<any>, keysRecord: KeysRecord<A, B>): void {
 		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
-		let index = this.table.lookup(key);
+		let index = this.table.lookup(key, cache);
 		if (index != null) {
-			let buffer = this.blockManager.readBlock(index);
-			let oldRecord = this.recordManager.decode(buffer);
+			let oldRecord = cache.lookup(index) ?? this.readRecord(index);
 			this.table.remove(key);
 			this.blockManager.deleteBlock(index);
+			cache.remove(index);
 			for (let indexManager of this.indexManagers) {
 				indexManager.remove(oldRecord);
 			}
@@ -626,40 +642,41 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 	}
 
-	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
+	search(cache: Cache<any>, query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
 		if (query === "") {
-			return StreamIterable.of(this.filter(undefined, undefined, anchorKeysRecord, limit))
+			return StreamIterable.of(this.filter(cache, undefined, undefined, anchorKeysRecord, limit))
 				.map((record) => ({
 					record,
 					rank: 0
 				}))
 				.collect();
 		}
-		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-		let iterable = StreamIterable.of(SearchIndexManager.search(this.searchIndexManagers, query, anchorBid));
+		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(cache, anchorKeysRecord) : undefined;
+		let iterable = StreamIterable.of(SearchIndexManager.search(cache, this.searchIndexManagers, query, anchorBid));
 		if (limit != null) {
 			iterable = iterable.limit(limit);
 		}
 		return iterable.collect();
 	}
 
-	update(keysRecord: KeysRecord<A, B>): void {
+	update(cache: Cache<any>, keysRecord: KeysRecord<A, B>): void {
 		let record = {
 			...this.getDefaultRecord(),
 			...keysRecord
 		};
 		try {
 			record = {
-				...this.lookup(keysRecord),
+				...this.lookup(cache, keysRecord),
 				...keysRecord
 			};
 		} catch (error) {}
-		return this.insert(record);
+		return this.insert(cache, record);
 	}
 
-	vacate(): void {
+	vacate(cache: Cache<any>): void {
 		for (let bid of this.table) {
 			this.blockManager.deleteBlock(bid);
+			cache.remove(bid);
 		}
 		for (let indexManager of this.indexManagers) {
 			indexManager.vacate();
@@ -684,9 +701,13 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		let searchIndices = options.searchIndices ?? [];
 		let recordManager = new RecordManager(fields);
 		let storage = new Table(blockManager, {
-			getKeyFromValue: (value) => {
-				let buffer = blockManager.readBlock(value);
-				let record = recordManager.decode(buffer);
+			getKeyFromValue: (value, cache) => {
+				let record = cache?.lookup(value);
+				if (record == null) {
+					let buffer = blockManager.readBlock(value);
+					record = recordManager.decode(buffer);
+					cache?.insert(value, record);
+				}
 				return recordManager.encodeKeys(keys, record);
 			}
 		});

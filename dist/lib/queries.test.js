@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const blocks_1 = require("./blocks");
+const caches_1 = require("./caches");
 const files_1 = require("./files");
 const operators_1 = require("./operators");
 const orders_1 = require("./orders");
@@ -17,19 +18,19 @@ function createUsers() {
         },
         keys: ["key"]
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "User 0",
         name: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "User 1",
         name: "A"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "User 2",
         name: "B"
     });
-    users.insert({
+    users.insert(new caches_1.Cache(), {
         key: "User 3",
         name: "B"
     });
@@ -43,7 +44,7 @@ wtf.test(`It should support filtering without explicit ordering.`, async (assert
     let queryManager = new queries_1.QueryManager(users, {
         name: new operators_1.EqualityOperator()
     }, {});
-    let iterable = queryManager.filter({
+    let iterable = queryManager.filter(new caches_1.Cache(), {
         name: "B"
     });
     let observed = Array.from(iterable).map((user) => user.key);
@@ -57,7 +58,7 @@ wtf.test(`It should support filtering with explicit ordering.`, async (assert) =
     }, {
         key: new orders_1.DecreasingOrder()
     });
-    let iterable = queryManager.filter({
+    let iterable = queryManager.filter(new caches_1.Cache(), {
         name: "B"
     });
     let observed = Array.from(iterable).map((user) => user.key);

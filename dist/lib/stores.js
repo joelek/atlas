@@ -10,15 +10,23 @@ const records_1 = require("./records");
 const trees_1 = require("./trees");
 const sorters_1 = require("../mod/sorters");
 const utils_1 = require("./utils");
+const caches_1 = require("./caches");
 ;
 class FilteredStore {
+    cache;
     recordManager;
     blockManager;
     bids;
     filters;
     orders;
     anchor;
-    constructor(recordManager, blockManager, bids, filters, orders, anchor) {
+    readRecord(bid) {
+        let buffer = this.blockManager.readBlock(bid);
+        let record = this.recordManager.decode(buffer);
+        return record;
+    }
+    constructor(cache, recordManager, blockManager, bids, filters, orders, anchor) {
+        this.cache = cache;
         this.recordManager = recordManager;
         this.blockManager = blockManager;
         this.bids = bids;
@@ -29,8 +37,7 @@ class FilteredStore {
     *[Symbol.iterator]() {
         let iterable = streams_1.StreamIterable.of(this.bids)
             .map((bid) => {
-            let buffer = this.blockManager.readBlock(bid);
-            let record = this.recordManager.decode(buffer);
+            let record = this.cache.lookup(bid) ?? this.readRecord(bid);
             return record;
         })
             .filter((record) => {
@@ -96,12 +103,12 @@ class IndexManager {
         this.tree = new trees_1.RadixTree(blockManager, options?.bid);
     }
     *[Symbol.iterator]() {
-        yield* new FilteredStore(this.recordManager, this.blockManager, this.tree, {}, {});
+        yield* new FilteredStore(new caches_1.Cache(undefined, 0), this.recordManager, this.blockManager, this.tree, {}, {});
     }
     delete() {
         this.tree.delete();
     }
-    filter(filters, orders, anchor) {
+    filter(cache, filters, orders, anchor) {
         filters = filters ?? {};
         orders = orders ?? {};
         filters = { ...filters };
@@ -146,7 +153,7 @@ class IndexManager {
             keys = this.recordManager.encodeKeys(keysRemaining, anchor);
         }
         let iterable = tree.filter(relationship, keys, directions);
-        return new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders);
+        return new FilteredStore(cache, this.recordManager, this.blockManager, iterable, filters, orders);
     }
     insert(keysRecord, bid) {
         let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
@@ -283,7 +290,7 @@ class SearchIndexManager {
         this.tree = new trees_1.RadixTree(blockManager, options?.bid);
     }
     *[Symbol.iterator]() {
-        yield* streams_1.StreamIterable.of(this.search(""));
+        yield* streams_1.StreamIterable.of(this.search(new caches_1.Cache(undefined, 0), ""));
     }
     delete() {
         this.tree.delete();
@@ -300,7 +307,7 @@ class SearchIndexManager {
             this.removeToken(token, tokens.length, bid);
         }
     }
-    *search(query, bid) {
+    *search(cache, query, bid) {
         let queryTokens = utils_1.Tokenizer.tokenize(query);
         if (queryTokens.length === 0) {
             queryTokens.push("");
@@ -310,7 +317,7 @@ class SearchIndexManager {
         let firstCategory = queryCategory;
         let firstTokenInCategory = lastQueryToken;
         if (bid != null) {
-            let record = this.readRecord(bid);
+            let record = cache.lookup(bid) ?? this.readRecord(bid);
             let recordTokens = this.tokenizeRecord(record);
             let recordCategory = recordTokens.length;
             if (recordCategory < queryCategory) {
@@ -335,7 +342,7 @@ class SearchIndexManager {
                 ];
                 let bids = categoryBranch.filter(">", keys);
                 for (let bid of bids) {
-                    let record = this.readRecord(bid);
+                    let record = cache.lookup(bid) ?? this.readRecord(bid);
                     let recordTokens = this.tokenizeRecord(record);
                     let firstCompletion = getFirstCompletion(lastQueryToken, recordTokens);
                     if (firstCompletion == null) {
@@ -377,7 +384,7 @@ class SearchIndexManager {
                 });
                 let iterable = (0, utils_1.intersection)(iterables, (one, two) => one - two);
                 for (let bid of iterable) {
-                    let record = this.readRecord(bid);
+                    let record = cache.lookup(bid) ?? this.readRecord(bid);
                     let recordTokens = this.tokenizeRecord(record);
                     let tokensLeft = recordTokens.filter((recordToken) => !queryTokens.includes(recordToken));
                     if (tokensLeft.find((token) => token.startsWith(lastQueryToken)) == null) {
@@ -400,8 +407,8 @@ class SearchIndexManager {
     vacate() {
         this.tree.vacate();
     }
-    static *search(searchIndexManagers, query, bid) {
-        let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
+    static *search(cache, searchIndexManagers, query, bid) {
+        let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(cache, query, bid));
         let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
         let searchResults = iterators.map((iterator) => iterator.next().value);
         outer: while (true) {
@@ -445,14 +452,19 @@ class StoreManager {
         }
         return record;
     }
-    lookupBlockIndex(keysRecord) {
+    lookupBlockIndex(cache, keysRecord) {
         let key = this.recordManager.encodeKeys(this.keys, keysRecord);
-        let index = this.table.lookup(key);
+        let index = this.table.lookup(key, cache);
         if (index == null) {
             let key = this.keys.map((key) => keysRecord[key]).join(", ");
             throw `Expected a matching record for key ${key}!`;
         }
         return index;
+    }
+    readRecord(bid) {
+        let buffer = this.blockManager.readBlock(bid);
+        let record = this.recordManager.decode(buffer);
+        return record;
     }
     constructor(blockManager, fields, keys, orders, table, indexManagers, searchIndexManagers) {
         this.blockManager = blockManager;
@@ -465,9 +477,9 @@ class StoreManager {
         this.searchIndexManagers = searchIndexManagers;
     }
     *[Symbol.iterator]() {
-        yield* this.filter();
+        yield* this.filter(new caches_1.Cache(undefined, 0));
     }
-    delete() {
+    delete(cache) {
         for (let bid of this.table) {
             this.blockManager.deleteBlock(bid);
         }
@@ -479,24 +491,24 @@ class StoreManager {
         }
         this.table.delete();
     }
-    filter(filters, orders, anchorKeysRecord, limit) {
+    filter(cache, filters, orders, anchorKeysRecord, limit) {
         orders = orders ?? this.orders;
         for (let key of this.keys) {
             if (!(key in orders)) {
                 orders[key] = new orders_1.IncreasingOrder();
             }
         }
-        let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
+        let anchor = anchorKeysRecord != null ? this.lookup(cache, anchorKeysRecord) : undefined;
         let filteredStores = [];
         for (let indexManager of this.indexManagers) {
-            let filteredStore = indexManager.filter(filters, orders, anchor);
+            let filteredStore = indexManager.filter(cache, filters, orders, anchor);
             if (filteredStore == null) {
                 // We can exit early as the index manager has signaled that there are no matching records.
                 return [];
             }
             filteredStores.push(filteredStore);
         }
-        filteredStores.push(new FilteredStore(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
+        filteredStores.push(new FilteredStore(cache, this.recordManager, this.blockManager, this.table, filters, orders, anchor));
         let filteredStore = FilteredStore.getOptimal(filteredStores);
         let iterable = streams_1.StreamIterable.of(filteredStore);
         if (limit != null) {
@@ -504,14 +516,15 @@ class StoreManager {
         }
         return iterable.collect();
     }
-    insert(record) {
+    insert(cache, record) {
         let key = this.recordManager.encodeKeys(this.keys, record);
         let encoded = this.recordManager.encode(record);
-        let index = this.table.lookup(key);
+        let index = this.table.lookup(key, cache);
         if (index == null) {
             index = this.blockManager.createBlock(encoded.length);
             this.blockManager.writeBlock(index, encoded);
             this.table.insert(key, index);
+            cache.insert(index, record);
             for (let indexManager of this.indexManagers) {
                 indexManager.insert(record, index);
             }
@@ -525,9 +538,10 @@ class StoreManager {
             if ((0, tables_1.compareBuffers)([encoded], [buffer.subarray(0, encoded.length)]) === 0) {
                 return;
             }
-            let oldRecord = this.recordManager.decode(buffer);
+            let oldRecord = cache.lookup(index) ?? this.recordManager.decode(buffer);
             this.blockManager.resizeBlock(index, encoded.length);
             this.blockManager.writeBlock(index, encoded);
+            cache.insert(index, record);
             for (let indexManager of this.indexManagers) {
                 indexManager.update(oldRecord, record, index);
             }
@@ -536,26 +550,26 @@ class StoreManager {
             }
         }
     }
-    length() {
+    length(cache) {
         return this.table.length();
     }
-    lookup(keysRecord) {
-        let index = this.lookupBlockIndex(keysRecord);
-        let buffer = this.blockManager.readBlock(index);
-        let record = this.recordManager.decode(buffer);
+    lookup(cache, keysRecord) {
+        let index = this.lookupBlockIndex(cache, keysRecord);
+        let record = cache.lookup(index) ?? this.readRecord(index);
+        cache.insert(index, record);
         return record;
     }
     reload() {
         this.table.reload();
     }
-    remove(keysRecord) {
+    remove(cache, keysRecord) {
         let key = this.recordManager.encodeKeys(this.keys, keysRecord);
-        let index = this.table.lookup(key);
+        let index = this.table.lookup(key, cache);
         if (index != null) {
-            let buffer = this.blockManager.readBlock(index);
-            let oldRecord = this.recordManager.decode(buffer);
+            let oldRecord = cache.lookup(index) ?? this.readRecord(index);
             this.table.remove(key);
             this.blockManager.deleteBlock(index);
+            cache.remove(index);
             for (let indexManager of this.indexManagers) {
                 indexManager.remove(oldRecord);
             }
@@ -564,39 +578,40 @@ class StoreManager {
             }
         }
     }
-    search(query, anchorKeysRecord, limit) {
+    search(cache, query, anchorKeysRecord, limit) {
         if (query === "") {
-            return streams_1.StreamIterable.of(this.filter(undefined, undefined, anchorKeysRecord, limit))
+            return streams_1.StreamIterable.of(this.filter(cache, undefined, undefined, anchorKeysRecord, limit))
                 .map((record) => ({
                 record,
                 rank: 0
             }))
                 .collect();
         }
-        let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-        let iterable = streams_1.StreamIterable.of(SearchIndexManager.search(this.searchIndexManagers, query, anchorBid));
+        let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(cache, anchorKeysRecord) : undefined;
+        let iterable = streams_1.StreamIterable.of(SearchIndexManager.search(cache, this.searchIndexManagers, query, anchorBid));
         if (limit != null) {
             iterable = iterable.limit(limit);
         }
         return iterable.collect();
     }
-    update(keysRecord) {
+    update(cache, keysRecord) {
         let record = {
             ...this.getDefaultRecord(),
             ...keysRecord
         };
         try {
             record = {
-                ...this.lookup(keysRecord),
+                ...this.lookup(cache, keysRecord),
                 ...keysRecord
             };
         }
         catch (error) { }
-        return this.insert(record);
+        return this.insert(cache, record);
     }
-    vacate() {
+    vacate(cache) {
         for (let bid of this.table) {
             this.blockManager.deleteBlock(bid);
+            cache.remove(bid);
         }
         for (let indexManager of this.indexManagers) {
             indexManager.vacate();
@@ -614,9 +629,13 @@ class StoreManager {
         let searchIndices = options.searchIndices ?? [];
         let recordManager = new records_1.RecordManager(fields);
         let storage = new tables_1.Table(blockManager, {
-            getKeyFromValue: (value) => {
-                let buffer = blockManager.readBlock(value);
-                let record = recordManager.decode(buffer);
+            getKeyFromValue: (value, cache) => {
+                let record = cache?.lookup(value);
+                if (record == null) {
+                    let buffer = blockManager.readBlock(value);
+                    record = recordManager.decode(buffer);
+                    cache?.insert(value, record);
+                }
                 return recordManager.encodeKeys(keys, record);
             }
         });

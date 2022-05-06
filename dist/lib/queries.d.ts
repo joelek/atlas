@@ -1,3 +1,4 @@
+import { Cache } from "./caches";
 import { SubsetOf } from "./inference";
 import { Operators } from "./operators";
 import { Orders } from "./orders";
@@ -20,7 +21,7 @@ export declare class QueryManager<A extends Record, B extends RequiredKeys<A>, C
     private operators;
     private orders;
     constructor(storeManager: StoreManager<A, B>, operators: Operators<C>, orders: Orders<D>);
-    filter(parameters: C, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
+    filter(cache: Cache<any>, parameters: C, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
 }
 export type QueryManagers<A> = {
     [B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? QueryManager<C, D, E, F> : A[B];

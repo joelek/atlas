@@ -120,7 +120,7 @@ class Table {
             probeDistance += 1;
         }
     }
-    doLookup(key) {
+    doLookup(key, cache) {
         let optimalSlot = this.computeOptimalSlot(key);
         let probeDistance = 0;
         let slotIndex = optimalSlot;
@@ -131,7 +131,7 @@ class Table {
             if (value === 0 || probeDistance > slot.probeDistance()) {
                 return;
             }
-            if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
+            if (compareBuffers(this.detail.getKeyFromValue(value, cache), key) === 0) {
                 return slotIndex;
             }
             slotIndex = (slotIndex + 1) % this.slotCount;
@@ -232,8 +232,8 @@ class Table {
     length() {
         return this.header.count.value();
     }
-    lookup(key) {
-        let slotIndex = this.doLookup(key);
+    lookup(key, cache) {
+        let slotIndex = this.doLookup(key, cache);
         if (slotIndex == null) {
             return;
         }

@@ -6,22 +6,29 @@ import { PromiseQueue } from "./utils";
 import { QueryInterface } from "./queries";
 import { SubsetOf } from "./inference";
 import { DatabaseLink, DatabaseLinks, DatabaseQueries, DatabaseQuery, DatabaseStore, DatabaseStores } from "./databases";
+import { Cache } from "./caches";
 
 export class ReadableQueue {
 	protected queue: PromiseQueue;
+	protected cache: Cache<any>;
 
-	constructor(queue: PromiseQueue) {
+	constructor(queue: PromiseQueue, cache: Cache<any>) {
 		this.queue = queue;
+		this.cache = cache;
 	}
 
 	enqueueReadableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A> {
 		return this.queue.enqueue(operation);
 	}
+
+	getCache(): Cache<any> {
+		return this.cache;
+	}
 };
 
 export class WritableQueue extends ReadableQueue {
-	constructor(queue: PromiseQueue) {
-		super(queue);
+	constructor(queue: PromiseQueue, cache: Cache<any>) {
+		super(queue, cache);
 	}
 
 	enqueueWritableOperation<A>(operation: Promise<A> | (() => Promise<A>) | (() => A)): Promise<A> {
@@ -37,35 +44,35 @@ export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	filter(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["filter"]>): ReturnType<StoreInterface<A, B>["filter"]> {
-		return queue.enqueueReadableOperation(() => this.store.filter(...parameters));
+		return queue.enqueueReadableOperation(() => this.store.filter(queue.getCache(), ...parameters));
 	}
 
 	insert(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["insert"]>): ReturnType<StoreInterface<A, B>["insert"]> {
-		return queue.enqueueWritableOperation(() => this.store.insert(...parameters));
+		return queue.enqueueWritableOperation(() => this.store.insert(queue.getCache(), ...parameters));
 	}
 
 	length(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["length"]>): ReturnType<StoreInterface<A, B>["length"]> {
-		return queue.enqueueReadableOperation(() => this.store.length(...parameters));
+		return queue.enqueueReadableOperation(() => this.store.length(queue.getCache(), ...parameters));
 	}
 
 	lookup(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["lookup"]>): ReturnType<StoreInterface<A, B>["lookup"]> {
-		return queue.enqueueReadableOperation(() => this.store.lookup(...parameters));
+		return queue.enqueueReadableOperation(() => this.store.lookup(queue.getCache(), ...parameters));
 	}
 
 	remove(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["remove"]>): ReturnType<StoreInterface<A, B>["remove"]> {
-		return queue.enqueueWritableOperation(() => this.store.remove(...parameters));
+		return queue.enqueueWritableOperation(() => this.store.remove(queue.getCache(), ...parameters));
 	}
 
 	search(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["search"]>): ReturnType<StoreInterface<A, B>["search"]> {
-		return queue.enqueueReadableOperation(() => this.store.search(...parameters));
+		return queue.enqueueReadableOperation(() => this.store.search(queue.getCache(), ...parameters));
 	}
 
 	update(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]> {
-		return queue.enqueueWritableOperation(() => this.store.update(...parameters));
+		return queue.enqueueWritableOperation(() => this.store.update(queue.getCache(), ...parameters));
 	}
 
 	vacate(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]> {
-		return queue.enqueueWritableOperation(() => this.store.vacate(...parameters));
+		return queue.enqueueWritableOperation(() => this.store.vacate(queue.getCache(), ...parameters));
 	}
 };
 
@@ -81,11 +88,11 @@ export class TransactionalLink<A extends Record, B extends RequiredKeys<A>, C ex
 	}
 
 	filter(queue: ReadableQueue, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]> {
-		return queue.enqueueReadableOperation(() => this.link.filter(...parameters));
+		return queue.enqueueReadableOperation(() => this.link.filter(queue.getCache(), ...parameters));
 	}
 
 	lookup(queue: ReadableQueue, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]> {
-		return queue.enqueueReadableOperation(() => this.link.lookup(...parameters));
+		return queue.enqueueReadableOperation(() => this.link.lookup(queue.getCache(), ...parameters));
 	}
 };
 
@@ -101,7 +108,7 @@ export class TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C e
 	}
 
 	filter(queue: ReadableQueue, ...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]> {
-		return queue.enqueueReadableOperation(() => this.query.filter(...parameters));
+		return queue.enqueueReadableOperation(() => this.query.filter(queue.getCache(), ...parameters));
 	}
 };
 
@@ -121,6 +128,7 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
+	private cache: Cache<any>;
 	readonly stores: Readonly<TransactionalStoresFromDatabaseStores<A>>;
 	readonly links: Readonly<TransactionalLinksFromDatabaseLinks<B>>;
 	readonly queries: Readonly<TransactionalQueriesFromDatabaseQueries<C>>;
@@ -154,6 +162,7 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
+		this.cache = new Cache<any>(undefined, 65536);
 		this.stores = this.createTransactionalStores(databaseStores);
 		this.links = this.createTransactionalLinks(databaseLinks);
 		this.queries = this.createTransactionalQueries(databaseQueries);
@@ -162,7 +171,7 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D> {
 		let queue = new PromiseQueue();
-		let readableQueue = new ReadableQueue(queue);
+		let readableQueue = new ReadableQueue(queue, this.cache);
 		let promise = this.readableTransactionLock
 			.then(() => transaction(readableQueue))
 			.then((value) => queue.enqueue(() => value));
@@ -181,7 +190,8 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 
 	async enqueueWritableTransaction<D>(transaction: WritableTransaction<D>): Promise<D> {
 		let queue = new PromiseQueue();
-		let writableQueue = new WritableQueue(queue);
+		let cache = new Cache<any>(undefined, 0);
+		let writableQueue = new WritableQueue(queue, cache);
 		let promise = this.writableTransactionLock
 			.then(() => transaction(writableQueue))
 			.then((value) => queue.enqueue(() => value));
@@ -191,6 +201,9 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 		try {
 			let value = await promise;
 			this.file.persist();
+			for (let { key, value } of cache) {
+				this.cache.insert(key, value);
+			}
 			return value;
 		} catch (error) {
 			this.file.discard();

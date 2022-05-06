@@ -1,5 +1,6 @@
 import * as wtf from "@joelek/wtf";
 import { BlockManager } from "./blocks";
+import { Cache } from "./caches";
 import { VirtualFile } from "./files";
 import { EqualityOperator } from "./operators";
 import { DecreasingOrder, IncreasingOrder } from "./orders";
@@ -16,19 +17,19 @@ function createUsers() {
 		},
 		keys: ["key"]
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		key: "User 0",
 		name: "A"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		key: "User 1",
 		name: "A"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		key: "User 2",
 		name: "B"
 	});
-	users.insert({
+	users.insert(new Cache(), {
 		key: "User 3",
 		name: "B"
 	});
@@ -42,7 +43,7 @@ wtf.test(`It should support filtering without explicit ordering.`, async (assert
 	let queryManager = new QueryManager(users, {
 		name: new EqualityOperator()
 	}, {});
-	let iterable = queryManager.filter({
+	let iterable = queryManager.filter(new Cache(), {
 		name: "B"
 	});
 	let observed = Array.from(iterable).map((user) => user.key);
@@ -57,7 +58,7 @@ wtf.test(`It should support filtering with explicit ordering.`, async (assert) =
 	}, {
 		key: new DecreasingOrder()
 	});
-	let iterable = queryManager.filter({
+	let iterable = queryManager.filter(new Cache(), {
 		name: "B"
 	});
 	let observed = Array.from(iterable).map((user) => user.key);

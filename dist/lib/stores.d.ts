@@ -6,6 +6,7 @@ import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 import { RadixTree } from "./trees";
 import { SeekableIterable } from "./utils";
+import { Cache } from "./caches";
 export type SearchResult<A extends Record> = {
     record: A;
     rank: number;
@@ -30,13 +31,15 @@ export type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
     [B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? Store<C, D> : never;
 };
 export declare class FilteredStore<A extends Record> {
+    private cache;
     private recordManager;
     private blockManager;
     private bids;
     private filters;
     private orders;
     private anchor?;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A);
+    private readRecord;
+    constructor(cache: Cache<any>, recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A);
     [Symbol.iterator](): Iterator<A>;
     static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined;
 }
@@ -50,7 +53,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     });
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined;
+    filter(cache: Cache<any>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined;
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void;
@@ -77,10 +80,10 @@ export declare class SearchIndexManager<A extends Record, B extends Key<A>> {
     delete(): void;
     insert(record: A, bid: number): void;
     remove(record: A, bid: number): void;
-    search(query: string, bid?: number): Iterable<SearchResult<A>>;
+    search(cache: Cache<any>, query: string, bid?: number): Iterable<SearchResult<A>>;
     update(oldRecord: A, newRecord: A, bid: number): void;
     vacate(): void;
-    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>>;
+    static search<A extends Record>(cache: Cache<any>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>>;
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
@@ -93,18 +96,19 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private searchIndexManagers;
     private getDefaultRecord;
     private lookupBlockIndex;
+    private readRecord;
     constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>);
     [Symbol.iterator](): Iterator<A>;
-    delete(): void;
-    filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
-    insert(record: A): void;
-    length(): number;
-    lookup(keysRecord: KeysRecord<A, B>): A;
+    delete(cache: Cache<any>): void;
+    filter(cache: Cache<any>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
+    insert(cache: Cache<any>, record: A): void;
+    length(cache: Cache<any>): number;
+    lookup(cache: Cache<any>, keysRecord: KeysRecord<A, B>): A;
     reload(): void;
-    remove(keysRecord: KeysRecord<A, B>): void;
-    search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>>;
-    update(keysRecord: KeysRecord<A, B>): void;
-    vacate(): void;
+    remove(cache: Cache<any>, keysRecord: KeysRecord<A, B>): void;
+    search(cache: Cache<any>, query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>>;
+    update(cache: Cache<any>, keysRecord: KeysRecord<A, B>): void;
+    vacate(cache: Cache<any>): void;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
         fields: Fields<A>;
         keys: [...B];

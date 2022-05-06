@@ -1,5 +1,6 @@
 import * as wtf from "@joelek/wtf";
 import { BlockManager } from "./blocks";
+import { Cache } from "./caches";
 import { Database } from "./databases";
 import { VirtualFile } from "./files";
 import { StringField, BooleanField } from "./records";
@@ -17,11 +18,11 @@ wtf.test(`It should be able to construct a new database manager.`, async (assert
 		}, ["key"], {})
 	}));
 	let stores = databaseManager.createDatabaseStores();
-	await stores.users.insert({
+	await stores.users.insert(new Cache(), {
 		key: "0",
 		name: "A"
 	});
-	let observed = await stores.users.lookup({
+	let observed = await stores.users.lookup(new Cache(), {
 		key: "0"
 	});
 	let expected = {
@@ -42,7 +43,7 @@ wtf.test(`It should be able to construct an existing database manager with an id
 		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createDatabaseStores();
-	await stores1.users.insert({
+	await stores1.users.insert(new Cache(), {
 		key: "0",
 		name: "A"
 	});
@@ -53,7 +54,7 @@ wtf.test(`It should be able to construct an existing database manager with an id
 		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createDatabaseStores();
-	let observed = await stores2.users.lookup({
+	let observed = await stores2.users.lookup(new Cache(), {
 		key: "0"
 	});
 	let expected = {
@@ -74,7 +75,7 @@ wtf.test(`It should be able to construct an existing database manager when one f
 		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createDatabaseStores();
-	await stores1.users.insert({
+	await stores1.users.insert(new Cache(), {
 		key: "0",
 		name: "A"
 	});
@@ -86,7 +87,7 @@ wtf.test(`It should be able to construct an existing database manager when one f
 		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createDatabaseStores();
-	let observed = await stores2.users.lookup({
+	let observed = await stores2.users.lookup(new Cache(), {
 		key: "0"
 	});
 	let expected = {
@@ -109,7 +110,7 @@ wtf.test(`It should be able to construct an existing database manager when one f
 		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createDatabaseStores();
-	await stores1.users.insert({
+	await stores1.users.insert(new Cache(), {
 		key: "0",
 		name: "A",
 		lastname: "B"
@@ -121,7 +122,7 @@ wtf.test(`It should be able to construct an existing database manager when one f
 		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createDatabaseStores();
-	let observed = await stores2.users.lookup({
+	let observed = await stores2.users.lookup(new Cache(), {
 		key: "0"
 	});
 	let expected = {
@@ -142,7 +143,7 @@ wtf.test(`It should be able to construct an existing database manager when one f
 		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createDatabaseStores();
-	await stores1.users.insert({
+	await stores1.users.insert(new Cache(), {
 		key: "0",
 		name: "A"
 	});
@@ -153,7 +154,7 @@ wtf.test(`It should be able to construct an existing database manager when one f
 		}, ["key"], {})
 	}));
 	let stores2 = databaseManager2.createDatabaseStores();
-	let observed = await stores2.users.lookup({
+	let observed = await stores2.users.lookup(new Cache(), {
 		key: "0"
 	});
 	let expected = {
@@ -174,7 +175,7 @@ wtf.test(`It should be able to construct an existing database manager when the k
 		}, ["key"], {})
 	}));
 	let stores1 = databaseManager1.createDatabaseStores();
-	await stores1.users.insert({
+	await stores1.users.insert(new Cache(), {
 		key: "0",
 		name: "A"
 	});
@@ -185,7 +186,7 @@ wtf.test(`It should be able to construct an existing database manager when the k
 		}, ["name"], {})
 	}));
 	let stores2 = databaseManager2.createDatabaseStores();
-	let observed = await stores2.users.lookup({
+	let observed = await stores2.users.lookup(new Cache(), {
 		name: "A"
 	});
 	let expected = {

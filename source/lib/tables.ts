@@ -5,6 +5,7 @@ import { Chunk } from "./chunks";
 import { DEBUG } from "./variables";
 import * as asserts from "../mod/asserts";
 import { IntegerAssert } from "../mod/asserts";
+import { Cache } from "./caches";
 
 export function compareBuffers(one: Array<Uint8Array>, two: Array<Uint8Array>): number {
 	if (one.length < two.length) {
@@ -47,7 +48,7 @@ export class HashTableSlot extends BlockReference {
 };
 
 export interface TableDetail {
-	getKeyFromValue(value: number): Array<Uint8Array>;
+	getKeyFromValue(value: number, cache?: Cache<any>): Array<Uint8Array>;
 };
 
 export class Table {
@@ -133,7 +134,7 @@ export class Table {
 		}
 	}
 
-	private doLookup(key: Array<Uint8Array>): number | undefined {
+	private doLookup(key: Array<Uint8Array>, cache?: Cache<any>): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
 		let probeDistance = 0;
 		let slotIndex = optimalSlot;
@@ -144,7 +145,7 @@ export class Table {
 			if (value === 0 || probeDistance > slot.probeDistance()) {
 				return;
 			}
-			if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
+			if (compareBuffers(this.detail.getKeyFromValue(value, cache), key) === 0) {
 				return slotIndex;
 			}
 			slotIndex = (slotIndex + 1) % this.slotCount;
@@ -252,8 +253,8 @@ export class Table {
 		return this.header.count.value();
 	}
 
-	lookup(key: Array<Uint8Array>): number | undefined {
-		let slotIndex = this.doLookup(key);
+	lookup(key: Array<Uint8Array>, cache?: Cache<any>): number | undefined {
+		let slotIndex = this.doLookup(key, cache);
 		if (slotIndex == null) {
 			return;
 		}

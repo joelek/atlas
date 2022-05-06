@@ -8,6 +8,7 @@ const blocks_1 = require("./blocks");
 const records_1 = require("./records");
 const databases_1 = require("./databases");
 const tables_1 = require("./tables");
+const caches_1 = require("./caches");
 async function delay(ms) {
     await new Promise((resolve, reject) => {
         setTimeout(resolve, ms);
@@ -157,7 +158,7 @@ wtf.test(`It should reload entities with cached values when a transaction fails 
             storeManager.reload();
         }
     });
-    storeManager.insert({
+    storeManager.insert(new caches_1.Cache(), {
         key: "1"
     });
     file.persist();
