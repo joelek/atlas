@@ -21,18 +21,6 @@ export type QueriesFromWritableQueries<A extends WritableQueries<any>> = {
 	[B in keyof A]: A[B] extends WritableQuery<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
 };
 
-export class WritableQueryManager<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements WritableQuery<A, B, C, D> {
-	protected queryManager: QueryManager<A, B, C, D>;
-
-	constructor(queryManager: QueryManager<A, B, C, D>) {
-		this.queryManager = queryManager;
-	}
-
-	async filter(...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
-		return this.queryManager.filter(...parameters);
-	}
-};
-
 export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
 	private storeManager: StoreManager<A, B>;
 	private operators: Operators<C>;

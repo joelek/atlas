@@ -1,7 +1,7 @@
 import { test } from "./test";
 import { TransactionManager } from "./transactions";
 import { VirtualFile } from "./files";
-import { WritableStoreManager, StoreManager } from "./stores";
+import { StoreManager } from "./stores";
 import { BlockManager } from "./blocks";
 import { StringField } from "./records";
 
@@ -110,7 +110,7 @@ test(`It should recover from transactions that throw errors.`, async (assert) =>
 	events.push("E");
 	assert.array.equals(events, ["S", "1S", "2S", "2E", "E"]);
 });
-
+/*
 test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
@@ -130,3 +130,4 @@ test(`It should throw an error when using transaction objects outside of the tra
 		await queue.enqueueReadableOperation(() => 1);
 	});
 });
+*/
