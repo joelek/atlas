@@ -1,9 +1,9 @@
 import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
-import { WritableLink, WritableLinks } from "./links";
-import { WritableStore, WritableStores } from "./stores";
+import { LinkInterface, LinkInterfaces } from "./links";
+import { StoreInterface, StoreInterfaces } from "./stores";
 import { PromiseQueue } from "./utils";
-import { WritableQueries, WritableQuery } from "./queries";
+import { QueryInterfaces, QueryInterface } from "./queries";
 import { SubsetOf } from "./inference";
 
 export class ReadableQueue {
@@ -29,128 +29,128 @@ export class WritableQueue extends ReadableQueue {
 };
 
 export class TransactionalStore<A extends Record, B extends RequiredKeys<A>> {
-	protected store: WritableStore<A, B>;
+	protected store: StoreInterface<A, B>;
 
-	constructor(store: WritableStore<A, B>) {
+	constructor(store: StoreInterface<A, B>) {
 		this.store = store;
 	}
 
-	filter(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]> {
+	filter(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["filter"]>): ReturnType<StoreInterface<A, B>["filter"]> {
 		return queue.enqueueReadableOperation(() => this.store.filter(...parameters));
 	}
 
-	insert(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]> {
+	insert(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["insert"]>): ReturnType<StoreInterface<A, B>["insert"]> {
 		return queue.enqueueWritableOperation(() => this.store.insert(...parameters));
 	}
 
-	length(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]> {
+	length(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["length"]>): ReturnType<StoreInterface<A, B>["length"]> {
 		return queue.enqueueReadableOperation(() => this.store.length(...parameters));
 	}
 
-	lookup(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]> {
+	lookup(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["lookup"]>): ReturnType<StoreInterface<A, B>["lookup"]> {
 		return queue.enqueueReadableOperation(() => this.store.lookup(...parameters));
 	}
 
-	remove(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]> {
+	remove(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["remove"]>): ReturnType<StoreInterface<A, B>["remove"]> {
 		return queue.enqueueWritableOperation(() => this.store.remove(...parameters));
 	}
 
-	search(queue: ReadableQueue, ...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]> {
+	search(queue: ReadableQueue, ...parameters: Parameters<StoreInterface<A, B>["search"]>): ReturnType<StoreInterface<A, B>["search"]> {
 		return queue.enqueueReadableOperation(() => this.store.search(...parameters));
 	}
 
-	update(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]> {
+	update(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]> {
 		return queue.enqueueWritableOperation(() => this.store.update(...parameters));
 	}
 
-	vacate(queue: WritableQueue, ...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]> {
+	vacate(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]> {
 		return queue.enqueueWritableOperation(() => this.store.vacate(...parameters));
 	}
 };
 
-export type TransactionalStoresFromWritableStores<A extends WritableStores<any>> = {
-	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? TransactionalStore<C, D> : never;
+export type TransactionalStoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
+	[B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? TransactionalStore<C, D> : never;
 };
 
 export class TransactionalLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
-	protected link: WritableLink<A, B, C, D, E>;
+	protected link: LinkInterface<A, B, C, D, E>;
 
-	constructor(link: WritableLink<A, B, C, D, E>) {
+	constructor(link: LinkInterface<A, B, C, D, E>) {
 		this.link = link;
 	}
 
-	filter(queue: ReadableQueue, ...parameters: Parameters<WritableLink<A, B, C, D, E>["filter"]>): ReturnType<WritableLink<A, B, C, D, E>["filter"]> {
+	filter(queue: ReadableQueue, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]> {
 		return queue.enqueueReadableOperation(() => this.link.filter(...parameters));
 	}
 
-	lookup(queue: ReadableQueue, ...parameters: Parameters<WritableLink<A, B, C, D, E>["lookup"]>): ReturnType<WritableLink<A, B, C, D, E>["lookup"]> {
+	lookup(queue: ReadableQueue, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]> {
 		return queue.enqueueReadableOperation(() => this.link.lookup(...parameters));
 	}
 };
 
-export type TransactionalLinksFromWritableLinks<A extends WritableLinks<any>> = {
-	[B in keyof A]: A[B] extends WritableLink<infer C, infer D, infer E, infer F, infer G> ? TransactionalLink<C, D, E, F, G> : never;
+export type TransactionalLinksFromLinkInterfaces<A extends LinkInterfaces<any>> = {
+	[B in keyof A]: A[B] extends LinkInterface<infer C, infer D, infer E, infer F, infer G> ? TransactionalLink<C, D, E, F, G> : never;
 };
 
 export class TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
-	protected query: WritableQuery<A, B, C, D>;
+	protected query: QueryInterface<A, B, C, D>;
 
-	constructor(query: WritableQuery<A, B, C, D>) {
+	constructor(query: QueryInterface<A, B, C, D>) {
 		this.query = query;
 	}
 
-	filter(queue: ReadableQueue, ...parameters: Parameters<WritableQuery<A, B, C, D>["filter"]>): ReturnType<WritableQuery<A, B, C, D>["filter"]> {
+	filter(queue: ReadableQueue, ...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]> {
 		return queue.enqueueReadableOperation(() => this.query.filter(...parameters));
 	}
 };
 
-export type TransactionalQueriesFromWritableQueries<A extends WritableQueries<any>> = {
-	[B in keyof A]: A[B] extends WritableQuery<infer C, infer D, infer E, infer F> ? TransactionalQuery<C, D, E, F> : never;
+export type TransactionalQueriesFromQueryInterfaces<A extends QueryInterfaces<any>> = {
+	[B in keyof A]: A[B] extends QueryInterface<infer C, infer D, infer E, infer F> ? TransactionalQuery<C, D, E, F> : never;
 };
 
 export type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
 
 export type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
 
-export class TransactionManager<A extends WritableStores<any>, B extends WritableLinks<any>, C extends WritableQueries<any>> {
+export class TransactionManager<A extends StoreInterfaces<any>, B extends LinkInterfaces<any>, C extends QueryInterfaces<any>> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
 	private writableTransactionLock: Promise<any>;
-	readonly stores: Readonly<TransactionalStoresFromWritableStores<A>>;
-	readonly links: Readonly<TransactionalLinksFromWritableLinks<B>>;
-	readonly queries: Readonly<TransactionalQueriesFromWritableQueries<C>>;
+	readonly stores: Readonly<TransactionalStoresFromStoreInterfaces<A>>;
+	readonly links: Readonly<TransactionalLinksFromLinkInterfaces<B>>;
+	readonly queries: Readonly<TransactionalQueriesFromQueryInterfaces<C>>;
 
-	private createTransactionalStores(writableStores: A): TransactionalStoresFromWritableStores<A> {
-		let transactionalStores = {} as TransactionalStoresFromWritableStores<any>;
-		for (let key in writableStores) {
-			transactionalStores[key] = new TransactionalStore(writableStores[key]);
+	private createTransactionalStores(storeInterfaces: A): TransactionalStoresFromStoreInterfaces<A> {
+		let transactionalStores = {} as TransactionalStoresFromStoreInterfaces<any>;
+		for (let key in storeInterfaces) {
+			transactionalStores[key] = new TransactionalStore(storeInterfaces[key]);
 		}
 		return transactionalStores;
 	}
 
-	private createTransactionalLinks(writableLinks: B): TransactionalLinksFromWritableLinks<B> {
-		let transactionalLinks = {} as TransactionalLinksFromWritableLinks<any>;
-		for (let key in writableLinks) {
-			transactionalLinks[key] = new TransactionalLink(writableLinks[key]);
+	private createTransactionalLinks(linkInterfaces: B): TransactionalLinksFromLinkInterfaces<B> {
+		let transactionalLinks = {} as TransactionalLinksFromLinkInterfaces<any>;
+		for (let key in linkInterfaces) {
+			transactionalLinks[key] = new TransactionalLink(linkInterfaces[key]);
 		}
 		return transactionalLinks;
 	}
 
-	private createTransactionalQueries(writableQueries: C): TransactionalQueriesFromWritableQueries<C> {
-		let transactionalQueries = {} as TransactionalQueriesFromWritableQueries<any>;
-		for (let key in writableQueries) {
-			transactionalQueries[key] = new TransactionalQuery(writableQueries[key]);
+	private createTransactionalQueries(queryInterfaces: C): TransactionalQueriesFromQueryInterfaces<C> {
+		let transactionalQueries = {} as TransactionalQueriesFromQueryInterfaces<any>;
+		for (let key in queryInterfaces) {
+			transactionalQueries[key] = new TransactionalQuery(queryInterfaces[key]);
 		}
 		return transactionalQueries;
 	}
 
-	constructor(file: File, writableStores: A, writableLinks: B, writableQueries: C) {
+	constructor(file: File, storeInterfaces: A, linkInterfaces: B, queryInterfaces: C) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
-		this.stores = this.createTransactionalStores(writableStores);
-		this.links = this.createTransactionalLinks(writableLinks);
-		this.queries = this.createTransactionalQueries(writableQueries);
+		this.stores = this.createTransactionalStores(storeInterfaces);
+		this.links = this.createTransactionalLinks(linkInterfaces);
+		this.queries = this.createTransactionalQueries(queryInterfaces);
 	}
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D> {

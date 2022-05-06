@@ -5,20 +5,20 @@ import { OrderMap, Orders } from "./orders";
 import { RequiredKeys, Record, Keys, Key, KeysRecord } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 
-export interface WritableQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
+export interface QueryInterface<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
 	filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 };
 
-export type WritableQueries<A> = {
-	[B in keyof A]: A[B] extends WritableQuery<infer C, infer D, infer E, infer F> ? WritableQuery<C, D, E, F> : A[B];
+export type QueryInterfaces<A> = {
+	[B in keyof A]: A[B] extends QueryInterface<infer C, infer D, infer E, infer F> ? QueryInterface<C, D, E, F> : A[B];
 };
 
-export type WritableQueriesFromQueries<A extends Queries<any>> = {
-	[B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? WritableQuery<C, D, E, F> : never;
+export type QueryInterfacesFromQueries<A extends Queries<any>> = {
+	[B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? QueryInterface<C, D, E, F> : never;
 };
 
-export type QueriesFromWritableQueries<A extends WritableQueries<any>> = {
-	[B in keyof A]: A[B] extends WritableQuery<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
+export type QueriesFromQueryInterfaces<A extends QueryInterfaces<any>> = {
+	[B in keyof A]: A[B] extends QueryInterface<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
 };
 
 export class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
@@ -53,8 +53,8 @@ export type QueryManagersFromQueries<A extends Queries<any>> = {
 	[B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? QueryManager<C, D, E, F> : never;
 };
 
-export type WritableQueriesFromQueryManagers<A extends QueryManagers<any>> = {
-	[B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? WritableQuery<C, D, E, F> : never;
+export type QueryInterfacesFromQueryManagers<A extends QueryManagers<any>> = {
+	[B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? QueryInterface<C, D, E, F> : never;
 };
 
 export class Query<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {

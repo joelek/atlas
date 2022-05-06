@@ -1,5 +1,5 @@
-import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./links";
-import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./stores";
+import { Link, LinkManagersFromLinks, LinkInterfacesFromLinkManagers } from "./links";
+import { Store, StoreManagersFromStores, StoreInterfacesFromStoreManagers } from "./stores";
 import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
@@ -8,7 +8,7 @@ import { Database } from "./databases";
 import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
-import { Query, QueryManagersFromQueries, WritableQueriesFromQueryManagers } from "./queries";
+import { Query, QueryManagersFromQueries, QueryInterfacesFromQueryManagers } from "./queries";
 
 export class FieldReference<A extends Field<any>> {
 	private FieldReference!: "FieldReference";
@@ -295,7 +295,7 @@ export class Context {
 		return reference;
 	}
 
-	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
+	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<StoreInterfacesFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, LinkInterfacesFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, QueryInterfacesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
 		let file = this.createFile(path);
 		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
@@ -312,10 +312,10 @@ export class Context {
 		let schemaManager = new SchemaManager();
 		let database = new Database(stores, links, queries);
 		let databaseManager = schemaManager.createDatabaseManager(file, database);
-		let writableStores = databaseManager.createWritableStores();
-		let writableLinks = databaseManager.createWritableLinks();
-		let writableQueries = databaseManager.createWritableQueries();
-		let transactionManager = new TransactionManager(file, writableStores, writableLinks, writableQueries);
+		let storeInterfaces = databaseManager.createStoreInterfaces();
+		let linkInterfaces = databaseManager.createLinkInterfaces();
+		let queryInterfaces = databaseManager.createQueryInterfaces();
+		let transactionManager = new TransactionManager(file, storeInterfaces, linkInterfaces, queryInterfaces);
 		return transactionManager;
 	}
 };

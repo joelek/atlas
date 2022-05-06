@@ -14,7 +14,7 @@ test(`It should be able to construct a new database manager.`, async (assert) =>
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores = databaseManager.createWritableStores();
+	let stores = databaseManager.createStoreInterfaces();
 	await stores.users.insert({
 		key: "0",
 		name: "A"
@@ -38,7 +38,7 @@ test(`It should be able to construct an existing database manager with an identi
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores1 = databaseManager1.createWritableStores();
+	let stores1 = databaseManager1.createStoreInterfaces();
 	await stores1.users.insert({
 		key: "0",
 		name: "A"
@@ -49,7 +49,7 @@ test(`It should be able to construct an existing database manager with an identi
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores2 = databaseManager2.createWritableStores();
+	let stores2 = databaseManager2.createStoreInterfaces();
 	let observed = await stores2.users.lookup({
 		key: "0"
 	});
@@ -69,7 +69,7 @@ test(`It should be able to construct an existing database manager when one field
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores1 = databaseManager1.createWritableStores();
+	let stores1 = databaseManager1.createStoreInterfaces();
 	await stores1.users.insert({
 		key: "0",
 		name: "A"
@@ -81,7 +81,7 @@ test(`It should be able to construct an existing database manager when one field
 			lastname: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores2 = databaseManager2.createWritableStores();
+	let stores2 = databaseManager2.createStoreInterfaces();
 	let observed = await stores2.users.lookup({
 		key: "0"
 	});
@@ -103,7 +103,7 @@ test(`It should be able to construct an existing database manager when one field
 			lastname: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores1 = databaseManager1.createWritableStores();
+	let stores1 = databaseManager1.createStoreInterfaces();
 	await stores1.users.insert({
 		key: "0",
 		name: "A",
@@ -115,7 +115,7 @@ test(`It should be able to construct an existing database manager when one field
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores2 = databaseManager2.createWritableStores();
+	let stores2 = databaseManager2.createStoreInterfaces();
 	let observed = await stores2.users.lookup({
 		key: "0"
 	});
@@ -135,7 +135,7 @@ test(`It should be able to construct an existing database manager when one field
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores1 = databaseManager1.createWritableStores();
+	let stores1 = databaseManager1.createStoreInterfaces();
 	await stores1.users.insert({
 		key: "0",
 		name: "A"
@@ -146,7 +146,7 @@ test(`It should be able to construct an existing database manager when one field
 			name: new BooleanField(false)
 		}, ["key"], {})
 	}));
-	let stores2 = databaseManager2.createWritableStores();
+	let stores2 = databaseManager2.createStoreInterfaces();
 	let observed = await stores2.users.lookup({
 		key: "0"
 	});
@@ -166,7 +166,7 @@ test(`It should be able to construct an existing database manager when the keys 
 			name: new StringField("")
 		}, ["key"], {})
 	}));
-	let stores1 = databaseManager1.createWritableStores();
+	let stores1 = databaseManager1.createStoreInterfaces();
 	await stores1.users.insert({
 		key: "0",
 		name: "A"
@@ -177,7 +177,7 @@ test(`It should be able to construct an existing database manager when the keys 
 			name: new StringField("")
 		}, ["name"], {})
 	}));
-	let stores2 = databaseManager2.createWritableStores();
+	let stores2 = databaseManager2.createStoreInterfaces();
 	let observed = await stores2.users.lookup({
 		name: "A"
 	});

@@ -15,7 +15,7 @@ export type SearchResult<A extends Record> = {
 	rank: number;
 };
 
-export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
+export interface StoreInterface<A extends Record, B extends RequiredKeys<A>> {
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 	insert(record: A): Promise<void>;
 	length(): Promise<number>;
@@ -26,16 +26,16 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
 	vacate(): Promise<void>;
 };
 
-export type WritableStores<A> = {
-	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? WritableStore<C, D> : A[B];
+export type StoreInterfaces<A> = {
+	[B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? StoreInterface<C, D> : A[B];
 };
 
-export type WritableStoresFromStores<A extends Stores<any>> = {
-	[B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
+export type StoreInterfacesFromStores<A extends Stores<any>> = {
+	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreInterface<C, D> : never;
 };
 
-export type StoresFromWritableStores<A extends WritableStores<any>> = {
-	[B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? Store<C, D> : never;
+export type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
+	[B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? Store<C, D> : never;
 };
 
 export class FilteredStore<A extends Record> {
@@ -1588,8 +1588,8 @@ export type StoreManagersFromStores<A extends Stores<any>> = {
 	[B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
 
-export type WritableStoresFromStoreManagers<A extends StoreManagers<any>> = {
-	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
+export type StoreInterfacesFromStoreManagers<A extends StoreManagers<any>> = {
+	[B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreInterface<C, D> : never;
 };
 
 export class Index<A extends Record> {
