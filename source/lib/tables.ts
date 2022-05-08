@@ -56,6 +56,7 @@ export class Table {
 	private detail: TableDetail;
 	private header: HashTableHeader;
 	private minimumCapacity: number;
+	private slotCount: number;
 
 	constructor(
 		blockManager: BlockManager,
@@ -79,6 +80,7 @@ export class Table {
 			this.header.table.value(table);
 		}
 		this.header.write(blockManager.makeWritable(this.bid), 0);
+		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / BlockReference.LENGTH);
 	}
 
 	private readSlot(index: number, slot: HashTableSlot): HashTableSlot {
@@ -92,7 +94,6 @@ export class Table {
 	}
 
 	private computeOptimalSlot(key: Array<Uint8Array>): number {
-		let slotCount = this.getSlotCount();
 		let hash = Buffer.alloc(6);
 		for (let keyPart of key) {
 			hash = libcrypto.createHash("sha256")
@@ -100,16 +101,15 @@ export class Table {
 				.update(keyPart)
 				.digest();
 		}
-		return hash.readUIntBE(0, 6) % slotCount;
+		return hash.readUIntBE(0, 6) % this.slotCount;
 	}
 
 	private doInsert(key: Array<Uint8Array>, value: number): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
-		let slotCount = this.getSlotCount();
 		let probeDistance = 0;
 		let slotIndex = optimalSlot;
 		let slot = new HashTableSlot();
-		for (let i = 0; i < slotCount; i++) {
+		for (let i = 0; i < this.slotCount; i++) {
 			this.readSlot(slotIndex, slot);
 			if (slot.value() === 0) {
 				slot.probeDistance(probeDistance);
@@ -128,18 +128,17 @@ export class Table {
 				value = slot.value();
 				probeDistance = slot.probeDistance();
 			}
-			slotIndex = (slotIndex + 1) % slotCount;
+			slotIndex = (slotIndex + 1) % this.slotCount;
 			probeDistance += 1;
 		}
 	}
 
 	private doLookup(key: Array<Uint8Array>): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
-		let slotCount = this.getSlotCount();
 		let probeDistance = 0;
 		let slotIndex = optimalSlot;
 		let slot = new HashTableSlot();
-		for (let i = 0; i < slotCount; i++) {
+		for (let i = 0; i < this.slotCount; i++) {
 			this.readSlot(slotIndex, slot);
 			let value = slot.value();
 			if (value === 0 || probeDistance > slot.probeDistance()) {
@@ -148,18 +147,17 @@ export class Table {
 			if (compareBuffers(this.detail.getKeyFromValue(value), key) === 0) {
 				return slotIndex;
 			}
-			slotIndex = (slotIndex + 1) % slotCount;
+			slotIndex = (slotIndex + 1) % this.slotCount;
 			probeDistance += 1;
 		}
 	}
 
 	private doRemove(key: Array<Uint8Array>): number | undefined {
 		let optimalSlot = this.computeOptimalSlot(key);
-		let slotCount = this.getSlotCount();
 		let probeDistance = 0;
 		let slotIndex = optimalSlot;
 		let slot = new HashTableSlot();
-		for (let i = 0; i < slotCount; i++) {
+		for (let i = 0; i < this.slotCount; i++) {
 			this.readSlot(slotIndex, slot);
 			let value = slot.value();
 			if (value === 0 || probeDistance > slot.probeDistance()) {
@@ -169,21 +167,15 @@ export class Table {
 				this.writeSlot(slotIndex, new HashTableSlot());
 				return slotIndex;
 			}
-			slotIndex = (slotIndex + 1) % slotCount;
+			slotIndex = (slotIndex + 1) % this.slotCount;
 			probeDistance += 1;
 		}
 	}
 
-	private getSlotCount(): number {
-		let blockSize = this.blockManager.getBlockSize(this.header.table.value());
-		return Math.floor(blockSize / BlockReference.LENGTH);
-	}
-
 	private propagateBackwards(slotIndex: number): void {
-		let slotCount = this.getSlotCount();
 		let slot = new HashTableSlot();
-		for (let i = 0; i < slotCount; i++) {
-			this.readSlot((slotIndex + 1) % slotCount, slot);
+		for (let i = 0; i < this.slotCount; i++) {
+			this.readSlot((slotIndex + 1) % this.slotCount, slot);
 			let probeDistance = slot.probeDistance();
 			if (probeDistance === 0) {
 				this.writeSlot(slotIndex, new HashTableSlot());
@@ -191,26 +183,25 @@ export class Table {
 			}
 			slot.probeDistance(probeDistance - 1);
 			this.writeSlot(slotIndex, slot);
-			slotIndex = (slotIndex + 1) % slotCount;
+			slotIndex = (slotIndex + 1) % this.slotCount;
 		}
 	}
 
 	private resizeIfNecessary(): void {
-		let slotCount = this.getSlotCount();
-		let currentLoadFactor = this.header.count.value() / slotCount;
-		let desiredSlotCount = slotCount;
+		let currentLoadFactor = this.header.count.value() / this.slotCount;
+		let desiredSlotCount = this.slotCount;
 		if (currentLoadFactor <= 0.25) {
-			desiredSlotCount = Math.max(Math.ceil(slotCount / 2), this.minimumCapacity);
+			desiredSlotCount = Math.max(Math.ceil(this.slotCount / 2), this.minimumCapacity);
 		}
 		if (currentLoadFactor >= 0.75) {
-			desiredSlotCount = slotCount * 2;
+			desiredSlotCount = this.slotCount * 2;
 		}
-		if (desiredSlotCount === slotCount) {
+		if (desiredSlotCount === this.slotCount) {
 			return;
 		}
 		let values = new Array<number>();
 		let slot = new HashTableSlot();
-		for (let i = 0; i < slotCount; i++) {
+		for (let i = 0; i < this.slotCount; i++) {
 			this.readSlot(i, slot);
 			let value = slot.value();
 			if (value !== 0) {
@@ -220,6 +211,7 @@ export class Table {
 		let minLength = desiredSlotCount * BlockReference.LENGTH;
 		this.blockManager.resizeBlock(this.header.table.value(), minLength);
 		this.blockManager.clearBlock(this.header.table.value());
+		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / BlockReference.LENGTH);
 		for (let value of values) {
 			let key = this.detail.getKeyFromValue(value);
 			this.doInsert(key, value);
@@ -228,9 +220,8 @@ export class Table {
 	}
 
 	* [Symbol.iterator](): Iterator<number> {
-		let slotCount = this.getSlotCount();
 		let slot = new HashTableSlot();
-		for (let i = 0; i < slotCount; i++) {
+		for (let i = 0; i < this.slotCount; i++) {
 			this.readSlot(i, slot);
 			let value = slot.value();
 			if (value !== 0) {
