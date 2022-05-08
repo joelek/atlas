@@ -472,4 +472,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate caching of tree branches for quick traversal.
 * Retain last block when resizing PagedFile and only clear affected bytes.
 * Create EntityManagers in SchemaManager.
-* Cached decoded records on a per-transaction basis.
+* Cached decoded records on a per-transaction basis. Readable transactions may re-use caches.
