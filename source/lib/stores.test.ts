@@ -1034,7 +1034,7 @@ test(`It should return the correct search results when names are ["Joel A Z", "J
 		name: "Joel A Z"
 	});
 	let observed = users.search("").map((record) => record.record.user_id);
-	let expected = ["User 1", "User 0", "User 2"] as Array<string>;
+	let expected = ["User 0", "User 1", "User 2"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
 

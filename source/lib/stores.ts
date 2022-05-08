@@ -1511,6 +1511,14 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>> {
+		if (query === "") {
+			return StreamIterable.of(this.filter(undefined, undefined, anchorKeysRecord, limit))
+				.map((record) => ({
+					record,
+					rank: 0
+				}))
+				.collect();
+		}
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
 		// TODO: Remove map when SearchIndexResult is removed.
 		let iterable = StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid)).map((entry) => {
