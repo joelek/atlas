@@ -20,6 +20,7 @@ export declare class Table {
     private detail;
     private header;
     private minimumCapacity;
+    private slotCount;
     constructor(blockManager: BlockManager, detail: TableDetail, options?: {
         bid?: number;
         minimumCapacity?: number;
@@ -30,7 +31,6 @@ export declare class Table {
     private doInsert;
     private doLookup;
     private doRemove;
-    private getSlotCount;
     private propagateBackwards;
     private resizeIfNecessary;
     [Symbol.iterator](): Iterator<number>;

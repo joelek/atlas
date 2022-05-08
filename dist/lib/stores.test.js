@@ -985,7 +985,7 @@ function makeUsersSearchIndex() {
         name: "Joel A Z"
     });
     let observed = users.search("").map((record) => record.record.user_id);
-    let expected = ["User 1", "User 0", "User 2"];
+    let expected = ["User 0", "User 1", "User 2"];
     assert.array.equals(observed, expected);
 });
 (0, test_1.test)(`It should return the correct search results when names are ["Joel A Z", "Joel Ek", "Joel A Z"] and query is "e".`, async (assert) => {

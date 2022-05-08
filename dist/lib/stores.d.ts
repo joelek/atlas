@@ -10,7 +10,7 @@ export declare type SearchResult<A extends Record> = {
     record: A;
     rank: number;
 };
-export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
+export interface StoreInterface<A extends Record, B extends RequiredKeys<A>> {
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
     insert(record: A): Promise<void>;
     length(): Promise<number>;
@@ -20,27 +20,15 @@ export interface WritableStore<A extends Record, B extends RequiredKeys<A>> {
     update(keysRecord: KeysRecord<A, B>): Promise<void>;
     vacate(): Promise<void>;
 }
-export declare type WritableStores<A> = {
-    [B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? WritableStore<C, D> : A[B];
+export declare type StoreInterfaces<A> = {
+    [B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? StoreInterface<C, D> : A[B];
 };
-export declare type WritableStoresFromStores<A extends Stores<any>> = {
-    [B in keyof A]: A[B] extends Store<infer C, infer D> ? WritableStore<C, D> : never;
+export declare type StoreInterfacesFromStores<A extends Stores<any>> = {
+    [B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreInterface<C, D> : never;
 };
-export declare type StoresFromWritableStores<A extends WritableStores<any>> = {
-    [B in keyof A]: A[B] extends WritableStore<infer C, infer D> ? Store<C, D> : never;
+export declare type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
+    [B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? Store<C, D> : never;
 };
-export declare class WritableStoreManager<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
-    private storeManager;
-    constructor(storeManager: StoreManager<A, B>);
-    filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]>;
-    insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]>;
-    length(...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]>;
-    lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]>;
-    remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]>;
-    search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]>;
-    update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]>;
-    vacate(...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]>;
-}
 export declare class FilteredStore<A extends Record> {
     private recordManager;
     private blockManager;
@@ -212,7 +200,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     length(): number;
     lookup(keysRecord: KeysRecord<A, B>): A;
     remove(keysRecord: KeysRecord<A, B>): void;
-    search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchIndexResult<A>>;
+    search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>>;
     update(keysRecord: KeysRecord<A, B>): void;
     vacate(): void;
     static construct<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(blockManager: BlockManager, options: {
@@ -229,8 +217,8 @@ export declare type StoreManagers<A> = {
 export declare type StoreManagersFromStores<A extends Stores<any>> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
-export declare type WritableStoresFromStoreManagers<A extends StoreManagers<any>> = {
-    [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? WritableStore<C, D> : never;
+export declare type StoreInterfacesFromStoreManagers<A extends StoreManagers<any>> = {
+    [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreInterface<C, D> : never;
 };
 export declare class Index<A extends Record> {
     keys: Keys<A>;
@@ -255,16 +243,3 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
 export declare type Stores<A> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];
 };
-export declare class OverridableWritableStore<A extends Record, B extends RequiredKeys<A>> implements WritableStore<A, B> {
-    private storeManager;
-    private overrides;
-    constructor(storeManager: StoreManager<A, B>, overrides: Partial<WritableStore<A, B>>);
-    filter(...parameters: Parameters<WritableStore<A, B>["filter"]>): ReturnType<WritableStore<A, B>["filter"]>;
-    insert(...parameters: Parameters<WritableStore<A, B>["insert"]>): ReturnType<WritableStore<A, B>["insert"]>;
-    length(...parameters: Parameters<WritableStore<A, B>["length"]>): ReturnType<WritableStore<A, B>["length"]>;
-    lookup(...parameters: Parameters<WritableStore<A, B>["lookup"]>): ReturnType<WritableStore<A, B>["lookup"]>;
-    remove(...parameters: Parameters<WritableStore<A, B>["remove"]>): ReturnType<WritableStore<A, B>["remove"]>;
-    search(...parameters: Parameters<WritableStore<A, B>["search"]>): ReturnType<WritableStore<A, B>["search"]>;
-    update(...parameters: Parameters<WritableStore<A, B>["update"]>): ReturnType<WritableStore<A, B>["update"]>;
-    vacate(...parameters: Parameters<WritableStore<A, B>["vacate"]>): ReturnType<WritableStore<A, B>["vacate"]>;
-}

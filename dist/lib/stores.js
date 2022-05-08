@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableStore = exports.Store = exports.SearchIndex = exports.Index = exports.StoreManager = exports.SearchIndexManagerV5 = exports.SearchIndexManagerV4 = exports.SearchIndexManagerV3 = exports.makeSeekableIterable = exports.SearchIndexManagerV2 = exports.SearchIndexManagerV1 = exports.getFirstTokenBefore = exports.getFirstCompletion = exports.IndexManager = exports.FilteredStore = exports.WritableStoreManager = void 0;
+exports.Store = exports.SearchIndex = exports.Index = exports.StoreManager = exports.SearchIndexManagerV5 = exports.SearchIndexManagerV4 = exports.SearchIndexManagerV3 = exports.makeSeekableIterable = exports.SearchIndexManagerV2 = exports.SearchIndexManagerV1 = exports.getFirstTokenBefore = exports.getFirstCompletion = exports.IndexManager = exports.FilteredStore = void 0;
 const bedrock = require("@joelek/bedrock");
 const streams_1 = require("./streams");
 const filters_1 = require("./filters");
@@ -10,44 +10,6 @@ const records_1 = require("./records");
 const trees_1 = require("./trees");
 const sorters_1 = require("../mod/sorters");
 const utils_1 = require("./utils");
-;
-class WritableStoreManager {
-    storeManager;
-    constructor(storeManager) {
-        this.storeManager = storeManager;
-    }
-    async filter(...parameters) {
-        return this.storeManager.filter(...parameters);
-    }
-    async insert(...parameters) {
-        return this.storeManager.insert(...parameters);
-    }
-    async length(...parameters) {
-        return this.storeManager.length(...parameters);
-    }
-    async lookup(...parameters) {
-        return this.storeManager.lookup(...parameters);
-    }
-    async remove(...parameters) {
-        return this.storeManager.remove(...parameters);
-    }
-    async search(...parameters) {
-        return this.storeManager.search(...parameters).map((entry) => {
-            let { record, rank } = { ...entry };
-            return {
-                record,
-                rank
-            };
-        });
-    }
-    async update(...parameters) {
-        return this.storeManager.update(...parameters);
-    }
-    async vacate(...parameters) {
-        return this.storeManager.vacate(...parameters);
-    }
-}
-exports.WritableStoreManager = WritableStoreManager;
 ;
 class FilteredStore {
     recordManager;
@@ -1419,8 +1381,23 @@ class StoreManager {
         }
     }
     search(query, anchorKeysRecord, limit) {
+        if (query === "") {
+            return streams_1.StreamIterable.of(this.filter(undefined, undefined, anchorKeysRecord, limit))
+                .map((record) => ({
+                record,
+                rank: 0
+            }))
+                .collect();
+        }
         let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-        let iterable = streams_1.StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid));
+        // TODO: Remove map when SearchIndexResult is removed.
+        let iterable = streams_1.StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid)).map((entry) => {
+            let { record, rank } = { ...entry };
+            return {
+                record,
+                rank
+            };
+        });
         if (limit != null) {
             iterable = iterable.limit(limit);
         }
@@ -1551,44 +1528,4 @@ class Store {
     }
 }
 exports.Store = Store;
-;
-class OverridableWritableStore {
-    storeManager;
-    overrides;
-    constructor(storeManager, overrides) {
-        this.storeManager = storeManager;
-        this.overrides = overrides;
-    }
-    async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
-    }
-    async insert(...parameters) {
-        return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
-    }
-    async length(...parameters) {
-        return this.overrides.length?.(...parameters) ?? this.storeManager.length(...parameters);
-    }
-    async lookup(...parameters) {
-        return this.overrides.lookup?.(...parameters) ?? this.storeManager.lookup(...parameters);
-    }
-    async remove(...parameters) {
-        return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
-    }
-    async search(...parameters) {
-        return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters).map((entry) => {
-            let { record, rank } = { ...entry };
-            return {
-                record,
-                rank
-            };
-        });
-    }
-    async update(...parameters) {
-        return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
-    }
-    async vacate(...parameters) {
-        return this.overrides.vacate?.(...parameters) ?? this.storeManager.vacate(...parameters);
-    }
-}
-exports.OverridableWritableStore = OverridableWritableStore;
 ;

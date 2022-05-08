@@ -4,6 +4,7 @@ exports.Context = exports.OperatorReference = exports.OrderReference = exports.Q
 const links_1 = require("./links");
 const stores_1 = require("./stores");
 const records_1 = require("./records");
+const transactions_1 = require("./transactions");
 const orders_1 = require("./orders");
 const files_1 = require("./files");
 const databases_1 = require("./databases");
@@ -255,7 +256,10 @@ class Context {
         let schemaManager = new schemas_1.SchemaManager();
         let database = new databases_1.Database(stores, links, queries);
         let databaseManager = schemaManager.createDatabaseManager(file, database);
-        let transactionManager = databaseManager.createTransactionManager(file);
+        let databaseStores = databaseManager.createDatabaseStores();
+        let databaseLinks = databaseManager.createDatabaseLinks();
+        let databaseQueries = databaseManager.createDatabaseQueries();
+        let transactionManager = new transactions_1.TransactionManager(file, databaseStores, databaseLinks, databaseQueries);
         return transactionManager;
     }
 }

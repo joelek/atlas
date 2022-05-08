@@ -1,22 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableLink = exports.Link = exports.LinkManager = exports.WritableLinkManager = void 0;
+exports.Link = exports.LinkManager = void 0;
 const filters_1 = require("./filters");
 const stores_1 = require("./stores");
-;
-class WritableLinkManager {
-    linkManager;
-    constructor(linkManager) {
-        this.linkManager = linkManager;
-    }
-    async filter(...parameters) {
-        return this.linkManager.filter(...parameters);
-    }
-    async lookup(...parameters) {
-        return this.linkManager.lookup(...parameters);
-    }
-}
-exports.WritableLinkManager = WritableLinkManager;
 ;
 class LinkManager {
     parent;
@@ -100,20 +86,4 @@ class Link {
     }
 }
 exports.Link = Link;
-;
-class OverridableWritableLink {
-    linkManager;
-    overrides;
-    constructor(linkManager, overrides) {
-        this.linkManager = linkManager;
-        this.overrides = overrides;
-    }
-    async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
-    }
-    async lookup(...parameters) {
-        return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);
-    }
-}
-exports.OverridableWritableLink = OverridableWritableLink;
 ;

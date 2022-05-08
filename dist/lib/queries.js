@@ -1,19 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OverridableWritableQuery = exports.Query = exports.QueryManager = exports.WritableQueryManager = void 0;
+exports.Query = exports.QueryManager = void 0;
 const operators_1 = require("./operators");
 const stores_1 = require("./stores");
-;
-class WritableQueryManager {
-    queryManager;
-    constructor(queryManager) {
-        this.queryManager = queryManager;
-    }
-    async filter(...parameters) {
-        return this.queryManager.filter(...parameters);
-    }
-}
-exports.WritableQueryManager = WritableQueryManager;
 ;
 class QueryManager {
     storeManager;
@@ -77,17 +66,4 @@ class Query {
     }
 }
 exports.Query = Query;
-;
-class OverridableWritableQuery {
-    queryManager;
-    overrides;
-    constructor(queryManager, overrides) {
-        this.queryManager = queryManager;
-        this.overrides = overrides;
-    }
-    async filter(...parameters) {
-        return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
-    }
-}
-exports.OverridableWritableQuery = OverridableWritableQuery;
 ;

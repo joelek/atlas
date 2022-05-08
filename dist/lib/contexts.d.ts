@@ -1,11 +1,12 @@
-import { Link, LinkManagersFromLinks, WritableLinksFromLinkManagers } from "./links";
-import { Store, StoreManagersFromStores, WritableStoresFromStoreManagers } from "./stores";
+import { Link, LinkManagersFromLinks } from "./links";
+import { Store, StoreManagersFromStores } from "./stores";
 import { Record, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order } from "./orders";
+import { DatabaseLinksFromLinkManagers, DatabaseQueriesFromQueryManagers, DatabaseStoresFromStorManagers } from "./databases";
 import { EqualityOperator, Operator } from "./operators";
 import { SubsetOf } from "./inference";
-import { Query, QueryManagersFromQueries, WritableQueriesFromQueryManagers } from "./queries";
+import { Query, QueryManagersFromQueries } from "./queries";
 export declare class FieldReference<A extends Field<any>> {
     private FieldReference;
 }
@@ -88,5 +89,5 @@ export declare class Context {
     createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>>;
     createDecreasingOrder<A extends Value>(): OrderReference<DecreasingOrder<A>>;
     createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>>;
-    createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<WritableStoresFromStoreManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, WritableLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, WritableQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;
+    createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<DatabaseStoresFromStorManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, DatabaseLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, DatabaseQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;
 }

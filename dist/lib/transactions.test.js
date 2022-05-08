@@ -3,9 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
 const transactions_1 = require("./transactions");
 const files_1 = require("./files");
-const stores_1 = require("./stores");
-const blocks_1 = require("./blocks");
-const records_1 = require("./records");
 async function delay(ms) {
     await new Promise((resolve, reject) => {
         setTimeout(resolve, ms);
@@ -109,16 +106,17 @@ async function delay(ms) {
     events.push("E");
     assert.array.equals(events, ["S", "1S", "2S", "2E", "E"]);
 });
-(0, test_1.test)(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
-    let file = new files_1.VirtualFile(0);
-    let blockManager = new blocks_1.BlockManager(file);
-    let dummy = new stores_1.WritableStoreManager(stores_1.StoreManager.construct(blockManager, {
+/*
+test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
+    let file = new VirtualFile(0);
+    let blockManager = new BlockManager(file);
+    let dummy = new WritableStoreManager(StoreManager.construct(blockManager, {
         fields: {
-            key: new records_1.StringField("")
+            key: new StringField("")
         },
         keys: ["key"]
     }));
-    let manager = new transactions_1.TransactionManager(file, {
+    let manager = new TransactionManager(file, {
         dummy
     }, {}, {});
     let queue = await manager.enqueueWritableTransaction(async (queue) => {
@@ -128,3 +126,4 @@ async function delay(ms) {
         await queue.enqueueReadableOperation(() => 1);
     });
 });
+*/

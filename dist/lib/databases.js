@@ -1,10 +1,69 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Database = exports.DatabaseManager = void 0;
-const links_1 = require("./links");
-const queries_1 = require("./queries");
-const stores_1 = require("./stores");
-const transactions_1 = require("./transactions");
+exports.Database = exports.DatabaseManager = exports.DatabaseQuery = exports.DatabaseLink = exports.DatabaseStore = void 0;
+class DatabaseStore {
+    storeManager;
+    overrides;
+    constructor(storeManager, overrides) {
+        this.storeManager = storeManager;
+        this.overrides = overrides;
+    }
+    async filter(...parameters) {
+        return this.overrides.filter?.(...parameters) ?? this.storeManager.filter(...parameters);
+    }
+    async insert(...parameters) {
+        return this.overrides.insert?.(...parameters) ?? this.storeManager.insert(...parameters);
+    }
+    async length(...parameters) {
+        return this.overrides.length?.(...parameters) ?? this.storeManager.length(...parameters);
+    }
+    async lookup(...parameters) {
+        return this.overrides.lookup?.(...parameters) ?? this.storeManager.lookup(...parameters);
+    }
+    async remove(...parameters) {
+        return this.overrides.remove?.(...parameters) ?? this.storeManager.remove(...parameters);
+    }
+    async search(...parameters) {
+        return this.overrides.search?.(...parameters) ?? this.storeManager.search(...parameters);
+    }
+    async update(...parameters) {
+        return this.overrides.update?.(...parameters) ?? this.storeManager.update(...parameters);
+    }
+    async vacate(...parameters) {
+        return this.overrides.vacate?.(...parameters) ?? this.storeManager.vacate(...parameters);
+    }
+}
+exports.DatabaseStore = DatabaseStore;
+;
+class DatabaseLink {
+    linkManager;
+    overrides;
+    constructor(linkManager, overrides) {
+        this.linkManager = linkManager;
+        this.overrides = overrides;
+    }
+    async filter(...parameters) {
+        return this.overrides.filter?.(...parameters) ?? this.linkManager.filter(...parameters);
+    }
+    async lookup(...parameters) {
+        return this.overrides.lookup?.(...parameters) ?? this.linkManager.lookup(...parameters);
+    }
+}
+exports.DatabaseLink = DatabaseLink;
+;
+class DatabaseQuery {
+    queryManager;
+    overrides;
+    constructor(queryManager, overrides) {
+        this.queryManager = queryManager;
+        this.overrides = overrides;
+    }
+    async filter(...parameters) {
+        return this.overrides.filter?.(...parameters) ?? this.queryManager.filter(...parameters);
+    }
+}
+exports.DatabaseQuery = DatabaseQuery;
+;
 class DatabaseManager {
     storeManagers;
     linkManagers;
@@ -95,39 +154,33 @@ class DatabaseManager {
             this.linksWhereStoreIsChild.set(storeManager, linksWhereStoreIsChild);
         }
     }
-    createTransactionManager(file) {
-        let writableStores = this.createWritableStores();
-        let writableLinks = this.createWritableLinks();
-        let writableQueries = this.createWritableQueries();
-        return new transactions_1.TransactionManager(file, writableStores, writableLinks, writableQueries);
-    }
-    createWritableStores() {
-        let writableStores = {};
+    createDatabaseStores() {
+        let databaseStores = {};
         for (let key in this.storeManagers) {
             let storeManager = this.storeManagers[key];
-            writableStores[key] = new stores_1.OverridableWritableStore(storeManager, {
+            databaseStores[key] = new DatabaseStore(storeManager, {
                 insert: async (record) => this.doInsert(storeManager, [record]),
                 remove: async (record) => this.doRemove(storeManager, [record]),
                 vacate: async () => this.doVacate(storeManager, [])
             });
         }
-        return writableStores;
+        return databaseStores;
     }
-    createWritableLinks() {
-        let writableLinks = {};
+    createDatabaseLinks() {
+        let databaseLinks = {};
         for (let key in this.linkManagers) {
             let linkManager = this.linkManagers[key];
-            writableLinks[key] = new links_1.OverridableWritableLink(linkManager, {});
+            databaseLinks[key] = new DatabaseLink(linkManager, {});
         }
-        return writableLinks;
+        return databaseLinks;
     }
-    createWritableQueries() {
-        let writableQueries = {};
+    createDatabaseQueries() {
+        let databaseQueries = {};
         for (let key in this.queryManagers) {
             let queryManager = this.queryManagers[key];
-            writableQueries[key] = new queries_1.OverridableWritableQuery(queryManager, {});
+            databaseQueries[key] = new DatabaseQuery(queryManager, {});
         }
-        return writableQueries;
+        return databaseQueries;
     }
     enforceStoreConsistency(storeNames) {
         for (let key of storeNames) {

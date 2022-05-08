@@ -15,7 +15,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores = databaseManager.createWritableStores();
+    let stores = databaseManager.createDatabaseStores();
     await stores.users.insert({
         key: "0",
         name: "A"
@@ -38,7 +38,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores1 = databaseManager1.createWritableStores();
+    let stores1 = databaseManager1.createDatabaseStores();
     await stores1.users.insert({
         key: "0",
         name: "A"
@@ -49,7 +49,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores2 = databaseManager2.createWritableStores();
+    let stores2 = databaseManager2.createDatabaseStores();
     let observed = await stores2.users.lookup({
         key: "0"
     });
@@ -68,7 +68,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores1 = databaseManager1.createWritableStores();
+    let stores1 = databaseManager1.createDatabaseStores();
     await stores1.users.insert({
         key: "0",
         name: "A"
@@ -80,7 +80,7 @@ const test_1 = require("./test");
             lastname: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores2 = databaseManager2.createWritableStores();
+    let stores2 = databaseManager2.createDatabaseStores();
     let observed = await stores2.users.lookup({
         key: "0"
     });
@@ -101,7 +101,7 @@ const test_1 = require("./test");
             lastname: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores1 = databaseManager1.createWritableStores();
+    let stores1 = databaseManager1.createDatabaseStores();
     await stores1.users.insert({
         key: "0",
         name: "A",
@@ -113,7 +113,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores2 = databaseManager2.createWritableStores();
+    let stores2 = databaseManager2.createDatabaseStores();
     let observed = await stores2.users.lookup({
         key: "0"
     });
@@ -132,7 +132,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores1 = databaseManager1.createWritableStores();
+    let stores1 = databaseManager1.createDatabaseStores();
     await stores1.users.insert({
         key: "0",
         name: "A"
@@ -143,7 +143,7 @@ const test_1 = require("./test");
             name: new records_1.BooleanField(false)
         }, ["key"], {})
     }));
-    let stores2 = databaseManager2.createWritableStores();
+    let stores2 = databaseManager2.createDatabaseStores();
     let observed = await stores2.users.lookup({
         key: "0"
     });
@@ -162,7 +162,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["key"], {})
     }));
-    let stores1 = databaseManager1.createWritableStores();
+    let stores1 = databaseManager1.createDatabaseStores();
     await stores1.users.insert({
         key: "0",
         name: "A"
@@ -173,7 +173,7 @@ const test_1 = require("./test");
             name: new records_1.StringField("")
         }, ["name"], {})
     }));
-    let stores2 = databaseManager2.createWritableStores();
+    let stores2 = databaseManager2.createDatabaseStores();
     let observed = await stores2.users.lookup({
         name: "A"
     });
