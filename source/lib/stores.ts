@@ -1493,6 +1493,10 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return record;
 	}
 
+	reload(): void {
+		this.table.reload();
+	}
+
 	remove(keysRecord: KeysRecord<A, B>): void {
 		let key = this.recordManager.encodeKeys(this.keys, keysRecord);
 		let index = this.table.lookup(key);

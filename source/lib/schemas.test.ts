@@ -1,3 +1,4 @@
+import { BlockManager } from "./blocks";
 import { Database } from "./databases";
 import { VirtualFile } from "./files";
 import { StringField, BooleanField } from "./records";
@@ -7,8 +8,9 @@ import { test } from "./test";
 
 test(`It should be able to construct a new database manager.`, async (assert) => {
 	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
-	let databaseManager = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -31,8 +33,9 @@ test(`It should be able to construct a new database manager.`, async (assert) =>
 
 test(`It should be able to construct an existing database manager with an identical schema.`, async (assert) => {
 	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
-	let databaseManager1 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager1 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -43,7 +46,7 @@ test(`It should be able to construct an existing database manager with an identi
 		key: "0",
 		name: "A"
 	});
-	let databaseManager2 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager2 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -62,8 +65,9 @@ test(`It should be able to construct an existing database manager with an identi
 
 test(`It should be able to construct an existing database manager when one field is added to the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
-	let databaseManager1 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager1 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -74,7 +78,7 @@ test(`It should be able to construct an existing database manager when one field
 		key: "0",
 		name: "A"
 	});
-	let databaseManager2 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager2 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField(""),
@@ -95,8 +99,9 @@ test(`It should be able to construct an existing database manager when one field
 
 test(`It should be able to construct an existing database manager when one field is removed from the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
-	let databaseManager1 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager1 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField(""),
@@ -109,7 +114,7 @@ test(`It should be able to construct an existing database manager when one field
 		name: "A",
 		lastname: "B"
 	});
-	let databaseManager2 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager2 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -128,8 +133,9 @@ test(`It should be able to construct an existing database manager when one field
 
 test(`It should be able to construct an existing database manager when one field is changed in the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
-	let databaseManager1 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager1 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -140,7 +146,7 @@ test(`It should be able to construct an existing database manager when one field
 		key: "0",
 		name: "A"
 	});
-	let databaseManager2 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager2 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new BooleanField(false)
@@ -159,8 +165,9 @@ test(`It should be able to construct an existing database manager when one field
 
 test(`It should be able to construct an existing database manager when the keys have changed in the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
-	let databaseManager1 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager1 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")
@@ -171,7 +178,7 @@ test(`It should be able to construct an existing database manager when the keys 
 		key: "0",
 		name: "A"
 	});
-	let databaseManager2 = schemaManager.createDatabaseManager(file, new Database({
+	let databaseManager2 = schemaManager.createDatabaseManager(file, blockManager, new Database({
 		users: new Store({
 			key: new StringField(""),
 			name: new StringField("")

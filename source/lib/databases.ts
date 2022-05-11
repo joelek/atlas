@@ -288,6 +288,12 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			this.doRemove(child, records);
 		}
 	}
+
+	reload(): void {
+		for (let key in this.storeManagers) {
+			this.storeManagers[key].reload();
+		}
+	}
 };
 
 export class Database<A extends Stores<any>, B extends Links<any>, C extends Queries<any>> {

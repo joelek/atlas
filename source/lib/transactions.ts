@@ -113,6 +113,10 @@ export type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
 
 export type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
 
+export interface TransactionManagerDetail {
+	onDiscard?(): void;
+};
+
 export class TransactionManager<A extends DatabaseStores<any>, B extends DatabaseLinks<any>, C extends DatabaseQueries<any>> {
 	private file: File;
 	private readableTransactionLock: Promise<any>;
@@ -120,6 +124,7 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 	readonly stores: Readonly<TransactionalStoresFromDatabaseStores<A>>;
 	readonly links: Readonly<TransactionalLinksFromDatabaseLinks<B>>;
 	readonly queries: Readonly<TransactionalQueriesFromDatabaseQueries<C>>;
+	private detail?: TransactionManagerDetail;
 
 	private createTransactionalStores(databaseStores: A): TransactionalStoresFromDatabaseStores<A> {
 		let transactionalStores = {} as TransactionalStoresFromDatabaseStores<any>;
@@ -145,13 +150,14 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 		return transactionalQueries;
 	}
 
-	constructor(file: File, databaseStores: A, databaseLinks: B, databaseQueries: C) {
+	constructor(file: File, databaseStores: A, databaseLinks: B, databaseQueries: C, detail?: TransactionManagerDetail) {
 		this.file = file;
 		this.readableTransactionLock = Promise.resolve();
 		this.writableTransactionLock = Promise.resolve();
 		this.stores = this.createTransactionalStores(databaseStores);
 		this.links = this.createTransactionalLinks(databaseLinks);
 		this.queries = this.createTransactionalQueries(databaseQueries);
+		this.detail = detail;
 	}
 
 	async enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D> {
@@ -188,6 +194,7 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 			return value;
 		} catch (error) {
 			this.file.discard();
+			this.detail?.onDiscard?.();
 			throw error;
 		} finally {
 			queue.close();

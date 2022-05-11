@@ -3,7 +3,9 @@ import { TransactionManager } from "./transactions";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./stores";
 import { BlockManager } from "./blocks";
-import { StringField } from "./records";
+import { RecordManager, StringField } from "./records";
+import { DatabaseStore } from "./databases";
+import { Table } from "./tables";
 
 async function delay(ms: number): Promise<void> {
 	await new Promise((resolve, reject) => {
@@ -131,3 +133,46 @@ test(`It should throw an error when using transaction objects outside of the tra
 	});
 });
 */
+test(`It should reload entities with cached values when a transaction fails to complete.`, async (assert) => {
+	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
+	let fields = {
+		key: new StringField("")
+	};
+	let keys = ["key"] as ["key"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	}, {
+		minimumCapacity: 2
+	});
+	let storeManager = new StoreManager(blockManager, fields, keys, {}, table, [], []);
+	let databaseStore = new DatabaseStore(storeManager, {});
+	let transactionManager = new TransactionManager(file, {
+		transactionalStore: databaseStore
+	}, {}, {}, {
+		onDiscard: () => {
+			blockManager.reload();
+			storeManager.reload();
+		}
+	});
+	storeManager.insert({
+		key: "1"
+	});
+	file.persist();
+	try {
+		await transactionManager.enqueueWritableTransaction(async (queue) => {
+			await transactionManager.stores.transactionalStore.insert(queue, {
+				key: "2"
+			});
+			throw "";
+		});
+	} catch (error) {}
+	let observed = Array.from(storeManager).map((record) => record.key);
+	let expected = ["1"];
+	assert.array.equals(observed, expected);
+});

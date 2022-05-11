@@ -354,6 +354,10 @@ export class BlockManager {
 		return data;
 	}
 
+	reload(): void {
+		this.header.read(this.file, 0);
+	}
+
 	resizeBlock(idOne: number, minLength: number): void {
 		let headerOne = new BlockHeader();
 		this.readBlockHeader(idOne, headerOne, false);

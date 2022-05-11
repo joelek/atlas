@@ -1071,8 +1071,7 @@ export class SchemaManager {
 
 	constructor() {}
 
-	createDatabaseManager<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(file: File, database: Database<A, B, C>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>> {
-		let blockManager = new BlockManager(file);
+	createDatabaseManager<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(file: File, blockManager: BlockManager, database: Database<A, B, C>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>> {
 		if (blockManager.getBlockCount() === 0) {
 			this.initializeDatabase(blockManager);
 		}

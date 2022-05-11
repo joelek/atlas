@@ -262,6 +262,11 @@ export class Table {
 		return slot.value();
 	}
 
+	reload(): void {
+		this.header.read(this.blockManager.makeReadable(this.bid), 0);
+		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / BlockReference.LENGTH);
+	}
+
 	remove(key: Array<Uint8Array>): boolean {
 		let slotIndex = this.doRemove(key);
 		if (slotIndex == null) {

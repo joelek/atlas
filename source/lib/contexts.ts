@@ -9,6 +9,7 @@ import { EqualityOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
 import { Query, QueryManagersFromQueries, QueryInterfacesFromQueryManagers } from "./queries";
+import { BlockManager } from "./blocks";
 
 export class FieldReference<A extends Field<any>> {
 	private FieldReference!: "FieldReference";
@@ -297,6 +298,7 @@ export class Context {
 
 	createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<DatabaseStoresFromStorManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, DatabaseLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, DatabaseQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>> {
 		let file = this.createFile(path);
+		let blockManager = new BlockManager(file);
 		let stores = {} as StoresFromStoreReferences<A>;
 		for (let key in storeReferences) {
 			stores[key] = this.getStore(storeReferences[key]) as StoresFromStoreReferences<A>[keyof A];
@@ -311,11 +313,16 @@ export class Context {
 		}
 		let schemaManager = new SchemaManager();
 		let database = new Database(stores, links, queries);
-		let databaseManager = schemaManager.createDatabaseManager(file, database);
+		let databaseManager = schemaManager.createDatabaseManager(file, blockManager, database);
 		let databaseStores = databaseManager.createDatabaseStores();
 		let databaseLinks = databaseManager.createDatabaseLinks();
 		let databaseQueries = databaseManager.createDatabaseQueries();
-		let transactionManager = new TransactionManager(file, databaseStores, databaseLinks, databaseQueries);
+		let transactionManager = new TransactionManager(file, databaseStores, databaseLinks, databaseQueries, {
+			onDiscard: () => {
+				blockManager.reload();
+				databaseManager.reload();
+			}
+		});
 		return transactionManager;
 	}
 };
