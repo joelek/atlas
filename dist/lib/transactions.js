@@ -80,6 +80,7 @@ class TransactionalQuery {
 }
 exports.TransactionalQuery = TransactionalQuery;
 ;
+;
 class TransactionManager {
     file;
     readableTransactionLock;
@@ -87,6 +88,7 @@ class TransactionManager {
     stores;
     links;
     queries;
+    detail;
     createTransactionalStores(databaseStores) {
         let transactionalStores = {};
         for (let key in databaseStores) {
@@ -108,13 +110,14 @@ class TransactionManager {
         }
         return transactionalQueries;
     }
-    constructor(file, databaseStores, databaseLinks, databaseQueries) {
+    constructor(file, databaseStores, databaseLinks, databaseQueries, detail) {
         this.file = file;
         this.readableTransactionLock = Promise.resolve();
         this.writableTransactionLock = Promise.resolve();
         this.stores = this.createTransactionalStores(databaseStores);
         this.links = this.createTransactionalLinks(databaseLinks);
         this.queries = this.createTransactionalQueries(databaseQueries);
+        this.detail = detail;
     }
     async enqueueReadableTransaction(transaction) {
         let queue = new utils_1.PromiseQueue();
@@ -152,6 +155,7 @@ class TransactionManager {
         }
         catch (error) {
             this.file.discard();
+            this.detail?.onDiscard?.();
             throw error;
         }
         finally {

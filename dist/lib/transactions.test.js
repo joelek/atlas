@@ -3,6 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("./test");
 const transactions_1 = require("./transactions");
 const files_1 = require("./files");
+const stores_1 = require("./stores");
+const blocks_1 = require("./blocks");
+const records_1 = require("./records");
+const databases_1 = require("./databases");
+const tables_1 = require("./tables");
 async function delay(ms) {
     await new Promise((resolve, reject) => {
         setTimeout(resolve, ms);
@@ -127,3 +132,47 @@ test(`It should throw an error when using transaction objects outside of the tra
     });
 });
 */
+(0, test_1.test)(`It should reload entities with cached values when a transaction fails to complete.`, async (assert) => {
+    let file = new files_1.VirtualFile(0);
+    let blockManager = new blocks_1.BlockManager(file);
+    let fields = {
+        key: new records_1.StringField("")
+    };
+    let keys = ["key"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    }, {
+        minimumCapacity: 2
+    });
+    let storeManager = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], []);
+    let databaseStore = new databases_1.DatabaseStore(storeManager, {});
+    let transactionManager = new transactions_1.TransactionManager(file, {
+        transactionalStore: databaseStore
+    }, {}, {}, {
+        onDiscard: () => {
+            blockManager.reload();
+            storeManager.reload();
+        }
+    });
+    storeManager.insert({
+        key: "1"
+    });
+    file.persist();
+    try {
+        await transactionManager.enqueueWritableTransaction(async (queue) => {
+            await transactionManager.stores.transactionalStore.insert(queue, {
+                key: "2"
+            });
+            throw "";
+        });
+    }
+    catch (error) { }
+    let observed = Array.from(storeManager).map((record) => record.key);
+    let expected = ["1"];
+    assert.array.equals(observed, expected);
+});

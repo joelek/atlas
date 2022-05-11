@@ -3,6 +3,7 @@ import { Database, DatabaseManager } from "./databases";
 import { File } from "./files";
 import { Links, LinkManagersFromLinks } from "./links";
 import { Stores, StoreManagersFromStores } from "./stores";
+import { BlockManager } from "./blocks";
 import { Queries, QueryManagersFromQueries } from "./queries";
 export declare const BigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BigIntField";
@@ -558,5 +559,5 @@ export declare class SchemaManager {
     private getDirtyStoreNames;
     private getDirtyLinkNames;
     constructor();
-    createDatabaseManager<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(file: File, database: Database<A, B, C>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>>;
+    createDatabaseManager<A extends Stores<any>, B extends Links<any>, C extends Queries<any>>(file: File, blockManager: BlockManager, database: Database<A, B, C>): DatabaseManager<StoreManagersFromStores<A>, LinkManagersFromLinks<B>, QueryManagersFromQueries<C>>;
 }

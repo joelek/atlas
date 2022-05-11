@@ -241,6 +241,10 @@ class Table {
         this.readSlot(slotIndex, slot);
         return slot.value();
     }
+    reload() {
+        this.header.read(this.blockManager.makeReadable(this.bid), 0);
+        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / blocks_1.BlockReference.LENGTH);
+    }
     remove(key) {
         let slotIndex = this.doRemove(key);
         if (slotIndex == null) {

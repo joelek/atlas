@@ -11,6 +11,7 @@ const databases_1 = require("./databases");
 const operators_1 = require("./operators");
 const schemas_1 = require("./schemas");
 const queries_1 = require("./queries");
+const blocks_1 = require("./blocks");
 class FieldReference {
     FieldReference;
 }
@@ -241,6 +242,7 @@ class Context {
     }
     createTransactionManager(path, storeReferences, linkReferences, queryReferences) {
         let file = this.createFile(path);
+        let blockManager = new blocks_1.BlockManager(file);
         let stores = {};
         for (let key in storeReferences) {
             stores[key] = this.getStore(storeReferences[key]);
@@ -255,11 +257,16 @@ class Context {
         }
         let schemaManager = new schemas_1.SchemaManager();
         let database = new databases_1.Database(stores, links, queries);
-        let databaseManager = schemaManager.createDatabaseManager(file, database);
+        let databaseManager = schemaManager.createDatabaseManager(file, blockManager, database);
         let databaseStores = databaseManager.createDatabaseStores();
         let databaseLinks = databaseManager.createDatabaseLinks();
         let databaseQueries = databaseManager.createDatabaseQueries();
-        let transactionManager = new transactions_1.TransactionManager(file, databaseStores, databaseLinks, databaseQueries);
+        let transactionManager = new transactions_1.TransactionManager(file, databaseStores, databaseLinks, databaseQueries, {
+            onDiscard: () => {
+                blockManager.reload();
+                databaseManager.reload();
+            }
+        });
         return transactionManager;
     }
 }

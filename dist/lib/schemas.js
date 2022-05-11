@@ -8,7 +8,6 @@ const links_1 = require("./links");
 const orders_1 = require("./orders");
 const records_1 = require("./records");
 const stores_1 = require("./stores");
-const blocks_1 = require("./blocks");
 const queries_1 = require("./queries");
 const operators_1 = require("./operators");
 const trees_1 = require("./trees");
@@ -890,8 +889,7 @@ class SchemaManager {
         return names;
     }
     constructor() { }
-    createDatabaseManager(file, database) {
-        let blockManager = new blocks_1.BlockManager(file);
+    createDatabaseManager(file, blockManager, database) {
         if (blockManager.getBlockCount() === 0) {
             this.initializeDatabase(blockManager);
         }

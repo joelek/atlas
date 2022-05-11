@@ -241,6 +241,11 @@ class DatabaseManager {
             this.doRemove(child, records);
         }
     }
+    reload() {
+        for (let key in this.storeManagers) {
+            this.storeManagers[key].reload();
+        }
+    }
 }
 exports.DatabaseManager = DatabaseManager;
 ;

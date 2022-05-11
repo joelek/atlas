@@ -1364,6 +1364,9 @@ class StoreManager {
         let record = this.recordManager.decode(buffer);
         return record;
     }
+    reload() {
+        this.table.reload();
+    }
     remove(keysRecord) {
         let key = this.recordManager.encodeKeys(this.keys, keysRecord);
         let index = this.table.lookup(key);

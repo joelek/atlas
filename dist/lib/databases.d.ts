@@ -65,6 +65,7 @@ export declare class DatabaseManager<A extends StoreManagers<any>, B extends Lin
     enforceStoreConsistency<C extends Keys<A>>(storeNames: [...C]): void;
     enforceLinkConsistency<D extends Keys<B>>(linkNames: [...D]): void;
     enforceConsistency<C extends Keys<A>, D extends Keys<B>>(storeNames: [...C], linkNames: [...D]): void;
+    reload(): void;
 }
 export declare class Database<A extends Stores<any>, B extends Links<any>, C extends Queries<any>> {
     stores: A;

@@ -49,6 +49,9 @@ export declare type TransactionalQueriesFromDatabaseQueries<A extends DatabaseQu
 };
 export declare type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
 export declare type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
+export interface TransactionManagerDetail {
+    onDiscard?(): void;
+}
 export declare class TransactionManager<A extends DatabaseStores<any>, B extends DatabaseLinks<any>, C extends DatabaseQueries<any>> {
     private file;
     private readableTransactionLock;
@@ -56,10 +59,11 @@ export declare class TransactionManager<A extends DatabaseStores<any>, B extends
     readonly stores: Readonly<TransactionalStoresFromDatabaseStores<A>>;
     readonly links: Readonly<TransactionalLinksFromDatabaseLinks<B>>;
     readonly queries: Readonly<TransactionalQueriesFromDatabaseQueries<C>>;
+    private detail?;
     private createTransactionalStores;
     private createTransactionalLinks;
     private createTransactionalQueries;
-    constructor(file: File, databaseStores: A, databaseLinks: B, databaseQueries: C);
+    constructor(file: File, databaseStores: A, databaseLinks: B, databaseQueries: C, detail?: TransactionManagerDetail);
     enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D>;
     enqueueWritableTransaction<D>(transaction: WritableTransaction<D>): Promise<D>;
 }

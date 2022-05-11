@@ -64,6 +64,7 @@ export declare class BlockManager {
     makeReadable(id: number): Readable;
     makeWritable(id: number): Writable;
     readBlock(id: number, data?: Uint8Array, blockOffset?: number): Uint8Array;
+    reload(): void;
     resizeBlock(idOne: number, minLength: number): void;
     setBlockFlag(id: number, bit: number, value: boolean): void;
     swapBlocks(idOne: number, idTwo: number): void;

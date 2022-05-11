@@ -199,6 +199,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     insert(record: A): void;
     length(): number;
     lookup(keysRecord: KeysRecord<A, B>): A;
+    reload(): void;
     remove(keysRecord: KeysRecord<A, B>): void;
     search(query: string, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<SearchResult<A>>;
     update(keysRecord: KeysRecord<A, B>): void;
