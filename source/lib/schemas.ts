@@ -308,37 +308,37 @@ export class SchemaManager {
 			return new BigIntField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableBigIntFieldSchema, fieldSchema)) {
-			return new NullableBigIntField(fieldSchema.defaultValue);
+			return new NullableBigIntField(fieldSchema.defaultValue as bigint | null);
 		}
 		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
 			return new BinaryField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableBinaryFieldSchema, fieldSchema)) {
-			return new NullableBinaryField(fieldSchema.defaultValue);
+			return new NullableBinaryField(fieldSchema.defaultValue as Uint8Array | null);
 		}
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
 			return new BooleanField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableBooleanFieldSchema, fieldSchema)) {
-			return new NullableBooleanField(fieldSchema.defaultValue);
+			return new NullableBooleanField(fieldSchema.defaultValue as boolean | null);
 		}
 		if (isSchemaCompatible(IntegerFieldSchema, fieldSchema)) {
 			return new IntegerField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableIntegerFieldSchema, fieldSchema)) {
-			return new NullableIntegerField(fieldSchema.defaultValue);
+			return new NullableIntegerField(fieldSchema.defaultValue as number | null);
 		}
 		if (isSchemaCompatible(NumberFieldSchema, fieldSchema)) {
 			return new NumberField(fieldSchema.defaultValue);
 		}
 		if (isSchemaCompatible(NullableNumberFieldSchema, fieldSchema)) {
-			return new NullableNumberField(fieldSchema.defaultValue);
+			return new NullableNumberField(fieldSchema.defaultValue as number | null);
 		}
 		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
 			return new StringField(fieldSchema.defaultValue, fieldSchema.searchable);
 		}
 		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
-			return new NullableStringField(fieldSchema.defaultValue, fieldSchema.searchable);
+			return new NullableStringField(fieldSchema.defaultValue as string | null, fieldSchema.searchable);
 		}
 		throw `Expected code to be unreachable!`;
 	}

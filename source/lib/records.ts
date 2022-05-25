@@ -51,7 +51,7 @@ export class BigIntField extends Field<bigint> {
 
 export class NullableBigIntField extends Field<bigint | null> {
 	constructor(defaultValue: bigint | null) {
-		super(bedrock.codecs.Union.of(
+		super(bedrock.codecs.Union.of<[bigint, null]>(
 			bedrock.codecs.BigInt,
 			bedrock.codecs.Null
 		), defaultValue);
@@ -66,7 +66,7 @@ export class BinaryField extends Field<Uint8Array> {
 
 export class NullableBinaryField extends Field<Uint8Array | null> {
 	constructor(defaultValue: Uint8Array | null) {
-		super(bedrock.codecs.Union.of(
+		super(bedrock.codecs.Union.of<[Uint8Array, null]>(
 			bedrock.codecs.Binary,
 			bedrock.codecs.Null
 		), defaultValue);
@@ -81,7 +81,7 @@ export class BooleanField extends Field<boolean> {
 
 export class NullableBooleanField extends Field<boolean | null> {
 	constructor(defaultValue: boolean | null) {
-		super(bedrock.codecs.Union.of(
+		super(bedrock.codecs.Union.of<[boolean, null]>(
 			bedrock.codecs.Boolean,
 			bedrock.codecs.Null
 		), defaultValue);
@@ -96,7 +96,7 @@ export class IntegerField extends Field<number> {
 
 export class NullableIntegerField extends Field<number | null> {
 	constructor(defaultValue: number | null) {
-		super(bedrock.codecs.Union.of(
+		super(bedrock.codecs.Union.of<[number, null]>(
 			bedrock.codecs.Integer,
 			bedrock.codecs.Null
 		), defaultValue);
@@ -111,7 +111,7 @@ export class NumberField extends Field<number> {
 
 export class NullableNumberField extends Field<number | null> {
 	constructor(defaultValue: number | null) {
-		super(bedrock.codecs.Union.of(
+		super(bedrock.codecs.Union.of<[number, null]>(
 			bedrock.codecs.Number,
 			bedrock.codecs.Null
 		), defaultValue);
@@ -126,7 +126,7 @@ export class StringField extends Field<string> {
 
 export class NullableStringField extends Field<string | null> {
 	constructor(defaultValue: string | null, searchable?: boolean) {
-		super(bedrock.codecs.Union.of(
+		super(bedrock.codecs.Union.of<[string, null]>(
 			bedrock.codecs.String,
 			bedrock.codecs.Null
 		), defaultValue, searchable);
@@ -141,7 +141,7 @@ export class RecordManager<A extends Record> {
 	constructor(fields: Fields<A>) {
 		this.fields = fields;
 		this.tupleKeys = Object.keys(fields).sort();
-		this.tupleCodec = bedrock.codecs.Tuple.of(...this.tupleKeys.map((key) => fields[key].getCodec()));
+		this.tupleCodec = bedrock.codecs.Tuple.of<Array<A[Key<A>]>>(...this.tupleKeys.map((key) => fields[key].getCodec()));
 	}
 
 	decode(buffer: Uint8Array): A {
