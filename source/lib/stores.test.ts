@@ -1,4 +1,4 @@
-import { Index, IndexManager, SearchIndexManagerV5, Store, StoreManager } from "./stores";
+import { Index, IndexManager, SearchIndexManager, Store, StoreManager } from "./stores";
 import { IntegerField, RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
@@ -828,7 +828,7 @@ function makeUsersSearchIndex() {
 			return recordManager.encodeKeys(keys, record);
 		}
 	});
-	let index = new SearchIndexManagerV5(recordManager, blockManager, "name");
+	let index = new SearchIndexManager(recordManager, blockManager, "name");
 	let users = new StoreManager(blockManager, fields, keys, {}, table, [], [index]);
 	return {
 		users,

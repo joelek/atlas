@@ -271,7 +271,7 @@ export function makeSeekableIterable(tree: RadixTree, value: number): SeekableIt
 	};
 };
 
-export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
+export class SearchIndexManager<A extends Record, B extends Key<A>> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
 	private key: B;
@@ -463,7 +463,7 @@ export class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
 		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
@@ -499,7 +499,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	private recordManager: RecordManager<A>;
 	private table: Table;
 	private indexManagers: Array<IndexManager<A, Keys<A>>>;
-	private searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>;
+	private searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>;
 
 	private getDefaultRecord(): A {
 		let record = {} as A;
@@ -519,7 +519,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return index;
 	}
 
-	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>) {
+	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>) {
 		this.blockManager = blockManager;
 		this.fields = fields;
 		this.keys = keys;
@@ -648,7 +648,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
 		// TODO: Remove map when SearchIndexResult is removed.
-		let iterable = StreamIterable.of(SearchIndexManagerV5.search(this.searchIndexManagers, query, anchorBid)).map((entry) => {
+		let iterable = StreamIterable.of(SearchIndexManager.search(this.searchIndexManagers, query, anchorBid)).map((entry) => {
 			let { record, rank } = { ...entry };
 			return {
 				record,
@@ -709,7 +709,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			}
 		});
 		let indexManagers = indices.map((index) => new IndexManager<A, Keys<A>>(recordManager, blockManager, index.keys));
-		let searchIndexManagers = searchIndices.map((index) => new SearchIndexManagerV5<A, Key<A>>(recordManager, blockManager, index.key));
+		let searchIndexManagers = searchIndices.map((index) => new SearchIndexManager<A, Key<A>>(recordManager, blockManager, index.key));
 		let manager = new StoreManager(blockManager, fields, keys, orders, storage, indexManagers, searchIndexManagers);
 		return manager;
 	}
