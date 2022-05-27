@@ -212,13 +212,6 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 	}
 };
 
-export type SearchIndexResult<A extends Record> = {
-	bid: number;
-	record: A;
-	tokens: Array<string>;
-	rank: number;
-};
-
 export function getFirstCompletion(prefix: string, tokens: Array<string>): string | undefined {
 	return tokens
 		.filter((token) => token.startsWith(prefix))
@@ -335,7 +328,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 		this.tree = new RadixTree(blockManager, options?.bid);
 	}
 
-	* [Symbol.iterator](): Iterator<SearchIndexResult<A>> {
+	* [Symbol.iterator](): Iterator<SearchResult<A>> {
 		yield * StreamIterable.of(this.search(""));
 	}
 
@@ -357,7 +350,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 		}
 	}
 
-	* search(query: string, bid?: number): Iterable<SearchIndexResult<A>> {
+	* search(query: string, bid?: number): Iterable<SearchResult<A>> {
 		let queryTokens = Tokenizer.tokenize(query);
 		if (queryTokens.length === 0) {
 			queryTokens.push("");
@@ -408,9 +401,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 					keys = recordKeys;
 					let rank = this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
 					yield {
-						bid,
 						record,
-						tokens: recordTokens,
 						rank
 					};
 				}
@@ -443,9 +434,7 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 					}
 					let rank = this.computeRank(recordTokens, [...queryTokens, lastQueryToken]);
 					yield {
-						bid,
 						record,
-						tokens: recordTokens,
 						rank
 					};
 				}
@@ -463,14 +452,14 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 		this.tree.vacate();
 	}
 
-	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>> {
+	static * search<A extends Record>(searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>> {
 		let iterables = searchIndexManagers.map((searchIndexManager) => searchIndexManager.search(query, bid));
 		let iterators = iterables.map((iterable) => iterable[Symbol.iterator]());
-		let searchResults = iterators.map((iterator) => iterator.next().value as SearchIndexResult<A> | undefined);
+		let searchResults = iterators.map((iterator) => iterator.next().value as SearchResult<A> | undefined);
 		outer: while (true) {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
-				.filter((candidate): candidate is { searchResult: SearchIndexResult<A>, index: number } => candidate.searchResult != null)
+				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
 				.sort((one, two) => {
 					return one.searchResult.rank - two.searchResult.rank;
 				});
@@ -481,12 +470,12 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 			inner: for (let searchIndexManager of searchIndexManagers) {
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
 				if (rank != null && rank > candidate.searchResult.rank) {
-					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
 					continue outer;
 				}
 			}
 			yield candidate.searchResult;
-			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchIndexResult<A> | undefined;
+			searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
 		}
 	}
 };
@@ -647,14 +636,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 				.collect();
 		}
 		let anchorBid = anchorKeysRecord != null ? this.lookupBlockIndex(anchorKeysRecord) : undefined;
-		// TODO: Remove map when SearchIndexResult is removed.
-		let iterable = StreamIterable.of(SearchIndexManager.search(this.searchIndexManagers, query, anchorBid)).map((entry) => {
-			let { record, rank } = { ...entry };
-			return {
-				record,
-				rank
-			};
-		});
+		let iterable = StreamIterable.of(SearchIndexManager.search(this.searchIndexManagers, query, anchorBid));
 		if (limit != null) {
 			iterable = iterable.limit(limit);
 		}
