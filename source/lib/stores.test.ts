@@ -1298,3 +1298,33 @@ test(`It should not skip the entire category branch when the first candidate occ
 	let expected = ["User 1"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
+
+test(`It should not return the same result twice when multiple indices match the query.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		firstname: new StringField(""),
+		lastname: new StringField("")
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let indexOne = new SearchIndexManager(recordManager, blockManager, "firstname");
+	let indexTwo = new SearchIndexManager(recordManager, blockManager, "lastname");
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [], [indexOne, indexTwo]);
+	users.insert({
+		user_id: "User 1",
+		firstname: "Name",
+		lastname: "Name"
+	});
+	let iterable = users.search("name");
+	let observed = Array.from(iterable).map((record) => record.record.user_id);
+	let expected = ["User 1"] as Array<string>;
+	assert.array.equals(observed, expected);
+});
