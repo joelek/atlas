@@ -25,5 +25,5 @@
 		"postversion": "git push && git push --tags",
 		"test": "set DEBUG=true && ts-node test"
 	},
-	"version": "0.10.3"
+	"version": "0.11.0"
 }
