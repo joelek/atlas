@@ -56,63 +56,10 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void;
     vacate(): void;
 }
-export declare type SearchIndexResult<A extends Record> = {
-    bid: number;
-    record: A;
-    tokens: Array<string>;
-    rank: number;
-};
 export declare function getFirstCompletion(prefix: string, tokens: Array<string>): string | undefined;
 export declare function getFirstTokenBefore(prefix: string, tokens: Array<string>): string | undefined;
-export declare class SearchIndexManagerV1<A extends Record, B extends Key<A>> {
-    private recordManager;
-    private blockManager;
-    private key;
-    private tree;
-    private computeRank;
-    private computeRecordRank;
-    private getNextMatch;
-    private insertToken;
-    private removeToken;
-    private readRecord;
-    private tokenizeRecord;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
-        bid?: number;
-    });
-    [Symbol.iterator](): Iterator<SearchIndexResult<A>>;
-    delete(): void;
-    insert(record: A, bid: number): void;
-    remove(record: A, bid: number): void;
-    search(query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-    update(oldRecord: A, newRecord: A, bid: number): void;
-    vacate(): void;
-    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV1<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-}
-export declare class SearchIndexManagerV2<A extends Record, B extends Key<A>> {
-    private recordManager;
-    private blockManager;
-    private key;
-    private tree;
-    private computeRank;
-    private computeRecordRank;
-    private insertToken;
-    private removeToken;
-    private readRecord;
-    private tokenizeRecord;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
-        bid?: number;
-    });
-    [Symbol.iterator](): Iterator<SearchIndexResult<A>>;
-    delete(): void;
-    insert(record: A, bid: number): void;
-    remove(record: A, bid: number): void;
-    search(query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-    update(oldRecord: A, newRecord: A, bid: number): void;
-    vacate(): void;
-    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV2<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-}
 export declare function makeSeekableIterable(tree: RadixTree, value: number): SeekableIterable<number>;
-export declare class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
+export declare class SearchIndexManager<A extends Record, B extends Key<A>> {
     private recordManager;
     private blockManager;
     private key;
@@ -126,60 +73,14 @@ export declare class SearchIndexManagerV3<A extends Record, B extends Key<A>> {
     constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
         bid?: number;
     });
-    [Symbol.iterator](): Iterator<SearchIndexResult<A>>;
+    [Symbol.iterator](): Iterator<SearchResult<A>>;
     delete(): void;
     insert(record: A, bid: number): void;
     remove(record: A, bid: number): void;
-    search(query: string, bid?: number): Iterable<SearchIndexResult<A>>;
+    search(query: string, bid?: number): Iterable<SearchResult<A>>;
     update(oldRecord: A, newRecord: A, bid: number): void;
     vacate(): void;
-    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV3<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-}
-export declare class SearchIndexManagerV4<A extends Record, B extends Key<A>> {
-    private recordManager;
-    private blockManager;
-    private key;
-    private tree;
-    private computeRank;
-    private computeRecordRank;
-    private insertToken;
-    private removeToken;
-    private readRecord;
-    private tokenizeRecord;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
-        bid?: number;
-    });
-    [Symbol.iterator](): Iterator<SearchIndexResult<A>>;
-    delete(): void;
-    insert(record: A, bid: number): void;
-    remove(record: A, bid: number): void;
-    search(query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-    update(oldRecord: A, newRecord: A, bid: number): void;
-    vacate(): void;
-    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV4<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-}
-export declare class SearchIndexManagerV5<A extends Record, B extends Key<A>> {
-    private recordManager;
-    private blockManager;
-    private key;
-    private tree;
-    private computeRank;
-    private computeRecordRank;
-    private insertToken;
-    private removeToken;
-    private readRecord;
-    private tokenizeRecord;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, key: B, options?: {
-        bid?: number;
-    });
-    [Symbol.iterator](): Iterator<SearchIndexResult<A>>;
-    delete(): void;
-    insert(record: A, bid: number): void;
-    remove(record: A, bid: number): void;
-    search(query: string, bid?: number): Iterable<SearchIndexResult<A>>;
-    update(oldRecord: A, newRecord: A, bid: number): void;
-    vacate(): void;
-    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>, query: string, bid?: number): Iterable<SearchIndexResult<A>>;
+    static search<A extends Record>(searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>, query: string, bid?: number): Iterable<SearchResult<A>>;
 }
 export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private blockManager;
@@ -192,7 +93,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private searchIndexManagers;
     private getDefaultRecord;
     private lookupBlockIndex;
-    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManagerV5<A, Key<A>>>);
+    constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>);
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;

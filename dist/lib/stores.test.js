@@ -795,7 +795,7 @@ function makeUsersSearchIndex() {
             return recordManager.encodeKeys(keys, record);
         }
     });
-    let index = new stores_1.SearchIndexManagerV5(recordManager, blockManager, "name");
+    let index = new stores_1.SearchIndexManager(recordManager, blockManager, "name");
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], [index]);
     return {
         users,
@@ -1231,6 +1231,35 @@ function makeUsersSearchIndex() {
         name: "a c"
     });
     let observed = users.search("b").map((record) => record.record.user_id);
+    let expected = ["User 1"];
+    assert.array.equals(observed, expected);
+});
+(0, test_1.test)(`It should not return the same result twice when multiple indices match the query.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        firstname: new records_1.StringField(""),
+        lastname: new records_1.StringField("")
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let indexOne = new stores_1.SearchIndexManager(recordManager, blockManager, "firstname");
+    let indexTwo = new stores_1.SearchIndexManager(recordManager, blockManager, "lastname");
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], [indexOne, indexTwo]);
+    users.insert({
+        user_id: "User 1",
+        firstname: "Name",
+        lastname: "Name"
+    });
+    let iterable = users.search("name");
+    let observed = Array.from(iterable).map((record) => record.record.user_id);
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });

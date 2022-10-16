@@ -217,7 +217,7 @@ class SchemaManager {
         });
     }
     loadSearchIndexManager(recordManager, blockManager, searchIndexSchema) {
-        return new stores_1.SearchIndexManagerV5(recordManager, blockManager, searchIndexSchema.key, {
+        return new stores_1.SearchIndexManager(recordManager, blockManager, searchIndexSchema.key, {
             bid: searchIndexSchema.bid
         });
     }
