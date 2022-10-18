@@ -1,12 +1,12 @@
+import * as wtf from "@joelek/wtf";
 import { BlockManager } from "./blocks";
 import { Database } from "./databases";
 import { VirtualFile } from "./files";
 import { StringField, BooleanField } from "./records";
 import { SchemaManager } from "./schemas";
 import { Store } from "./stores";
-import { test } from "./test";
 
-test(`It should be able to construct a new database manager.`, async (assert) => {
+wtf.test(`It should be able to construct a new database manager.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
@@ -28,10 +28,10 @@ test(`It should be able to construct a new database manager.`, async (assert) =>
 		key: "0",
 		name: "A"
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should be able to construct an existing database manager with an identical schema.`, async (assert) => {
+wtf.test(`It should be able to construct an existing database manager with an identical schema.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
@@ -60,10 +60,10 @@ test(`It should be able to construct an existing database manager with an identi
 		key: "0",
 		name: "A"
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should be able to construct an existing database manager when one field is added to the schema.`, async (assert) => {
+wtf.test(`It should be able to construct an existing database manager when one field is added to the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
@@ -94,10 +94,10 @@ test(`It should be able to construct an existing database manager when one field
 		name: "A",
 		lastname: ""
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should be able to construct an existing database manager when one field is removed from the schema.`, async (assert) => {
+wtf.test(`It should be able to construct an existing database manager when one field is removed from the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
@@ -128,10 +128,10 @@ test(`It should be able to construct an existing database manager when one field
 		key: "0",
 		name: "A"
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should be able to construct an existing database manager when one field is changed in the schema.`, async (assert) => {
+wtf.test(`It should be able to construct an existing database manager when one field is changed in the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
@@ -160,10 +160,10 @@ test(`It should be able to construct an existing database manager when one field
 		key: "0",
 		name: false
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should be able to construct an existing database manager when the keys have changed in the schema.`, async (assert) => {
+wtf.test(`It should be able to construct an existing database manager when the keys have changed in the schema.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let schemaManager = new SchemaManager();
@@ -192,5 +192,5 @@ test(`It should be able to construct an existing database manager when the keys 
 		key: "0",
 		name: "A"
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });

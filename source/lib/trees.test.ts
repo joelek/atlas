@@ -1,8 +1,8 @@
+import * as wtf from "@joelek/wtf";
 import * as bedrock from "@joelek/bedrock"
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { RadixTree } from "./trees";
-import { test } from "./test";
 import { StreamIterable } from "./streams";
 
 function getKeyFromString(string: string): Uint8Array {
@@ -22,28 +22,28 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("B"), getKeyFromString("B"), getKeyFromString("A")], 7);
 	tree.insert([getKeyFromString("B"), getKeyFromString("B"), getKeyFromString("B")], 8);
 
-	test(`It should support ordered filtering in ">" mode.`, async (assert) => {
+	wtf.test(`It should support ordered filtering in ">" mode.`, async (assert) => {
 		let observed = Array.from(tree.filter(">", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
 		let expected = [8, 7, 2, 1, 4, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support ordered filtering in ">=" mode.`, async (assert) => {
+	wtf.test(`It should support ordered filtering in ">=" mode.`, async (assert) => {
 		let observed = Array.from(tree.filter(">=", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
 		let expected = [5, 8, 7, 2, 1, 4, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support ordered filtering in "<" mode.`, async (assert) => {
+	wtf.test(`It should support ordered filtering in "<" mode.`, async (assert) => {
 		let observed = Array.from(tree.filter("<", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
 		let expected = [6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support ordered filtering in "<=" mode.`, async (assert) => {
+	wtf.test(`It should support ordered filtering in "<=" mode.`, async (assert) => {
 		let observed = Array.from(tree.filter("<=", [getKeyFromString("B"), getKeyFromString("A"), getKeyFromString("A")], ["decreasing", "increasing", "decreasing"]));
 		let expected = [6, 5];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -59,112 +59,112 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("b"), getKeyFromString("b")], 6);
 	tree.insert([getKeyFromString("c")], 7);
 
-	test(`It should support filtering values matching a zero element key in "^=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a zero element key in "^=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("^=", []));
 		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a zero element key in "=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a zero element key in "=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("=", []));
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a zero element key in ">" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a zero element key in ">" mode`, async (assert) => {
 		let observed = Array.from(tree.filter(">", []));
 		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a zero element key in ">=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a zero element key in ">=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter(">=", []));
 		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a zero element key in "<" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a zero element key in "<" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("<", []));
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a zero element key in "<=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a zero element key in "<=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("<=", []));
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a one element key in "^=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a one element key in "^=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("^=", [getKeyFromString("a")]));
 		let expected = [1, 2, 3] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a one element key in "=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a one element key in "=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("=", [getKeyFromString("a")]));
 		let expected = [1] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a one element key in ">" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a one element key in ">" mode`, async (assert) => {
 		let observed = Array.from(tree.filter(">", [getKeyFromString("a")]));
 		let expected = [2, 3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a one element key in ">=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a one element key in ">=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter(">=", [getKeyFromString("a")]));
 		let expected = [1, 2, 3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a one element key in "<" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a one element key in "<" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("<", [getKeyFromString("b")]));
 		let expected = [1, 2, 3] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a one element key in "<=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a one element key in "<=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("<=", [getKeyFromString("b")]));
 		let expected = [1, 2, 3, 4] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a two element key in "^=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a two element key in "^=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("^=", [getKeyFromString("a"), getKeyFromString("a")]));
 		let expected = [2] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a two element key in "=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a two element key in "=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("=", [getKeyFromString("a"), getKeyFromString("a")]));
 		let expected = [2] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a two element key in ">" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a two element key in ">" mode`, async (assert) => {
 		let observed = Array.from(tree.filter(">", [getKeyFromString("a"), getKeyFromString("a")]));
 		let expected = [3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a two element key in ">=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a two element key in ">=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter(">=", [getKeyFromString("a"), getKeyFromString("a")]));
 		let expected = [2, 3, 4, 5, 6, 7] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a two element key in "<" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a two element key in "<" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("<", [getKeyFromString("b"), getKeyFromString("b")]));
 		let expected = [1, 2, 3, 4, 5] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should support filtering values matching a two element key in "<=" mode`, async (assert) => {
+	wtf.test(`It should support filtering values matching a two element key in "<=" mode`, async (assert) => {
 		let observed = Array.from(tree.filter("<=", [getKeyFromString("b"), getKeyFromString("b")]));
 		let expected = [1, 2, 3, 4, 5, 6] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -173,11 +173,11 @@ function getKeyFromString(string: string): Uint8Array {
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
 	tree.insert([getKeyFromString("apa")], 1);
-	test(`It should return the correct values for a full root node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a full root node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [1];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -192,256 +192,256 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("banan1")], 5);
 	tree.insert([getKeyFromString("banan3")], 6);
 
-	test(`It should return the correct values for a root node match in ^= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a root node match in ^= mode.`, async (assert) => {
 		let results = tree.filter("^=", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for an inner node match in ^= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for an inner node match in ^= mode.`, async (assert) => {
 		let results = tree.filter("^=", [getKeyFromString("apa")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a leaf node match in ^= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a leaf node match in ^= mode.`, async (assert) => {
 		let results = tree.filter("^=", [getKeyFromString("apa1")]);
 		let observed = Array.from(results);
 		let expected = [2];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a non-existing leaf node match in ^= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a non-existing leaf node match in ^= mode.`, async (assert) => {
 		let results = tree.filter("^=", [getKeyFromString("apa2")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in ^= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in ^= mode.`, async (assert) => {
 		let results = tree.filter("^=", [getKeyFromString("ap")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a childless leaf node match in ^= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a childless leaf node match in ^= mode.`, async (assert) => {
 		let results = tree.filter("^=", [getKeyFromString("apa1b")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a root node match in = mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a root node match in = mode.`, async (assert) => {
 		let results = tree.filter("=", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for an inner node match in = mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for an inner node match in = mode.`, async (assert) => {
 		let results = tree.filter("=", [getKeyFromString("apa")]);
 		let observed = Array.from(results);
 		let expected = [1];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a leaf node match in = mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a leaf node match in = mode.`, async (assert) => {
 		let results = tree.filter("=", [getKeyFromString("apa1")]);
 		let observed = Array.from(results);
 		let expected = [2];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a non-existing leaf node match in = mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a non-existing leaf node match in = mode.`, async (assert) => {
 		let results = tree.filter("=", [getKeyFromString("apa2")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in = mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in = mode.`, async (assert) => {
 		let results = tree.filter("=", [getKeyFromString("ap")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in = mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in = mode.`, async (assert) => {
 		let results = tree.filter("=", [getKeyFromString("apa1b")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a root node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a root node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for an inner node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for an inner node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("apa")]);
 		let observed = Array.from(results);
 		let expected = [2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a leaf node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a leaf node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("apa1")]);
 		let observed = Array.from(results);
 		let expected = [3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a non-existing leaf node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a non-existing leaf node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("apa2")]);
 		let observed = Array.from(results);
 		let expected = [3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("ap")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a childless leaf node match in > mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a childless leaf node match in > mode.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("apa1b")]);
 		let observed = Array.from(results);
 		let expected = [3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a root node match in >= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a root node match in >= mode.`, async (assert) => {
 		let results = tree.filter(">=", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for an inner node match in >= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for an inner node match in >= mode.`, async (assert) => {
 		let results = tree.filter(">=", [getKeyFromString("apa")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a leaf node match in >= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a leaf node match in >= mode.`, async (assert) => {
 		let results = tree.filter(">=", [getKeyFromString("apa1")]);
 		let observed = Array.from(results);
 		let expected = [2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a non-existing leaf node match in >= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a non-existing leaf node match in >= mode.`, async (assert) => {
 		let results = tree.filter(">=", [getKeyFromString("apa2")]);
 		let observed = Array.from(results);
 		let expected = [3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in >= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in >= mode.`, async (assert) => {
 		let results = tree.filter(">=", [getKeyFromString("ap")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a childless leaf node match in >= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a childless leaf node match in >= mode.`, async (assert) => {
 		let results = tree.filter(">=", [getKeyFromString("apa1b")]);
 		let observed = Array.from(results);
 		let expected = [3, 4, 5, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a root node match in < mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a root node match in < mode.`, async (assert) => {
 		let results = tree.filter("<", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for an inner node match in < mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for an inner node match in < mode.`, async (assert) => {
 		let results = tree.filter("<", [getKeyFromString("banan")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a leaf node match in < mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a leaf node match in < mode.`, async (assert) => {
 		let results = tree.filter("<", [getKeyFromString("banan1")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a non-existing leaf node match in < mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a non-existing leaf node match in < mode.`, async (assert) => {
 		let results = tree.filter("<", [getKeyFromString("banan2")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in < mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in < mode.`, async (assert) => {
 		let results = tree.filter("<", [getKeyFromString("bana")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a childless leaf node match in < mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a childless leaf node match in < mode.`, async (assert) => {
 		let results = tree.filter("<", [getKeyFromString("banan1b")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a root node match in <= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a root node match in <= mode.`, async (assert) => {
 		let results = tree.filter("<=", [getKeyFromString("")]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for an inner node match in <= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for an inner node match in <= mode.`, async (assert) => {
 		let results = tree.filter("<=", [getKeyFromString("banan")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a leaf node match in <= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a leaf node match in <= mode.`, async (assert) => {
 		let results = tree.filter("<=", [getKeyFromString("banan1")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a non-existing leaf node match in <= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a non-existing leaf node match in <= mode.`, async (assert) => {
 		let results = tree.filter("<=", [getKeyFromString("banan2")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a partial inner node match in <= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a partial inner node match in <= mode.`, async (assert) => {
 		let results = tree.filter("<=", [getKeyFromString("bana")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values for a childless leaf node match in <= mode.`, async (assert) => {
+	wtf.test(`It should return the correct values for a childless leaf node match in <= mode.`, async (assert) => {
 		let results = tree.filter("<=", [getKeyFromString("banan1b")]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -456,18 +456,18 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("two"), getKeyFromString("a")], 5);
 	tree.insert([getKeyFromString("two"), getKeyFromString("b")], 6);
 
-	test(`It should return the correct branch for an existing key in "=" mode.`, async (assert) => {
+	wtf.test(`It should return the correct branch for an existing key in "=" mode.`, async (assert) => {
 		let results = StreamIterable.of(tree.branch("=", [getKeyFromString("one")])).shift();
 		let observed = Array.from(results ?? []);
 		let expected = [2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct branch for a non-existing key in "=" mode.`, async (assert) => {
+	wtf.test(`It should return the correct branch for a non-existing key in "=" mode.`, async (assert) => {
 		let results = StreamIterable.of(tree.branch("=", [getKeyFromString("three")])).shift();
 		let observed = Array.from(results ?? []);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -483,32 +483,32 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("d"), getKeyFromString("1")], 6);
 	tree.insert([getKeyFromString("d"), getKeyFromString("2")], 7);
 
-	test(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("a")], ["increasing", "increasing"]);
 		let observed = Array.from(results);
 		let expected = [2, 3, 4, 5, 6, 7];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("a")], ["increasing", "decreasing"]);
 		let observed = Array.from(results);
 		let expected = [3, 2, 5, 4, 7, 6];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("a")], ["decreasing", "increasing"]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("a")], ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -519,10 +519,10 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("one")], 1);
 	tree.insert([getKeyFromString("two")], 2);
 
-	test(`It should support iteration.`, async (assert) => {
+	wtf.test(`It should support iteration.`, async (assert) => {
 		let observed = Array.from(tree);
 		let expected = [1, 2];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
@@ -540,64 +540,64 @@ function getKeyFromString(string: string): Uint8Array {
 	tree.insert([getKeyFromString("c"), getKeyFromString("b")], 8);
 	tree.insert([getKeyFromString("c"), getKeyFromString("c")], 9);
 
-	test(`It should return the correct values when directions are "increasing", "increasing" and key is set.`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "increasing", "increasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "increasing"]);
 		let observed = Array.from(results);
 		let expected = [6, 7, 8, 9];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "increasing", "decreasing" and key is set.`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "increasing", "decreasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["increasing", "decreasing"]);
 		let observed = Array.from(results);
 		let expected = [4, 9, 8, 7];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "decreasing", "increasing" and key is set.`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "decreasing", "increasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "increasing"]);
 		let observed = Array.from(results);
 		let expected = [6, 1, 2, 3];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "decreasing", "decreasing" and key is set.`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "decreasing", "decreasing" and key is set.`, async (assert) => {
 		let results = tree.filter(">", [getKeyFromString("b"), getKeyFromString("b")], ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
 		let expected = [4, 3, 2, 1];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "increasing", "increasing".`, async (assert) => {
 		let results = tree.filter(">", [], ["increasing", "increasing"]);
 		let observed = Array.from(results);
 		let expected = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "increasing", "decreasing".`, async (assert) => {
 		let results = tree.filter(">", [], ["increasing", "decreasing"]);
 		let observed = Array.from(results);
 		let expected = [3, 2, 1, 6, 5, 4, 9, 8, 7];
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "decreasing", "increasing".`, async (assert) => {
 		let results = tree.filter(">", [], ["decreasing", "increasing"]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 
-	test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
+	wtf.test(`It should return the correct values when directions are "decreasing", "decreasing".`, async (assert) => {
 		let results = tree.filter(">", [], ["decreasing", "decreasing"]);
 		let observed = Array.from(results);
 		let expected = [] as Array<number>;
-		assert.array.equals(observed, expected);
+		assert.equals(observed, expected);
 	});
 })();
 
-test(`It should throw errors when used after deletion.`, async (assert) => {
+wtf.test(`It should throw errors when used after deletion.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -631,78 +631,78 @@ test(`It should throw errors when used after deletion.`, async (assert) => {
 	});
 });
 
-test(`It should support inserting values not prevously inserted.`, async (assert) => {
+wtf.test(`It should support inserting values not prevously inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 	tree.insert([], 1);
-	assert.true(tree.lookup([]) === 1);
+	assert.equals(tree.lookup([]), 1);
 });
 
-test(`It should support inserting values prevously inserted.`, async (assert) => {
+wtf.test(`It should support inserting values prevously inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 	tree.insert([], 1);
-	assert.true(tree.lookup([]) === 1);
+	assert.equals(tree.lookup([]), 1);
 	tree.insert([], 1);
-	assert.true(tree.lookup([]) === 1);
+	assert.equals(tree.lookup([]), 1);
 });
 
-test(`It should keep track of the number of values stored.`, async (assert) => {
+wtf.test(`It should keep track of the number of values stored.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.length() === 0);
+	assert.equals(tree.length(), 0);
 	tree.insert([getKeyFromString("a")], 1);
-	assert.true(tree.length() === 1);
+	assert.equals(tree.length(), 1);
 	tree.insert([getKeyFromString("b")], 2);
-	assert.true(tree.length() === 2);
+	assert.equals(tree.length(), 2);
 	tree.remove([getKeyFromString("b")]);
-	assert.true(tree.length() === 1);
+	assert.equals(tree.length(), 1);
 	tree.remove([getKeyFromString("a")]);
-	assert.true(tree.length() === 0);
+	assert.equals(tree.length(), 0);
 });
 
-test(`It should support looking up values not prevously inserted.`, async (assert) => {
+wtf.test(`It should support looking up values not prevously inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 });
 
-test(`It should support looking up values prevously inserted.`, async (assert) => {
+wtf.test(`It should support looking up values prevously inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 	tree.insert([], 1);
-	assert.true(tree.lookup([]) === 1);
+	assert.equals(tree.lookup([]), 1);
 });
 
-test(`It should support removing values not prevously inserted.`, async (assert) => {
+wtf.test(`It should support removing values not prevously inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 	tree.remove([]);
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 });
 
-test(`It should support removing values prevously inserted.`, async (assert) => {
+wtf.test(`It should support removing values prevously inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 	tree.insert([], 1);
-	assert.true(tree.lookup([]) === 1);
+	assert.equals(tree.lookup([]), 1);
 	tree.remove([]);
-	assert.true(tree.lookup([]) == null);
+	assert.equals(tree.lookup([]), undefined);
 });
 
-test(`It should support vacating.`, async (assert) => {
+wtf.test(`It should support vacating.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -711,10 +711,10 @@ test(`It should support vacating.`, async (assert) => {
 	tree.vacate();
 	let observed = Array.from(tree).sort();
 	let expected = [] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support inserting values with a key already inserted being a prefix for the key.`, async (assert) => {
+wtf.test(`It should support inserting values with a key already inserted being a prefix for the key.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -722,10 +722,10 @@ test(`It should support inserting values with a key already inserted being a pre
 	tree.insert([getKeyFromString("ab")], 2);
 	let observed = Array.from(tree);
 	let expected = [1, 2];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support inserting values with the key being a prefix for a key already inserted.`, async (assert) => {
+wtf.test(`It should support inserting values with the key being a prefix for a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -733,10 +733,10 @@ test(`It should support inserting values with the key being a prefix for a key a
 	tree.insert([getKeyFromString("a")], 2);
 	let observed = Array.from(tree);
 	let expected = [2, 1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support inserting values with the key being indentical to a key already inserted.`, async (assert) => {
+wtf.test(`It should support inserting values with the key being indentical to a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -744,10 +744,10 @@ test(`It should support inserting values with the key being indentical to a key 
 	tree.insert([getKeyFromString("a")], 2);
 	let observed = Array.from(tree);
 	let expected = [2];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support inserting values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
+wtf.test(`It should support inserting values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -755,10 +755,10 @@ test(`It should support inserting values with the key being a lesser sibling of 
 	tree.insert([getKeyFromString("a")], 2);
 	let observed = Array.from(tree);
 	let expected = [2, 1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support inserting values with the key being a greater sibling of a key already inserted.`, async (assert) => {
+wtf.test(`It should support inserting values with the key being a greater sibling of a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -766,20 +766,20 @@ test(`It should support inserting values with the key being a greater sibling of
 	tree.insert([getKeyFromString("b")], 2);
 	let observed = Array.from(tree);
 	let expected = [1, 2];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support inserting long values.`, async (assert) => {
+wtf.test(`It should support inserting long values.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
 	tree.insert([getKeyFromString("01234566789abcdef")], 1);
 	let observed = Array.from(tree);
 	let expected = [1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support removing values with a key already inserted being a prefix for the key.`, async (assert) => {
+wtf.test(`It should support removing values with a key already inserted being a prefix for the key.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -788,10 +788,10 @@ test(`It should support removing values with a key already inserted being a pref
 	tree.remove([getKeyFromString("ab")]);
 	let observed = Array.from(tree);
 	let expected = [1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support removing values with the key being a prefix for a key already inserted.`, async (assert) => {
+wtf.test(`It should support removing values with the key being a prefix for a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -800,10 +800,10 @@ test(`It should support removing values with the key being a prefix for a key al
 	tree.remove([getKeyFromString("a")]);
 	let observed = Array.from(tree);
 	let expected = [1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support removing values with the key being indentical to a key already inserted.`, async (assert) => {
+wtf.test(`It should support removing values with the key being indentical to a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -812,10 +812,10 @@ test(`It should support removing values with the key being indentical to a key a
 	tree.remove([getKeyFromString("a")]);
 	let observed = Array.from(tree);
 	let expected = [] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support removing values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
+wtf.test(`It should support removing values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -824,10 +824,10 @@ test(`It should support removing values with the key being a lesser sibling of a
 	tree.remove([getKeyFromString("a")]);
 	let observed = Array.from(tree);
 	let expected = [1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support removing values with the key being a greater sibling of a key already inserted.`, async (assert) => {
+wtf.test(`It should support removing values with the key being a greater sibling of a key already inserted.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -836,10 +836,10 @@ test(`It should support removing values with the key being a greater sibling of 
 	tree.remove([getKeyFromString("b")]);
 	let observed = Array.from(tree);
 	let expected = [1];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support removing long values.`, async (assert) => {
+wtf.test(`It should support removing long values.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	blockManager.createBlock(256);
 	let tree = new RadixTree(blockManager, blockManager.createBlock(256));
@@ -847,5 +847,5 @@ test(`It should support removing long values.`, async (assert) => {
 	tree.remove([getKeyFromString("01234566789abcdef")]);
 	let observed = Array.from(tree);
 	let expected = [] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });

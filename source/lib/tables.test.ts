@@ -1,8 +1,8 @@
+import * as wtf from "@joelek/wtf";
 import * as hash from "./tables";
 import * as files from "./files";
 import * as utils from "./utils";
 import * as blocks from "./blocks";
-import { test } from "./test";
 
 const DETAIL: hash.TableDetail = {
 	getKeyFromValue: (value) => {
@@ -12,7 +12,7 @@ const DETAIL: hash.TableDetail = {
 	}
 };
 
-test(`It should support iteration with no values inserted.`, async (assert) => {
+wtf.test(`It should support iteration with no values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -20,10 +20,10 @@ test(`It should support iteration with no values inserted.`, async (assert) => {
 	});
 	let observed = Array.from(ht).sort();
 	let expected = [] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support iteration with value one inserted.`, async (assert) => {
+wtf.test(`It should support iteration with value one inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -32,10 +32,10 @@ test(`It should support iteration with value one inserted.`, async (assert) => {
 	ht.insert(DETAIL.getKeyFromValue(1), 1);
 	let observed = Array.from(ht).sort();
 	let expected = [1] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support iteration with value two inserted.`, async (assert) => {
+wtf.test(`It should support iteration with value two inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -44,10 +44,10 @@ test(`It should support iteration with value two inserted.`, async (assert) => {
 	ht.insert(DETAIL.getKeyFromValue(2), 2);
 	let observed = Array.from(ht).sort();
 	let expected = [2] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support iteration with both values inserted.`, async (assert) => {
+wtf.test(`It should support iteration with both values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -57,10 +57,10 @@ test(`It should support iteration with both values inserted.`, async (assert) =>
 	ht.insert(DETAIL.getKeyFromValue(2), 2);
 	let observed = Array.from(ht).sort();
 	let expected = [1, 2] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should support vacating.`, async (assert) => {
+wtf.test(`It should support vacating.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -71,10 +71,10 @@ test(`It should support vacating.`, async (assert) => {
 	ht.vacate();
 	let observed = Array.from(ht).sort();
 	let expected = [] as Array<number>;
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should throw an error when attempting to insert after deletion.`, async (assert) => {
+wtf.test(`It should throw an error when attempting to insert after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -86,7 +86,7 @@ test(`It should throw an error when attempting to insert after deletion.`, async
 	});
 });
 
-test(`It should throw an error when attempting to lookup after deletion.`, async (assert) => {
+wtf.test(`It should throw an error when attempting to lookup after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -98,7 +98,7 @@ test(`It should throw an error when attempting to lookup after deletion.`, async
 	});
 });
 
-test(`It should throw an error when attempting to remove after deletion.`, async (assert) => {
+wtf.test(`It should throw an error when attempting to remove after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -110,7 +110,7 @@ test(`It should throw an error when attempting to remove after deletion.`, async
 	});
 });
 
-test(`It should throw an error when attempting to vacate after deletion.`, async (assert) => {
+wtf.test(`It should throw an error when attempting to vacate after deletion.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -122,43 +122,29 @@ test(`It should throw an error when attempting to vacate after deletion.`, async
 	});
 });
 
-test(`It should support inserting value one.`, async (assert) => {
+wtf.test(`It should support inserting value one.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
 	let keysOne = DETAIL.getKeyFromValue(1);
-	assert.true(ht.insert(keysOne, 1) === true);
-	assert.true(ht.insert(keysOne, 1) === false);
+	assert.equals(ht.insert(keysOne, 1), true);
+	assert.equals(ht.insert(keysOne, 1), false);
 });
 
-test(`It should support inserting value two.`, async (assert) => {
+wtf.test(`It should support inserting value two.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
 		minimumCapacity: 2
 	});
 	let keysTwo = DETAIL.getKeyFromValue(2);
-	assert.true(ht.insert(keysTwo, 2) === true);
-	assert.true(ht.insert(keysTwo, 2) === false);
+	assert.equals(ht.insert(keysTwo, 2), true);
+	assert.equals(ht.insert(keysTwo, 2), false);
 });
 
-test(`It should support inserting both values.`, async (assert) => {
-	let file = new files.VirtualFile(0);
-	let blockManager = new blocks.BlockManager(file);
-	let ht = new hash.Table(blockManager, DETAIL, {
-		minimumCapacity: 2
-	});
-	let keysOne = DETAIL.getKeyFromValue(1);
-	let keysTwo = DETAIL.getKeyFromValue(2);
-	assert.true(ht.insert(keysOne, 1) === true);
-	assert.true(ht.insert(keysTwo, 2) === true);
-	assert.true(ht.insert(keysOne, 1) === false);
-	assert.true(ht.insert(keysTwo, 2) === false);
-});
-
-test(`It should support keeping track of the total number of values.`, async (assert) => {
+wtf.test(`It should support inserting both values.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -166,18 +152,32 @@ test(`It should support keeping track of the total number of values.`, async (as
 	});
 	let keysOne = DETAIL.getKeyFromValue(1);
 	let keysTwo = DETAIL.getKeyFromValue(2);
-	assert.true(ht.length() === 0);
+	assert.equals(ht.insert(keysOne, 1), true);
+	assert.equals(ht.insert(keysTwo, 2), true);
+	assert.equals(ht.insert(keysOne, 1), false);
+	assert.equals(ht.insert(keysTwo, 2), false);
+});
+
+wtf.test(`It should support keeping track of the total number of values.`, async (assert) => {
+	let file = new files.VirtualFile(0);
+	let blockManager = new blocks.BlockManager(file);
+	let ht = new hash.Table(blockManager, DETAIL, {
+		minimumCapacity: 2
+	});
+	let keysOne = DETAIL.getKeyFromValue(1);
+	let keysTwo = DETAIL.getKeyFromValue(2);
+	assert.equals(ht.length(), 0);
 	ht.insert(keysOne, 1);
-	assert.true(ht.length() === 1);
+	assert.equals(ht.length(), 1);
 	ht.insert(keysTwo, 2);
-	assert.true(ht.length() === 2);
+	assert.equals(ht.length(), 2);
 	ht.remove(keysOne);
-	assert.true(ht.length() === 1);
+	assert.equals(ht.length(), 1);
 	ht.remove(keysTwo);
-	assert.true(ht.length() === 0);
+	assert.equals(ht.length(), 0);
 });
 
-test(`It should support looking up values with no values inserted.`, async (assert) => {
+wtf.test(`It should support looking up values with no values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -185,37 +185,11 @@ test(`It should support looking up values with no values inserted.`, async (asse
 	});
 	let keysOne = DETAIL.getKeyFromValue(1);
 	let keysTwo = DETAIL.getKeyFromValue(2);
-	assert.true(ht.lookup(keysOne) === undefined);
-	assert.true(ht.lookup(keysTwo) === undefined);
+	assert.equals(ht.lookup(keysOne), undefined);
+	assert.equals(ht.lookup(keysTwo), undefined);
 });
 
-test(`It should support looking up values with value one inserted.`, async (assert) => {
-	let file = new files.VirtualFile(0);
-	let blockManager = new blocks.BlockManager(file);
-	let ht = new hash.Table(blockManager, DETAIL, {
-		minimumCapacity: 2
-	});
-	let keysOne = DETAIL.getKeyFromValue(1);
-	let keysTwo = DETAIL.getKeyFromValue(2);
-	ht.insert(keysOne, 1);
-	assert.true(ht.lookup(keysOne) === 1);
-	assert.true(ht.lookup(keysTwo) === undefined);
-});
-
-test(`It should support looking up values with value two inserted.`, async (assert) => {
-	let file = new files.VirtualFile(0);
-	let blockManager = new blocks.BlockManager(file);
-	let ht = new hash.Table(blockManager, DETAIL, {
-		minimumCapacity: 2
-	});
-	let keysOne = DETAIL.getKeyFromValue(1);
-	let keysTwo = DETAIL.getKeyFromValue(2);
-	ht.insert(keysTwo, 2);
-	assert.true(ht.lookup(keysOne) === undefined);
-	assert.true(ht.lookup(keysTwo) === 2);
-});
-
-test(`It should support looking up values with both values inserted.`, async (assert) => {
+wtf.test(`It should support looking up values with value one inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -224,37 +198,11 @@ test(`It should support looking up values with both values inserted.`, async (as
 	let keysOne = DETAIL.getKeyFromValue(1);
 	let keysTwo = DETAIL.getKeyFromValue(2);
 	ht.insert(keysOne, 1);
-	ht.insert(keysTwo, 2);
-	assert.true(ht.lookup(keysOne) === 1);
-	assert.true(ht.lookup(keysTwo) === 2);
+	assert.equals(ht.lookup(keysOne), 1);
+	assert.equals(ht.lookup(keysTwo), undefined);
 });
 
-test(`It should support removing values with no values inserted.`, async (assert) => {
-	let file = new files.VirtualFile(0);
-	let blockManager = new blocks.BlockManager(file);
-	let ht = new hash.Table(blockManager, DETAIL, {
-		minimumCapacity: 2
-	});
-	let keysOne = DETAIL.getKeyFromValue(1);
-	let keysTwo = DETAIL.getKeyFromValue(2);
-	assert.true(ht.remove(keysOne) === false);
-	assert.true(ht.remove(keysTwo) === false);
-});
-
-test(`It should support removing values with value one inserted.`, async (assert) => {
-	let file = new files.VirtualFile(0);
-	let blockManager = new blocks.BlockManager(file);
-	let ht = new hash.Table(blockManager, DETAIL, {
-		minimumCapacity: 2
-	});
-	let keysOne = DETAIL.getKeyFromValue(1);
-	let keysTwo = DETAIL.getKeyFromValue(2);
-	ht.insert(keysOne, 1);
-	assert.true(ht.remove(keysOne) === true);
-	assert.true(ht.remove(keysTwo) === false);
-});
-
-test(`It should support removing values with value two inserted.`, async (assert) => {
+wtf.test(`It should support looking up values with value two inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -263,11 +211,11 @@ test(`It should support removing values with value two inserted.`, async (assert
 	let keysOne = DETAIL.getKeyFromValue(1);
 	let keysTwo = DETAIL.getKeyFromValue(2);
 	ht.insert(keysTwo, 2);
-	assert.true(ht.remove(keysOne) === false);
-	assert.true(ht.remove(keysTwo) === true);
+	assert.equals(ht.lookup(keysOne), undefined);
+	assert.equals(ht.lookup(keysTwo), 2);
 });
 
-test(`It should support removing values with both values inserted.`, async (assert) => {
+wtf.test(`It should support looking up values with both values inserted.`, async (assert) => {
 	let file = new files.VirtualFile(0);
 	let blockManager = new blocks.BlockManager(file);
 	let ht = new hash.Table(blockManager, DETAIL, {
@@ -277,6 +225,58 @@ test(`It should support removing values with both values inserted.`, async (asse
 	let keysTwo = DETAIL.getKeyFromValue(2);
 	ht.insert(keysOne, 1);
 	ht.insert(keysTwo, 2);
-	assert.true(ht.remove(keysOne) === true);
-	assert.true(ht.remove(keysTwo) === true);
+	assert.equals(ht.lookup(keysOne), 1);
+	assert.equals(ht.lookup(keysTwo), 2);
+});
+
+wtf.test(`It should support removing values with no values inserted.`, async (assert) => {
+	let file = new files.VirtualFile(0);
+	let blockManager = new blocks.BlockManager(file);
+	let ht = new hash.Table(blockManager, DETAIL, {
+		minimumCapacity: 2
+	});
+	let keysOne = DETAIL.getKeyFromValue(1);
+	let keysTwo = DETAIL.getKeyFromValue(2);
+	assert.equals(ht.remove(keysOne), false);
+	assert.equals(ht.remove(keysTwo), false);
+});
+
+wtf.test(`It should support removing values with value one inserted.`, async (assert) => {
+	let file = new files.VirtualFile(0);
+	let blockManager = new blocks.BlockManager(file);
+	let ht = new hash.Table(blockManager, DETAIL, {
+		minimumCapacity: 2
+	});
+	let keysOne = DETAIL.getKeyFromValue(1);
+	let keysTwo = DETAIL.getKeyFromValue(2);
+	ht.insert(keysOne, 1);
+	assert.equals(ht.remove(keysOne), true);
+	assert.equals(ht.remove(keysTwo), false);
+});
+
+wtf.test(`It should support removing values with value two inserted.`, async (assert) => {
+	let file = new files.VirtualFile(0);
+	let blockManager = new blocks.BlockManager(file);
+	let ht = new hash.Table(blockManager, DETAIL, {
+		minimumCapacity: 2
+	});
+	let keysOne = DETAIL.getKeyFromValue(1);
+	let keysTwo = DETAIL.getKeyFromValue(2);
+	ht.insert(keysTwo, 2);
+	assert.equals(ht.remove(keysOne), false);
+	assert.equals(ht.remove(keysTwo), true);
+});
+
+wtf.test(`It should support removing values with both values inserted.`, async (assert) => {
+	let file = new files.VirtualFile(0);
+	let blockManager = new blocks.BlockManager(file);
+	let ht = new hash.Table(blockManager, DETAIL, {
+		minimumCapacity: 2
+	});
+	let keysOne = DETAIL.getKeyFromValue(1);
+	let keysTwo = DETAIL.getKeyFromValue(2);
+	ht.insert(keysOne, 1);
+	ht.insert(keysTwo, 2);
+	assert.equals(ht.remove(keysOne), true);
+	assert.equals(ht.remove(keysTwo), true);
 });

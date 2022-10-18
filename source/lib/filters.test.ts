@@ -1,9 +1,9 @@
+import * as wtf from "@joelek/wtf";
 import { EqualityFilter } from "./filters";
-import { test } from "./test";
 
-test(`It should determine matches (EqualityFilter).`, async (assert) => {
+wtf.test(`It should determine matches (EqualityFilter).`, async (assert) => {
 	let filter = new EqualityFilter<number>(0);
-	assert.false(filter.matches(-1));
-	assert.true(filter.matches(0));
-	assert.false(filter.matches(1));
+	assert.equals(filter.matches(-1), false);
+	assert.equals(filter.matches(0), true);
+	assert.equals(filter.matches(1), false);
 });

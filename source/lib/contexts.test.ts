@@ -1,7 +1,7 @@
-import { test } from "./test";
+import * as wtf from "@joelek/wtf";
 import { Context } from "./contexts";
 
-test(`It should work.`, async (assert) => {
+wtf.test(`It should work.`, async (assert) => {
 	let context = new Context();
 	let users = context.createStore({
 		user_id: context.createStringField(),
@@ -58,5 +58,5 @@ test(`It should work.`, async (assert) => {
 		name: "Joel Ek",
 		age: 38
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });

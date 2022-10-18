@@ -1,7 +1,7 @@
+import * as wtf from "@joelek/wtf";
 import * as records from "./records";
-import { test } from "./test";
 
-test(`It should encode records.`, async (assert) => {
+wtf.test(`It should encode records.`, async (assert) => {
 	let rh = new records.RecordManager({
 		firstname: new records.StringField(""),
 		lastname: new records.StringField("")
@@ -12,10 +12,10 @@ test(`It should encode records.`, async (assert) => {
 	};
 	let observed = rh.decode(rh.encode(record));
 	let expected = record;
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });
 
-test(`It should encode keys.`, async (assert) => {
+wtf.test(`It should encode keys.`, async (assert) => {
 	let rh = new records.RecordManager({
 		firstname: new records.StringField(""),
 		lastname: new records.StringField("")
@@ -28,5 +28,5 @@ test(`It should encode keys.`, async (assert) => {
 	let expected = {
 		firstname: "Joel"
 	};
-	assert.record.equals(observed, expected);
+	assert.equals(observed, expected);
 });

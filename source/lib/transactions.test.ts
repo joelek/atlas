@@ -1,4 +1,4 @@
-import { test } from "./test";
+import * as wtf from "@joelek/wtf";
 import { TransactionManager } from "./transactions";
 import { VirtualFile } from "./files";
 import { StoreManager } from "./stores";
@@ -13,7 +13,7 @@ async function delay(ms: number): Promise<void> {
 	});
 };
 
-test(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
+wtf.test(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let manager = new TransactionManager(file, {}, {}, {});
 	let events = new Array<string>();
@@ -42,15 +42,15 @@ test(`It should wait for all read actions to complete before starting a write ac
 		return 4;
 	});
 	events.push("S");
-	assert.true(await transactionOne === 1);
-	assert.true(await transactionTwo === 2);
-	assert.true(await transactionThree === 3);
-	assert.true(await transactionFour === 4);
+	assert.equals(await transactionOne, 1);
+	assert.equals(await transactionTwo, 2);
+	assert.equals(await transactionThree,3);
+	assert.equals(await transactionFour, 4);
 	events.push("E");
-	assert.array.equals(events, ["S", "1S", "2S", "1E", "2E", "3S", "3E", "4S", "4E", "E"]);
+	assert.equals(events, ["S", "1S", "2S", "1E", "2E", "3S", "3E", "4S", "4E", "E"]);
 });
 
-test(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
+wtf.test(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let manager = new TransactionManager(file, {}, {}, {});
 	let events = new Array<string>();
@@ -79,15 +79,15 @@ test(`It should wait for all write actions to complete before starting a read ac
 		return 4;
 	});
 	events.push("S");
-	assert.true(await transactionOne === 1);
-	assert.true(await transactionTwo === 2);
-	assert.true(await transactionThree === 3);
-	assert.true(await transactionFour === 4);
+	assert.equals(await transactionOne, 1);
+	assert.equals(await transactionTwo, 2);
+	assert.equals(await transactionThree, 3);
+	assert.equals(await transactionFour, 4);
 	events.push("E");
-	assert.array.equals(events, ["S", "1S", "1E", "2S", "2E", "3S", "4S", "3E", "4E", "E"]);
+	assert.equals(events, ["S", "1S", "1E", "2S", "2E", "3S", "4S", "3E", "4E", "E"]);
 });
 
-test(`It should recover from transactions that throw errors.`, async (assert) => {
+wtf.test(`It should recover from transactions that throw errors.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let manager = new TransactionManager(file, {}, {}, {});
 	let events = new Array<string>();
@@ -108,20 +108,20 @@ test(`It should recover from transactions that throw errors.`, async (assert) =>
 	await assert.throws(async () => {
 		await transactionOne;
 	});
-	assert.true(await transactionTwo === 2);
+	assert.equals(await transactionTwo, 2);
 	events.push("E");
-	assert.array.equals(events, ["S", "1S", "2S", "2E", "E"]);
+	assert.equals(events, ["S", "1S", "2S", "2E", "E"]);
 });
-/*
-test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
+
+wtf.test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
-	let dummy = new WritableStoreManager(StoreManager.construct(blockManager, {
+	let dummy = new DatabaseStore(StoreManager.construct(blockManager, {
 		fields: {
 			key: new StringField("")
 		},
 		keys: ["key"]
-	}));
+	}), {});
 	let manager = new TransactionManager(file, {
 		dummy
 	}, {}, {});
@@ -132,8 +132,8 @@ test(`It should throw an error when using transaction objects outside of the tra
 		await queue.enqueueReadableOperation(() => 1);
 	});
 });
-*/
-test(`It should reload entities with cached values when a transaction fails to complete.`, async (assert) => {
+
+wtf.test(`It should reload entities with cached values when a transaction fails to complete.`, async (assert) => {
 	let file = new VirtualFile(0);
 	let blockManager = new BlockManager(file);
 	let fields = {
@@ -174,5 +174,5 @@ test(`It should reload entities with cached values when a transaction fails to c
 	} catch (error) {}
 	let observed = Array.from(storeManager).map((record) => record.key);
 	let expected = ["1"];
-	assert.array.equals(observed, expected);
+	assert.equals(observed, expected);
 });
