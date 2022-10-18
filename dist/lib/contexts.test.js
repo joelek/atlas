@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const test_1 = require("./test");
+const wtf = require("@joelek/wtf");
 const contexts_1 = require("./contexts");
-(0, test_1.test)(`It should work.`, async (assert) => {
+wtf.test(`It should work.`, async (assert) => {
     let context = new contexts_1.Context();
     let users = context.createStore({
         user_id: context.createStringField(),
@@ -59,5 +59,5 @@ const contexts_1 = require("./contexts");
         name: "Joel Ek",
         age: 38
     };
-    assert.record.equals(observed, expected);
+    assert.equals(observed, expected);
 });

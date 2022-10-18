@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const test_1 = require("./test");
+const wtf = require("@joelek/wtf");
 const files_1 = require("./files");
 const links_1 = require("./links");
 const orders_1 = require("./orders");
@@ -28,7 +28,7 @@ function createUsersAndPosts() {
     };
 }
 ;
-(0, test_1.test)(`It should support filtering without explicit ordering for a referencing link.`, async (assert) => {
+wtf.test(`It should support filtering without explicit ordering for a referencing link.`, async (assert) => {
     let { users, posts } = { ...createUsersAndPosts() };
     let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
@@ -56,9 +56,9 @@ function createUsersAndPosts() {
     });
     let observed = Array.from(iterable).map((entry) => entry.post_id);
     let expected = ["Post 1", "Post 2"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should support filtering with explicit ordering for a referencing link.`, async (assert) => {
+wtf.test(`It should support filtering with explicit ordering for a referencing link.`, async (assert) => {
     let { users, posts } = { ...createUsersAndPosts() };
     let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
@@ -88,9 +88,9 @@ function createUsersAndPosts() {
     });
     let observed = Array.from(iterable).map((entry) => entry.post_id);
     let expected = ["Post 2", "Post 1"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should support looking up the corresponding parent for a referencing link.`, async (assert) => {
+wtf.test(`It should support looking up the corresponding parent for a referencing link.`, async (assert) => {
     let { users, posts } = { ...createUsersAndPosts() };
     let userPosts = links_1.LinkManager.construct(users, posts, {
         user_id: "post_user_id"
@@ -108,7 +108,7 @@ function createUsersAndPosts() {
     let expected = {
         user_id: "User 1"
     };
-    assert.record.equals(observed, expected);
+    assert.equals(observed, expected);
 });
 function createDirectories() {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -124,7 +124,7 @@ function createDirectories() {
     };
 }
 ;
-(0, test_1.test)(`It should support filtering without explicit ordering for a self-referencing link.`, async (assert) => {
+wtf.test(`It should support filtering without explicit ordering for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
@@ -146,9 +146,9 @@ function createDirectories() {
     });
     let observed = Array.from(iterable).map((entry) => entry.directory_id);
     let expected = ["Directory 2", "Directory 3"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should support filtering with explicit ordering for a self-referencing link.`, async (assert) => {
+wtf.test(`It should support filtering with explicit ordering for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
@@ -172,9 +172,9 @@ function createDirectories() {
     });
     let observed = Array.from(iterable).map((entry) => entry.directory_id);
     let expected = ["Directory 3", "Directory 2"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should support looking up the corresponding parent for a self-referencing link.`, async (assert) => {
+wtf.test(`It should support looking up the corresponding parent for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
@@ -194,9 +194,9 @@ function createDirectories() {
         directory_id: "Directory 1",
         parent_directory_id: null
     };
-    assert.record.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should support looking up absent parents for a self-referencing link.`, async (assert) => {
+wtf.test(`It should support looking up absent parents for a self-referencing link.`, async (assert) => {
     let { directories } = { ...createDirectories() };
     let childDirectories = links_1.LinkManager.construct(directories, directories, {
         directory_id: "parent_directory_id"
@@ -213,9 +213,9 @@ function createDirectories() {
         parent_directory_id: null
     });
     let expected = undefined;
-    assert.true(observed === expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a referencing link without orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a referencing link without orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
@@ -235,9 +235,9 @@ function createDirectories() {
     let index = userPosts.createIndex();
     let observed = index.keys;
     let expected = ["post_user_id", "post_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a referencing link with metadata field orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a referencing link with metadata field orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
@@ -255,9 +255,9 @@ function createDirectories() {
     let index = userPosts.createIndex();
     let observed = index.keys;
     let expected = ["post_user_id", "title", "post_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a referencing link with identifying field orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a referencing link with identifying field orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
@@ -276,9 +276,9 @@ function createDirectories() {
     let index = userPosts.createIndex();
     let observed = index.keys;
     let expected = ["post_user_id", "post_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a self-referencing link without orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a self-referencing link without orders.`, async (assert) => {
     let directories = new stores_1.Store({
         directory_id: new records_1.StringField(""),
         parent_directory_id: new records_1.NullableStringField(null),
@@ -294,9 +294,9 @@ function createDirectories() {
     let index = childDirectories.createIndex();
     let observed = index.keys;
     let expected = ["parent_directory_id", "directory_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a self-referencing link with metadata field orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a self-referencing link with metadata field orders.`, async (assert) => {
     let directories = new stores_1.Store({
         directory_id: new records_1.StringField(""),
         parent_directory_id: new records_1.NullableStringField(null),
@@ -310,9 +310,9 @@ function createDirectories() {
     let index = childDirectories.createIndex();
     let observed = index.keys;
     let expected = ["parent_directory_id", "name", "directory_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a self-referencing link with identifying field orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a self-referencing link with identifying field orders.`, async (assert) => {
     let directories = new stores_1.Store({
         directory_id: new records_1.StringField(""),
         parent_directory_id: new records_1.NullableStringField(null),
@@ -327,5 +327,5 @@ function createDirectories() {
     let index = childDirectories.createIndex();
     let observed = index.keys;
     let expected = ["parent_directory_id", "directory_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });

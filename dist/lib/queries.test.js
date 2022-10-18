@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const wtf = require("@joelek/wtf");
 const blocks_1 = require("./blocks");
 const files_1 = require("./files");
 const operators_1 = require("./operators");
@@ -7,7 +8,6 @@ const orders_1 = require("./orders");
 const queries_1 = require("./queries");
 const records_1 = require("./records");
 const stores_1 = require("./stores");
-const test_1 = require("./test");
 function createUsers() {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
@@ -38,7 +38,7 @@ function createUsers() {
     };
 }
 ;
-(0, test_1.test)(`It should support filtering without explicit ordering.`, async (assert) => {
+wtf.test(`It should support filtering without explicit ordering.`, async (assert) => {
     let { users } = { ...createUsers() };
     let queryManager = new queries_1.QueryManager(users, {
         name: new operators_1.EqualityOperator()
@@ -48,9 +48,9 @@ function createUsers() {
     });
     let observed = Array.from(iterable).map((user) => user.key);
     let expected = ["User 2", "User 3"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should support filtering with explicit ordering.`, async (assert) => {
+wtf.test(`It should support filtering with explicit ordering.`, async (assert) => {
     let { users } = { ...createUsers() };
     let queryManager = new queries_1.QueryManager(users, {
         name: new operators_1.EqualityOperator()
@@ -62,9 +62,9 @@ function createUsers() {
     });
     let observed = Array.from(iterable).map((user) => user.key);
     let expected = ["User 3", "User 2"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a query without orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a query without orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
@@ -75,9 +75,9 @@ function createUsers() {
     let index = query.createIndex();
     let observed = index.keys;
     let expected = ["name", "user_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a query with metadata field orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a query with metadata field orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
@@ -90,9 +90,9 @@ function createUsers() {
     let index = query.createIndex();
     let observed = index.keys;
     let expected = ["name", "user_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should create the correct index for a query with identifying field orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a query with identifying field orders.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
@@ -105,5 +105,5 @@ function createUsers() {
     let index = query.createIndex();
     let observed = index.keys;
     let expected = ["name", "user_id"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });

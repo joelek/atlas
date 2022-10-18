@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const wtf = require("@joelek/wtf");
 const filters_1 = require("./filters");
-const test_1 = require("./test");
-(0, test_1.test)(`It should determine matches (EqualityFilter).`, async (assert) => {
+wtf.test(`It should determine matches (EqualityFilter).`, async (assert) => {
     let filter = new filters_1.EqualityFilter(0);
-    assert.false(filter.matches(-1));
-    assert.true(filter.matches(0));
-    assert.false(filter.matches(1));
+    assert.equals(filter.matches(-1), false);
+    assert.equals(filter.matches(0), true);
+    assert.equals(filter.matches(1), false);
 });

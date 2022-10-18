@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const wtf = require("@joelek/wtf");
 const files = require("./files");
-const test_1 = require("./test");
 const constructors = {
     CachedFile: () => new files.CachedFile(new files.VirtualFile(0)),
     DurableFile: () => new files.DurableFile(new files.VirtualFile(0), new files.VirtualFile(0)),
@@ -12,73 +12,73 @@ const constructors = {
 };
 for (let key in constructors) {
     let constructor = constructors[key];
-    (0, test_1.test)(`It should support increasing in size (${key}).`, async (assert) => {
+    wtf.test(`It should support increasing in size (${key}).`, async (assert) => {
         let file = constructor();
         file.resize(0);
         file.write(Uint8Array.of(1), 0);
-        assert.true(file.size() === 1);
+        assert.equals(file.size(), 1);
         file.resize(2);
-        assert.true(file.size() === 2);
+        assert.equals(file.size(), 2);
         let buffer = file.read(new Uint8Array(2), 0);
-        assert.true(buffer[0] === 1);
-        assert.true(buffer[1] === 0);
+        assert.equals(buffer[0], 1);
+        assert.equals(buffer[1], 0);
     });
-    (0, test_1.test)(`It should support decreasing in size (${key}).`, async (assert) => {
+    wtf.test(`It should support decreasing in size (${key}).`, async (assert) => {
         let file = constructor();
         file.resize(0);
         file.write(Uint8Array.of(1, 2), 0);
-        assert.true(file.size() === 2);
+        assert.equals(file.size(), 2);
         file.resize(1);
-        assert.true(file.size() === 1);
+        assert.equals(file.size(), 1);
         let buffer = file.read(new Uint8Array(1), 0);
-        assert.true(buffer[0] === 1);
+        assert.equals(buffer[0], 1);
     });
-    (0, test_1.test)(`It should support writing before the end (${key}).`, async (assert) => {
+    wtf.test(`It should support writing before the end (${key}).`, async (assert) => {
         let file = constructor();
         file.resize(3);
         file.write(Uint8Array.of(2, 3), 1);
-        assert.true(file.size() === 3);
+        assert.equals(file.size(), 3);
         let buffer = file.read(new Uint8Array(3), 0);
-        assert.true(buffer[0] === 0);
-        assert.true(buffer[1] === 2);
-        assert.true(buffer[2] === 3);
+        assert.equals(buffer[0], 0);
+        assert.equals(buffer[1], 2);
+        assert.equals(buffer[2], 3);
     });
-    (0, test_1.test)(`It should support writing at the end (${key}).`, async (assert) => {
+    wtf.test(`It should support writing at the end (${key}).`, async (assert) => {
         let file = constructor();
         file.resize(1);
         file.write(Uint8Array.of(2, 3), 1);
-        assert.true(file.size() === 3);
+        assert.equals(file.size(), 3);
         let buffer = file.read(new Uint8Array(3), 0);
-        assert.true(buffer[0] === 0);
-        assert.true(buffer[1] === 2);
-        assert.true(buffer[2] === 3);
+        assert.equals(buffer[0], 0);
+        assert.equals(buffer[1], 2);
+        assert.equals(buffer[2], 3);
     });
-    (0, test_1.test)(`It should support writing past the end (${key}).`, async (assert) => {
+    wtf.test(`It should support writing past the end (${key}).`, async (assert) => {
         let file = constructor();
         file.resize(0);
         file.write(Uint8Array.of(2, 3), 1);
-        assert.true(file.size() === 3);
+        assert.equals(file.size(), 3);
         let buffer = file.read(new Uint8Array(3), 0);
-        assert.true(buffer[0] === 0);
-        assert.true(buffer[1] === 2);
-        assert.true(buffer[2] === 3);
+        assert.equals(buffer[0], 0);
+        assert.equals(buffer[1], 2);
+        assert.equals(buffer[2], 3);
     });
-    (0, test_1.test)(`It should persist data written (${key}).`, async (assert) => {
+    wtf.test(`It should persist data written (${key}).`, async (assert) => {
         let file = constructor();
         file.write(Uint8Array.of(1), 1);
         file.persist();
-        assert.binary.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(1));
+        assert.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(1));
     });
-    (0, test_1.test)(`It should discard truncated data (${key}).`, async (assert) => {
+    wtf.test(`It should discard truncated data (${key}).`, async (assert) => {
         let file = constructor();
         file.write(Uint8Array.of(1), 1);
         file.persist();
         file.resize(0);
         file.resize(2);
-        assert.binary.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(0));
+        assert.equals(file.read(new Uint8Array(1), 1), Uint8Array.of(0));
     });
 }
-(0, test_1.test)(`It should behave consistently (PagedDurableFile).`, async (assert) => {
+wtf.test(`It should behave consistently (PagedDurableFile).`, async (assert) => {
     let virtual = new files.VirtualFile(0);
     let file = new files.PagedDurableFile(new files.VirtualFile(0), new files.VirtualFile(0), Math.log2(2));
     for (let i = 0; i < 10000; i++) {
@@ -90,7 +90,7 @@ for (let key in constructors) {
             let buffer2 = new Uint8Array(length);
             file.read(buffer1, offset);
             virtual.read(buffer2, offset);
-            assert.binary.equals(buffer1, buffer2);
+            assert.equals(buffer1, buffer2);
         }
         else if (action === 1) {
             let length = Math.floor(Math.random() * 2);
@@ -114,15 +114,15 @@ for (let key in constructors) {
                 virtual.persist();
             }
         }
-        assert.true(file.size() === virtual.size());
+        assert.equals(file.size(), virtual.size());
         let buffer1 = new Uint8Array(file.size());
         let buffer2 = new Uint8Array(virtual.size());
         file.read(buffer1, 0);
         file.read(buffer2, 0);
-        assert.binary.equals(buffer1, buffer2);
+        assert.equals(buffer1, buffer2);
     }
 });
-(0, test_1.test)(`It should not persist truncated data (DurableFile).`, async (assert) => {
+wtf.test(`It should not persist truncated data (DurableFile).`, async (assert) => {
     let bin = new files.VirtualFile(0);
     let log = new files.VirtualFile(0);
     let file = new files.DurableFile(bin, log);
@@ -132,10 +132,10 @@ for (let key in constructors) {
     file.resize(2);
     file.persist();
     let buffer = bin.read(new Uint8Array(2), 0);
-    assert.true(buffer[0] === 1);
-    assert.true(buffer[1] === 0);
+    assert.equals(buffer[0], 1);
+    assert.equals(buffer[1], 0);
 });
-(0, test_1.test)(`It should not persist truncated data (PagedDurableFile).`, async (assert) => {
+wtf.test(`It should not persist truncated data (PagedDurableFile).`, async (assert) => {
     let bin = new files.VirtualFile(0);
     let log = new files.VirtualFile(0);
     let file = new files.PagedDurableFile(bin, log, 2);
@@ -145,153 +145,153 @@ for (let key in constructors) {
     file.resize(2);
     file.persist();
     let buffer = bin.read(new Uint8Array(2), 0);
-    assert.true(buffer[0] === 1);
-    assert.true(buffer[1] === 0);
+    assert.equals(buffer[0], 1);
+    assert.equals(buffer[1], 0);
 });
-(0, test_1.test)(`It should support writing before a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing before a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 0);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(2, 2, 1, 0, 0, 0, 0, 1, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(2, 2, 1, 1, 1, 1, 1, 1, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(2, 2, 1, 0, 0, 0, 0, 1, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(2, 2, 1, 1, 1, 1, 1, 1, 1, 1));
 });
-(0, test_1.test)(`It should support writing just before a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing just before a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 1);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 2, 2, 0, 0, 0, 0, 1, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 2, 2, 1, 1, 1, 1, 1, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 2, 2, 0, 0, 0, 0, 1, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 2, 2, 1, 1, 1, 1, 1, 1, 1));
 });
-(0, test_1.test)(`It should support writing overlapping the beginning of a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing overlapping the beginning of a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 2);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 0, 0, 0, 1, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 1, 1, 1, 1, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 0, 0, 0, 1, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 1, 1, 1, 1, 1, 1));
 });
-(0, test_1.test)(`It should support writing at the beginning of a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing at the beginning of a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 3);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 2, 2, 0, 0, 1, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 2, 2, 1, 1, 1, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 2, 2, 0, 0, 1, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 2, 2, 1, 1, 1, 1, 1));
 });
-(0, test_1.test)(`It should support writing embedding into a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing embedding into a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 4);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 2, 2, 0, 1, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 2, 2, 1, 1, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 2, 2, 0, 1, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 2, 2, 1, 1, 1, 1));
 });
-(0, test_1.test)(`It should support writing at the end of a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing at the end of a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 5);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 2, 2, 1, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 2, 2, 1, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 2, 2, 1, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 2, 2, 1, 1, 1));
 });
-(0, test_1.test)(`It should support writing overlapping the end of a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing overlapping the end of a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 6);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 2, 2, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 2, 2, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 2, 2, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 2, 2, 1, 1));
 });
-(0, test_1.test)(`It should support writing just after a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing just after a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 7);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 0, 2, 2, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 2, 2, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 0, 2, 2, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 2, 2, 1));
 });
-(0, test_1.test)(`It should support writing after a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing after a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2), 8);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 0, 1, 2, 2));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 2, 2));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 0, 0, 0, 0, 1, 2, 2));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 2, 2));
 });
-(0, test_1.test)(`It should support writing overlapping the beginning and the end of a cached range (CachedFile).`, async (assert) => {
+wtf.test(`It should support writing overlapping the beginning and the end of a cached range (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(10);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(4), 3);
     file.write(Uint8Array.of(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 0);
     cached.write(Uint8Array.of(2, 2, 2, 2, 2, 2), 2);
-    assert.binary.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 2, 2, 2, 2, 1, 1));
-    assert.binary.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 2, 2, 2, 2, 1, 1));
+    assert.equals(cached.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 2, 2, 2, 2, 1, 1));
+    assert.equals(file.read(new Uint8Array(10), 0), Uint8Array.of(1, 1, 2, 2, 2, 2, 2, 2, 1, 1));
 });
-(0, test_1.test)(`It should not store shallow copies when reading from the file (CachedFile).`, async (assert) => {
+wtf.test(`It should not store shallow copies when reading from the file (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(3);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(1), 1);
     let buffer = new Uint8Array(3);
     cached.read(buffer, 0);
     buffer.set(Uint8Array.of(1, 1, 1), 0);
-    assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
+    assert.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
 });
-(0, test_1.test)(`It should not store shallow copies when writing to the file (CachedFile).`, async (assert) => {
+wtf.test(`It should not store shallow copies when writing to the file (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(3);
     let cached = new files.CachedFile(file);
     cached.read(new Uint8Array(1), 1);
     let buffer = new Uint8Array(3);
     cached.write(buffer, 0);
     buffer.set(Uint8Array.of(1, 1, 1), 0);
-    assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
+    assert.equals(cached.read(buffer, 0), Uint8Array.of(0, 0, 0));
 });
-(0, test_1.test)(`It should fill the entire buffer when reading from the file (CachedFile).`, async (assert) => {
+wtf.test(`It should fill the entire buffer when reading from the file (CachedFile).`, async (assert) => {
     let file = new files.VirtualFile(3);
     let cached = new files.CachedFile(file);
     cached.resize(4);
     cached.write(Uint8Array.of(1), 1);
     let buffer = new Uint8Array(1);
-    assert.binary.equals(cached.read(buffer, 0), Uint8Array.of(0));
-    assert.binary.equals(cached.read(buffer, 1), Uint8Array.of(1));
-    assert.binary.equals(cached.read(buffer, 2), Uint8Array.of(0));
-    assert.binary.equals(cached.read(buffer, 3), Uint8Array.of(0));
+    assert.equals(cached.read(buffer, 0), Uint8Array.of(0));
+    assert.equals(cached.read(buffer, 1), Uint8Array.of(1));
+    assert.equals(cached.read(buffer, 2), Uint8Array.of(0));
+    assert.equals(cached.read(buffer, 3), Uint8Array.of(0));
 });
-(0, test_1.test)(`It should fill the entire buffer when reading from the file (DurableFile).`, async (assert) => {
+wtf.test(`It should fill the entire buffer when reading from the file (DurableFile).`, async (assert) => {
     let bin = new files.VirtualFile(0);
     let log = new files.VirtualFile(0);
     let durable = new files.DurableFile(bin, log);
     durable.resize(4);
     durable.write(Uint8Array.of(1), 1);
     let buffer = new Uint8Array(1);
-    assert.binary.equals(durable.read(buffer, 0), Uint8Array.of(0));
-    assert.binary.equals(durable.read(buffer, 1), Uint8Array.of(1));
-    assert.binary.equals(durable.read(buffer, 2), Uint8Array.of(0));
-    assert.binary.equals(durable.read(buffer, 3), Uint8Array.of(0));
+    assert.equals(durable.read(buffer, 0), Uint8Array.of(0));
+    assert.equals(durable.read(buffer, 1), Uint8Array.of(1));
+    assert.equals(durable.read(buffer, 2), Uint8Array.of(0));
+    assert.equals(durable.read(buffer, 3), Uint8Array.of(0));
 });
-(0, test_1.test)(`It should fill the entire buffer when reading from the file (PagedDurableFile).`, async (assert) => {
+wtf.test(`It should fill the entire buffer when reading from the file (PagedDurableFile).`, async (assert) => {
     let bin = new files.VirtualFile(0);
     let log = new files.VirtualFile(0);
     let durable = new files.PagedDurableFile(bin, log, 4);
     durable.resize(4);
     durable.write(Uint8Array.of(1), 1);
     let buffer = new Uint8Array(1);
-    assert.binary.equals(durable.read(buffer, 0), Uint8Array.of(0));
-    assert.binary.equals(durable.read(buffer, 1), Uint8Array.of(1));
-    assert.binary.equals(durable.read(buffer, 2), Uint8Array.of(0));
-    assert.binary.equals(durable.read(buffer, 3), Uint8Array.of(0));
+    assert.equals(durable.read(buffer, 0), Uint8Array.of(0));
+    assert.equals(durable.read(buffer, 1), Uint8Array.of(1));
+    assert.equals(durable.read(buffer, 2), Uint8Array.of(0));
+    assert.equals(durable.read(buffer, 3), Uint8Array.of(0));
 });
-(0, test_1.test)(`It should endure through multiple transactions and thousands of operations (DurableFile).`, async (assert) => {
+wtf.test(`It should endure through multiple transactions and thousands of operations (DurableFile).`, async (assert) => {
     let bin = new files.PagedFile(new files.PhysicalFile("./private/endurance.bin"), Math.log2(4096), 4);
     let log = new files.PagedFile(new files.PhysicalFile("./private/endurance.log"), Math.log2(4096), 4);
     let durable = new files.DurableFile(bin, log);
@@ -346,62 +346,62 @@ for (let key in constructors) {
     //console.log(`Resize: ${(resizeTime/timesResized).toFixed(3)} ms`);
     //console.log(`Persist: ${(persistTime/timesPersisted).toFixed(3)} ms`);
 });
-(0, test_1.test)(`It should support reading with different overlaps (PagedFile).`, async (assert) => {
+wtf.test(`It should support reading with different overlaps (PagedFile).`, async (assert) => {
     let virtual = new files.VirtualFile(0);
     virtual.write(Uint8Array.of(1, 2, 3, 4, 5), 0);
     for (let i = 0; i < 3; i++) {
         let paged = new files.PagedFile(virtual, 2, i);
-        assert.binary.equals(paged.read(new Uint8Array(1), 0), Uint8Array.of(1));
-        assert.binary.equals(paged.read(new Uint8Array(1), 1), Uint8Array.of(2));
-        assert.binary.equals(paged.read(new Uint8Array(1), 2), Uint8Array.of(3));
-        assert.binary.equals(paged.read(new Uint8Array(1), 3), Uint8Array.of(4));
-        assert.binary.equals(paged.read(new Uint8Array(1), 4), Uint8Array.of(5));
-        assert.binary.equals(paged.read(new Uint8Array(2), 0), Uint8Array.of(1, 2));
-        assert.binary.equals(paged.read(new Uint8Array(2), 1), Uint8Array.of(2, 3));
-        assert.binary.equals(paged.read(new Uint8Array(2), 2), Uint8Array.of(3, 4));
-        assert.binary.equals(paged.read(new Uint8Array(2), 3), Uint8Array.of(4, 5));
-        assert.binary.equals(paged.read(new Uint8Array(3), 0), Uint8Array.of(1, 2, 3));
-        assert.binary.equals(paged.read(new Uint8Array(3), 1), Uint8Array.of(2, 3, 4));
-        assert.binary.equals(paged.read(new Uint8Array(3), 2), Uint8Array.of(3, 4, 5));
-        assert.binary.equals(paged.read(new Uint8Array(4), 0), Uint8Array.of(1, 2, 3, 4));
-        assert.binary.equals(paged.read(new Uint8Array(4), 1), Uint8Array.of(2, 3, 4, 5));
-        assert.binary.equals(paged.read(new Uint8Array(5), 0), Uint8Array.of(1, 2, 3, 4, 5));
+        assert.equals(paged.read(new Uint8Array(1), 0), Uint8Array.of(1));
+        assert.equals(paged.read(new Uint8Array(1), 1), Uint8Array.of(2));
+        assert.equals(paged.read(new Uint8Array(1), 2), Uint8Array.of(3));
+        assert.equals(paged.read(new Uint8Array(1), 3), Uint8Array.of(4));
+        assert.equals(paged.read(new Uint8Array(1), 4), Uint8Array.of(5));
+        assert.equals(paged.read(new Uint8Array(2), 0), Uint8Array.of(1, 2));
+        assert.equals(paged.read(new Uint8Array(2), 1), Uint8Array.of(2, 3));
+        assert.equals(paged.read(new Uint8Array(2), 2), Uint8Array.of(3, 4));
+        assert.equals(paged.read(new Uint8Array(2), 3), Uint8Array.of(4, 5));
+        assert.equals(paged.read(new Uint8Array(3), 0), Uint8Array.of(1, 2, 3));
+        assert.equals(paged.read(new Uint8Array(3), 1), Uint8Array.of(2, 3, 4));
+        assert.equals(paged.read(new Uint8Array(3), 2), Uint8Array.of(3, 4, 5));
+        assert.equals(paged.read(new Uint8Array(4), 0), Uint8Array.of(1, 2, 3, 4));
+        assert.equals(paged.read(new Uint8Array(4), 1), Uint8Array.of(2, 3, 4, 5));
+        assert.equals(paged.read(new Uint8Array(5), 0), Uint8Array.of(1, 2, 3, 4, 5));
     }
 });
-(0, test_1.test)(`It should support writing with different overlaps (PagedFile).`, async (assert) => {
+wtf.test(`It should support writing with different overlaps (PagedFile).`, async (assert) => {
     let virtual = new files.VirtualFile(0);
     virtual.write(Uint8Array.of(1, 2, 3, 4, 5), 0);
     for (let i = 0; i < 3; i++) {
         let paged = new files.PagedFile(virtual, 2, i);
         paged.write(Uint8Array.of(11), 0);
-        assert.binary.equals(paged.read(new Uint8Array(1), 0), Uint8Array.of(11));
+        assert.equals(paged.read(new Uint8Array(1), 0), Uint8Array.of(11));
         paged.write(Uint8Array.of(12), 1);
-        assert.binary.equals(paged.read(new Uint8Array(1), 1), Uint8Array.of(12));
+        assert.equals(paged.read(new Uint8Array(1), 1), Uint8Array.of(12));
         paged.write(Uint8Array.of(13), 2);
-        assert.binary.equals(paged.read(new Uint8Array(1), 2), Uint8Array.of(13));
+        assert.equals(paged.read(new Uint8Array(1), 2), Uint8Array.of(13));
         paged.write(Uint8Array.of(14), 3);
-        assert.binary.equals(paged.read(new Uint8Array(1), 3), Uint8Array.of(14));
+        assert.equals(paged.read(new Uint8Array(1), 3), Uint8Array.of(14));
         paged.write(Uint8Array.of(15), 4);
-        assert.binary.equals(paged.read(new Uint8Array(1), 4), Uint8Array.of(15));
+        assert.equals(paged.read(new Uint8Array(1), 4), Uint8Array.of(15));
         paged.write(Uint8Array.of(21, 22), 0);
-        assert.binary.equals(paged.read(new Uint8Array(2), 0), Uint8Array.of(21, 22));
+        assert.equals(paged.read(new Uint8Array(2), 0), Uint8Array.of(21, 22));
         paged.write(Uint8Array.of(22, 23), 1);
-        assert.binary.equals(paged.read(new Uint8Array(2), 1), Uint8Array.of(22, 23));
+        assert.equals(paged.read(new Uint8Array(2), 1), Uint8Array.of(22, 23));
         paged.write(Uint8Array.of(23, 24), 2);
-        assert.binary.equals(paged.read(new Uint8Array(2), 2), Uint8Array.of(23, 24));
+        assert.equals(paged.read(new Uint8Array(2), 2), Uint8Array.of(23, 24));
         paged.write(Uint8Array.of(24, 25), 3);
-        assert.binary.equals(paged.read(new Uint8Array(2), 3), Uint8Array.of(24, 25));
+        assert.equals(paged.read(new Uint8Array(2), 3), Uint8Array.of(24, 25));
         paged.write(Uint8Array.of(31, 32, 33), 0);
-        assert.binary.equals(paged.read(new Uint8Array(3), 0), Uint8Array.of(31, 32, 33));
+        assert.equals(paged.read(new Uint8Array(3), 0), Uint8Array.of(31, 32, 33));
         paged.write(Uint8Array.of(32, 33, 34), 1);
-        assert.binary.equals(paged.read(new Uint8Array(3), 1), Uint8Array.of(32, 33, 34));
+        assert.equals(paged.read(new Uint8Array(3), 1), Uint8Array.of(32, 33, 34));
         paged.write(Uint8Array.of(33, 34, 35), 2);
-        assert.binary.equals(paged.read(new Uint8Array(3), 2), Uint8Array.of(33, 34, 35));
+        assert.equals(paged.read(new Uint8Array(3), 2), Uint8Array.of(33, 34, 35));
         paged.write(Uint8Array.of(41, 42, 43, 44), 0);
-        assert.binary.equals(paged.read(new Uint8Array(4), 0), Uint8Array.of(41, 42, 43, 44));
+        assert.equals(paged.read(new Uint8Array(4), 0), Uint8Array.of(41, 42, 43, 44));
         paged.write(Uint8Array.of(42, 43, 44, 45), 1);
-        assert.binary.equals(paged.read(new Uint8Array(4), 1), Uint8Array.of(42, 43, 44, 45));
+        assert.equals(paged.read(new Uint8Array(4), 1), Uint8Array.of(42, 43, 44, 45));
         paged.write(Uint8Array.of(51, 52, 53, 54, 55), 0);
-        assert.binary.equals(paged.read(new Uint8Array(5), 0), Uint8Array.of(51, 52, 53, 54, 55));
+        assert.equals(paged.read(new Uint8Array(5), 0), Uint8Array.of(51, 52, 53, 54, 55));
     }
 });

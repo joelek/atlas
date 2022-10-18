@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const wtf = require("@joelek/wtf");
 const records = require("./records");
-const test_1 = require("./test");
-(0, test_1.test)(`It should encode records.`, async (assert) => {
+wtf.test(`It should encode records.`, async (assert) => {
     let rh = new records.RecordManager({
         firstname: new records.StringField(""),
         lastname: new records.StringField("")
@@ -13,9 +13,9 @@ const test_1 = require("./test");
     };
     let observed = rh.decode(rh.encode(record));
     let expected = record;
-    assert.record.equals(observed, expected);
+    assert.equals(observed, expected);
 });
-(0, test_1.test)(`It should encode keys.`, async (assert) => {
+wtf.test(`It should encode keys.`, async (assert) => {
     let rh = new records.RecordManager({
         firstname: new records.StringField(""),
         lastname: new records.StringField("")
@@ -28,5 +28,5 @@ const test_1 = require("./test");
     let expected = {
         firstname: "Joel"
     };
-    assert.record.equals(observed, expected);
+    assert.equals(observed, expected);
 });

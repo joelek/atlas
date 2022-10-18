@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const test_1 = require("./test");
+const wtf = require("@joelek/wtf");
 const transactions_1 = require("./transactions");
 const files_1 = require("./files");
 const stores_1 = require("./stores");
@@ -14,7 +14,7 @@ async function delay(ms) {
     });
 }
 ;
-(0, test_1.test)(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
+wtf.test(`It should wait for all read actions to complete before starting a write action.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
     let manager = new transactions_1.TransactionManager(file, {}, {}, {});
     let events = new Array();
@@ -43,14 +43,14 @@ async function delay(ms) {
         return 4;
     });
     events.push("S");
-    assert.true(await transactionOne === 1);
-    assert.true(await transactionTwo === 2);
-    assert.true(await transactionThree === 3);
-    assert.true(await transactionFour === 4);
+    assert.equals(await transactionOne, 1);
+    assert.equals(await transactionTwo, 2);
+    assert.equals(await transactionThree, 3);
+    assert.equals(await transactionFour, 4);
     events.push("E");
-    assert.array.equals(events, ["S", "1S", "2S", "1E", "2E", "3S", "3E", "4S", "4E", "E"]);
+    assert.equals(events, ["S", "1S", "2S", "1E", "2E", "3S", "3E", "4S", "4E", "E"]);
 });
-(0, test_1.test)(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
+wtf.test(`It should wait for all write actions to complete before starting a read action.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
     let manager = new transactions_1.TransactionManager(file, {}, {}, {});
     let events = new Array();
@@ -79,14 +79,14 @@ async function delay(ms) {
         return 4;
     });
     events.push("S");
-    assert.true(await transactionOne === 1);
-    assert.true(await transactionTwo === 2);
-    assert.true(await transactionThree === 3);
-    assert.true(await transactionFour === 4);
+    assert.equals(await transactionOne, 1);
+    assert.equals(await transactionTwo, 2);
+    assert.equals(await transactionThree, 3);
+    assert.equals(await transactionFour, 4);
     events.push("E");
-    assert.array.equals(events, ["S", "1S", "1E", "2S", "2E", "3S", "4S", "3E", "4E", "E"]);
+    assert.equals(events, ["S", "1S", "1E", "2S", "2E", "3S", "4S", "3E", "4E", "E"]);
 });
-(0, test_1.test)(`It should recover from transactions that throw errors.`, async (assert) => {
+wtf.test(`It should recover from transactions that throw errors.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
     let manager = new transactions_1.TransactionManager(file, {}, {}, {});
     let events = new Array();
@@ -107,21 +107,20 @@ async function delay(ms) {
     await assert.throws(async () => {
         await transactionOne;
     });
-    assert.true(await transactionTwo === 2);
+    assert.equals(await transactionTwo, 2);
     events.push("E");
-    assert.array.equals(events, ["S", "1S", "2S", "2E", "E"]);
+    assert.equals(events, ["S", "1S", "2S", "2E", "E"]);
 });
-/*
-test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
-    let file = new VirtualFile(0);
-    let blockManager = new BlockManager(file);
-    let dummy = new WritableStoreManager(StoreManager.construct(blockManager, {
+wtf.test(`It should throw an error when using transaction objects outside of the transaction.`, async (assert) => {
+    let file = new files_1.VirtualFile(0);
+    let blockManager = new blocks_1.BlockManager(file);
+    let dummy = new databases_1.DatabaseStore(stores_1.StoreManager.construct(blockManager, {
         fields: {
-            key: new StringField("")
+            key: new records_1.StringField("")
         },
         keys: ["key"]
-    }));
-    let manager = new TransactionManager(file, {
+    }), {});
+    let manager = new transactions_1.TransactionManager(file, {
         dummy
     }, {}, {});
     let queue = await manager.enqueueWritableTransaction(async (queue) => {
@@ -131,8 +130,7 @@ test(`It should throw an error when using transaction objects outside of the tra
         await queue.enqueueReadableOperation(() => 1);
     });
 });
-*/
-(0, test_1.test)(`It should reload entities with cached values when a transaction fails to complete.`, async (assert) => {
+wtf.test(`It should reload entities with cached values when a transaction fails to complete.`, async (assert) => {
     let file = new files_1.VirtualFile(0);
     let blockManager = new blocks_1.BlockManager(file);
     let fields = {
@@ -174,5 +172,5 @@ test(`It should throw an error when using transaction objects outside of the tra
     catch (error) { }
     let observed = Array.from(storeManager).map((record) => record.key);
     let expected = ["1"];
-    assert.array.equals(observed, expected);
+    assert.equals(observed, expected);
 });
