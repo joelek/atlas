@@ -13,13 +13,10 @@
 	"include": [],
 	"references": [
 		{
-			"path": "./source/bench/"
+			"path": "./source/lib/"
 		},
 		{
 			"path": "./source/mod/"
-		},
-		{
-			"path": "./source/lib/"
 		}
 	]
 }
