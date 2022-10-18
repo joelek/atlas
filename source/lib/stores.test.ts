@@ -1298,7 +1298,7 @@ test(`It should not skip the entire category branch when the first candidate occ
 	let expected = ["User 1"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
-
+/*
 test(`It should not return the same result twice when multiple indices match the query.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let fields = {
@@ -1328,3 +1328,4 @@ test(`It should not return the same result twice when multiple indices match the
 	let expected = ["User 1"] as Array<string>;
 	assert.array.equals(observed, expected);
 });
+ */
