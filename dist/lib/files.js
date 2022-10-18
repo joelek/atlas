@@ -655,6 +655,12 @@ class DurableFile extends File {
         for (let entry of entries) {
             this.tree.remove(entry.key);
         }
+        let offset = this.header.redoSize();
+        let distance = size - offset;
+        if (distance > 0) {
+            let redo = new Uint8Array(distance);
+            this.appendRedo(redo, offset);
+        }
         this.header.redoSize(size);
     }
     size() {

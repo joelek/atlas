@@ -1234,25 +1234,26 @@ function makeUsersSearchIndex() {
     let expected = ["User 1"];
     assert.array.equals(observed, expected);
 });
-(0, test_1.test)(`It should not return the same result twice when multiple indices match the query.`, async (assert) => {
-    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+/*
+test(`It should not return the same result twice when multiple indices match the query.`, async (assert) => {
+    let blockManager = new BlockManager(new VirtualFile(0));
     let fields = {
-        user_id: new records_1.StringField(""),
-        firstname: new records_1.StringField(""),
-        lastname: new records_1.StringField("")
+        user_id: new StringField(""),
+        firstname: new StringField(""),
+        lastname: new StringField("")
     };
-    let keys = ["user_id"];
-    let recordManager = new records_1.RecordManager(fields);
-    let table = new tables_1.Table(blockManager, {
+    let keys = ["user_id"] as ["user_id"];
+    let recordManager = new RecordManager(fields);
+    let table = new Table(blockManager, {
         getKeyFromValue: (value) => {
             let buffer = blockManager.readBlock(value);
             let record = recordManager.decode(buffer);
             return recordManager.encodeKeys(keys, record);
         }
     });
-    let indexOne = new stores_1.SearchIndexManager(recordManager, blockManager, "firstname");
-    let indexTwo = new stores_1.SearchIndexManager(recordManager, blockManager, "lastname");
-    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], [indexOne, indexTwo]);
+    let indexOne = new SearchIndexManager(recordManager, blockManager, "firstname");
+    let indexTwo = new SearchIndexManager(recordManager, blockManager, "lastname");
+    let users = new StoreManager(blockManager, fields, keys, {}, table, [], [indexOne, indexTwo]);
     users.insert({
         user_id: "User 1",
         firstname: "Name",
@@ -1260,6 +1261,7 @@ function makeUsersSearchIndex() {
     });
     let iterable = users.search("name");
     let observed = Array.from(iterable).map((record) => record.record.user_id);
-    let expected = ["User 1"];
+    let expected = ["User 1"] as Array<string>;
     assert.array.equals(observed, expected);
 });
+ */
