@@ -1,7 +1,7 @@
 {
 	"bin": {},
 	"dependencies": {
-		"@joelek/bedrock": "github:joelek/bedrock#semver:^0.6",
+		"@joelek/bedrock": "github:joelek/bedrock#semver:^1.0",
 		"@joelek/ts-stdlib": "github:joelek/ts-stdlib#semver:^1.2"
 	},
 	"devDependencies": {
