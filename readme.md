@@ -474,3 +474,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Create EntityManagers in SchemaManager.
 * Cached decoded records on a per-transaction basis. Readable transactions may re-use caches.
 * Fix issue with de-duplication of search results originating from multiple indices.
+* Add user-friendly support for unique fields.
