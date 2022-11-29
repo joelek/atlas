@@ -17,7 +17,8 @@
 		"url": "https://github.com/joelek/atlas.git"
 	},
 	"scripts": {
-		"build": "npm run codegen && npm run compile && npm run package && npm run test",
+		"appgen": "node -p \"JSON.stringify((({ name, version }) => ({ name, version }))(require('./package.json')), null, '\t')\" > ./source/app.json",
+		"build": "npm run appgen && npm run codegen && npm run compile && npm run package && npm run test",
 		"clean": "rm -rf ./build/ ./node_modules/",
 		"codegen": "",
 		"compile": "rm -rf ./build/* && npx tsc --build",
