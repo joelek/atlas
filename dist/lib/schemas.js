@@ -721,7 +721,7 @@ class SchemaManager {
     createKeyOperators(blockManager, operatorMap) {
         let operators = [];
         for (let key in operatorMap) {
-            let operator = operatorMap[key];
+            let operator = operatorMap[key]; // TypeScript 4.0 cannot infer type properly.
             if (operator == null) {
                 continue;
             }
@@ -748,7 +748,7 @@ class SchemaManager {
     createKeyOrders(blockManager, orderMap) {
         let orders = [];
         for (let key in orderMap) {
-            let order = orderMap[key];
+            let order = orderMap[key]; // TypeScript 4.0 cannot infer type properly.
             if (order == null) {
                 continue;
             }

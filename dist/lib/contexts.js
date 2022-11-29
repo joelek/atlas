@@ -181,7 +181,7 @@ class Context {
         let reference = new LinkReference();
         let orders = {};
         for (let key in orderReferences) {
-            let orderReference = orderReferences[key];
+            let orderReference = orderReferences[key]; // TypeScript 4.0 cannot infer type properly.
             if (orderReference == null) {
                 continue;
             }
