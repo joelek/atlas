@@ -231,7 +231,7 @@ export class Context {
 		let reference = new LinkReference<A, B, C, D, E>();
 		let orders = {} as OrderMap<C>;
 		for (let key in orderReferences) {
-			let orderReference = orderReferences[key];
+			let orderReference = orderReferences[key] as any; // TypeScript 4.0 cannot infer type properly.
 			if (orderReference == null) {
 				continue;
 			}

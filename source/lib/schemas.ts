@@ -889,7 +889,7 @@ export class SchemaManager {
 	private createKeyOperators<A extends Record>(blockManager: BlockManager, operatorMap: OperatorMap<A>): KeyOperatorsSchema {
 		let operators: KeyOperatorsSchema = [];
 		for (let key in operatorMap) {
-			let operator = operatorMap[key];
+			let operator = operatorMap[key] as any; // TypeScript 4.0 cannot infer type properly.
 			if (operator == null) {
 				continue;
 			}
@@ -918,7 +918,7 @@ export class SchemaManager {
 	private createKeyOrders<A extends Record>(blockManager: BlockManager, orderMap: OrderMap<A>): KeyOrdersSchema {
 		let orders: KeyOrdersSchema = [];
 		for (let key in orderMap) {
-			let order = orderMap[key];
+			let order = orderMap[key] as any; // TypeScript 4.0 cannot infer type properly.
 			if (order == null) {
 				continue;
 			}
