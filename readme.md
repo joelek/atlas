@@ -103,7 +103,7 @@ Readable transactions are executed in parallel whereas writable transactions are
 
 ## Schemas
 
-The context is used to defined the desired database schema. Atlas will use the desired schema to perform automatic schema migration when a transaction manager is created with a path where a database already is stored. This is done by determining the differences between the desired and the existing schema.
+The context is used to define the desired database schema. Atlas will use the desired schema to perform automatic schema migration when a transaction manager is created with a path where a database already is stored. This is done by determining the differences between the desired and the existing schema.
 
 Please make sure that you understand how Atlas handles automatic schema migration by studying the migration rules before you use Atlas in production environments.
 
