@@ -1,5 +1,5 @@
-export declare type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";
-export declare type Endian = "big" | "little";
+export type Encoding = "hex" | "base64" | "base64url" | "binary" | "utf-8";
+export type Endian = "big" | "little";
 export declare class Binary {
     private constructor();
     static string(buffer: Uint8Array, offset: number, length: number, encoding: Encoding, value?: string): string;
@@ -22,7 +22,7 @@ export interface SeekableIterable<A> extends Iterable<A> {
     next(): A | undefined;
     seek(value: A | undefined): A | undefined;
 }
-export declare type Collator<A> = (one: A, two: A) => number;
+export type Collator<A> = (one: A, two: A) => number;
 export declare function makeSeekableIterable<A>(source: Iterable<A>, collator: Collator<A>): SeekableIterable<A>;
 export declare function intersection<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A>;
 export declare function union<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A>;

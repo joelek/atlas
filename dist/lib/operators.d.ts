@@ -8,9 +8,9 @@ export declare class EqualityOperator<A extends Value> extends Operator<A> {
     constructor();
     createFilter(value: A): EqualityFilter<A>;
 }
-export declare type OperatorMap<A extends Record> = {
+export type OperatorMap<A extends Record> = {
     [B in keyof A]?: Operator<A[B]>;
 };
-export declare type Operators<A extends Record> = {
+export type Operators<A extends Record> = {
     [B in keyof A]: Operator<A[B]>;
 };

@@ -27,7 +27,7 @@ export declare class TransactionalStore<A extends Record, B extends RequiredKeys
     update(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]>;
     vacate(queue: WritableQueue, ...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]>;
 }
-export declare type TransactionalStoresFromDatabaseStores<A extends DatabaseStores<any>> = {
+export type TransactionalStoresFromDatabaseStores<A extends DatabaseStores<any>> = {
     [B in keyof A]: A[B] extends DatabaseStore<infer C, infer D> ? TransactionalStore<C, D> : never;
 };
 export declare class TransactionalLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
@@ -36,7 +36,7 @@ export declare class TransactionalLink<A extends Record, B extends RequiredKeys<
     filter(queue: ReadableQueue, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]>;
     lookup(queue: ReadableQueue, ...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]>;
 }
-export declare type TransactionalLinksFromDatabaseLinks<A extends DatabaseLinks<any>> = {
+export type TransactionalLinksFromDatabaseLinks<A extends DatabaseLinks<any>> = {
     [B in keyof A]: A[B] extends DatabaseLink<infer C, infer D, infer E, infer F, infer G> ? TransactionalLink<C, D, E, F, G> : never;
 };
 export declare class TransactionalQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
@@ -44,11 +44,11 @@ export declare class TransactionalQuery<A extends Record, B extends RequiredKeys
     constructor(query: DatabaseQuery<A, B, C, D>);
     filter(queue: ReadableQueue, ...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]>;
 }
-export declare type TransactionalQueriesFromDatabaseQueries<A extends DatabaseQueries<any>> = {
+export type TransactionalQueriesFromDatabaseQueries<A extends DatabaseQueries<any>> = {
     [B in keyof A]: A[B] extends DatabaseQuery<infer C, infer D, infer E, infer F> ? TransactionalQuery<C, D, E, F> : never;
 };
-export declare type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
-export declare type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
+export type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
+export type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
 export interface TransactionManagerDetail {
     onDiscard?(): void;
 }

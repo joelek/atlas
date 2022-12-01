@@ -15,9 +15,9 @@ export declare class DecreasingOrder<A extends Value> extends Order<A> {
     compare(one: A, two: A): number;
     getDirection(): Direction;
 }
-export declare type OrderMap<A extends Record> = {
+export type OrderMap<A extends Record> = {
     [C in keyof A]?: Order<A[C]>;
 };
-export declare type Orders<A extends Record> = {
+export type Orders<A extends Record> = {
     [C in keyof A]: Order<A[C]>;
 };

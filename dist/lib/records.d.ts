@@ -1,16 +1,16 @@
 import * as bedrock from "@joelek/bedrock";
-export declare type Value = Uint8Array | bigint | boolean | null | number | string;
-export declare type Record = {
+export type Value = Uint8Array | bigint | boolean | null | number | string;
+export type Record = {
     [key: string]: Value;
 };
-export declare type Key<A> = keyof A & string;
-export declare type Keys<A> = Array<Key<A>>;
-export declare type RequiredKey<A> = Key<A> & {
+export type Key<A> = keyof A & string;
+export type Keys<A> = Array<Key<A>>;
+export type RequiredKey<A> = Key<A> & {
     [B in keyof A]: null extends A[B] ? never : B;
 }[keyof A];
-export declare type RequiredKeys<A> = Array<RequiredKey<A>>;
-export declare type KeysRecord<A extends Record, B extends Keys<A>> = A | Pick<A, B[number]>;
-export declare type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record> = {
+export type RequiredKeys<A> = Array<RequiredKey<A>>;
+export type KeysRecord<A extends Record, B extends Keys<A>> = A | Pick<A, B[number]>;
+export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record> = {
     [D in B[number]]: {
         [E in keyof C]: A[D] extends C[E] ? E : never;
     }[keyof C];
@@ -24,7 +24,7 @@ export declare abstract class Field<A extends Value> {
     getDefaultValue(): A;
     getSearchable(): boolean | undefined;
 }
-export declare type Fields<A extends Record> = {
+export type Fields<A extends Record> = {
     [B in keyof A]: Field<A[B]>;
 };
 export declare class BigIntField extends Field<bigint> {

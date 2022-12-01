@@ -10,9 +10,9 @@ export declare class EqualityFilter<A extends Value> extends Filter<A> {
     getValue(): A;
     matches(value: A): boolean;
 }
-export declare type FilterMap<A extends Record> = {
+export type FilterMap<A extends Record> = {
     [C in keyof A]?: Filter<A[C]>;
 };
-export declare type Filters<A extends Record> = {
+export type Filters<A extends Record> = {
     [C in keyof A]: Filter<A[C]>;
 };

@@ -6,13 +6,13 @@ import { Index, Store, StoreManager } from "./stores";
 export interface QueryInterface<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
     filter(parameters: C, anchor?: KeysRecord<A, B>, limit?: number): Promise<Array<A>>;
 }
-export declare type QueryInterfaces<A> = {
+export type QueryInterfaces<A> = {
     [B in keyof A]: A[B] extends QueryInterface<infer C, infer D, infer E, infer F> ? QueryInterface<C, D, E, F> : A[B];
 };
-export declare type QueryInterfacesFromQueries<A extends Queries<any>> = {
+export type QueryInterfacesFromQueries<A extends Queries<any>> = {
     [B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? QueryInterface<C, D, E, F> : never;
 };
-export declare type QueriesFromQueryInterfaces<A extends QueryInterfaces<any>> = {
+export type QueriesFromQueryInterfaces<A extends QueryInterfaces<any>> = {
     [B in keyof A]: A[B] extends QueryInterface<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : never;
 };
 export declare class QueryManager<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
@@ -22,13 +22,13 @@ export declare class QueryManager<A extends Record, B extends RequiredKeys<A>, C
     constructor(storeManager: StoreManager<A, B>, operators: Operators<C>, orders: Orders<D>);
     filter(parameters: C, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
 }
-export declare type QueryManagers<A> = {
+export type QueryManagers<A> = {
     [B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? QueryManager<C, D, E, F> : A[B];
 };
-export declare type QueryManagersFromQueries<A extends Queries<any>> = {
+export type QueryManagersFromQueries<A extends Queries<any>> = {
     [B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? QueryManager<C, D, E, F> : never;
 };
-export declare type QueryInterfacesFromQueryManagers<A extends QueryManagers<any>> = {
+export type QueryInterfacesFromQueryManagers<A extends QueryManagers<any>> = {
     [B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? QueryInterface<C, D, E, F> : never;
 };
 export declare class Query<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> {
@@ -38,6 +38,6 @@ export declare class Query<A extends Record, B extends RequiredKeys<A>, C extend
     constructor(store: Store<A, B>, operators: Operators<C>, orders: Orders<D>);
     createIndex(): Index<A>;
 }
-export declare type Queries<A> = {
+export type Queries<A> = {
     [B in keyof A]: A[B] extends Query<infer C, infer D, infer E, infer F> ? Query<C, D, E, F> : A[B];
 };

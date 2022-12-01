@@ -9,66 +9,66 @@ export declare const BigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BigIntField";
     defaultValue: bigint;
 }, {}>;
-export declare type BigIntFieldSchema = ReturnType<typeof BigIntFieldSchema["decode"]>;
+export type BigIntFieldSchema = ReturnType<typeof BigIntFieldSchema["decode"]>;
 export declare const NullableBigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableBigIntField";
     defaultValue: bigint | null;
 }, {}>;
-export declare type NullableBigIntFieldSchema = ReturnType<typeof NullableBigIntFieldSchema["decode"]>;
+export type NullableBigIntFieldSchema = ReturnType<typeof NullableBigIntFieldSchema["decode"]>;
 export declare const BinaryFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BinaryField";
     defaultValue: Uint8Array;
 }, {}>;
-export declare type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
+export type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
 export declare const NullableBinaryFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableBinaryField";
     defaultValue: Uint8Array | null;
 }, {}>;
-export declare type NullableBinaryFieldSchema = ReturnType<typeof NullableBinaryFieldSchema["decode"]>;
+export type NullableBinaryFieldSchema = ReturnType<typeof NullableBinaryFieldSchema["decode"]>;
 export declare const BooleanFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BooleanField";
     defaultValue: boolean;
 }, {}>;
-export declare type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
+export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
 export declare const NullableBooleanFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableBooleanField";
     defaultValue: boolean | null;
 }, {}>;
-export declare type NullableBooleanFieldSchema = ReturnType<typeof NullableBooleanFieldSchema["decode"]>;
+export type NullableBooleanFieldSchema = ReturnType<typeof NullableBooleanFieldSchema["decode"]>;
 export declare const IntegerFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "IntegerField";
     defaultValue: number;
 }, {}>;
-export declare type IntegerFieldSchema = ReturnType<typeof IntegerFieldSchema["decode"]>;
+export type IntegerFieldSchema = ReturnType<typeof IntegerFieldSchema["decode"]>;
 export declare const NullableIntegerFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableIntegerField";
     defaultValue: number | null;
 }, {}>;
-export declare type NullableIntegerFieldSchema = ReturnType<typeof NullableIntegerFieldSchema["decode"]>;
+export type NullableIntegerFieldSchema = ReturnType<typeof NullableIntegerFieldSchema["decode"]>;
 export declare const NumberFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NumberField";
     defaultValue: number;
 }, {}>;
-export declare type NumberFieldSchema = ReturnType<typeof NumberFieldSchema["decode"]>;
+export type NumberFieldSchema = ReturnType<typeof NumberFieldSchema["decode"]>;
 export declare const NullableNumberFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableNumberField";
     defaultValue: number | null;
 }, {}>;
-export declare type NullableNumberFieldSchema = ReturnType<typeof NullableNumberFieldSchema["decode"]>;
+export type NullableNumberFieldSchema = ReturnType<typeof NullableNumberFieldSchema["decode"]>;
 export declare const StringFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "StringField";
     defaultValue: string;
 }, {
     searchable: boolean;
 }>;
-export declare type StringFieldSchema = ReturnType<typeof StringFieldSchema["decode"]>;
+export type StringFieldSchema = ReturnType<typeof StringFieldSchema["decode"]>;
 export declare const NullableStringFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableStringField";
     defaultValue: string | null;
 }, {
     searchable: boolean;
 }>;
-export declare type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
+export type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
 export declare const FieldSchema: bedrock.codecs.UnionCodec<[{
     type: "BigIntField";
     defaultValue: bigint;
@@ -108,7 +108,7 @@ export declare const FieldSchema: bedrock.codecs.UnionCodec<[{
     defaultValue: string | null;
     searchable?: boolean | undefined;
 }]>;
-export declare type FieldSchema = ReturnType<typeof FieldSchema["decode"]>;
+export type FieldSchema = ReturnType<typeof FieldSchema["decode"]>;
 export declare const FieldsSchema: bedrock.codecs.RecordCodec<{
     type: "BigIntField";
     defaultValue: bigint;
@@ -148,55 +148,55 @@ export declare const FieldsSchema: bedrock.codecs.RecordCodec<{
     defaultValue: string | null;
     searchable?: boolean | undefined;
 }>;
-export declare type FieldsSchema = ReturnType<typeof FieldsSchema["decode"]>;
+export type FieldsSchema = ReturnType<typeof FieldsSchema["decode"]>;
 export declare const KeysSchema: bedrock.codecs.ArrayCodec<string>;
-export declare type KeysSchema = ReturnType<typeof KeysSchema["decode"]>;
+export type KeysSchema = ReturnType<typeof KeysSchema["decode"]>;
 export declare const IndexSchema: bedrock.codecs.ObjectCodec<{
     keys: string[];
     bid: number;
 }, {}>;
-export declare type IndexSchema = ReturnType<typeof IndexSchema["decode"]>;
+export type IndexSchema = ReturnType<typeof IndexSchema["decode"]>;
 export declare const IndicesSchema: bedrock.codecs.ArrayCodec<{
     keys: string[];
     bid: number;
 }>;
-export declare type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
+export type IndicesSchema = ReturnType<typeof IndicesSchema["decode"]>;
 export declare const EqualityOperatorSchema: bedrock.codecs.ObjectCodec<{
     type: "EqualityOperator";
 }, {}>;
-export declare type EqualityOperatorSchema = ReturnType<typeof EqualityOperatorSchema["decode"]>;
+export type EqualityOperatorSchema = ReturnType<typeof EqualityOperatorSchema["decode"]>;
 export declare const OperatorSchema: bedrock.codecs.UnionCodec<[{
     type: "EqualityOperator";
 }]>;
-export declare type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
+export type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
 export declare const KeyOperatorSchema: bedrock.codecs.ObjectCodec<{
     key: string;
     operator: {
         type: "EqualityOperator";
     };
 }, {}>;
-export declare type KeyOperatorSchema = ReturnType<typeof KeyOperatorSchema["decode"]>;
+export type KeyOperatorSchema = ReturnType<typeof KeyOperatorSchema["decode"]>;
 export declare const KeyOperatorsSchema: bedrock.codecs.ArrayCodec<{
     key: string;
     operator: {
         type: "EqualityOperator";
     };
 }>;
-export declare type KeyOperatorsSchema = ReturnType<typeof KeyOperatorsSchema["decode"]>;
+export type KeyOperatorsSchema = ReturnType<typeof KeyOperatorsSchema["decode"]>;
 export declare const DecreasingOrderSchema: bedrock.codecs.ObjectCodec<{
     type: "DecreasingOrder";
 }, {}>;
-export declare type DecreasingOrderSchema = ReturnType<typeof DecreasingOrderSchema["decode"]>;
+export type DecreasingOrderSchema = ReturnType<typeof DecreasingOrderSchema["decode"]>;
 export declare const IncreasingOrderSchema: bedrock.codecs.ObjectCodec<{
     type: "IncreasingOrder";
 }, {}>;
-export declare type IncreasingOrderSchema = ReturnType<typeof IncreasingOrderSchema["decode"]>;
+export type IncreasingOrderSchema = ReturnType<typeof IncreasingOrderSchema["decode"]>;
 export declare const OrderSchema: bedrock.codecs.UnionCodec<[{
     type: "DecreasingOrder";
 }, {
     type: "IncreasingOrder";
 }]>;
-export declare type OrderSchema = ReturnType<typeof OrderSchema["decode"]>;
+export type OrderSchema = ReturnType<typeof OrderSchema["decode"]>;
 export declare const KeyOrderSchema: bedrock.codecs.ObjectCodec<{
     key: string;
     order: {
@@ -205,7 +205,7 @@ export declare const KeyOrderSchema: bedrock.codecs.ObjectCodec<{
         type: "IncreasingOrder";
     };
 }, {}>;
-export declare type KeyOrderSchema = ReturnType<typeof KeyOrderSchema["decode"]>;
+export type KeyOrderSchema = ReturnType<typeof KeyOrderSchema["decode"]>;
 export declare const KeyOrdersSchema: bedrock.codecs.ArrayCodec<{
     key: string;
     order: {
@@ -214,19 +214,19 @@ export declare const KeyOrdersSchema: bedrock.codecs.ArrayCodec<{
         type: "IncreasingOrder";
     };
 }>;
-export declare type KeyOrdersSchema = ReturnType<typeof KeyOrdersSchema["decode"]>;
+export type KeyOrdersSchema = ReturnType<typeof KeyOrdersSchema["decode"]>;
 export declare const KeysMapSchema: bedrock.codecs.RecordCodec<string>;
-export declare type KeyMapSchema = ReturnType<typeof KeysMapSchema["decode"]>;
+export type KeyMapSchema = ReturnType<typeof KeysMapSchema["decode"]>;
 export declare const SearchIndexSchema: bedrock.codecs.ObjectCodec<{
     key: string;
     bid: number;
 }, {}>;
-export declare type SearchIndexSchema = ReturnType<typeof SearchIndexSchema["decode"]>;
+export type SearchIndexSchema = ReturnType<typeof SearchIndexSchema["decode"]>;
 export declare const SearchIndicesSchema: bedrock.codecs.ArrayCodec<{
     key: string;
     bid: number;
 }>;
-export declare type SearchIndicesSchema = ReturnType<typeof SearchIndicesSchema["decode"]>;
+export type SearchIndicesSchema = ReturnType<typeof SearchIndicesSchema["decode"]>;
 export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
     version: number;
     fields: globalThis.Record<string, {
@@ -287,7 +287,7 @@ export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
         bid: number;
     }[];
 }, {}>;
-export declare type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
+export type StoreSchema = ReturnType<typeof StoreSchema["decode"]>;
 export declare const StoresSchema: bedrock.codecs.RecordCodec<{
     version: number;
     fields: globalThis.Record<string, {
@@ -348,7 +348,7 @@ export declare const StoresSchema: bedrock.codecs.RecordCodec<{
         bid: number;
     }[];
 }>;
-export declare type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
+export type StoresSchema = ReturnType<typeof StoresSchema["decode"]>;
 export declare const LinkSchema: bedrock.codecs.ObjectCodec<{
     version: number;
     parent: string;
@@ -363,7 +363,7 @@ export declare const LinkSchema: bedrock.codecs.ObjectCodec<{
         };
     }[];
 }, {}>;
-export declare type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
+export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
 export declare const LinksSchema: bedrock.codecs.RecordCodec<{
     version: number;
     parent: string;
@@ -378,7 +378,7 @@ export declare const LinksSchema: bedrock.codecs.RecordCodec<{
         };
     }[];
 }>;
-export declare type LinksSchema = ReturnType<typeof LinksSchema["decode"]>;
+export type LinksSchema = ReturnType<typeof LinksSchema["decode"]>;
 export declare const QuerySchema: bedrock.codecs.ObjectCodec<{
     version: number;
     store: string;
@@ -397,7 +397,7 @@ export declare const QuerySchema: bedrock.codecs.ObjectCodec<{
         };
     }[];
 }, {}>;
-export declare type QuerySchema = ReturnType<typeof QuerySchema["decode"]>;
+export type QuerySchema = ReturnType<typeof QuerySchema["decode"]>;
 export declare const QueriesSchema: bedrock.codecs.RecordCodec<{
     version: number;
     store: string;
@@ -416,7 +416,7 @@ export declare const QueriesSchema: bedrock.codecs.RecordCodec<{
         };
     }[];
 }>;
-export declare type QueriesSchema = ReturnType<typeof QueriesSchema["decode"]>;
+export type QueriesSchema = ReturnType<typeof QueriesSchema["decode"]>;
 export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
     stores: globalThis.Record<string, {
         version: number;
@@ -511,7 +511,7 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
         }[];
     }>;
 }, {}>;
-export declare type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
+export type DatabaseSchema = ReturnType<typeof DatabaseSchema["decode"]>;
 export declare function isSchemaCompatible<V>(codec: bedrock.codecs.Codec<V>, subject: any): subject is V;
 export declare class SchemaManager {
     private getStoreName;

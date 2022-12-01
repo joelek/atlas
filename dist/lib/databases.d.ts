@@ -16,10 +16,10 @@ export declare class DatabaseStore<A extends Record, B extends RequiredKeys<A>> 
     update(...parameters: Parameters<StoreInterface<A, B>["update"]>): ReturnType<StoreInterface<A, B>["update"]>;
     vacate(...parameters: Parameters<StoreInterface<A, B>["vacate"]>): ReturnType<StoreInterface<A, B>["vacate"]>;
 }
-export declare type DatabaseStores<A> = {
+export type DatabaseStores<A> = {
     [B in keyof A]: A[B] extends DatabaseStore<infer C, infer D> ? DatabaseStore<C, D> : A[B];
 };
-export declare type DatabaseStoresFromStorManagers<A extends StoreManagers<any>> = {
+export type DatabaseStoresFromStorManagers<A extends StoreManagers<any>> = {
     [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? DatabaseStore<C, D> : never;
 };
 export declare class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> implements LinkInterface<A, B, C, D, E> {
@@ -29,10 +29,10 @@ export declare class DatabaseLink<A extends Record, B extends RequiredKeys<A>, C
     filter(...parameters: Parameters<LinkInterface<A, B, C, D, E>["filter"]>): ReturnType<LinkInterface<A, B, C, D, E>["filter"]>;
     lookup(...parameters: Parameters<LinkInterface<A, B, C, D, E>["lookup"]>): ReturnType<LinkInterface<A, B, C, D, E>["lookup"]>;
 }
-export declare type DatabaseLinks<A> = {
+export type DatabaseLinks<A> = {
     [B in keyof A]: A[B] extends DatabaseLink<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : A[B];
 };
-export declare type DatabaseLinksFromLinkManagers<A extends LinkManagers<any>> = {
+export type DatabaseLinksFromLinkManagers<A extends LinkManagers<any>> = {
     [B in keyof A]: A[B] extends LinkManager<infer C, infer D, infer E, infer F, infer G> ? DatabaseLink<C, D, E, F, G> : never;
 };
 export declare class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>> implements QueryInterface<A, B, C, D> {
@@ -41,10 +41,10 @@ export declare class DatabaseQuery<A extends Record, B extends RequiredKeys<A>, 
     constructor(queryManager: QueryManager<A, B, C, D>, overrides: Partial<QueryManager<A, B, C, D>>);
     filter(...parameters: Parameters<QueryInterface<A, B, C, D>["filter"]>): ReturnType<QueryInterface<A, B, C, D>["filter"]>;
 }
-export declare type DatabaseQueries<A> = {
+export type DatabaseQueries<A> = {
     [B in keyof A]: A[B] extends DatabaseQuery<infer C, infer D, infer E, infer F> ? DatabaseQuery<C, D, E, F> : A[B];
 };
-export declare type DatabaseQueriesFromQueryManagers<A extends QueryManagers<any>> = {
+export type DatabaseQueriesFromQueryManagers<A extends QueryManagers<any>> = {
     [B in keyof A]: A[B] extends QueryManager<infer C, infer D, infer E, infer F> ? DatabaseQuery<C, D, E, F> : never;
 };
 export declare class DatabaseManager<A extends StoreManagers<any>, B extends LinkManagers<any>, C extends QueryManagers<any>> {

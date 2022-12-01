@@ -35,7 +35,7 @@ export declare class LogDeltaHeader extends Chunk {
     length(value?: number): number;
     static readonly LENGTH = 16;
 }
-export declare type LogDelta = {
+export type LogDelta = {
     header: LogDeltaHeader;
     redo: Uint8Array;
     undo: Uint8Array;

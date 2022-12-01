@@ -6,7 +6,7 @@ import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 import { RadixTree } from "./trees";
 import { SeekableIterable } from "./utils";
-export declare type SearchResult<A extends Record> = {
+export type SearchResult<A extends Record> = {
     record: A;
     rank: number;
 };
@@ -20,13 +20,13 @@ export interface StoreInterface<A extends Record, B extends RequiredKeys<A>> {
     update(keysRecord: KeysRecord<A, B>): Promise<void>;
     vacate(): Promise<void>;
 }
-export declare type StoreInterfaces<A> = {
+export type StoreInterfaces<A> = {
     [B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? StoreInterface<C, D> : A[B];
 };
-export declare type StoreInterfacesFromStores<A extends Stores<any>> = {
+export type StoreInterfacesFromStores<A extends Stores<any>> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreInterface<C, D> : never;
 };
-export declare type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
+export type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
     [B in keyof A]: A[B] extends StoreInterface<infer C, infer D> ? Store<C, D> : never;
 };
 export declare class FilteredStore<A extends Record> {
@@ -113,13 +113,13 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
         searchIndices?: Array<SearchIndex<any>>;
     }): StoreManager<A, B>;
 }
-export declare type StoreManagers<A> = {
+export type StoreManagers<A> = {
     [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreManager<C, D> : A[B];
 };
-export declare type StoreManagersFromStores<A extends Stores<any>> = {
+export type StoreManagersFromStores<A extends Stores<any>> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? StoreManager<C, D> : never;
 };
-export declare type StoreInterfacesFromStoreManagers<A extends StoreManagers<any>> = {
+export type StoreInterfacesFromStoreManagers<A extends StoreManagers<any>> = {
     [B in keyof A]: A[B] extends StoreManager<infer C, infer D> ? StoreInterface<C, D> : never;
 };
 export declare class Index<A extends Record> {
@@ -142,6 +142,6 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     createIndex(): Index<A>;
     index(that: Index<A>): void;
 }
-export declare type Stores<A> = {
+export type Stores<A> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];
 };

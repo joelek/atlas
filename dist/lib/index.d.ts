@@ -7,9 +7,9 @@ import { LinkManagersFromLinks } from "./links";
 import { QueryManagersFromQueries } from "./queries";
 import { StoreManagersFromStores } from "./stores";
 import { DatabaseLinksFromLinkManagers, DatabaseQueriesFromQueryManagers, DatabaseStoresFromStorManagers } from "./databases";
-export declare type ReadableQueue = transactions.ReadableQueue;
-export declare type WritableQueue = transactions.WritableQueue;
-export declare type RecordOf<A> = A extends StoreReference<infer C, infer D> ? C : never;
+export type ReadableQueue = transactions.ReadableQueue;
+export type WritableQueue = transactions.WritableQueue;
+export type RecordOf<A> = A extends StoreReference<infer C, infer D> ? C : never;
 export declare function createContext(): Context;
 export declare function createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, schemaProvider: (context: Context) => {
     stores?: A;

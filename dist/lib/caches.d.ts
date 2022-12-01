@@ -1,14 +1,14 @@
-export declare type Primitive = boolean | null | number | string | undefined;
+export type Primitive = boolean | null | number | string | undefined;
 export interface CacheDetail<A, B> {
     getWeightForValue(value: B): number;
     onInsert?(key: A, value: B): void;
     onRemove?(key: A): void;
 }
-export declare type CacheStatus = {
+export type CacheStatus = {
     weight: number;
     maxWeight?: number;
 };
-export declare type CacheEntry<A extends Primitive, B> = {
+export type CacheEntry<A extends Primitive, B> = {
     key: A;
     value: B;
 };

@@ -1,7 +1,7 @@
 import { BlockManager } from "./blocks";
 import { Chunk } from "./chunks";
-export declare type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
-export declare type Direction = "increasing" | "decreasing";
+export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
+export type Direction = "increasing" | "decreasing";
 export declare function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number;
 export declare function getNibblesFromBytes(buffer: Uint8Array): Array<number>;
 export declare function getBytesFromNibbles(nibbles: Array<number>): Uint8Array;
