@@ -196,20 +196,34 @@ A record that is about to be inserted into a child store is checked against the 
 A link is `referencing` when the parent and child stores correspond to separate stores.
 
 ```ts
-let users = context.createStore({
-	user_id: context.createBinaryField(),
-	name: context.createStringField(),
-	age: context.createIntegerField()
-}, ["user_id"]);
+import * as atlas from "@joelek/atlas";
 
-let posts = context.createStore({
-	post_id: context.createBinaryField(),
-	post_user_id: context.createBinaryField(),
-	title: context.createStringField()
-}, ["post_id"]);
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let users = context.createStore({
+		user_id: context.createBinaryField(),
+		name: context.createStringField(),
+		age: context.createIntegerField()
+	}, ["user_id"]);
 
-let userPosts = context.createLink(users, posts, {
-	user_id: "post_user_id"
+	let posts = context.createStore({
+		post_id: context.createBinaryField(),
+		post_user_id: context.createBinaryField(),
+		title: context.createStringField()
+	}, ["post_id"]);
+
+	let userPosts = context.createLink(users, posts, {
+		user_id: "post_user_id"
+	});
+
+	return {
+		stores: {
+			users,
+			posts
+		},
+		links: {
+			userPosts
+		}
+	};
 });
 ```
 
@@ -238,13 +252,26 @@ The default order of the child records in a link will be set to the identifying 
 A link is `self-referencing` when the parent and child stores correspond to the same store. Self-referencing links must allow orphaned child records through the use of a nullable field in order not to restrict the database from inserting any records at all into the store.
 
 ```ts
-let directories = context.createStore({
-	directory_id: context.createBinaryField(),
-	parent_directory_id: context.createNullableBinaryField()
-}, ["directory_id"]);
+import * as atlas from "@joelek/atlas";
 
-let childDirectories = context.createLink(directories, directories, {
-	directory_id: "parent_directory_id"
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let directories = context.createStore({
+		directory_id: context.createBinaryField(),
+		parent_directory_id: context.createNullableBinaryField()
+	}, ["directory_id"]);
+
+	let childDirectories = context.createLink(directories, directories, {
+		directory_id: "parent_directory_id"
+	});
+
+	return {
+		stores: {
+			directories
+		},
+		links: {
+			childDirectories
+		}
+	};
 });
 ```
 
@@ -269,8 +296,27 @@ Atlas defines the filter entity as a logical operator coupled with a parameter v
 Atlas defines the query entity as a store coupled with an associative collection of operators where each operator is assigned a specific key corresponding to one of the keys in the store. Queries can be used to filter the corresponding store for records matching all operators specified.
 
 ```ts
-let getUsersByName = context.createQuery(users, {
-	name: context.createEqualityOperator()
+import * as atlas from "@joelek/atlas";
+
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let users = context.createStore({
+		user_id: context.createBinaryField(),
+		name: context.createStringField(),
+		age: context.createIntegerField()
+	}, ["user_id"]);
+
+	let getUsersByName = context.createQuery(users, {
+		name: context.createEqualityOperator()
+	});
+
+	return {
+		stores: {
+			users
+		},
+		queries: {
+			getUsersByName
+		}
+	};
 });
 ```
 
