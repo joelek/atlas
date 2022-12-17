@@ -105,75 +105,75 @@ class Context {
         this.operators = new Map();
         this.orders = new Map();
     }
-    createBigIntField() {
+    createBigIntField(options) {
         let reference = new FieldReference();
-        let field = new records_1.BigIntField(0n);
+        let field = new records_1.BigIntField(0n, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createNullableBigIntField() {
+    createNullableBigIntField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableBigIntField(null);
+        let field = new records_1.NullableBigIntField(null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createBinaryField() {
+    createBinaryField(options) {
         let reference = new FieldReference();
-        let field = new records_1.BinaryField(Uint8Array.of());
+        let field = new records_1.BinaryField(Uint8Array.of(), options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createNullableBinaryField() {
+    createNullableBinaryField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableBinaryField(null);
+        let field = new records_1.NullableBinaryField(null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createBooleanField() {
+    createBooleanField(options) {
         let reference = new FieldReference();
-        let field = new records_1.BooleanField(false);
+        let field = new records_1.BooleanField(false, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createNullableBooleanField() {
+    createNullableBooleanField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableBooleanField(null);
+        let field = new records_1.NullableBooleanField(null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createIntegerField() {
+    createIntegerField(options) {
         let reference = new FieldReference();
-        let field = new records_1.IntegerField(0);
+        let field = new records_1.IntegerField(0, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createNullableIntegerField() {
+    createNullableIntegerField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableIntegerField(null);
+        let field = new records_1.NullableIntegerField(null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createNumberField() {
+    createNumberField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NumberField(0);
+        let field = new records_1.NumberField(0, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
-    createNullableNumberField() {
+    createNullableNumberField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableNumberField(null);
+        let field = new records_1.NullableNumberField(null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createStringField(options) {
         let reference = new FieldReference();
-        let field = new records_1.StringField("", options?.searchable);
+        let field = new records_1.StringField("", options?.unique, options?.searchable);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableStringField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableStringField(null, options?.searchable);
+        let field = new records_1.NullableStringField(null, options?.unique, options?.searchable);
         this.fields.set(reference, field);
         return reference;
     }

@@ -422,6 +422,13 @@ wtf.test(`It should create the correct index for a store with identifying field 
     let expected = ["user_id"];
     assert.equals(observed, expected);
 });
+wtf.test(`It should create appropriate indices for a store with unique fields.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("", true)
+    }, ["user_id"]);
+    assert.equals(users.index(new stores_1.Index(["name", "user_id"])), false);
+});
 wtf.test(`It should update indices on insert.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let fields = {
@@ -503,6 +510,83 @@ wtf.test(`It should update indices on remove.`, async (assert) => {
     let observed = Array.from(index).map((record) => record.name);
     let expected = [];
     assert.equals(observed, expected);
+});
+wtf.test(`It should not prevent unique fields from being stored with identical non-null values for the same record.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.NullableStringField("", true)
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], []);
+    users.insert({
+        user_id: "User 1",
+        name: "Name 1"
+    });
+    users.insert({
+        user_id: "User 1",
+        name: "Name 1"
+    });
+});
+wtf.test(`It should not prevent unique fields from being stored with null values for two different records.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.NullableStringField("", true)
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], []);
+    users.insert({
+        user_id: "User 1",
+        name: null
+    });
+    users.insert({
+        user_id: "User 2",
+        name: null
+    });
+});
+wtf.test(`It should prevent unique fields from being stored with identical non-null values for two different records.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let fields = {
+        user_id: new records_1.StringField(""),
+        name: new records_1.NullableStringField("", true)
+    };
+    let keys = ["user_id"];
+    let recordManager = new records_1.RecordManager(fields);
+    let table = new tables_1.Table(blockManager, {
+        getKeyFromValue: (value) => {
+            let buffer = blockManager.readBlock(value);
+            let record = recordManager.decode(buffer);
+            return recordManager.encodeKeys(keys, record);
+        }
+    });
+    let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [], []);
+    users.insert({
+        user_id: "User 1",
+        name: "Name 1"
+    });
+    await assert.throws(async () => {
+        users.insert({
+            user_id: "User 2",
+            name: "Name 1"
+        });
+    });
 });
 wtf.test(`It should use the optimal index when filtering with filters.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));

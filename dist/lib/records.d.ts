@@ -18,50 +18,52 @@ export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record>
 export declare abstract class Field<A extends Value> {
     protected codec: bedrock.codecs.Codec<A>;
     protected defaultValue: A;
+    protected unique?: boolean;
     protected searchable?: boolean;
-    constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A, searchable?: boolean);
+    constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A, unique?: boolean, searchable?: boolean);
     getCodec(): bedrock.codecs.Codec<A>;
     getDefaultValue(): A;
+    getUnique(): boolean | undefined;
     getSearchable(): boolean | undefined;
 }
 export type Fields<A extends Record> = {
     [B in keyof A]: Field<A[B]>;
 };
 export declare class BigIntField extends Field<bigint> {
-    constructor(defaultValue: bigint);
+    constructor(defaultValue: bigint, unique?: boolean);
 }
 export declare class NullableBigIntField extends Field<bigint | null> {
-    constructor(defaultValue: bigint | null);
+    constructor(defaultValue: bigint | null, unique?: boolean);
 }
 export declare class BinaryField extends Field<Uint8Array> {
-    constructor(defaultValue: Uint8Array);
+    constructor(defaultValue: Uint8Array, unique?: boolean);
 }
 export declare class NullableBinaryField extends Field<Uint8Array | null> {
-    constructor(defaultValue: Uint8Array | null);
+    constructor(defaultValue: Uint8Array | null, unique?: boolean);
 }
 export declare class BooleanField extends Field<boolean> {
-    constructor(defaultValue: boolean);
+    constructor(defaultValue: boolean, unique?: boolean);
 }
 export declare class NullableBooleanField extends Field<boolean | null> {
-    constructor(defaultValue: boolean | null);
+    constructor(defaultValue: boolean | null, unique?: boolean);
 }
 export declare class IntegerField extends Field<number> {
-    constructor(defaultValue: number);
+    constructor(defaultValue: number, unique?: boolean);
 }
 export declare class NullableIntegerField extends Field<number | null> {
-    constructor(defaultValue: number | null);
+    constructor(defaultValue: number | null, unique?: boolean);
 }
 export declare class NumberField extends Field<number> {
-    constructor(defaultValue: number);
+    constructor(defaultValue: number, unique?: boolean);
 }
 export declare class NullableNumberField extends Field<number | null> {
-    constructor(defaultValue: number | null);
+    constructor(defaultValue: number | null, unique?: boolean);
 }
 export declare class StringField extends Field<string> {
-    constructor(defaultValue: string, searchable?: boolean);
+    constructor(defaultValue: string, unique?: boolean, searchable?: boolean);
 }
 export declare class NullableStringField extends Field<string | null> {
-    constructor(defaultValue: string | null, searchable?: boolean);
+    constructor(defaultValue: string | null, unique?: boolean, searchable?: boolean);
 }
 export declare class RecordManager<A extends Record> {
     private fields;

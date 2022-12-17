@@ -93,6 +93,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private searchIndexManagers;
     private getDefaultRecord;
     private lookupBlockIndex;
+    private checkConstraints;
     constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>);
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
@@ -140,7 +141,7 @@ export declare class Store<A extends Record, B extends RequiredKeys<A>> {
     searchIndices: Array<SearchIndex<A>>;
     constructor(fields: Fields<A>, keys: [...B], orders?: OrderMap<A>);
     createIndex(): Index<A>;
-    index(that: Index<A>): void;
+    index(that: Index<A>): boolean;
 }
 export type Stores<A> = {
     [B in keyof A]: A[B] extends Store<infer C, infer D> ? Store<C, D> : A[B];

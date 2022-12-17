@@ -8,57 +8,78 @@ import { Queries, QueryManagersFromQueries } from "./queries";
 export declare const BigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BigIntField";
     defaultValue: bigint;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type BigIntFieldSchema = ReturnType<typeof BigIntFieldSchema["decode"]>;
 export declare const NullableBigIntFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableBigIntField";
     defaultValue: bigint | null;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type NullableBigIntFieldSchema = ReturnType<typeof NullableBigIntFieldSchema["decode"]>;
 export declare const BinaryFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BinaryField";
     defaultValue: Uint8Array;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
 export declare const NullableBinaryFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableBinaryField";
     defaultValue: Uint8Array | null;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type NullableBinaryFieldSchema = ReturnType<typeof NullableBinaryFieldSchema["decode"]>;
 export declare const BooleanFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "BooleanField";
     defaultValue: boolean;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
 export declare const NullableBooleanFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableBooleanField";
     defaultValue: boolean | null;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type NullableBooleanFieldSchema = ReturnType<typeof NullableBooleanFieldSchema["decode"]>;
 export declare const IntegerFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "IntegerField";
     defaultValue: number;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type IntegerFieldSchema = ReturnType<typeof IntegerFieldSchema["decode"]>;
 export declare const NullableIntegerFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableIntegerField";
     defaultValue: number | null;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type NullableIntegerFieldSchema = ReturnType<typeof NullableIntegerFieldSchema["decode"]>;
 export declare const NumberFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NumberField";
     defaultValue: number;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type NumberFieldSchema = ReturnType<typeof NumberFieldSchema["decode"]>;
 export declare const NullableNumberFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableNumberField";
     defaultValue: number | null;
-}, {}>;
+}, {
+    unique: boolean;
+}>;
 export type NullableNumberFieldSchema = ReturnType<typeof NullableNumberFieldSchema["decode"]>;
 export declare const StringFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "StringField";
     defaultValue: string;
 }, {
+    unique: boolean;
     searchable: boolean;
 }>;
 export type StringFieldSchema = ReturnType<typeof StringFieldSchema["decode"]>;
@@ -66,86 +87,111 @@ export declare const NullableStringFieldSchema: bedrock.codecs.ObjectCodec<{
     type: "NullableStringField";
     defaultValue: string | null;
 }, {
+    unique: boolean;
     searchable: boolean;
 }>;
 export type NullableStringFieldSchema = ReturnType<typeof NullableStringFieldSchema["decode"]>;
 export declare const FieldSchema: bedrock.codecs.UnionCodec<[{
     type: "BigIntField";
     defaultValue: bigint;
+    unique?: boolean | undefined;
 }, {
     type: "NullableBigIntField";
     defaultValue: bigint | null;
+    unique?: boolean | undefined;
 }, {
     type: "BinaryField";
     defaultValue: Uint8Array;
+    unique?: boolean | undefined;
 }, {
     type: "NullableBinaryField";
     defaultValue: Uint8Array | null;
+    unique?: boolean | undefined;
 }, {
     type: "BooleanField";
     defaultValue: boolean;
+    unique?: boolean | undefined;
 }, {
     type: "NullableBooleanField";
     defaultValue: boolean | null;
+    unique?: boolean | undefined;
 }, {
     type: "IntegerField";
     defaultValue: number;
+    unique?: boolean | undefined;
 }, {
     type: "NullableIntegerField";
     defaultValue: number | null;
+    unique?: boolean | undefined;
 }, {
     type: "NumberField";
     defaultValue: number;
+    unique?: boolean | undefined;
 }, {
     type: "NullableNumberField";
     defaultValue: number | null;
+    unique?: boolean | undefined;
 }, {
     type: "StringField";
     defaultValue: string;
+    unique?: boolean | undefined;
     searchable?: boolean | undefined;
 }, {
     type: "NullableStringField";
     defaultValue: string | null;
+    unique?: boolean | undefined;
     searchable?: boolean | undefined;
 }]>;
 export type FieldSchema = ReturnType<typeof FieldSchema["decode"]>;
 export declare const FieldsSchema: bedrock.codecs.RecordCodec<{
     type: "BigIntField";
     defaultValue: bigint;
+    unique?: boolean | undefined;
 } | {
     type: "NullableBigIntField";
     defaultValue: bigint | null;
+    unique?: boolean | undefined;
 } | {
     type: "BinaryField";
     defaultValue: Uint8Array;
+    unique?: boolean | undefined;
 } | {
     type: "NullableBinaryField";
     defaultValue: Uint8Array | null;
+    unique?: boolean | undefined;
 } | {
     type: "BooleanField";
     defaultValue: boolean;
+    unique?: boolean | undefined;
 } | {
     type: "NullableBooleanField";
     defaultValue: boolean | null;
+    unique?: boolean | undefined;
 } | {
     type: "IntegerField";
     defaultValue: number;
+    unique?: boolean | undefined;
 } | {
     type: "NullableIntegerField";
     defaultValue: number | null;
+    unique?: boolean | undefined;
 } | {
     type: "NumberField";
     defaultValue: number;
+    unique?: boolean | undefined;
 } | {
     type: "NullableNumberField";
     defaultValue: number | null;
+    unique?: boolean | undefined;
 } | {
     type: "StringField";
     defaultValue: string;
+    unique?: boolean | undefined;
     searchable?: boolean | undefined;
 } | {
     type: "NullableStringField";
     defaultValue: string | null;
+    unique?: boolean | undefined;
     searchable?: boolean | undefined;
 }>;
 export type FieldsSchema = ReturnType<typeof FieldsSchema["decode"]>;
@@ -232,40 +278,52 @@ export declare const StoreSchema: bedrock.codecs.ObjectCodec<{
     fields: globalThis.Record<string, {
         type: "BigIntField";
         defaultValue: bigint;
+        unique?: boolean | undefined;
     } | {
         type: "NullableBigIntField";
         defaultValue: bigint | null;
+        unique?: boolean | undefined;
     } | {
         type: "BinaryField";
         defaultValue: Uint8Array;
+        unique?: boolean | undefined;
     } | {
         type: "NullableBinaryField";
         defaultValue: Uint8Array | null;
+        unique?: boolean | undefined;
     } | {
         type: "BooleanField";
         defaultValue: boolean;
+        unique?: boolean | undefined;
     } | {
         type: "NullableBooleanField";
         defaultValue: boolean | null;
+        unique?: boolean | undefined;
     } | {
         type: "IntegerField";
         defaultValue: number;
+        unique?: boolean | undefined;
     } | {
         type: "NullableIntegerField";
         defaultValue: number | null;
+        unique?: boolean | undefined;
     } | {
         type: "NumberField";
         defaultValue: number;
+        unique?: boolean | undefined;
     } | {
         type: "NullableNumberField";
         defaultValue: number | null;
+        unique?: boolean | undefined;
     } | {
         type: "StringField";
         defaultValue: string;
+        unique?: boolean | undefined;
         searchable?: boolean | undefined;
     } | {
         type: "NullableStringField";
         defaultValue: string | null;
+        unique?: boolean | undefined;
         searchable?: boolean | undefined;
     }>;
     keys: string[];
@@ -293,40 +351,52 @@ export declare const StoresSchema: bedrock.codecs.RecordCodec<{
     fields: globalThis.Record<string, {
         type: "BigIntField";
         defaultValue: bigint;
+        unique?: boolean | undefined;
     } | {
         type: "NullableBigIntField";
         defaultValue: bigint | null;
+        unique?: boolean | undefined;
     } | {
         type: "BinaryField";
         defaultValue: Uint8Array;
+        unique?: boolean | undefined;
     } | {
         type: "NullableBinaryField";
         defaultValue: Uint8Array | null;
+        unique?: boolean | undefined;
     } | {
         type: "BooleanField";
         defaultValue: boolean;
+        unique?: boolean | undefined;
     } | {
         type: "NullableBooleanField";
         defaultValue: boolean | null;
+        unique?: boolean | undefined;
     } | {
         type: "IntegerField";
         defaultValue: number;
+        unique?: boolean | undefined;
     } | {
         type: "NullableIntegerField";
         defaultValue: number | null;
+        unique?: boolean | undefined;
     } | {
         type: "NumberField";
         defaultValue: number;
+        unique?: boolean | undefined;
     } | {
         type: "NullableNumberField";
         defaultValue: number | null;
+        unique?: boolean | undefined;
     } | {
         type: "StringField";
         defaultValue: string;
+        unique?: boolean | undefined;
         searchable?: boolean | undefined;
     } | {
         type: "NullableStringField";
         defaultValue: string | null;
+        unique?: boolean | undefined;
         searchable?: boolean | undefined;
     }>;
     keys: string[];
@@ -423,40 +493,52 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
         fields: globalThis.Record<string, {
             type: "BigIntField";
             defaultValue: bigint;
+            unique?: boolean | undefined;
         } | {
             type: "NullableBigIntField";
             defaultValue: bigint | null;
+            unique?: boolean | undefined;
         } | {
             type: "BinaryField";
             defaultValue: Uint8Array;
+            unique?: boolean | undefined;
         } | {
             type: "NullableBinaryField";
             defaultValue: Uint8Array | null;
+            unique?: boolean | undefined;
         } | {
             type: "BooleanField";
             defaultValue: boolean;
+            unique?: boolean | undefined;
         } | {
             type: "NullableBooleanField";
             defaultValue: boolean | null;
+            unique?: boolean | undefined;
         } | {
             type: "IntegerField";
             defaultValue: number;
+            unique?: boolean | undefined;
         } | {
             type: "NullableIntegerField";
             defaultValue: number | null;
+            unique?: boolean | undefined;
         } | {
             type: "NumberField";
             defaultValue: number;
+            unique?: boolean | undefined;
         } | {
             type: "NullableNumberField";
             defaultValue: number | null;
+            unique?: boolean | undefined;
         } | {
             type: "StringField";
             defaultValue: string;
+            unique?: boolean | undefined;
             searchable?: boolean | undefined;
         } | {
             type: "NullableStringField";
             defaultValue: string | null;
+            unique?: boolean | undefined;
             searchable?: boolean | undefined;
         }>;
         keys: string[];

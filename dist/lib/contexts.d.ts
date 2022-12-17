@@ -67,21 +67,43 @@ export declare class Context {
     private getOrder;
     private createFile;
     constructor();
-    createBigIntField(): FieldReference<BigIntField>;
-    createNullableBigIntField(): FieldReference<NullableBigIntField>;
-    createBinaryField(): FieldReference<BinaryField>;
-    createNullableBinaryField(): FieldReference<NullableBinaryField>;
-    createBooleanField(): FieldReference<BooleanField>;
-    createNullableBooleanField(): FieldReference<NullableBooleanField>;
-    createIntegerField(): FieldReference<IntegerField>;
-    createNullableIntegerField(): FieldReference<NullableIntegerField>;
-    createNumberField(): FieldReference<NumberField>;
-    createNullableNumberField(): FieldReference<NullableNumberField>;
+    createBigIntField(options?: {
+        unique?: boolean;
+    }): FieldReference<BigIntField>;
+    createNullableBigIntField(options?: {
+        unique?: boolean;
+    }): FieldReference<NullableBigIntField>;
+    createBinaryField(options?: {
+        unique?: boolean;
+    }): FieldReference<BinaryField>;
+    createNullableBinaryField(options?: {
+        unique?: boolean;
+    }): FieldReference<NullableBinaryField>;
+    createBooleanField(options?: {
+        unique?: boolean;
+    }): FieldReference<BooleanField>;
+    createNullableBooleanField(options?: {
+        unique?: boolean;
+    }): FieldReference<NullableBooleanField>;
+    createIntegerField(options?: {
+        unique?: boolean;
+    }): FieldReference<IntegerField>;
+    createNullableIntegerField(options?: {
+        unique?: boolean;
+    }): FieldReference<NullableIntegerField>;
+    createNumberField(options?: {
+        unique?: boolean;
+    }): FieldReference<NumberField>;
+    createNullableNumberField(options?: {
+        unique?: boolean;
+    }): FieldReference<NullableNumberField>;
     createStringField(options?: {
-        searchable: boolean;
+        unique?: boolean;
+        searchable?: boolean;
     }): FieldReference<StringField>;
     createNullableStringField(options?: {
-        searchable: boolean;
+        unique?: boolean;
+        searchable?: boolean;
     }): FieldReference<NullableStringField>;
     createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E>;
     createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B>;

@@ -5,10 +5,12 @@ const bedrock = require("@joelek/bedrock");
 class Field {
     codec;
     defaultValue;
+    unique;
     searchable;
-    constructor(codec, defaultValue, searchable) {
+    constructor(codec, defaultValue, unique, searchable) {
         this.codec = codec;
         this.defaultValue = defaultValue;
+        this.unique = unique;
         this.searchable = searchable;
     }
     getCodec() {
@@ -17,6 +19,9 @@ class Field {
     getDefaultValue() {
         return this.defaultValue;
     }
+    getUnique() {
+        return this.unique;
+    }
     getSearchable() {
         return this.searchable;
     }
@@ -24,85 +29,85 @@ class Field {
 exports.Field = Field;
 ;
 class BigIntField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.BigInt, defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.BigInt, defaultValue, unique);
     }
 }
 exports.BigIntField = BigIntField;
 ;
 class NullableBigIntField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.BigInt, bedrock.codecs.Null), defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.BigInt, bedrock.codecs.Null), defaultValue, unique);
     }
 }
 exports.NullableBigIntField = NullableBigIntField;
 ;
 class BinaryField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Binary, defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Binary, defaultValue, unique);
     }
 }
 exports.BinaryField = BinaryField;
 ;
 class NullableBinaryField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.Binary, bedrock.codecs.Null), defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Binary, bedrock.codecs.Null), defaultValue, unique);
     }
 }
 exports.NullableBinaryField = NullableBinaryField;
 ;
 class BooleanField extends Field {
-    constructor(defaultValue) {
+    constructor(defaultValue, unique) {
         super(bedrock.codecs.Boolean, defaultValue);
     }
 }
 exports.BooleanField = BooleanField;
 ;
 class NullableBooleanField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.Boolean, bedrock.codecs.Null), defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Boolean, bedrock.codecs.Null), defaultValue, unique);
     }
 }
 exports.NullableBooleanField = NullableBooleanField;
 ;
 class IntegerField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Integer, defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Integer, defaultValue, unique);
     }
 }
 exports.IntegerField = IntegerField;
 ;
 class NullableIntegerField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.Integer, bedrock.codecs.Null), defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Integer, bedrock.codecs.Null), defaultValue, unique);
     }
 }
 exports.NullableIntegerField = NullableIntegerField;
 ;
 class NumberField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Number, defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Number, defaultValue, unique);
     }
 }
 exports.NumberField = NumberField;
 ;
 class NullableNumberField extends Field {
-    constructor(defaultValue) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.Number, bedrock.codecs.Null), defaultValue);
+    constructor(defaultValue, unique) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.Number, bedrock.codecs.Null), defaultValue, unique);
     }
 }
 exports.NullableNumberField = NullableNumberField;
 ;
 class StringField extends Field {
-    constructor(defaultValue, searchable) {
-        super(bedrock.codecs.String, defaultValue, searchable);
+    constructor(defaultValue, unique, searchable) {
+        super(bedrock.codecs.String, defaultValue, unique, searchable);
     }
 }
 exports.StringField = StringField;
 ;
 class NullableStringField extends Field {
-    constructor(defaultValue, searchable) {
-        super(bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null), defaultValue, searchable);
+    constructor(defaultValue, unique, searchable) {
+        super(bedrock.codecs.Union.of(bedrock.codecs.String, bedrock.codecs.Null), defaultValue, unique, searchable);
     }
 }
 exports.NullableStringField = NullableStringField;

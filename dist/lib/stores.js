@@ -454,6 +454,29 @@ class StoreManager {
         }
         return index;
     }
+    checkConstraints(record) {
+        let recordKey = this.recordManager.encodeKeys(this.keys, record);
+        for (let fieldKey in this.fields) {
+            let field = this.fields[fieldKey];
+            if (!field.getUnique()) {
+                continue;
+            }
+            if (record[fieldKey] == null) {
+                continue;
+            }
+            let existingRecord = this.filter({
+                [fieldKey]: new filters_1.EqualityFilter(record[fieldKey])
+            }, undefined, undefined, 1).pop();
+            if (existingRecord == null) {
+                continue;
+            }
+            let existingRecordKey = this.recordManager.encodeKeys(this.keys, existingRecord);
+            if ((0, tables_1.compareBuffers)(recordKey, existingRecordKey) === 0) {
+                continue;
+            }
+            throw new Error(`Expected value of field "${fieldKey}" to be unique!`);
+        }
+    }
     constructor(blockManager, fields, keys, orders, table, indexManagers, searchIndexManagers) {
         this.blockManager = blockManager;
         this.fields = fields;
@@ -505,6 +528,7 @@ class StoreManager {
         return iterable.collect();
     }
     insert(record) {
+        this.checkConstraints(record);
         let key = this.recordManager.encodeKeys(this.keys, record);
         let encoded = this.recordManager.encode(record);
         let index = this.table.lookup(key);
@@ -675,6 +699,9 @@ class Store {
             if (fields[key].getSearchable()) {
                 this.searchIndices.push(new SearchIndex(key));
             }
+            if (fields[key].getUnique()) {
+                this.index(new Index([key, ...this.keys]));
+            }
         }
     }
     createIndex() {
@@ -698,10 +725,11 @@ class Store {
     index(that) {
         for (let index of this.indices) {
             if (index.equals(that)) {
-                return;
+                return false;
             }
         }
         this.indices.push(that);
+        return true;
     }
 }
 exports.Store = Store;
