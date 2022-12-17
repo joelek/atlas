@@ -502,7 +502,6 @@ NB: This project targets TypeScript 4 in strict mode.
 
 ## Roadmap
 
-* Consider implementing file locks.
 * Make memory limit configurable for Cache.
 * Allow BlockManager to keep track of the exact stored size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
@@ -510,7 +509,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
 * Improve heuristic for index selector.
-* Allow undefined values instead of nulls.
 * Implement enum types.
 * Implement structure for stores with many to many relationships.
 * Only recreate stores when referenced fields are altered, else update records.
@@ -518,6 +516,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate caching of tree branches for quick traversal.
 * Retain last block when resizing PagedFile and only clear affected bytes.
 * Create EntityManagers in SchemaManager.
-* Cached decoded records on a per-transaction basis. Readable transactions may re-use caches.
+* Cache decoded records on a per-transaction basis. Readable transactions may re-use caches.
 * Fix issue with de-duplication of search results originating from multiple indices.
 * Add user-friendly support for unique fields.
