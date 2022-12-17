@@ -18,11 +18,13 @@ export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record>
 export abstract class Field<A extends Value> {
 	protected codec: bedrock.codecs.Codec<A>;
 	protected defaultValue: A;
+	protected unique?: boolean;
 	protected searchable?: boolean;
 
-	constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A, searchable?: boolean) {
+	constructor(codec: bedrock.codecs.Codec<A>, defaultValue: A, unique?: boolean, searchable?: boolean) {
 		this.codec = codec;
 		this.defaultValue = defaultValue;
+		this.unique = unique;
 		this.searchable = searchable;
 	}
 
@@ -32,6 +34,10 @@ export abstract class Field<A extends Value> {
 
 	getDefaultValue(): A {
 		return this.defaultValue;
+	}
+
+	getUnique(): boolean | undefined {
+		return this.unique;
 	}
 
 	getSearchable(): boolean | undefined {
@@ -44,92 +50,92 @@ export type Fields<A extends Record> = {
 };
 
 export class BigIntField extends Field<bigint> {
-	constructor(defaultValue: bigint) {
-		super(bedrock.codecs.BigInt, defaultValue);
+	constructor(defaultValue: bigint, unique?: boolean) {
+		super(bedrock.codecs.BigInt, defaultValue, unique);
 	}
 };
 
 export class NullableBigIntField extends Field<bigint | null> {
-	constructor(defaultValue: bigint | null) {
+	constructor(defaultValue: bigint | null, unique?: boolean) {
 		super(bedrock.codecs.Union.of<[bigint, null]>(
 			bedrock.codecs.BigInt,
 			bedrock.codecs.Null
-		), defaultValue);
+		), defaultValue, unique);
 	}
 };
 
 export class BinaryField extends Field<Uint8Array> {
-	constructor(defaultValue: Uint8Array) {
-		super(bedrock.codecs.Binary, defaultValue);
+	constructor(defaultValue: Uint8Array, unique?: boolean) {
+		super(bedrock.codecs.Binary, defaultValue, unique);
 	}
 };
 
 export class NullableBinaryField extends Field<Uint8Array | null> {
-	constructor(defaultValue: Uint8Array | null) {
+	constructor(defaultValue: Uint8Array | null, unique?: boolean) {
 		super(bedrock.codecs.Union.of<[Uint8Array, null]>(
 			bedrock.codecs.Binary,
 			bedrock.codecs.Null
-		), defaultValue);
+		), defaultValue, unique);
 	}
 };
 
 export class BooleanField extends Field<boolean> {
-	constructor(defaultValue: boolean) {
+	constructor(defaultValue: boolean, unique?: boolean) {
 		super(bedrock.codecs.Boolean, defaultValue);
 	}
 };
 
 export class NullableBooleanField extends Field<boolean | null> {
-	constructor(defaultValue: boolean | null) {
+	constructor(defaultValue: boolean | null, unique?: boolean) {
 		super(bedrock.codecs.Union.of<[boolean, null]>(
 			bedrock.codecs.Boolean,
 			bedrock.codecs.Null
-		), defaultValue);
+		), defaultValue, unique);
 	}
 };
 
 export class IntegerField extends Field<number> {
-	constructor(defaultValue: number) {
-		super(bedrock.codecs.Integer, defaultValue);
+	constructor(defaultValue: number, unique?: boolean) {
+		super(bedrock.codecs.Integer, defaultValue, unique);
 	}
 };
 
 export class NullableIntegerField extends Field<number | null> {
-	constructor(defaultValue: number | null) {
+	constructor(defaultValue: number | null, unique?: boolean) {
 		super(bedrock.codecs.Union.of<[number, null]>(
 			bedrock.codecs.Integer,
 			bedrock.codecs.Null
-		), defaultValue);
+		), defaultValue, unique);
 	}
 };
 
 export class NumberField extends Field<number> {
-	constructor(defaultValue: number) {
-		super(bedrock.codecs.Number, defaultValue);
+	constructor(defaultValue: number, unique?: boolean) {
+		super(bedrock.codecs.Number, defaultValue, unique);
 	}
 };
 
 export class NullableNumberField extends Field<number | null> {
-	constructor(defaultValue: number | null) {
+	constructor(defaultValue: number | null, unique?: boolean) {
 		super(bedrock.codecs.Union.of<[number, null]>(
 			bedrock.codecs.Number,
 			bedrock.codecs.Null
-		), defaultValue);
+		), defaultValue, unique);
 	}
 };
 
 export class StringField extends Field<string> {
-	constructor(defaultValue: string, searchable?: boolean) {
-		super(bedrock.codecs.String, defaultValue, searchable);
+	constructor(defaultValue: string, unique?: boolean, searchable?: boolean) {
+		super(bedrock.codecs.String, defaultValue, unique, searchable);
 	}
 };
 
 export class NullableStringField extends Field<string | null> {
-	constructor(defaultValue: string | null, searchable?: boolean) {
+	constructor(defaultValue: string | null, unique?: boolean, searchable?: boolean) {
 		super(bedrock.codecs.Union.of<[string, null]>(
 			bedrock.codecs.String,
 			bedrock.codecs.Null
-		), defaultValue, searchable);
+		), defaultValue, unique, searchable);
 	}
 };
 

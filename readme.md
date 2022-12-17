@@ -137,6 +137,13 @@ context.createStringField();
 context.createNullableStringField();
 ```
 
+All fields may be created with a "unique" hint that instructs Atlas to prevent two different records from storing identical non-nullable values for the field in question.
+
+```ts
+context.createStringField({ unique: true });
+context.createNullableStringField({ unique: true });
+```
+
 String fields may be created with a "searchable" hint that instructs Atlas to include the corresponding fields when performing searches in the database.
 
 ```ts
@@ -351,7 +358,9 @@ Atlas defines the search index entity as a store coupled with a key specifying t
 * Atlas creates new fields for all fields not referenced in the existing schema of a given store. All records of the corresponding store will have their corresponding values set to a default value.
 * Atlas updates all fields referenced both in the new and in the existing schemas of a given store. All records of the corresponding store will have their corresponding values set to either a default value or the existing value. The existing value is always used when the value is considered compatible with the new field. This is always the case when changing a non-nullable field into a nullable field but not guaranteed to be the case when changing a nullable field into a non-nullable field. A default value is always used when the fundamental type of a field changes.
 
-In addition to this, Atlas will enforce data-consistency for all links not referenced in the existing schema.
+In addition to this, Atlas will enforce data-consistency for all links not referenced in the existing schema. Atlas will also enforce all constraints not referenced in the existing schema.
+
+When a non-unique field is made unique, at most one record from the set of records having identical values for the field in question is retained. The record retained is the first record in the default order for the given store.
 
 ## API
 
@@ -518,4 +527,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Create EntityManagers in SchemaManager.
 * Cache decoded records on a per-transaction basis. Readable transactions may re-use caches.
 * Fix issue with de-duplication of search results originating from multiple indices.
-* Add user-friendly support for unique fields.

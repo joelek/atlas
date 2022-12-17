@@ -1,6 +1,6 @@
 import * as wtf from "@joelek/wtf";
 import { Index, IndexManager, SearchIndexManager, Store, StoreManager } from "./stores";
-import { IntegerField, RecordManager, StringField } from "./records";
+import { IntegerField, NullableStringField, RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityFilter } from "./filters";
@@ -443,6 +443,14 @@ wtf.test(`It should create the correct index for a store with identifying field 
 	assert.equals(observed, expected);
 });
 
+wtf.test(`It should create appropriate indices for a store with unique fields.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("", true)
+	}, ["user_id"]);
+	assert.equals(users.index(new Index(["name", "user_id"])), false);
+});
+
 wtf.test(`It should update indices on insert.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let fields = {
@@ -526,6 +534,86 @@ wtf.test(`It should update indices on remove.`, async (assert) => {
 	let observed = Array.from(index).map((record) => record.name);
 	let expected = [] as Array<string>;
 	assert.equals(observed, expected);
+});
+
+wtf.test(`It should not prevent unique fields from being stored with identical non-null values for the same record.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new NullableStringField("", true)
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [], []);
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+});
+
+wtf.test(`It should not prevent unique fields from being stored with null values for two different records.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new NullableStringField("", true)
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [], []);
+	users.insert({
+		user_id: "User 1",
+		name: null
+	});
+	users.insert({
+		user_id: "User 2",
+		name: null
+	});
+});
+
+wtf.test(`It should prevent unique fields from being stored with identical non-null values for two different records.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let fields = {
+		user_id: new StringField(""),
+		name: new NullableStringField("", true)
+	};
+	let keys = ["user_id"] as ["user_id"];
+	let recordManager = new RecordManager(fields);
+	let table = new Table(blockManager, {
+		getKeyFromValue: (value) => {
+			let buffer = blockManager.readBlock(value);
+			let record = recordManager.decode(buffer);
+			return recordManager.encodeKeys(keys, record);
+		}
+	});
+	let users = new StoreManager(blockManager, fields, keys, {}, table, [], []);
+	users.insert({
+		user_id: "User 1",
+		name: "Name 1"
+	});
+	await assert.throws(async () => {
+		users.insert({
+			user_id: "User 2",
+			name: "Name 1"
+		});
+	});
 });
 
 wtf.test(`It should use the optimal index when filtering with filters.`, async (assert) => {

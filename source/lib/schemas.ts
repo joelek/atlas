@@ -14,7 +14,9 @@ import { RadixTree } from "./trees";
 
 export const BigIntFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BigIntField"),
-	defaultValue: bedrock.codecs.BigInt
+	defaultValue: bedrock.codecs.BigInt,
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type BigIntFieldSchema = ReturnType<typeof BigIntFieldSchema["decode"]>;
@@ -25,6 +27,8 @@ export const NullableBigIntFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.BigInt,
 		bedrock.codecs.Null
 	)
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type NullableBigIntFieldSchema = ReturnType<typeof NullableBigIntFieldSchema["decode"]>;
@@ -32,6 +36,8 @@ export type NullableBigIntFieldSchema = ReturnType<typeof NullableBigIntFieldSch
 export const BinaryFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BinaryField"),
 	defaultValue: bedrock.codecs.Binary
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type BinaryFieldSchema = ReturnType<typeof BinaryFieldSchema["decode"]>;
@@ -42,6 +48,8 @@ export const NullableBinaryFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.Binary,
 		bedrock.codecs.Null
 	)
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type NullableBinaryFieldSchema = ReturnType<typeof NullableBinaryFieldSchema["decode"]>;
@@ -49,6 +57,8 @@ export type NullableBinaryFieldSchema = ReturnType<typeof NullableBinaryFieldSch
 export const BooleanFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("BooleanField"),
 	defaultValue: bedrock.codecs.Boolean
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type BooleanFieldSchema = ReturnType<typeof BooleanFieldSchema["decode"]>;
@@ -59,6 +69,8 @@ export const NullableBooleanFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.Boolean,
 		bedrock.codecs.Null
 	)
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type NullableBooleanFieldSchema = ReturnType<typeof NullableBooleanFieldSchema["decode"]>;
@@ -66,6 +78,8 @@ export type NullableBooleanFieldSchema = ReturnType<typeof NullableBooleanFieldS
 export const IntegerFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("IntegerField"),
 	defaultValue: bedrock.codecs.Integer
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type IntegerFieldSchema = ReturnType<typeof IntegerFieldSchema["decode"]>;
@@ -76,6 +90,8 @@ export const NullableIntegerFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.Integer,
 		bedrock.codecs.Null
 	)
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type NullableIntegerFieldSchema = ReturnType<typeof NullableIntegerFieldSchema["decode"]>;
@@ -83,6 +99,8 @@ export type NullableIntegerFieldSchema = ReturnType<typeof NullableIntegerFieldS
 export const NumberFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("NumberField"),
 	defaultValue: bedrock.codecs.Number
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type NumberFieldSchema = ReturnType<typeof NumberFieldSchema["decode"]>;
@@ -93,6 +111,8 @@ export const NullableNumberFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.Number,
 		bedrock.codecs.Null
 	)
+}, {
+	unique: bedrock.codecs.Boolean
 });
 
 export type NullableNumberFieldSchema = ReturnType<typeof NullableNumberFieldSchema["decode"]>;
@@ -101,6 +121,7 @@ export const StringFieldSchema = bedrock.codecs.Object.of({
 	type: bedrock.codecs.StringLiteral.of("StringField"),
 	defaultValue: bedrock.codecs.String
 }, {
+	unique: bedrock.codecs.Boolean,
 	searchable: bedrock.codecs.Boolean
 });
 
@@ -113,6 +134,7 @@ export const NullableStringFieldSchema = bedrock.codecs.Object.of({
 		bedrock.codecs.Null
 	)
 }, {
+	unique: bedrock.codecs.Boolean,
 	searchable: bedrock.codecs.Boolean
 });
 
@@ -305,40 +327,40 @@ export class SchemaManager {
 
 	private loadFieldManager(blockManager: BlockManager, fieldSchema: FieldSchema): Field<any> {
 		if (isSchemaCompatible(BigIntFieldSchema, fieldSchema)) {
-			return new BigIntField(fieldSchema.defaultValue);
+			return new BigIntField(fieldSchema.defaultValue, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(NullableBigIntFieldSchema, fieldSchema)) {
-			return new NullableBigIntField(fieldSchema.defaultValue as bigint | null);
+			return new NullableBigIntField(fieldSchema.defaultValue as bigint | null, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(BinaryFieldSchema, fieldSchema)) {
-			return new BinaryField(fieldSchema.defaultValue);
+			return new BinaryField(fieldSchema.defaultValue, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(NullableBinaryFieldSchema, fieldSchema)) {
-			return new NullableBinaryField(fieldSchema.defaultValue as Uint8Array | null);
+			return new NullableBinaryField(fieldSchema.defaultValue as Uint8Array | null, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(BooleanFieldSchema, fieldSchema)) {
-			return new BooleanField(fieldSchema.defaultValue);
+			return new BooleanField(fieldSchema.defaultValue, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(NullableBooleanFieldSchema, fieldSchema)) {
-			return new NullableBooleanField(fieldSchema.defaultValue as boolean | null);
+			return new NullableBooleanField(fieldSchema.defaultValue as boolean | null, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(IntegerFieldSchema, fieldSchema)) {
-			return new IntegerField(fieldSchema.defaultValue);
+			return new IntegerField(fieldSchema.defaultValue, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(NullableIntegerFieldSchema, fieldSchema)) {
-			return new NullableIntegerField(fieldSchema.defaultValue as number | null);
+			return new NullableIntegerField(fieldSchema.defaultValue as number | null, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(NumberFieldSchema, fieldSchema)) {
-			return new NumberField(fieldSchema.defaultValue);
+			return new NumberField(fieldSchema.defaultValue, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(NullableNumberFieldSchema, fieldSchema)) {
-			return new NullableNumberField(fieldSchema.defaultValue as number | null);
+			return new NullableNumberField(fieldSchema.defaultValue as number | null, fieldSchema.unique);
 		}
 		if (isSchemaCompatible(StringFieldSchema, fieldSchema)) {
-			return new StringField(fieldSchema.defaultValue, fieldSchema.searchable);
+			return new StringField(fieldSchema.defaultValue, fieldSchema.unique, fieldSchema.searchable);
 		}
 		if (isSchemaCompatible(NullableStringFieldSchema, fieldSchema)) {
-			return new NullableStringField(fieldSchema.defaultValue as string | null, fieldSchema.searchable);
+			return new NullableStringField(fieldSchema.defaultValue as string | null, fieldSchema.unique, fieldSchema.searchable);
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -459,6 +481,9 @@ export class SchemaManager {
 	}
 
 	private compareField<A extends Value>(field: Field<A>, schema: FieldSchema): boolean {
+		if (field.getUnique() && !schema.unique) {
+			return false;
+		}
 		if (isSchemaCompatible(BigIntFieldSchema, schema)) {
 			if (field instanceof BigIntField) {
 				return true;
@@ -624,67 +649,78 @@ export class SchemaManager {
 		if (field instanceof BigIntField) {
 			return {
 				type: "BigIntField",
-				defaultValue: (field as BigIntField).getDefaultValue()
+				defaultValue: (field as BigIntField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof NullableBigIntField) {
 			return {
 				type: "NullableBigIntField",
-				defaultValue: (field as NullableBigIntField).getDefaultValue()
+				defaultValue: (field as NullableBigIntField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof BinaryField) {
 			return {
 				type: "BinaryField",
-				defaultValue: (field as BinaryField).getDefaultValue()
+				defaultValue: (field as BinaryField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof NullableBinaryField) {
 			return {
 				type: "NullableBinaryField",
-				defaultValue: (field as NullableBinaryField).getDefaultValue()
+				defaultValue: (field as NullableBinaryField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof BooleanField) {
 			return {
 				type: "BooleanField",
-				defaultValue: (field as BooleanField).getDefaultValue()
+				defaultValue: (field as BooleanField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof NullableBooleanField) {
 			return {
 				type: "NullableBooleanField",
-				defaultValue: (field as NullableBooleanField).getDefaultValue()
+				defaultValue: (field as NullableBooleanField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof IntegerField) {
 			return {
 				type: "IntegerField",
-				defaultValue: (field as IntegerField).getDefaultValue()
+				defaultValue: (field as IntegerField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof NullableIntegerField) {
 			return {
 				type: "NullableIntegerField",
-				defaultValue: (field as NullableIntegerField).getDefaultValue()
+				defaultValue: (field as NullableIntegerField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof NumberField) {
 			return {
 				type: "NumberField",
-				defaultValue: (field as NumberField).getDefaultValue()
+				defaultValue: (field as NumberField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof NullableNumberField) {
 			return {
 				type: "NullableNumberField",
-				defaultValue: (field as NullableNumberField).getDefaultValue()
+				defaultValue: (field as NullableNumberField).getDefaultValue(),
+				unique: field.getUnique()
 			};
 		}
 		if (field instanceof StringField) {
 			return {
 				type: "StringField",
 				defaultValue: (field as StringField).getDefaultValue(),
+				unique: field.getUnique(),
 				searchable: field.getSearchable()
 			};
 		}
@@ -692,6 +728,7 @@ export class SchemaManager {
 			return {
 				type: "NullableStringField",
 				defaultValue: (field as NullableStringField).getDefaultValue(),
+				unique: field.getUnique(),
 				searchable: field.getSearchable()
 			};
 		}

@@ -508,6 +508,30 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return index;
 	}
 
+	private checkConstraints(record: A): void {
+		let recordKey = this.recordManager.encodeKeys(this.keys, record);
+		for (let fieldKey in this.fields) {
+			let field = this.fields[fieldKey];
+			if (!field.getUnique()) {
+				continue;
+			}
+			if (record[fieldKey] == null) {
+				continue;
+			}
+			let existingRecord = this.filter({
+				[fieldKey]: new EqualityFilter(record[fieldKey])
+			} as any as FilterMap<A>, undefined, undefined, 1).pop();
+			if (existingRecord == null) {
+				continue;
+			}
+			let existingRecordKey = this.recordManager.encodeKeys(this.keys, existingRecord);
+			if (compareBuffers(recordKey, existingRecordKey) === 0) {
+				continue;
+			}
+			throw new Error(`Expected value of field "${fieldKey}" to be unique!`);
+		}
+	}
+
 	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>) {
 		this.blockManager = blockManager;
 		this.fields = fields;
@@ -563,6 +587,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	insert(record: A): void {
+		this.checkConstraints(record);
 		let key = this.recordManager.encodeKeys(this.keys, record);
 		let encoded = this.recordManager.encode(record);
 		let index = this.table.lookup(key);
@@ -758,6 +783,9 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 		for (let key in fields) {
 			if (fields[key].getSearchable()) {
 				this.searchIndices.push(new SearchIndex(key));
+			}
+			if (fields[key].getUnique()) {
+				this.index(new Index([key, ...this.keys]));
 			}
 		}
 	}

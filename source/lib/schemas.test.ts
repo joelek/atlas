@@ -194,3 +194,44 @@ wtf.test(`It should be able to construct an existing database manager when the k
 	};
 	assert.equals(observed, expected);
 });
+
+wtf.test(`It should be able to construct an existing database manager when one field is changed to unique in the schema.`, async (assert) => {
+	let file = new VirtualFile(0);
+	let blockManager = new BlockManager(file);
+	let schemaManager = new SchemaManager();
+	let databaseManager1 = schemaManager.createDatabaseManager(file, blockManager, new Database({
+		users: new Store({
+			key: new StringField(""),
+			name: new StringField("")
+		}, ["key"], {})
+	}));
+	let stores1 = databaseManager1.createDatabaseStores();
+	await stores1.users.insert({
+		key: "0",
+		name: "A"
+	});
+	await stores1.users.insert({
+		key: "1",
+		name: "A"
+	});
+	let databaseManager2 = schemaManager.createDatabaseManager(file, blockManager, new Database({
+		users: new Store({
+			key: new StringField(""),
+			name: new StringField("", true)
+		}, ["key"], {})
+	}));
+	let stores2 = databaseManager2.createDatabaseStores();
+	let observed = await stores2.users.lookup({
+		key: "0"
+	});
+	let expected = {
+		key: "0",
+		name: "A"
+	};
+	assert.equals(observed, expected);
+	await assert.throws(async () => {
+		await stores2.users.lookup({
+			key: "1"
+		});
+	});
+});
