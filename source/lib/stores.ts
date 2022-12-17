@@ -781,13 +781,14 @@ export class Store<A extends Record, B extends RequiredKeys<A>> {
 		return new Index(keys);
 	}
 
-	index(that: Index<A>): void {
+	index(that: Index<A>): boolean {
 		for (let index of this.indices) {
 			if (index.equals(that)) {
-				return;
+				return false;
 			}
 		}
 		this.indices.push(that);
+		return true;
 	}
 };
 
