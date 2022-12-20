@@ -565,7 +565,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider implementing fsync batching for transactions.
 * Improve heuristic for index selector.
 * Implement enum types.
-* Implement structure for stores with many to many relationships.
 * Only recreate stores when referenced fields are altered, else update records.
 * Only recreate indices when referenced fields are altered.
 * Investigate caching of tree branches for quick traversal.
