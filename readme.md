@@ -286,6 +286,52 @@ In the example above, two entities are created. A store for storing directory ob
 
 A self-referencing link is created for the store as there is a one to many relationship where every directory object may be linked to multiple directory objects. The "directory_id" field is mapped to the "parent_directory_id" field.
 
+#### Many to many relationships
+
+Atlas can be configured to maintain data-consistency for `many to many` relationships through clever use of the link entity.
+
+```ts
+import * as atlas from "@joelek/atlas";
+
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let users = context.createStore({
+		user_id: context.createBinaryField(),
+		name: context.createStringField(),
+		age: context.createIntegerField()
+	}, ["user_id"]);
+
+	let groups = context.createStore({
+		group_id: context.createBinaryField(),
+		name: context.createStringField()
+	}, ["group_id"]);
+
+	let userGroupMemberships = context.createStore({
+		user_id: context.createBinaryField(),
+		group_id: context.createBinaryField()
+	}, ["user_id", "group_id"]);
+
+	let userGroups = context.createLink(users, userGroupMemberships, {
+		user_id: "user_id"
+	});
+
+	let groupUsers = context.createLink(groups, userGroupMemberships, {
+		group_id: "group_id"
+	});
+
+	return {
+		stores: {
+			users,
+			posts,
+			userGroupMemberships
+		},
+		links: {
+			userGroups,
+			groupUsers
+		}
+	};
+});
+```
+
 ### Operators
 
 Atlas defines the operator entity as a logical operator that subsequently may be used to create a filter entity using a parameter value.
