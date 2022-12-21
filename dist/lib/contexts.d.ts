@@ -68,40 +68,52 @@ export declare class Context {
     private createFile;
     constructor();
     createBigIntField(options?: {
+        defaultValue?: bigint;
         unique?: boolean;
     }): FieldReference<BigIntField>;
     createNullableBigIntField(options?: {
+        defaultValue?: bigint | null;
         unique?: boolean;
     }): FieldReference<NullableBigIntField>;
     createBinaryField(options?: {
+        defaultValue?: Uint8Array;
         unique?: boolean;
     }): FieldReference<BinaryField>;
     createNullableBinaryField(options?: {
+        defaultValue?: Uint8Array | null;
         unique?: boolean;
     }): FieldReference<NullableBinaryField>;
     createBooleanField(options?: {
+        defaultValue?: boolean;
         unique?: boolean;
     }): FieldReference<BooleanField>;
     createNullableBooleanField(options?: {
+        defaultValue?: boolean | null;
         unique?: boolean;
     }): FieldReference<NullableBooleanField>;
     createIntegerField(options?: {
+        defaultValue?: number;
         unique?: boolean;
     }): FieldReference<IntegerField>;
     createNullableIntegerField(options?: {
+        defaultValue?: number | null;
         unique?: boolean;
     }): FieldReference<NullableIntegerField>;
     createNumberField(options?: {
+        defaultValue?: number;
         unique?: boolean;
     }): FieldReference<NumberField>;
     createNullableNumberField(options?: {
+        defaultValue?: number | null;
         unique?: boolean;
     }): FieldReference<NullableNumberField>;
     createStringField(options?: {
+        defaultValue?: string;
         unique?: boolean;
         searchable?: boolean;
     }): FieldReference<StringField>;
     createNullableStringField(options?: {
+        defaultValue?: string | null;
         unique?: boolean;
         searchable?: boolean;
     }): FieldReference<NullableStringField>;

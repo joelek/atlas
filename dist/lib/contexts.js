@@ -107,73 +107,73 @@ class Context {
     }
     createBigIntField(options) {
         let reference = new FieldReference();
-        let field = new records_1.BigIntField(0n, options?.unique);
+        let field = new records_1.BigIntField(options?.defaultValue ?? 0n, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableBigIntField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableBigIntField(null, options?.unique);
+        let field = new records_1.NullableBigIntField(options?.defaultValue ?? null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createBinaryField(options) {
         let reference = new FieldReference();
-        let field = new records_1.BinaryField(Uint8Array.of(), options?.unique);
+        let field = new records_1.BinaryField(options?.defaultValue ?? Uint8Array.of(), options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableBinaryField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableBinaryField(null, options?.unique);
+        let field = new records_1.NullableBinaryField(options?.defaultValue ?? null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createBooleanField(options) {
         let reference = new FieldReference();
-        let field = new records_1.BooleanField(false, options?.unique);
+        let field = new records_1.BooleanField(options?.defaultValue ?? false, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableBooleanField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableBooleanField(null, options?.unique);
+        let field = new records_1.NullableBooleanField(options?.defaultValue ?? null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createIntegerField(options) {
         let reference = new FieldReference();
-        let field = new records_1.IntegerField(0, options?.unique);
+        let field = new records_1.IntegerField(options?.defaultValue ?? 0, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableIntegerField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableIntegerField(null, options?.unique);
+        let field = new records_1.NullableIntegerField(options?.defaultValue ?? null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createNumberField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NumberField(0, options?.unique);
+        let field = new records_1.NumberField(options?.defaultValue ?? 0, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableNumberField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableNumberField(null, options?.unique);
+        let field = new records_1.NullableNumberField(options?.defaultValue ?? null, options?.unique);
         this.fields.set(reference, field);
         return reference;
     }
     createStringField(options) {
         let reference = new FieldReference();
-        let field = new records_1.StringField("", options?.unique, options?.searchable);
+        let field = new records_1.StringField(options?.defaultValue ?? "", options?.unique, options?.searchable);
         this.fields.set(reference, field);
         return reference;
     }
     createNullableStringField(options) {
         let reference = new FieldReference();
-        let field = new records_1.NullableStringField(null, options?.unique, options?.searchable);
+        let field = new records_1.NullableStringField(options?.defaultValue ?? null, options?.unique, options?.searchable);
         this.fields.set(reference, field);
         return reference;
     }
