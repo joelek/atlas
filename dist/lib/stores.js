@@ -408,16 +408,26 @@ class SearchIndexManager {
             let candidates = searchResults
                 .map((searchResult, index) => ({ searchResult, index }))
                 .filter((candidate) => candidate.searchResult != null)
-                .sort((one, two) => {
-                return one.searchResult.rank - two.searchResult.rank;
-            });
+                .sort(sorters_1.CompositeSorter.of(sorters_1.NumberSorter.increasing((record) => record.searchResult.rank), sorters_1.NumberSorter.decreasing((record) => record.index)));
             let candidate = candidates.pop();
             if (candidate == null) {
                 break;
             }
-            inner: for (let searchIndexManager of searchIndexManagers) {
+            inner: for (let [index, searchIndexManager] of searchIndexManagers.entries()) {
+                if (index === candidate.index) {
+                    continue;
+                }
                 let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
-                if (rank != null && rank > candidate.searchResult.rank) {
+                if (rank == null) {
+                    continue;
+                }
+                // The candidate has already been yielded since it is ranked higher by the current SearchIndexManager.
+                if (rank > candidate.searchResult.rank) {
+                    searchResults[candidate.index] = iterators[candidate.index].next().value;
+                    continue outer;
+                }
+                // The candidate has already been yielded since it is ranked equally by the current SearchIndexManager which has precedence.
+                if (rank === candidate.searchResult.rank && index < candidate.index) {
                     searchResults[candidate.index] = iterators[candidate.index].next().value;
                     continue outer;
                 }
