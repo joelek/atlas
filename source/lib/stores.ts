@@ -460,16 +460,29 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 			let candidates = searchResults
 				.map((searchResult, index) => ({ searchResult, index }))
 				.filter((candidate): candidate is { searchResult: SearchResult<A>, index: number } => candidate.searchResult != null)
-				.sort((one, two) => {
-					return one.searchResult.rank - two.searchResult.rank;
-				});
+				.sort(CompositeSorter.of(
+					NumberSorter.increasing((record) => record.searchResult.rank),
+					NumberSorter.decreasing((record) => record.index)
+				));
 			let candidate = candidates.pop();
 			if (candidate == null) {
 				break;
 			}
-			inner: for (let searchIndexManager of searchIndexManagers) {
+			inner: for (let [index, searchIndexManager] of searchIndexManagers.entries()) {
+				if (index === candidate.index) {
+					continue;
+				}
 				let rank = searchIndexManager.computeRecordRank(candidate.searchResult.record, query);
-				if (rank != null && rank > candidate.searchResult.rank) {
+				if (rank == null) {
+					continue;
+				}
+				// The candidate has already been yielded since it is ranked higher by the current SearchIndexManager.
+				if (rank > candidate.searchResult.rank) {
+					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
+					continue outer;
+				}
+				// The candidate has already been yielded since it is ranked equally by the current SearchIndexManager which has precedence.
+				if (rank === candidate.searchResult.rank && index < candidate.index) {
 					searchResults[candidate.index] = iterators[candidate.index].next().value as SearchResult<A> | undefined;
 					continue outer;
 				}
