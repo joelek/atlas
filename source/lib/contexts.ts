@@ -143,86 +143,86 @@ export class Context {
 		this.orders = new Map();
 	}
 
-	createBigIntField(options?: { unique?: boolean }): FieldReference<BigIntField> {
+	createBigIntField(options?: { defaultValue?: bigint, unique?: boolean }): FieldReference<BigIntField> {
 		let reference = new FieldReference();
-		let field = new BigIntField(0n, options?.unique);
+		let field = new BigIntField(options?.defaultValue ?? 0n, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableBigIntField(options?: { unique?: boolean }): FieldReference<NullableBigIntField> {
+	createNullableBigIntField(options?: { defaultValue?: bigint | null, unique?: boolean }): FieldReference<NullableBigIntField> {
 		let reference = new FieldReference();
-		let field = new NullableBigIntField(null, options?.unique);
+		let field = new NullableBigIntField(options?.defaultValue ?? null, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createBinaryField(options?: { unique?: boolean }): FieldReference<BinaryField> {
+	createBinaryField(options?: { defaultValue?: Uint8Array, unique?: boolean }): FieldReference<BinaryField> {
 		let reference = new FieldReference();
-		let field = new BinaryField(Uint8Array.of(), options?.unique);
+		let field = new BinaryField(options?.defaultValue ?? Uint8Array.of(), options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableBinaryField(options?: { unique?: boolean }): FieldReference<NullableBinaryField> {
+	createNullableBinaryField(options?: { defaultValue?: Uint8Array | null, unique?: boolean }): FieldReference<NullableBinaryField> {
 		let reference = new FieldReference();
-		let field = new NullableBinaryField(null, options?.unique);
+		let field = new NullableBinaryField(options?.defaultValue ?? null, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createBooleanField(options?: { unique?: boolean }): FieldReference<BooleanField> {
+	createBooleanField(options?: { defaultValue?: boolean, unique?: boolean }): FieldReference<BooleanField> {
 		let reference = new FieldReference();
-		let field = new BooleanField(false, options?.unique);
+		let field = new BooleanField(options?.defaultValue ?? false, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableBooleanField(options?: { unique?: boolean }): FieldReference<NullableBooleanField> {
+	createNullableBooleanField(options?: { defaultValue?: boolean | null, unique?: boolean }): FieldReference<NullableBooleanField> {
 		let reference = new FieldReference();
-		let field = new NullableBooleanField(null, options?.unique);
+		let field = new NullableBooleanField(options?.defaultValue ?? null, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createIntegerField(options?: { unique?: boolean }): FieldReference<IntegerField> {
+	createIntegerField(options?: { defaultValue?: number, unique?: boolean }): FieldReference<IntegerField> {
 		let reference = new FieldReference();
-		let field = new IntegerField(0, options?.unique);
+		let field = new IntegerField(options?.defaultValue ?? 0, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableIntegerField(options?: { unique?: boolean }): FieldReference<NullableIntegerField> {
+	createNullableIntegerField(options?: { defaultValue?: number | null, unique?: boolean }): FieldReference<NullableIntegerField> {
 		let reference = new FieldReference();
-		let field = new NullableIntegerField(null, options?.unique);
+		let field = new NullableIntegerField(options?.defaultValue ?? null, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNumberField(options?: { unique?: boolean }): FieldReference<NumberField> {
+	createNumberField(options?: { defaultValue?: number, unique?: boolean }): FieldReference<NumberField> {
 		let reference = new FieldReference();
-		let field = new NumberField(0, options?.unique);
+		let field = new NumberField(options?.defaultValue ?? 0, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableNumberField(options?: { unique?: boolean }): FieldReference<NullableNumberField> {
+	createNullableNumberField(options?: { defaultValue?: number | null, unique?: boolean }): FieldReference<NullableNumberField> {
 		let reference = new FieldReference();
-		let field = new NullableNumberField(null, options?.unique);
+		let field = new NullableNumberField(options?.defaultValue ?? null, options?.unique);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createStringField(options?: { unique?: boolean, searchable?: boolean }): FieldReference<StringField> {
+	createStringField(options?: { defaultValue?: string, unique?: boolean, searchable?: boolean }): FieldReference<StringField> {
 		let reference = new FieldReference();
-		let field = new StringField("", options?.unique, options?.searchable);
+		let field = new StringField(options?.defaultValue ?? "", options?.unique, options?.searchable);
 		this.fields.set(reference, field);
 		return reference;
 	}
 
-	createNullableStringField(options?: { unique?: boolean, searchable?: boolean }): FieldReference<NullableStringField> {
+	createNullableStringField(options?: { defaultValue?: string | null, unique?: boolean, searchable?: boolean }): FieldReference<NullableStringField> {
 		let reference = new FieldReference();
-		let field = new NullableStringField(null, options?.unique, options?.searchable);
+		let field = new NullableStringField(options?.defaultValue ?? null, options?.unique, options?.searchable);
 		this.fields.set(reference, field);
 		return reference;
 	}

@@ -137,6 +137,13 @@ context.createStringField();
 context.createNullableStringField();
 ```
 
+The default value may be configured for all fields, nullable and non-nullable alike.
+
+```ts
+context.createStringField({ defaultValue: "" });
+context.createNullableStringField({ defaultValue: null });
+```
+
 All fields may be created with a "unique" hint that instructs Atlas to prevent two different records from storing identical non-nullable values for the field in question.
 
 ```ts
