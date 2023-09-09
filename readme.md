@@ -114,7 +114,7 @@ Atlas supports all non-composite data types defined by [Bedrock](https://github.
 * The `bigint` data type may be used to store big integers of arbitrary length.
 * The `binary` data type may be used to store binary chunks of arbitrary length.
 * The `boolean` data type may be used to store booleans.
-* The `integer` data type may be used to store integers.
+* The `integer` data type may be used to store integers with a maximum magnitude of `9 007 199 254 740 991` (2<sup>53</sup> - 1).
 * The `number` data type may be used to store numbers.
 * The `string` data type may be used to store unicode strings of arbitrary length.
 
