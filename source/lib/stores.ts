@@ -147,8 +147,10 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		let keysConsumed = [] as Keys<A>;
 		let keysRemaining = [...this.keys];
 		let tree = this.tree;
-		for (let indexKey of this.keys) {
-			let filter = filters[indexKey];
+		let relationship = "^=" as Relationship;
+		let keys = [] as Array<Uint8Array>;
+		for (let [index, indexedKey] of this.keys.entries()) {
+			let filter = filters[indexedKey];
 			if (filter == null) {
 				break;
 			}
@@ -156,10 +158,15 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				let encodedValue = filter.getEncodedValue();
 				let branch = StreamIterable.of(tree.branch("=", [encodedValue])).shift();
 				if (branch == null) {
-					return;
+					if (index < this.keys.length - 1) {
+						return;
+					} else {
+						keys.push(encodedValue);
+						break;
+					}
 				}
-				delete filters[indexKey];
-				delete orders[indexKey];
+				delete filters[indexedKey];
+				delete orders[indexedKey];
 				keysConsumed.push(keysRemaining.shift() as Key<A>);
 				tree = branch;
 			}
@@ -177,11 +184,9 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			directions.push(order.getDirection());
 			delete orders[orderKeys[i]];
 		}
-		let relationship = "^=" as Relationship;
-		let keys = [] as Array<Uint8Array>;
 		if (anchor != null) {
 			relationship = ">";
-			keys = this.recordManager.encodeKeys(keysRemaining, anchor);
+			keys.push(...this.recordManager.encodeKeys(keysRemaining, anchor));
 		}
 		let iterable = tree.filter(relationship, keys, directions);
 		return new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders);
@@ -590,8 +595,12 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			}
 			filteredStores.push(filteredStore);
 		}
-		filteredStores.push(new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor));
+		let fullTableScan = new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor);
+		filteredStores.push(fullTableScan);
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
+		if (filteredStore === fullTableScan) {
+			// There should be an option to prevent this.
+		}
 		let iterable = StreamIterable.of(filteredStore)
 		if (limit != null) {
 			iterable = iterable.limit(limit);

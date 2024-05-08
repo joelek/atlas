@@ -1477,3 +1477,28 @@ wtf.test(`It should not return the same result twice when multiple indices match
 	let expected = ["User 1"] as Array<string>;
 	assert.equals(observed, expected);
 });
+
+wtf.test(`It should support filtering of the records stored when there is an index on the key.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField("")
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["key"])
+		]
+	});
+	users.insert({
+		key: "A"
+	});
+	users.insert({
+		key: "AA"
+	});
+	let iterable = users.filter({
+		key: new EqualityFilter("A")
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["A"];
+	assert.equals(observed, expected);
+});
