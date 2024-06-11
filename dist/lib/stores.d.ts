@@ -32,11 +32,13 @@ export type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
 export declare class FilteredStore<A extends Record> {
     private recordManager;
     private blockManager;
+    private keys;
+    private numberOfRecords;
     private bids;
     private filters;
     private orders;
     private anchor?;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A);
+    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A);
     [Symbol.iterator](): Iterator<A>;
     static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined;
 }

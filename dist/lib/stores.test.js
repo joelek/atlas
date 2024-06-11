@@ -9,6 +9,7 @@ const filters_1 = require("./filters");
 const orders_1 = require("./orders");
 const test_1 = require("./test");
 const tables_1 = require("./tables");
+const links_1 = require("./links");
 wtf.test(`It should support for-of iteration of the records stored.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
@@ -607,17 +608,25 @@ wtf.test(`It should use the optimal index when filtering with filters.`, async (
     let usersOne = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
     usersOne.insert({
         user_id: "User 1",
-        name: "Name"
+        name: "Right Name"
+    });
+    usersOne.insert({
+        user_id: "User 2",
+        name: "Wrong Name"
     });
     let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name", "user_id"]);
     let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
     usersTwo.insert({
+        user_id: "User 1",
+        name: "Wrong Name"
+    });
+    usersTwo.insert({
         user_id: "User 2",
-        name: "Name"
+        name: "Right Name"
     });
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
     let iterable = users.filter({
-        name: new filters_1.EqualityFilter("Name")
+        name: new filters_1.EqualityFilter("Right Name")
     });
     let observed = Array.from(iterable).map((record) => record.user_id);
     let expected = ["User 2"];
@@ -642,17 +651,25 @@ wtf.test(`It should use the optimal index when filtering with filters and orders
     let usersOne = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
     usersOne.insert({
         user_id: "User 1",
-        name: "Name"
+        name: "Right Name"
+    });
+    usersOne.insert({
+        user_id: "User 2",
+        name: "Wrong Name"
     });
     let indexTwo = new stores_1.IndexManager(recordManager, blockManager, ["name", "user_id"]);
     let usersTwo = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
     usersTwo.insert({
+        user_id: "User 1",
+        name: "Wrong Name"
+    });
+    usersTwo.insert({
         user_id: "User 2",
-        name: "Name"
+        name: "Right Name"
     });
     let users = new stores_1.StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
     let iterable = users.filter({
-        name: new filters_1.EqualityFilter("Name")
+        name: new filters_1.EqualityFilter("Right Name")
     });
     let observed = Array.from(iterable).map((record) => record.user_id);
     let expected = ["User 2"];
@@ -780,6 +797,49 @@ wtf.test(`It should support anchored filtering of the records stored in decreasi
     let expected = ["B", "A"];
     assert.equals(observed, expected);
 });
+wtf.test(`It should support anchored filtering of the records through a self-referencing link in increasing order with an index.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let directories = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            directory_id: new records_1.StringField(""),
+            parent_directory_id: new records_1.NullableStringField(""),
+            name: new records_1.StringField("")
+        },
+        keys: ["directory_id"],
+        indices: [
+            new stores_1.Index(["parent_directory_id", "name", "directory_id"])
+        ]
+    });
+    let directory_directories = links_1.LinkManager.construct(directories, directories, {
+        directory_id: "parent_directory_id"
+    }, {
+        name: new orders_1.IncreasingOrder()
+    });
+    directories.insert({
+        directory_id: "2",
+        parent_directory_id: null,
+        name: "A"
+    });
+    directories.insert({
+        directory_id: "3",
+        parent_directory_id: null,
+        name: "B"
+    });
+    directories.insert({
+        directory_id: "1",
+        parent_directory_id: null,
+        name: "C"
+    });
+    let records = [];
+    while (true) {
+        let batch = directory_directories.filter(undefined, records[records.length - 1], 1);
+        if (batch.length === 0) {
+            break;
+        }
+        records.push(...batch);
+    }
+    assert.equals(records.map((record) => record.name), ["A", "B", "C"]);
+});
 wtf.test(`It should perform significantly better with a suitable index.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let storeOne = stores_1.StoreManager.construct(blockManager, {
@@ -813,6 +873,69 @@ wtf.test(`It should perform significantly better with a suitable index.`, async 
         storeTwo.filter(undefined, undefined, undefined, 10);
     });
     assert.equals(averageOne * 100 < averageTwo, true);
+});
+wtf.test(`It should perform equally good when there are two suitable indices.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let tracks = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            track_id: new records_1.StringField("")
+        },
+        keys: ["track_id"],
+        indices: [
+            new stores_1.Index(["track_id"])
+        ]
+    });
+    let files = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            file_id: new records_1.StringField("")
+        },
+        keys: ["file_id"],
+        indices: [
+            new stores_1.Index(["file_id"])
+        ]
+    });
+    let track_files = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            track_id: new records_1.StringField(""),
+            file_id: new records_1.StringField("")
+        },
+        keys: ["track_id", "file_id"],
+        indices: [
+            new stores_1.Index(["track_id", "file_id"]),
+            new stores_1.Index(["file_id", "track_id"])
+        ]
+    });
+    let track_track_files = links_1.LinkManager.construct(tracks, track_files, {
+        track_id: "track_id"
+    });
+    let file_track_files = links_1.LinkManager.construct(files, track_files, {
+        file_id: "file_id"
+    });
+    for (let i = 0; i < 1000; i++) {
+        tracks.insert({
+            track_id: `Track ${i}`
+        });
+        files.insert({
+            file_id: `File ${i}`
+        });
+        track_files.insert({
+            track_id: `Track ${i}`,
+            file_id: `File ${i}`
+        });
+    }
+    let averageOne = await (0, test_1.benchmark)(() => {
+        track_track_files.filter({
+            track_id: "Track 500"
+        });
+    });
+    let averageTwo = await (0, test_1.benchmark)(() => {
+        file_track_files.filter({
+            file_id: "File 500"
+        });
+    });
+    let min = Math.min(averageOne, averageTwo);
+    let max = Math.max(averageOne, averageTwo);
+    assert.equals(min * 2 >= max, true);
 });
 wtf.test(`It should prevent identical records from being re-indexed.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
@@ -1428,5 +1551,102 @@ wtf.test(`It should support filtering of the records stored when there is an ind
     });
     let observed = Array.from(iterable).map((entry) => entry.key);
     let expected = ["A"];
+    assert.equals(observed, expected);
+});
+wtf.test(`It should support filtering the records using a greater than filter when there is no index.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField(""),
+            value: new records_1.IntegerField(0)
+        },
+        keys: ["key"],
+        indices: []
+    });
+    users.insert({
+        key: "A",
+        value: 2
+    });
+    users.insert({
+        key: "B",
+        value: 1
+    });
+    users.insert({
+        key: "C",
+        value: 3
+    });
+    let iterable = users.filter({
+        value: new filters_1.GreaterThanFilter(1)
+    }, {
+        key: new orders_1.IncreasingOrder()
+    });
+    let observed = Array.from(iterable).map((entry) => entry.key);
+    let expected = ["A", "C"];
+    assert.equals(observed, expected);
+});
+wtf.test(`It should support filtering the records using a greater than filter when there is an index for the filter.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField(""),
+            value: new records_1.IntegerField(0)
+        },
+        keys: ["key"],
+        indices: [
+            new stores_1.Index(["value"])
+        ]
+    });
+    users.insert({
+        key: "A",
+        value: 2
+    });
+    users.insert({
+        key: "B",
+        value: 1
+    });
+    users.insert({
+        key: "C",
+        value: 3
+    });
+    let iterable = users.filter({
+        value: new filters_1.GreaterThanFilter(1)
+    }, {
+        key: new orders_1.IncreasingOrder()
+    });
+    let observed = Array.from(iterable).map((entry) => entry.key);
+    let expected = ["A", "C"];
+    assert.equals(observed, expected);
+});
+wtf.test(`It should support filtering the records using a greater than filter when there is a combined index for the filter and the key.`, async (assert) => {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField(""),
+            value: new records_1.IntegerField(0)
+        },
+        keys: ["key"],
+        indices: [
+            new stores_1.Index(["value", "key"])
+        ]
+    });
+    users.insert({
+        key: "A",
+        value: 2
+    });
+    users.insert({
+        key: "B",
+        value: 1
+    });
+    users.insert({
+        key: "C",
+        value: 3
+    });
+    let iterable = users.filter({
+        value: new filters_1.GreaterThanFilter(1)
+    }, {
+        key: new orders_1.IncreasingOrder()
+    });
+    let observed = Array.from(iterable).map((entry) => entry.key);
+    let expected = ["A", "C"];
     assert.equals(observed, expected);
 });

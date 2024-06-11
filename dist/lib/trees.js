@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadixTree = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
+exports.RadixTree = exports.RadixTreeTraverserAfter = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeDecreasingWalker = exports.RadixTreeIncreasingWalker = exports.NodeVisitorAnd = exports.NodeVisitorOr = exports.NodeVisitorLessThanOrEqual = exports.NodeVisitorLessThan = exports.NodeVisitorGreaterThanOrEqual = exports.NodeVisitorGreaterThan = exports.NodeVisitorPrefix = exports.NodeVisitorEqual = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
 const asserts_1 = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const utils_1 = require("./utils");
 const variables_1 = require("./variables");
-function computeCommonPrefixLength(one, two) {
+function computeCommonPrefixLength(one, two, start = 0) {
     let length = Math.min(one.length, two.length);
-    for (let i = 0; i < length; i++) {
+    for (let i = start; i < length; i++) {
         if (one[i] !== two[i]) {
             return i;
         }
@@ -391,11 +391,444 @@ class RadixTreeWalker {
 }
 exports.RadixTreeWalker = RadixTreeWalker;
 ;
+var NodeKeyRelationship;
+(function (NodeKeyRelationship) {
+    NodeKeyRelationship[NodeKeyRelationship["KEY_IS_NODE_KEY"] = 0] = "KEY_IS_NODE_KEY";
+    NodeKeyRelationship[NodeKeyRelationship["KEY_IS_PREFIX_TO_NODE_KEY"] = 1] = "KEY_IS_PREFIX_TO_NODE_KEY";
+    NodeKeyRelationship[NodeKeyRelationship["KEY_IS_BEFORE_NODE_KEY"] = 2] = "KEY_IS_BEFORE_NODE_KEY";
+    NodeKeyRelationship[NodeKeyRelationship["KEY_IS_AFTER_NODE_KEY"] = 3] = "KEY_IS_AFTER_NODE_KEY";
+    NodeKeyRelationship[NodeKeyRelationship["NODE_KEY_IS_PREFIX_TO_KEY"] = 4] = "NODE_KEY_IS_PREFIX_TO_KEY";
+})(NodeKeyRelationship || (NodeKeyRelationship = {}));
+;
+const NOTHING_FLAG = 0;
+const CHILD_FLAGS = new Array(16).fill(0).map((value, index) => {
+    return (1 << index);
+});
+const CHILDREN_FLAG = (1 << 16) - 1;
+const CURRENT_FLAG = 1 << 16;
+const CHILDREN_BEFORE_FLAGS = new Array(16).fill(0).map((value, index) => {
+    let flags = 0;
+    for (let i = 0; i < index; i++) {
+        flags |= (1 << i);
+    }
+    return flags;
+});
+const CHILDREN_AFTER_FLAGS = new Array(16).fill(0).map((value, index) => {
+    let flags = 0;
+    for (let i = index + 1; i < 16; i++) {
+        flags |= (1 << i);
+    }
+    return flags;
+});
+const YIELD_NOTHING_CHECK_NOTHING = [NOTHING_FLAG, NOTHING_FLAG];
+const YIELD_CURRENT_CHECK_NOTHING = [CURRENT_FLAG, NOTHING_FLAG];
+const YIELD_CHILDREN_CHECK_NOTHING = [CHILDREN_FLAG, NOTHING_FLAG];
+const YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING = [CURRENT_FLAG | CHILDREN_FLAG, NOTHING_FLAG];
+const YIELD_NOTHING_CHECK_CHILD = new Array(16).fill(0).map((value, index) => {
+    return [NOTHING_FLAG, CHILD_FLAGS[index]];
+});
+const YIELD_CHILDREN_AFTER_CHECK_CHILD = new Array(16).fill(0).map((value, index) => {
+    return [CHILDREN_AFTER_FLAGS[index], CHILD_FLAGS[index]];
+});
+const YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD = new Array(16).fill(0).map((value, index) => {
+    return [CURRENT_FLAG | CHILDREN_BEFORE_FLAGS[index], CHILD_FLAGS[index]];
+});
+;
+class NodeVisitorEqual {
+    key_nibbles;
+    constructor(key_nibbles) {
+        this.key_nibbles = key_nibbles;
+    }
+    visit(node_nibbles, offset) {
+        let key_nibbles = this.key_nibbles;
+        let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+        let next_node_nibble = node_nibbles[common_prefix_length];
+        let next_key_nibble = key_nibbles[common_prefix_length];
+        if (next_key_nibble == null) {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.KEY_IS_NODE_KEY
+                return YIELD_CURRENT_CHECK_NOTHING;
+            }
+            else {
+                // NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+                return YIELD_NOTHING_CHECK_NOTHING;
+            }
+        }
+        else {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+                return YIELD_NOTHING_CHECK_CHILD[next_key_nibble];
+            }
+            else {
+                if (next_key_nibble < next_node_nibble) {
+                    // NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+                else {
+                    // NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+            }
+        }
+    }
+}
+exports.NodeVisitorEqual = NodeVisitorEqual;
+;
+class NodeVisitorPrefix {
+    key_nibbles;
+    constructor(key_nibbles) {
+        this.key_nibbles = key_nibbles;
+    }
+    visit(node_nibbles, offset) {
+        let key_nibbles = this.key_nibbles;
+        let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+        let next_node_nibble = node_nibbles[common_prefix_length];
+        let next_key_nibble = key_nibbles[common_prefix_length];
+        if (next_key_nibble == null) {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.KEY_IS_NODE_KEY
+                return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+            }
+            else {
+                // NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+                return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+            }
+        }
+        else {
+            if (next_node_nibble == null) {
+                return YIELD_NOTHING_CHECK_CHILD[next_key_nibble];
+            }
+            else {
+                if (next_key_nibble < next_node_nibble) {
+                    // NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+                else {
+                    // NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+            }
+        }
+    }
+}
+exports.NodeVisitorPrefix = NodeVisitorPrefix;
+;
+class NodeVisitorGreaterThan {
+    key_nibbles;
+    constructor(key_nibbles) {
+        this.key_nibbles = key_nibbles;
+    }
+    visit(node_nibbles, offset) {
+        let key_nibbles = this.key_nibbles;
+        let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+        let next_node_nibble = node_nibbles[common_prefix_length];
+        let next_key_nibble = key_nibbles[common_prefix_length];
+        if (next_key_nibble == null) {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.KEY_IS_NODE_KEY
+                return YIELD_CHILDREN_CHECK_NOTHING;
+            }
+            else {
+                // NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+                return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+            }
+        }
+        else {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+                return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
+            }
+            else {
+                if (next_key_nibble < next_node_nibble) {
+                    // NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+                    return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+                }
+                else {
+                    // NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+            }
+        }
+    }
+}
+exports.NodeVisitorGreaterThan = NodeVisitorGreaterThan;
+;
+class NodeVisitorGreaterThanOrEqual {
+    key_nibbles;
+    constructor(key_nibbles) {
+        this.key_nibbles = key_nibbles;
+    }
+    visit(node_nibbles, offset) {
+        let key_nibbles = this.key_nibbles;
+        let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+        let next_node_nibble = node_nibbles[common_prefix_length];
+        let next_key_nibble = key_nibbles[common_prefix_length];
+        if (next_key_nibble == null) {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.KEY_IS_NODE_KEY
+                return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+            }
+            else {
+                // NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+                return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+            }
+        }
+        else {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+                return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
+            }
+            else {
+                if (next_key_nibble < next_node_nibble) {
+                    // NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+                    return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+                }
+                else {
+                    // NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+            }
+        }
+    }
+}
+exports.NodeVisitorGreaterThanOrEqual = NodeVisitorGreaterThanOrEqual;
+;
+class NodeVisitorLessThan {
+    key_nibbles;
+    constructor(key_nibbles) {
+        this.key_nibbles = key_nibbles;
+    }
+    visit(node_nibbles, offset) {
+        let key_nibbles = this.key_nibbles;
+        let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+        let next_node_nibble = node_nibbles[common_prefix_length];
+        let next_key_nibble = key_nibbles[common_prefix_length];
+        if (next_key_nibble == null) {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.KEY_IS_NODE_KEY
+                return YIELD_NOTHING_CHECK_NOTHING;
+            }
+            else {
+                // NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+                return YIELD_NOTHING_CHECK_NOTHING;
+            }
+        }
+        else {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+                return YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD[next_key_nibble];
+            }
+            else {
+                if (next_key_nibble < next_node_nibble) {
+                    // NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+                else {
+                    // NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+                    return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+                }
+            }
+        }
+    }
+}
+exports.NodeVisitorLessThan = NodeVisitorLessThan;
+;
+class NodeVisitorLessThanOrEqual {
+    key_nibbles;
+    constructor(key_nibbles) {
+        this.key_nibbles = key_nibbles;
+    }
+    visit(node_nibbles, offset) {
+        let key_nibbles = this.key_nibbles;
+        let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+        let next_node_nibble = node_nibbles[common_prefix_length];
+        let next_key_nibble = key_nibbles[common_prefix_length];
+        if (next_key_nibble == null) {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.KEY_IS_NODE_KEY
+                return YIELD_CURRENT_CHECK_NOTHING;
+            }
+            else {
+                // NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+                return YIELD_NOTHING_CHECK_NOTHING;
+            }
+        }
+        else {
+            if (next_node_nibble == null) {
+                // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+                return YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD[next_key_nibble];
+            }
+            else {
+                if (next_key_nibble < next_node_nibble) {
+                    // NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+                    return YIELD_NOTHING_CHECK_NOTHING;
+                }
+                else {
+                    // NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+                    return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+                }
+            }
+        }
+    }
+}
+exports.NodeVisitorLessThanOrEqual = NodeVisitorLessThanOrEqual;
+;
+class NodeVisitorOr {
+    visitors;
+    constructor(visitor, ...vistors) {
+        this.visitors = [visitor, ...vistors];
+    }
+    visit(node_nibbles, offset) {
+        let combined_yield_outcome = NOTHING_FLAG;
+        let combined_check_outcome = NOTHING_FLAG;
+        for (let visitor of this.visitors) {
+            let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
+            combined_yield_outcome |= yield_outcome;
+            combined_check_outcome |= check_outcome;
+        }
+        return [combined_yield_outcome, combined_check_outcome];
+    }
+}
+exports.NodeVisitorOr = NodeVisitorOr;
+;
+class NodeVisitorAnd {
+    visitors;
+    constructor(visitor, ...vistors) {
+        this.visitors = [visitor, ...vistors];
+    }
+    visit(node_nibbles, offset) {
+        let combined_yield_outcome = NOTHING_FLAG;
+        let combined_check_outcome = NOTHING_FLAG;
+        for (let visitor of this.visitors) {
+            let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
+            combined_yield_outcome &= yield_outcome;
+            combined_check_outcome &= check_outcome;
+        }
+        return [combined_yield_outcome, combined_check_outcome];
+    }
+}
+exports.NodeVisitorAnd = NodeVisitorAnd;
+;
+class RadixTreeIncreasingWalker {
+    block_manager;
+    node_visitor;
+    *yieldChild(node_bid) {
+        yield node_bid;
+        if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            for (let i = 0; i < 16; i++) {
+                let child_node_bid = body.child(i);
+                if (child_node_bid !== 0) {
+                    yield* this.yieldChild(child_node_bid);
+                }
+            }
+        }
+    }
+    *visitNode(node_bid, previous_node_nibbles) {
+        let head = new NodeHead();
+        this.block_manager.readBlock(node_bid, head.buffer, 0);
+        let node_nibbles = head.prefix();
+        let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
+        let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles, previous_node_nibbles.length);
+        if (yield_outcome & CURRENT_FLAG) {
+            yield node_bid;
+        }
+        if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            for (let i = 0; i < 16; i++) {
+                if (yield_outcome & CHILD_FLAGS[i]) {
+                    let child_node_bid = body.child(i);
+                    if (child_node_bid !== 0) {
+                        yield* this.yieldChild(child_node_bid);
+                    }
+                    continue;
+                }
+                if (check_outcome & CHILD_FLAGS[i]) {
+                    let child_node_bid = body.child(i);
+                    if (child_node_bid !== 0) {
+                        yield* this.visitNode(child_node_bid, [...new_node_nibbles, i]);
+                    }
+                    continue;
+                }
+            }
+        }
+    }
+    constructor(block_manager, node_visitor) {
+        this.block_manager = block_manager;
+        this.node_visitor = node_visitor;
+    }
+    *traverse(node_bid) {
+        yield* this.visitNode(node_bid, []);
+    }
+}
+exports.RadixTreeIncreasingWalker = RadixTreeIncreasingWalker;
+;
+class RadixTreeDecreasingWalker {
+    block_manager;
+    node_visitor;
+    *yieldChild(node_bid) {
+        if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            for (let i = 16 - 1; i >= 0; i--) {
+                let child_node_bid = body.child(i);
+                if (child_node_bid !== 0) {
+                    yield* this.yieldChild(child_node_bid);
+                }
+            }
+        }
+        yield node_bid;
+    }
+    *visitNode(node_bid, previous_node_nibbles) {
+        let head = new NodeHead();
+        this.block_manager.readBlock(node_bid, head.buffer, 0);
+        let node_nibbles = head.prefix();
+        let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
+        let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles, previous_node_nibbles.length);
+        if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            for (let i = 16 - 1; i >= 0; i--) {
+                if (yield_outcome & CHILD_FLAGS[i]) {
+                    let child_node_bid = body.child(i);
+                    if (child_node_bid !== 0) {
+                        yield* this.yieldChild(child_node_bid);
+                    }
+                    continue;
+                }
+                if (check_outcome & CHILD_FLAGS[i]) {
+                    let child_node_bid = body.child(i);
+                    if (child_node_bid !== 0) {
+                        yield* this.visitNode(child_node_bid, [...new_node_nibbles, i]);
+                    }
+                    continue;
+                }
+            }
+        }
+        if (yield_outcome & CURRENT_FLAG) {
+            yield node_bid;
+        }
+    }
+    constructor(block_manager, node_visitor) {
+        this.block_manager = block_manager;
+        this.node_visitor = node_visitor;
+    }
+    *traverse(node_bid) {
+        yield* this.visitNode(node_bid, []);
+    }
+}
+exports.RadixTreeDecreasingWalker = RadixTreeDecreasingWalker;
+;
 class RadixTreeTraverser {
     blockManager;
     bid;
     *traverseUnconditionally(bid) {
         yield bid;
+        yield* this.traverseChildrenUnconditionally(bid);
+    }
+    *traverseChildrenUnconditionally(bid) {
         if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
             let body = new NodeBody();
             this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
@@ -603,6 +1036,74 @@ class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
     }
 }
 exports.RadixTreeTraverserAtOrAfter = RadixTreeTraverserAtOrAfter;
+;
+class RadixTreeTraverserAfter extends RadixTreeTraverser {
+    *doTraverse(bid, keys, keyNibbles) {
+        let head = new NodeHead();
+        this.blockManager.readBlock(bid, head.buffer, 0);
+        let nodeNibbles = head.prefix();
+        let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
+        let nextNodeNibble = nodeNibbles[commonPrefixLength];
+        let nextKeyNibble = keyNibbles[commonPrefixLength];
+        if (nextKeyNibble == null) {
+            if (nextNodeNibble == null) {
+                // Key ("ab") is identical to node ("ab").
+                if (keys.length === 0) {
+                    yield* this.traverseChildrenUnconditionally(bid);
+                }
+                else {
+                    let subtree = head.subtree();
+                    if (subtree !== 0) {
+                        yield* this.doTraverse(subtree, keys.slice(1), keys[0]);
+                    }
+                }
+            }
+            else {
+                // Key ("a") is prefix to node ("ab").
+                if (keys.length === 0) {
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    yield* this.traverseUnconditionally(bid);
+                }
+            }
+        }
+        else {
+            if (nextNodeNibble == null) {
+                // Node ("a") is prefix to key ("ab").
+                if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
+                    return;
+                }
+                let body = new NodeBody();
+                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let child = body.child(nextKeyNibble);
+                if (child !== 0) {
+                    yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
+                }
+                for (let i = nextKeyNibble + 1; i < 16; i++) {
+                    let child = body.child(i);
+                    if (child !== 0) {
+                        yield* this.traverseUnconditionally(child);
+                    }
+                }
+            }
+            else {
+                if (nextKeyNibble < nextNodeNibble) {
+                    // Key ("aa") is sibling before node ("ab").
+                    yield* this.traverseUnconditionally(bid);
+                }
+                else {
+                    // Key ("ac") is sibling after node ("ab").
+                    return;
+                }
+            }
+        }
+    }
+    constructor(blockManager, bid) {
+        super(blockManager, bid);
+    }
+}
+exports.RadixTreeTraverserAfter = RadixTreeTraverserAfter;
 ;
 class RadixTree {
     blockManager;
@@ -901,7 +1402,11 @@ class RadixTree {
             return new RadixTreeTraverserAtOrAfter(this.blockManager, this.blockIndex)
                 .traverse(nibbles);
         }
-        throw "Expected code to be unreachable!";
+        if (relationship === ">") {
+            return new RadixTreeTraverserAfter(this.blockManager, this.blockIndex)
+                .traverse(nibbles);
+        }
+        throw new Error("Expected code to be unreachable!");
     }
     constructor(blockManager, blockIndex) {
         this.blockManager = blockManager;
@@ -922,6 +1427,36 @@ class RadixTree {
             yield new RadixTree(this.blockManager, subtree);
         }
     }
+    debug(indent = "") {
+        let head = new NodeHead();
+        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let prefix = head.prefix();
+        let resident = head.resident();
+        let subtree = head.subtree();
+        let total = head.total();
+        if (prefix.length > 0) {
+            console.log(`${indent}prefix: ${prefix.map((nibble) => nibble.toString(16))}`);
+        }
+        if (resident !== 0) {
+            console.log(`${indent}resident: (${resident})`);
+        }
+        if (subtree !== 0) {
+            console.log(`${indent}subtree: (${subtree})`);
+            new RadixTree(this.blockManager, subtree).debug(indent + "\t");
+        }
+        console.log(`${indent}total: ${total}`);
+        if (this.blockManager.getBlockSize(this.blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+            let body = new NodeBody();
+            this.blockManager.readBlock(this.blockIndex, body.buffer, NodeBody.OFFSET);
+            for (let i = 0; i < 16; i++) {
+                let child = body.child(i);
+                if (child !== 0) {
+                    console.log(`${indent}children[${i.toString(16)}]: (${child})`);
+                    new RadixTree(this.blockManager, child).debug(indent + "\t");
+                }
+            }
+        }
+    }
     delete() {
         this.doDelete(this.blockIndex);
     }
@@ -929,6 +1464,29 @@ class RadixTree {
         let nibbles = keys.map(getNibblesFromBytes);
         let treeWalker = new RadixTreeWalker(this.blockManager, relationship, nibbles, directions ?? []);
         yield* treeWalker.traverse(this.blockIndex);
+    }
+    *get_filtered_node_bids(nodeVisitor, direction) {
+        nodeVisitor = nodeVisitor ?? new NodeVisitorPrefix([]);
+        let treeWalker = direction === "decreasing" ? new RadixTreeDecreasingWalker(this.blockManager, nodeVisitor) : new RadixTreeIncreasingWalker(this.blockManager, nodeVisitor);
+        yield* treeWalker.traverse(this.blockIndex);
+    }
+    get_resident_bid() {
+        let head = new NodeHead();
+        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let resident = head.resident();
+        if (resident === 0) {
+            return;
+        }
+        return resident;
+    }
+    get_subtree_bid() {
+        let head = new NodeHead();
+        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let subtree = head.subtree();
+        if (subtree === 0) {
+            return;
+        }
+        return subtree;
     }
     insert(keys, value) {
         if (variables_1.DEBUG)

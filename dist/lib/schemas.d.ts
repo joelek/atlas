@@ -211,14 +211,22 @@ export declare const EqualityOperatorSchema: bedrock.codecs.ObjectCodec<{
     type: "EqualityOperator";
 }, {}>;
 export type EqualityOperatorSchema = ReturnType<typeof EqualityOperatorSchema["decode"]>;
+export declare const GreaterThanOperatorSchema: bedrock.codecs.ObjectCodec<{
+    type: "GreaterThanOperator";
+}, {}>;
+export type GreaterThanOperatorSchema = ReturnType<typeof GreaterThanOperatorSchema["decode"]>;
 export declare const OperatorSchema: bedrock.codecs.UnionCodec<[{
     type: "EqualityOperator";
+}, {
+    type: "GreaterThanOperator";
 }]>;
 export type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
 export declare const KeyOperatorSchema: bedrock.codecs.ObjectCodec<{
     key: string;
     operator: {
         type: "EqualityOperator";
+    } | {
+        type: "GreaterThanOperator";
     };
 }, {}>;
 export type KeyOperatorSchema = ReturnType<typeof KeyOperatorSchema["decode"]>;
@@ -226,6 +234,8 @@ export declare const KeyOperatorsSchema: bedrock.codecs.ArrayCodec<{
     key: string;
     operator: {
         type: "EqualityOperator";
+    } | {
+        type: "GreaterThanOperator";
     };
 }>;
 export type KeyOperatorsSchema = ReturnType<typeof KeyOperatorsSchema["decode"]>;
@@ -456,6 +466,8 @@ export declare const QuerySchema: bedrock.codecs.ObjectCodec<{
         key: string;
         operator: {
             type: "EqualityOperator";
+        } | {
+            type: "GreaterThanOperator";
         };
     }[];
     orders: {
@@ -475,6 +487,8 @@ export declare const QueriesSchema: bedrock.codecs.RecordCodec<{
         key: string;
         operator: {
             type: "EqualityOperator";
+        } | {
+            type: "GreaterThanOperator";
         };
     }[];
     orders: {
@@ -581,6 +595,8 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
             key: string;
             operator: {
                 type: "EqualityOperator";
+            } | {
+                type: "GreaterThanOperator";
             };
         }[];
         orders: {

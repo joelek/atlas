@@ -228,6 +228,12 @@ class Context {
         this.operators.set(reference, operator);
         return reference;
     }
+    createGreaterThanOperator() {
+        let reference = new OperatorReference();
+        let operator = new operators_1.GreaterThanOperator();
+        this.operators.set(reference, operator);
+        return reference;
+    }
     createDecreasingOrder() {
         let reference = new OrderReference();
         let order = new orders_1.DecreasingOrder();

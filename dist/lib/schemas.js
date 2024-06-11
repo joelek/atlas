@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.SearchIndicesSchema = exports.SearchIndexSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.SearchIndicesSchema = exports.SearchIndexSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.GreaterThanOperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const databases_1 = require("./databases");
 const tables_1 = require("./tables");
@@ -96,7 +96,10 @@ exports.IndicesSchema = bedrock.codecs.Array.of(exports.IndexSchema);
 exports.EqualityOperatorSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("EqualityOperator")
 });
-exports.OperatorSchema = bedrock.codecs.Union.of(exports.EqualityOperatorSchema);
+exports.GreaterThanOperatorSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("GreaterThanOperator")
+});
+exports.OperatorSchema = bedrock.codecs.Union.of(exports.EqualityOperatorSchema, exports.GreaterThanOperatorSchema);
 exports.KeyOperatorSchema = bedrock.codecs.Object.of({
     key: bedrock.codecs.String,
     operator: exports.OperatorSchema
@@ -221,6 +224,9 @@ class SchemaManager {
     loadOperatorManager(operatorSchema) {
         if (isSchemaCompatible(exports.EqualityOperatorSchema, operatorSchema)) {
             return new operators_1.EqualityOperator();
+        }
+        if (isSchemaCompatible(exports.GreaterThanOperatorSchema, operatorSchema)) {
+            return new operators_1.GreaterThanOperator();
         }
         throw `Expected code to be unreachable!`;
     }
@@ -751,6 +757,11 @@ class SchemaManager {
         if (operator instanceof operators_1.EqualityOperator) {
             return {
                 type: "EqualityOperator"
+            };
+        }
+        if (operator instanceof operators_1.GreaterThanOperator) {
+            return {
+                type: "GreaterThanOperator"
             };
         }
         throw `Expected code to be unreachable!`;

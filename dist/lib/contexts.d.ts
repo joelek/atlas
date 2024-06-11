@@ -4,7 +4,7 @@ import { Record, KeysRecordMap, BinaryField, BooleanField, StringField, Nullable
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order } from "./orders";
 import { DatabaseLinksFromLinkManagers, DatabaseQueriesFromQueryManagers, DatabaseStoresFromStorManagers } from "./databases";
-import { EqualityOperator, Operator } from "./operators";
+import { EqualityOperator, GreaterThanOperator, Operator } from "./operators";
 import { SubsetOf } from "./inference";
 import { Query, QueryManagersFromQueries } from "./queries";
 export declare class FieldReference<A extends Field<any>> {
@@ -121,6 +121,7 @@ export declare class Context {
     createStore<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>>(fieldReferences: FieldReferences<A>, keys: [...B], orderReferences?: OrderReferences<C>): StoreReference<A, B>;
     createQuery<A extends Record, B extends RequiredKeys<A>, C extends SubsetOf<A, C>, D extends SubsetOf<A, D>>(storeReference: StoreReference<A, B>, operatorReferences: OperatorReferences<C>, orderReferences?: OrderReferences<D>): QueryReference<A, B, C, D>;
     createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>>;
+    createGreaterThanOperator<A extends Value>(): OperatorReference<GreaterThanOperator<A>>;
     createDecreasingOrder<A extends Value>(): OrderReference<DecreasingOrder<A>>;
     createIncreasingOrder<A extends Value>(): OrderReference<IncreasingOrder<A>>;
     createTransactionManager<A extends StoreReferences<any>, B extends LinkReferences<any>, C extends QueryReferences<any>>(path: string, storeReferences?: A, linkReferences?: B, queryReferences?: C): TransactionManager<DatabaseStoresFromStorManagers<StoreManagersFromStores<StoresFromStoreReferences<A>>>, DatabaseLinksFromLinkManagers<LinkManagersFromLinks<LinksFromLinkReferences<B>>>, DatabaseQueriesFromQueryManagers<QueryManagersFromQueries<QueriesFromQueryReferences<C>>>>;

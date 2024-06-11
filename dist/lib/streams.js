@@ -10,6 +10,17 @@ function* filter(iterable, predicate) {
     }
 }
 ;
+function* flatten(iterable) {
+    for (let value of iterable) {
+        if (typeof value[Symbol.iterator] === "function") {
+            yield* value;
+        }
+        else {
+            yield value;
+        }
+    }
+}
+;
 function* include(iterable, predicate) {
     let index = 0;
     for (let value of iterable) {
@@ -63,6 +74,9 @@ class StreamIterable {
             }
         }
     }
+    flatten() {
+        return new StreamIterable(flatten(this.values));
+    }
     include(predicate) {
         return new StreamIterable(include(this.values, predicate));
     }
@@ -80,6 +94,18 @@ class StreamIterable {
     }
     map(transform) {
         return new StreamIterable(map(this.values, transform));
+    }
+    peek() {
+        let iterator = this.values[Symbol.iterator]();
+        let result = iterator.next();
+        if (!result.done) {
+            this.values = flatten([[result.value], new class {
+                    [Symbol.iterator]() {
+                        return iterator;
+                    }
+                }]);
+        }
+        return result.value;
     }
     shift() {
         for (let value of this.values) {

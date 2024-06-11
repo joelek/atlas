@@ -38,13 +38,25 @@ function createUsers() {
     };
 }
 ;
-wtf.test(`It should support filtering without explicit ordering.`, async (assert) => {
+wtf.test(`It should support filtering with an equality operator`, async (assert) => {
     let { users } = { ...createUsers() };
     let queryManager = new queries_1.QueryManager(users, {
         name: new operators_1.EqualityOperator()
     }, {});
     let iterable = queryManager.filter({
         name: "B"
+    });
+    let observed = Array.from(iterable).map((user) => user.key);
+    let expected = ["User 2", "User 3"];
+    assert.equals(observed, expected);
+});
+wtf.test(`It should support filtering with a greater than operator.`, async (assert) => {
+    let { users } = { ...createUsers() };
+    let queryManager = new queries_1.QueryManager(users, {
+        name: new operators_1.GreaterThanOperator()
+    }, {});
+    let iterable = queryManager.filter({
+        name: "A"
     });
     let observed = Array.from(iterable).map((user) => user.key);
     let expected = ["User 2", "User 3"];
@@ -64,13 +76,26 @@ wtf.test(`It should support filtering with explicit ordering.`, async (assert) =
     let expected = ["User 3", "User 2"];
     assert.equals(observed, expected);
 });
-wtf.test(`It should create the correct index for a query without orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a query with an equality operator.`, async (assert) => {
     let users = new stores_1.Store({
         user_id: new records_1.StringField(""),
         name: new records_1.StringField("")
     }, ["user_id"]);
     let query = new queries_1.Query(users, {
         name: new operators_1.EqualityOperator()
+    }, {});
+    let index = query.createIndex();
+    let observed = index.keys;
+    let expected = ["name", "user_id"];
+    assert.equals(observed, expected);
+});
+wtf.test(`It should create the correct index for a query with a greater than operator.`, async (assert) => {
+    let users = new stores_1.Store({
+        user_id: new records_1.StringField(""),
+        name: new records_1.StringField("")
+    }, ["user_id"]);
+    let query = new queries_1.Query(users, {
+        name: new operators_1.GreaterThanOperator()
     }, {});
     let index = query.createIndex();
     let observed = index.keys;

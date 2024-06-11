@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EqualityFilter = exports.Filter = void 0;
+exports.GreaterThanFilter = exports.EqualityFilter = exports.Filter = void 0;
 const bedrock = require("@joelek/bedrock");
+const trees_1 = require("./trees");
 class Filter {
     constructor() { }
 }
@@ -13,17 +14,33 @@ class EqualityFilter extends Filter {
         super();
         this.value = value;
     }
-    getEncodedValue() {
-        return bedrock.codecs.Any.encodePayload(this.value);
+    createNodeVisitor(key_nibbles) {
+        return new trees_1.NodeVisitorEqual(key_nibbles);
     }
     getValue() {
         return this.value;
     }
-    matches(value) {
-        let one = bedrock.codecs.Any.encodePayload(this.value);
-        let two = bedrock.codecs.Any.encodePayload(value);
-        return bedrock.utils.Chunk.comparePrefixes(one, two) === 0;
+    matches(encodedFilterValue, encodedRecordValue) {
+        return bedrock.utils.Chunk.comparePrefixes(encodedFilterValue, encodedRecordValue) === 0;
     }
 }
 exports.EqualityFilter = EqualityFilter;
+;
+class GreaterThanFilter extends Filter {
+    value;
+    constructor(value) {
+        super();
+        this.value = value;
+    }
+    createNodeVisitor(key_nibbles) {
+        return new trees_1.NodeVisitorGreaterThan(key_nibbles);
+    }
+    getValue() {
+        return this.value;
+    }
+    matches(encodedFilterValue, encodedRecordValue) {
+        return bedrock.utils.Chunk.comparePrefixes(encodedFilterValue, encodedRecordValue) < 0;
+    }
+}
+exports.GreaterThanFilter = GreaterThanFilter;
 ;

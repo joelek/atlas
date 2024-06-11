@@ -41,11 +41,18 @@ class Query {
         let keys = [];
         for (let key in this.operators) {
             let operator = this.operators[key];
-            if (!(operator instanceof operators_1.EqualityOperator)) {
-                continue;
+            if (operator instanceof operators_1.EqualityOperator) {
+                if (!keys.includes(key)) {
+                    keys.push(key);
+                }
             }
-            if (!keys.includes(key)) {
-                keys.push(key);
+        }
+        for (let key in this.operators) {
+            let operator = this.operators[key];
+            if (!(operator instanceof operators_1.EqualityOperator)) {
+                if (!keys.includes(key)) {
+                    keys.push(key);
+                }
             }
         }
         for (let key in this.orders) {

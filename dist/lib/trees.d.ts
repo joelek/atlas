@@ -2,7 +2,7 @@ import { BlockManager } from "./blocks";
 import { Chunk } from "./chunks";
 export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 export type Direction = "increasing" | "decreasing";
-export declare function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number;
+export declare function computeCommonPrefixLength(one: Array<number>, two: Array<number>, start?: number): number;
 export declare function getNibblesFromBytes(buffer: Uint8Array): Array<number>;
 export declare function getBytesFromNibbles(nibbles: Array<number>): Uint8Array;
 export declare class NodeHead extends Chunk {
@@ -39,11 +39,72 @@ export declare class RadixTreeWalker {
     constructor(blockManager: BlockManager, relationship: Relationship, keys: Array<Array<number>>, directions: Array<Direction>);
     traverse(bid: number): Iterable<number>;
 }
+type NodeVisitorOutcome = [yield_outcome: number, check_outcome: number];
+export interface NodeVisitor {
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorEqual implements NodeVisitor {
+    protected key_nibbles: Array<number>;
+    constructor(key_nibbles: Array<number>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorPrefix implements NodeVisitor {
+    protected key_nibbles: Array<number>;
+    constructor(key_nibbles: Array<number>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorGreaterThan implements NodeVisitor {
+    protected key_nibbles: Array<number>;
+    constructor(key_nibbles: Array<number>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorGreaterThanOrEqual implements NodeVisitor {
+    protected key_nibbles: Array<number>;
+    constructor(key_nibbles: Array<number>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorLessThan implements NodeVisitor {
+    protected key_nibbles: Array<number>;
+    constructor(key_nibbles: Array<number>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorLessThanOrEqual implements NodeVisitor {
+    protected key_nibbles: Array<number>;
+    constructor(key_nibbles: Array<number>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorOr implements NodeVisitor {
+    protected visitors: Array<NodeVisitor>;
+    constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorAnd implements NodeVisitor {
+    protected visitors: Array<NodeVisitor>;
+    constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class RadixTreeIncreasingWalker {
+    protected block_manager: BlockManager;
+    protected node_visitor: NodeVisitor;
+    protected yieldChild(node_bid: number): Iterable<number>;
+    protected visitNode(node_bid: number, previous_node_nibbles: Array<number>): Iterable<number>;
+    constructor(block_manager: BlockManager, node_visitor: NodeVisitor);
+    traverse(node_bid: number): Iterable<number>;
+}
+export declare class RadixTreeDecreasingWalker {
+    protected block_manager: BlockManager;
+    protected node_visitor: NodeVisitor;
+    protected yieldChild(node_bid: number): Iterable<number>;
+    protected visitNode(node_bid: number, previous_node_nibbles: Array<number>): Iterable<number>;
+    constructor(block_manager: BlockManager, node_visitor: NodeVisitor);
+    traverse(node_bid: number): Iterable<number>;
+}
 export declare abstract class RadixTreeTraverser {
     protected blockManager: BlockManager;
     protected bid: number;
     protected abstract doTraverse(bid: number, keys: Array<Array<number>>, key: Array<number>): Iterable<number>;
     protected traverseUnconditionally(bid: number): Iterable<number>;
+    protected traverseChildrenUnconditionally(bid: number): Iterable<number>;
     constructor(blockManager: BlockManager, bid: number);
     traverse(keys: Array<Array<number>>): Iterable<number>;
 }
@@ -59,6 +120,10 @@ export declare class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
     protected doTraverse(bid: number, keys: Array<Array<number>>, keyNibbles: Array<number>): Iterable<number>;
     constructor(blockManager: BlockManager, bid: number);
 }
+export declare class RadixTreeTraverserAfter extends RadixTreeTraverser {
+    protected doTraverse(bid: number, keys: Array<Array<number>>, keyNibbles: Array<number>): Iterable<number>;
+    constructor(blockManager: BlockManager, bid: number);
+}
 export declare class RadixTree {
     private blockManager;
     private blockIndex;
@@ -71,8 +136,12 @@ export declare class RadixTree {
     constructor(blockManager: BlockManager, blockIndex?: number);
     [Symbol.iterator](): Iterator<number>;
     branch(relationship: Relationship, keys: Array<Uint8Array>): Iterable<RadixTree>;
+    debug(indent?: string): void;
     delete(): void;
     filter(relationship: Relationship, keys: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number>;
+    get_filtered_node_bids(nodeVisitor: NodeVisitor | undefined, direction: Direction | undefined): Iterable<number>;
+    get_resident_bid(): number | undefined;
+    get_subtree_bid(): number | undefined;
     insert(keys: Array<Uint8Array>, value: number): boolean;
     length(): number;
     lookup(keys: Array<Uint8Array>): number | undefined;
@@ -80,3 +149,4 @@ export declare class RadixTree {
     vacate(): void;
     static readonly INITIAL_SIZE = 32;
 }
+export {};

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createEqualityFilter = exports.createDecreasingOrder = exports.createIncreasingOrder = exports.createTransactionManager = exports.createContext = void 0;
+exports.createGreaterThanFilter = exports.createEqualityFilter = exports.createDecreasingOrder = exports.createIncreasingOrder = exports.createTransactionManager = exports.createContext = void 0;
 const contexts_1 = require("./contexts");
 const orders_1 = require("./orders");
 const filters_1 = require("./filters");
@@ -30,4 +30,9 @@ function createEqualityFilter(value) {
     return new filters_1.EqualityFilter(value);
 }
 exports.createEqualityFilter = createEqualityFilter;
+;
+function createGreaterThanFilter(value) {
+    return new filters_1.GreaterThanFilter(value);
+}
+exports.createGreaterThanFilter = createGreaterThanFilter;
 ;

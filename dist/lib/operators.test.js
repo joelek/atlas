@@ -8,3 +8,8 @@ wtf.test(`It should create a filter (EqualityOperator).`, async (assert) => {
     let filter = operator.createFilter(0);
     assert.equals(filter instanceof filters_1.EqualityFilter, true);
 });
+wtf.test(`It should create a filter (GreaterThanOperator).`, async (assert) => {
+    let operator = new operators_1.GreaterThanOperator();
+    let filter = operator.createFilter(0);
+    assert.equals(filter instanceof filters_1.GreaterThanFilter, true);
+});
