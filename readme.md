@@ -571,11 +571,9 @@ NB: This project targets TypeScript 4 in strict mode.
 * Add type-safety checks for keys during schema deserialization.
 * Defer decoding of records until record is filtered and ordered.
 * Consider implementing fsync batching for transactions.
-* Improve heuristic for index selector.
-* Implement enum types.
 * Only recreate stores when referenced fields are altered, else update records.
 * Only recreate indices when referenced fields are altered.
-* Investigate caching of tree branches for quick traversal.
 * Retain last block when resizing PagedFile and only clear affected bytes.
 * Create EntityManagers in SchemaManager.
 * Cache decoded records on a per-transaction basis. Readable transactions may re-use caches.
+* Fix issue with ambiguous encoding of Integer and Number filter values in IndexManager.
