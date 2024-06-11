@@ -382,6 +382,10 @@ export abstract class RadixTreeTraverser {
 
 	protected * traverseUnconditionally(bid: number): Iterable<number> {
 		yield bid;
+		yield * this.traverseChildrenUnconditionally(bid);
+	}
+
+	protected * traverseChildrenUnconditionally(bid: number): Iterable<number> {
 		if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
 			let body = new NodeBody();
 			this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
@@ -525,6 +529,68 @@ export class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
 				// Key ("ab") is identical to node ("ab").
 				if (keys.length === 0) {
 					yield * this.traverseUnconditionally(bid);
+				} else {
+					let subtree = head.subtree();
+					if (subtree !== 0) {
+						yield * this.doTraverse(subtree, keys.slice(1), keys[0]);
+					}
+				}
+			} else {
+				// Key ("a") is prefix to node ("ab").
+				if (keys.length === 0) {
+					yield * this.traverseUnconditionally(bid);
+				} else {
+					yield * this.traverseUnconditionally(bid);
+				}
+			}
+		} else {
+			if (nextNodeNibble == null) {
+				// Node ("a") is prefix to key ("ab").
+				if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
+					return;
+				}
+				let body = new NodeBody();
+				this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+				let child = body.child(nextKeyNibble);
+				if (child !== 0) {
+					yield * this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
+				}
+				for (let i = nextKeyNibble + 1; i < 16; i++) {
+					let child = body.child(i);
+					if (child !== 0) {
+						yield * this.traverseUnconditionally(child);
+					}
+				}
+			} else {
+				if (nextKeyNibble < nextNodeNibble) {
+					// Key ("aa") is sibling before node ("ab").
+					yield * this.traverseUnconditionally(bid);
+				} else {
+					// Key ("ac") is sibling after node ("ab").
+					return;
+				}
+			}
+		}
+	}
+
+	constructor(blockManager: BlockManager, bid: number) {
+		super(blockManager, bid);
+	}
+};
+
+export class RadixTreeTraverserAfter extends RadixTreeTraverser {
+	protected * doTraverse(bid: number, keys: Array<Array<number>>, keyNibbles: Array<number>): Iterable<number> {
+		let head = new NodeHead();
+		this.blockManager.readBlock(bid, head.buffer, 0);
+		let nodeNibbles = head.prefix();
+		let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
+		let nextNodeNibble = nodeNibbles[commonPrefixLength] as number | undefined;
+		let nextKeyNibble = keyNibbles[commonPrefixLength] as number | undefined;
+		if (nextKeyNibble == null) {
+			if (nextNodeNibble == null) {
+				// Key ("ab") is identical to node ("ab").
+				if (keys.length === 0) {
+					yield * this.traverseChildrenUnconditionally(bid);
 				} else {
 					let subtree = head.subtree();
 					if (subtree !== 0) {
@@ -861,7 +927,11 @@ export class RadixTree {
 			return new RadixTreeTraverserAtOrAfter(this.blockManager, this.blockIndex)
 				.traverse(nibbles);
 		}
-		throw "Expected code to be unreachable!";
+		if (relationship === ">") {
+			return new RadixTreeTraverserAfter(this.blockManager, this.blockIndex)
+				.traverse(nibbles);
+		}
+		throw new Error("Expected code to be unreachable!");
 	}
 
 	constructor(blockManager: BlockManager, blockIndex?: number) {
