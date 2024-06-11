@@ -576,4 +576,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Retain last block when resizing PagedFile and only clear affected bytes.
 * Create EntityManagers in SchemaManager.
 * Cache decoded records on a per-transaction basis. Readable transactions may re-use caches.
-* Fix issue with ambiguous encoding of Integer and Number filter values in IndexManager.
