@@ -74,7 +74,8 @@ export class FilteredStore<A extends Record> {
 					}
 					let filterValue = filter.getValue();
 					let recordValue = record[key];
-					let encodedFilterValue = this.recordManager.encodeKeys([key], {
+					// Links may request all records matching the value null in the child store.
+					let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : this.recordManager.encodeKeys([key], {
 						[key]: filterValue
 					} as any)[0];
 					let encodedRecordValue = this.recordManager.encodeKeys([key], {
@@ -166,8 +167,10 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				break;
 			}
 			if (filter instanceof EqualityFilter) {
-				let encodedFilterValue = this.recordManager.encodeKeys([indexedKey], {
-					[indexedKey]: filter.getValue()
+				let filterValue = filter.getValue();
+				// Links may request all records matching the value null in the child store.
+				let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : this.recordManager.encodeKeys([indexedKey], {
+					[indexedKey]: filterValue
 				} as any)[0];
 				let branch = StreamIterable.of(tree.branch("=", [encodedFilterValue])).shift();
 				if (branch == null) {
