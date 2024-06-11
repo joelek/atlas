@@ -104,6 +104,19 @@ export class StreamIterable<A> {
 		return new StreamIterable(map(this.values, transform));
 	}
 
+	peek(): A | undefined {
+		let iterator = this.values[Symbol.iterator]();
+		let result = iterator.next();
+		if (!result.done) {
+			this.values = flatten([[result.value], new class implements Iterable<A> {
+				[Symbol.iterator](): Iterator<A, any, undefined> {
+					return iterator;
+				}
+			}]);
+		}
+		return result.value;
+	}
+
 	shift(): A | undefined {
 		for (let value of this.values) {
 			return value;
