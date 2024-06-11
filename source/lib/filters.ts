@@ -5,7 +5,7 @@ export abstract class Filter<A extends Value> {
 	constructor() {}
 
 	abstract getValue(): A;
-	abstract matches(value: A): boolean;
+	abstract matches(encodedFilterValue: Uint8Array, encodedRecordValue: Uint8Array): boolean;
 };
 
 export class EqualityFilter<A extends Value> extends Filter<A> {
@@ -16,18 +16,12 @@ export class EqualityFilter<A extends Value> extends Filter<A> {
 		this.value = value;
 	}
 
-	getEncodedValue(): Uint8Array {
-		return bedrock.codecs.Any.encodePayload(this.value);
-	}
-
 	getValue(): A {
 		return this.value;
 	}
 
-	matches(value: A): boolean {
-		let one = bedrock.codecs.Any.encodePayload(this.value);
-		let two = bedrock.codecs.Any.encodePayload(value);
-		return bedrock.utils.Chunk.comparePrefixes(one, two) === 0;
+	matches(encodedFilterValue: Uint8Array, encodedRecordValue: Uint8Array): boolean {
+		return bedrock.utils.Chunk.comparePrefixes(encodedFilterValue, encodedRecordValue) === 0;
 	}
 };
 
@@ -39,18 +33,12 @@ export class GreaterThanFilter<A extends Value> extends Filter<A> {
 		this.value = value;
 	}
 
-	getEncodedValue(): Uint8Array {
-		return bedrock.codecs.Any.encodePayload(this.value);
-	}
-
 	getValue(): A {
 		return this.value;
 	}
 
-	matches(value: A): boolean {
-		let one = bedrock.codecs.Any.encodePayload(this.value);
-		let two = bedrock.codecs.Any.encodePayload(value);
-		return bedrock.utils.Chunk.comparePrefixes(one, two) < 0;
+	matches(encodedFilterValue: Uint8Array, encodedRecordValue: Uint8Array): boolean {
+		return bedrock.utils.Chunk.comparePrefixes(encodedFilterValue, encodedRecordValue) < 0;
 	}
 };
 

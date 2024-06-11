@@ -72,8 +72,15 @@ export class FilteredStore<A extends Record> {
 					if (filter == null) {
 						continue;
 					}
-					let value = record[key];
-					if (!filter.matches(value)) {
+					let filterValue = filter.getValue();
+					let recordValue = record[key];
+					let encodedFilterValue = this.recordManager.encodeKeys([key], {
+						[key]: filterValue
+					} as any)[0];
+					let encodedRecordValue = this.recordManager.encodeKeys([key], {
+						[key]: recordValue
+					} as any)[0];
+					if (!filter.matches(encodedFilterValue, encodedRecordValue)) {
 						return false;
 					}
 				}
@@ -159,13 +166,15 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				break;
 			}
 			if (filter instanceof EqualityFilter) {
-				let encodedValue = filter.getEncodedValue();
-				let branch = StreamIterable.of(tree.branch("=", [encodedValue])).shift();
+				let encodedFilterValue = this.recordManager.encodeKeys([indexedKey], {
+					[indexedKey]: filter.getValue()
+				} as any)[0];
+				let branch = StreamIterable.of(tree.branch("=", [encodedFilterValue])).shift();
 				if (branch == null) {
 					if (index < this.keys.length - 1) {
 						return;
 					} else {
-						keys.push(encodedValue);
+						keys.push(encodedFilterValue);
 						break;
 					}
 				}
