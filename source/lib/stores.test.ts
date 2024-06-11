@@ -7,6 +7,7 @@ import { EqualityFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder, Order } from "./orders";
 import { benchmark } from "./test";
 import { Table } from "./tables";
+import { LinkManager } from "./links";
 
 wtf.test(`It should support for-of iteration of the records stored.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
@@ -830,6 +831,50 @@ wtf.test(`It should support anchored filtering of the records stored in decreasi
 	assert.equals(observed, expected);
 });
 
+wtf.test(`It should support anchored filtering of the records through a self-referencing link in increasing order with an index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let directories = StoreManager.construct(blockManager, {
+		fields: {
+			directory_id: new StringField(""),
+			parent_directory_id: new NullableStringField(""),
+			name: new StringField("")
+		},
+		keys: ["directory_id"],
+		indices: [
+			new Index(["parent_directory_id", "name", "directory_id"])
+		]
+	});
+	let directory_directories = LinkManager.construct(directories, directories, {
+		directory_id: "parent_directory_id"
+	}, {
+		name: new IncreasingOrder()
+	});
+	directories.insert({
+		directory_id: "2",
+		parent_directory_id: null,
+		name: "A"
+	});
+	directories.insert({
+		directory_id: "3",
+		parent_directory_id: null,
+		name: "B"
+	});
+	directories.insert({
+		directory_id: "1",
+		parent_directory_id: null,
+		name: "C"
+	});
+	let records = [] as ReturnType<typeof directory_directories["filter"]>;
+	while (true) {
+		let batch = directory_directories.filter(undefined, records[records.length - 1], 1);
+		if (batch.length === 0) {
+			break;
+		}
+		records.push(...batch);
+	}
+	assert.equals(records.map((record) => record.name), ["A", "B", "C"]);
+});
+
 wtf.test(`It should perform significantly better with a suitable index.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let storeOne = StoreManager.construct(blockManager, {
@@ -863,6 +908,70 @@ wtf.test(`It should perform significantly better with a suitable index.`, async 
 		storeTwo.filter(undefined, undefined, undefined, 10);
 	});
 	assert.equals(averageOne * 100 < averageTwo, true);
+});
+
+wtf.test(`It should perform equally good when there are two suitable indices.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let tracks = StoreManager.construct(blockManager, {
+		fields: {
+			track_id: new StringField("")
+		},
+		keys: ["track_id"],
+		indices: [
+			new Index(["track_id"])
+		]
+	});
+	let files = StoreManager.construct(blockManager, {
+		fields: {
+			file_id: new StringField("")
+		},
+		keys: ["file_id"],
+		indices: [
+			new Index(["file_id"])
+		]
+	});
+	let track_files = StoreManager.construct(blockManager, {
+		fields: {
+			track_id: new StringField(""),
+			file_id: new StringField("")
+		},
+		keys: ["track_id", "file_id"],
+		indices: [
+			new Index(["track_id", "file_id"]),
+			new Index(["file_id", "track_id"])
+		]
+	});
+	let track_track_files = LinkManager.construct(tracks, track_files, {
+		track_id: "track_id"
+	});
+	let file_track_files = LinkManager.construct(files, track_files, {
+		file_id: "file_id"
+	});
+	for (let i = 0; i < 1000; i++) {
+		tracks.insert({
+			track_id: `Track ${i}`
+		});
+		files.insert({
+			file_id: `File ${i}`
+		});
+		track_files.insert({
+			track_id: `Track ${i}`,
+			file_id: `File ${i}`
+		});
+	}
+	let averageOne = await benchmark(() => {
+		track_track_files.filter({
+			track_id: "Track 500"
+		});
+	});
+	let averageTwo = await benchmark(() => {
+		file_track_files.filter({
+			file_id: "File 500"
+		});
+	});
+	let min = Math.min(averageOne, averageTwo);
+	let max = Math.max(averageOne, averageTwo);
+	assert.equals(min * 2 >= max, true);
 });
 
 wtf.test(`It should prevent identical records from being re-indexed.`, async (assert) => {
