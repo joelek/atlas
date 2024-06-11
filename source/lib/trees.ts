@@ -886,6 +886,37 @@ export class RadixTree {
 		}
 	}
 
+	debug(indent = ""): void {
+		let head = new NodeHead();
+		this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+		let prefix = head.prefix();
+		let resident = head.resident();
+		let subtree = head.subtree();
+		let total = head.total();
+		if (prefix.length > 0) {
+			console.log(`${indent}prefix: ${prefix.map((nibble) => nibble.toString(16))}`);
+		}
+		if (resident !== 0) {
+			console.log(`${indent}resident: (${resident})`);
+		}
+		if (subtree !== 0) {
+			console.log(`${indent}subtree: (${subtree})`);
+			new RadixTree(this.blockManager, subtree).debug(indent + "\t");
+		}
+		console.log(`${indent}total: ${total}`);
+		if (this.blockManager.getBlockSize(this.blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.blockManager.readBlock(this.blockIndex, body.buffer, NodeBody.OFFSET);
+			for (let i = 0; i < 16; i++) {
+				let child = body.child(i);
+				if (child !== 0) {
+					console.log(`${indent}children[${i.toString(16)}]: (${child})`);
+					new RadixTree(this.blockManager, child).debug(indent + "\t");
+				}
+			}
+		}
+	}
+
 	delete(): void {
 		this.doDelete(this.blockIndex);
 	}
