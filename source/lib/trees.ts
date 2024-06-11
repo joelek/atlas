@@ -8,9 +8,9 @@ export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 
 export type Direction = "increasing" | "decreasing";
 
-export function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number {
+export function computeCommonPrefixLength(one: Array<number>, two: Array<number>, start: number = 0): number {
 	let length = Math.min(one.length, two.length);
-	for (let i = 0; i < length; i++) {
+	for (let i = start; i < length; i++) {
 		if (one[i] !== two[i]) {
 			return i;
 		}
