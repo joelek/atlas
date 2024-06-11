@@ -5,7 +5,7 @@ import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { File, PagedDurableFile, PagedFile, PhysicalFile } from "./files";
 import { Database, DatabaseLinksFromLinkManagers, DatabaseQueriesFromQueryManagers, DatabaseStoresFromStorManagers } from "./databases";
-import { EqualityOperator, Operator, Operators } from "./operators";
+import { EqualityOperator, GreaterThanOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
 import { Query, QueryManagersFromQueries, QueryInterfacesFromQueryManagers } from "./queries";
@@ -278,6 +278,13 @@ export class Context {
 	createEqualityOperator<A extends Value>(): OperatorReference<EqualityOperator<A>> {
 		let reference = new OperatorReference();
 		let operator = new EqualityOperator();
+		this.operators.set(reference, operator);
+		return reference;
+	}
+
+	createGreaterThanOperator<A extends Value>(): OperatorReference<GreaterThanOperator<A>> {
+		let reference = new OperatorReference();
+		let operator = new GreaterThanOperator();
 		this.operators.set(reference, operator);
 		return reference;
 	}

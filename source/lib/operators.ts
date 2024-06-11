@@ -1,4 +1,4 @@
-import { EqualityFilter, Filter } from "./filters";
+import { EqualityFilter, Filter, GreaterThanFilter } from "./filters";
 import { Record, Value } from "./records";
 
 export abstract class Operator<A extends Value> {
@@ -14,6 +14,16 @@ export class EqualityOperator<A extends Value> extends Operator<A> {
 
 	createFilter(value: A): EqualityFilter<A> {
 		return new EqualityFilter(value);
+	}
+};
+
+export class GreaterThanOperator<A extends Value> extends Operator<A> {
+	constructor() {
+		super();
+	}
+
+	createFilter(value: A): GreaterThanFilter<A> {
+		return new GreaterThanFilter(value);
 	}
 };
 

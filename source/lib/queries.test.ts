@@ -1,7 +1,7 @@
 import * as wtf from "@joelek/wtf";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
-import { EqualityOperator } from "./operators";
+import { EqualityOperator, GreaterThanOperator } from "./operators";
 import { DecreasingOrder, IncreasingOrder } from "./orders";
 import { Query, QueryManager } from "./queries";
 import { StringField } from "./records";
@@ -37,10 +37,10 @@ function createUsers() {
 	};
 };
 
-wtf.test(`It should support filtering without explicit ordering.`, async (assert) => {
+wtf.test(`It should support filtering with an equality operator`, async (assert) => {
 	let { users } = { ...createUsers() };
 	let queryManager = new QueryManager(users, {
-		name: new EqualityOperator()
+		name: new EqualityOperator<string>()
 	}, {});
 	let iterable = queryManager.filter({
 		name: "B"
@@ -50,10 +50,23 @@ wtf.test(`It should support filtering without explicit ordering.`, async (assert
 	assert.equals(observed, expected);
 });
 
+wtf.test(`It should support filtering with a greater than operator.`, async (assert) => {
+	let { users } = { ...createUsers() };
+	let queryManager = new QueryManager(users, {
+		name: new GreaterThanOperator<string>()
+	}, {});
+	let iterable = queryManager.filter({
+		name: "A"
+	});
+	let observed = Array.from(iterable).map((user) => user.key);
+	let expected = ["User 2", "User 3"];
+	assert.equals(observed, expected);
+});
+
 wtf.test(`It should support filtering with explicit ordering.`, async (assert) => {
 	let { users } = { ...createUsers() };
 	let queryManager = new QueryManager(users, {
-		name: new EqualityOperator()
+		name: new EqualityOperator<string>()
 	}, {
 		key: new DecreasingOrder()
 	});
@@ -65,13 +78,27 @@ wtf.test(`It should support filtering with explicit ordering.`, async (assert) =
 	assert.equals(observed, expected);
 });
 
-wtf.test(`It should create the correct index for a query without orders.`, async (assert) => {
+wtf.test(`It should create the correct index for a query with an equality operator.`, async (assert) => {
 	let users = new Store({
 		user_id: new StringField(""),
 		name: new StringField("")
 	}, ["user_id"]);
 	let query = new Query(users, {
-		name: new EqualityOperator()
+		name: new EqualityOperator<string>()
+	}, {});
+	let index = query.createIndex();
+	let observed = index.keys;
+	let expected = ["name", "user_id"];
+	assert.equals(observed, expected);
+});
+
+wtf.test(`It should create the correct index for a query with a greater than operator.`, async (assert) => {
+	let users = new Store({
+		user_id: new StringField(""),
+		name: new StringField("")
+	}, ["user_id"]);
+	let query = new Query(users, {
+		name: new GreaterThanOperator<string>()
 	}, {});
 	let index = query.createIndex();
 	let observed = index.keys;
@@ -85,7 +112,7 @@ wtf.test(`It should create the correct index for a query with metadata field ord
 		name: new StringField("")
 	}, ["user_id"]);
 	let query = new Query(users, {
-		name: new EqualityOperator()
+		name: new EqualityOperator<string>()
 	}, {
 		name: new IncreasingOrder()
 	});
@@ -101,7 +128,7 @@ wtf.test(`It should create the correct index for a query with identifying field 
 		name: new StringField("")
 	}, ["user_id"]);
 	let query = new Query(users, {
-		name: new EqualityOperator()
+		name: new EqualityOperator<string>()
 	}, {
 		user_id: new IncreasingOrder()
 	});

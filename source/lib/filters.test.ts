@@ -1,9 +1,16 @@
 import * as wtf from "@joelek/wtf";
-import { EqualityFilter } from "./filters";
+import { EqualityFilter, GreaterThanFilter } from "./filters";
 
 wtf.test(`It should determine matches (EqualityFilter).`, async (assert) => {
 	let filter = new EqualityFilter<number>(0);
 	assert.equals(filter.matches(-1), false);
 	assert.equals(filter.matches(0), true);
 	assert.equals(filter.matches(1), false);
+});
+
+wtf.test(`It should determine matches (GreaterThanFilter).`, async (assert) => {
+	let filter = new GreaterThanFilter<number>(0);
+	assert.equals(filter.matches(-1), false);
+	assert.equals(filter.matches(0), false);
+	assert.equals(filter.matches(1), true);
 });

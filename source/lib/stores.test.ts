@@ -3,7 +3,7 @@ import { Index, IndexManager, SearchIndexManager, Store, StoreManager } from "./
 import { IntegerField, NullableStringField, RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
-import { EqualityFilter } from "./filters";
+import { EqualityFilter, GreaterThanFilter } from "./filters";
 import { IncreasingOrder, DecreasingOrder, Order } from "./orders";
 import { benchmark } from "./test";
 import { Table } from "./tables";
@@ -1625,5 +1625,105 @@ wtf.test(`It should support filtering of the records stored when there is an ind
 	});
 	let observed = Array.from(iterable).map((entry) => entry.key);
 	let expected = ["A"];
+	assert.equals(observed, expected);
+});
+
+wtf.test(`It should support filtering the records using a greater than filter when there is no index.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField(""),
+			value: new IntegerField(0)
+		},
+		keys: ["key"],
+		indices: []
+	});
+	users.insert({
+		key: "A",
+		value: 2
+	});
+	users.insert({
+		key: "B",
+		value: 1
+	});
+	users.insert({
+		key: "C",
+		value: 3
+	});
+	let iterable = users.filter({
+		value: new GreaterThanFilter(1)
+	}, {
+		key: new IncreasingOrder()
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["A", "C"];
+	assert.equals(observed, expected);
+});
+
+wtf.test(`It should support filtering the records using a greater than filter when there is an index for the filter.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField(""),
+			value: new IntegerField(0)
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["value"])
+		]
+	});
+	users.insert({
+		key: "A",
+		value: 2
+	});
+	users.insert({
+		key: "B",
+		value: 1
+	});
+	users.insert({
+		key: "C",
+		value: 3
+	});
+	let iterable = users.filter({
+		value: new GreaterThanFilter(1)
+	}, {
+		key: new IncreasingOrder()
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["A", "C"];
+	assert.equals(observed, expected);
+});
+
+wtf.test(`It should support filtering the records using a greater than filter when there is a combined index for the filter and the key.`, async (assert) => {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField(""),
+			value: new IntegerField(0)
+		},
+		keys: ["key"],
+		indices: [
+			new Index(["value", "key"])
+		]
+	});
+	users.insert({
+		key: "A",
+		value: 2
+	});
+	users.insert({
+		key: "B",
+		value: 1
+	});
+	users.insert({
+		key: "C",
+		value: 3
+	});
+	let iterable = users.filter({
+		value: new GreaterThanFilter(1)
+	}, {
+		key: new IncreasingOrder()
+	});
+	let observed = Array.from(iterable).map((entry) => entry.key);
+	let expected = ["A", "C"];
 	assert.equals(observed, expected);
 });

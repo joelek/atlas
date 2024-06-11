@@ -4,6 +4,7 @@ import { Record, Value } from "./records";
 export abstract class Filter<A extends Value> {
 	constructor() {}
 
+	abstract getValue(): A;
 	abstract matches(value: A): boolean;
 };
 
@@ -27,6 +28,29 @@ export class EqualityFilter<A extends Value> extends Filter<A> {
 		let one = bedrock.codecs.Any.encodePayload(this.value);
 		let two = bedrock.codecs.Any.encodePayload(value);
 		return bedrock.utils.Chunk.comparePrefixes(one, two) === 0;
+	}
+};
+
+export class GreaterThanFilter<A extends Value> extends Filter<A> {
+	private value: A;
+
+	constructor(value: A) {
+		super();
+		this.value = value;
+	}
+
+	getEncodedValue(): Uint8Array {
+		return bedrock.codecs.Any.encodePayload(this.value);
+	}
+
+	getValue(): A {
+		return this.value;
+	}
+
+	matches(value: A): boolean {
+		let one = bedrock.codecs.Any.encodePayload(this.value);
+		let two = bedrock.codecs.Any.encodePayload(value);
+		return bedrock.utils.Chunk.comparePrefixes(one, two) < 0;
 	}
 };
 

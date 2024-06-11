@@ -345,6 +345,7 @@ Atlas defines the operator entity as a logical operator that subsequently may be
 
 ```ts
 context.createEqualityOperator();
+context.createGreaterThanOperator();
 ```
 
 ### Filters

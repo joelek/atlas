@@ -8,7 +8,7 @@ import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField,
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager, SearchIndex, SearchIndexManager } from "./stores";
 import { BlockManager } from "./blocks";
 import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries } from "./queries";
-import { EqualityOperator, Operator, OperatorMap, Operators } from "./operators";
+import { EqualityOperator, GreaterThanOperator, Operator, OperatorMap, Operators } from "./operators";
 import { SubsetOf } from "./inference";
 import { RadixTree } from "./trees";
 
@@ -182,8 +182,15 @@ export const EqualityOperatorSchema = bedrock.codecs.Object.of({
 
 export type EqualityOperatorSchema = ReturnType<typeof EqualityOperatorSchema["decode"]>;
 
+export const GreaterThanOperatorSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("GreaterThanOperator")
+});
+
+export type GreaterThanOperatorSchema = ReturnType<typeof GreaterThanOperatorSchema["decode"]>;
+
 export const OperatorSchema = bedrock.codecs.Union.of(
-	EqualityOperatorSchema
+	EqualityOperatorSchema,
+	GreaterThanOperatorSchema
 );
 
 export type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
@@ -368,6 +375,9 @@ export class SchemaManager {
 	private loadOperatorManager(operatorSchema: OperatorSchema): Operator<any> {
 		if (isSchemaCompatible(EqualityOperatorSchema, operatorSchema)) {
 			return new EqualityOperator();
+		}
+		if (isSchemaCompatible(GreaterThanOperatorSchema, operatorSchema)) {
+			return new GreaterThanOperator();
 		}
 		throw `Expected code to be unreachable!`;
 	}
@@ -918,6 +928,11 @@ export class SchemaManager {
 		if (operator instanceof EqualityOperator) {
 			return {
 				type: "EqualityOperator"
+			};
+		}
+		if (operator instanceof GreaterThanOperator) {
+			return {
+				type: "GreaterThanOperator"
 			};
 		}
 		throw `Expected code to be unreachable!`;

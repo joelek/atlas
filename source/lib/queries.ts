@@ -73,11 +73,18 @@ export class Query<A extends Record, B extends RequiredKeys<A>, C extends Subset
 		let keys = [] as Keys<A>;
 		for (let key in this.operators) {
 			let operator = this.operators[key];
-			if (!(operator instanceof EqualityOperator)) {
-				continue;
+			if (operator instanceof EqualityOperator) {
+				if (!keys.includes(key)) {
+					keys.push(key);
+				}
 			}
-			if (!keys.includes(key)) {
-				keys.push(key);
+		}
+		for (let key in this.operators) {
+			let operator = this.operators[key];
+			if (!(operator instanceof EqualityOperator)) {
+				if (!keys.includes(key)) {
+					keys.push(key);
+				}
 			}
 		}
 		for (let key in this.orders) {
