@@ -41,14 +41,18 @@ export type StoresFromStoreInterfaces<A extends StoreInterfaces<any>> = {
 export class FilteredStore<A extends Record> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
+	private keys: Array<string>;
+	private numberOfRecords: number;
 	private bids: Iterable<number>;
 	private filters: FilterMap<A>;
 	private orders: OrderMap<A>;
 	private anchor?: A;
 
-	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
+	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
 		this.recordManager = recordManager;
 		this.blockManager = blockManager;
+		this.keys = keys;
+		this.numberOfRecords = numberOfRecords;
 		this.bids = bids;
 		this.filters = filters ?? {};
 		this.orders = orders ?? {};
@@ -110,7 +114,7 @@ export class FilteredStore<A extends Record> {
 	static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined {
 		filteredStores.sort(CompositeSorter.of<FilteredStore<A>>(
 			NumberSorter.decreasing((value) => Object.keys(value.orders).length),
-			NumberSorter.decreasing((value) => Object.keys(value.filters).length)
+			NumberSorter.decreasing((value) => Object.keys(value.filters).length * value.numberOfRecords)
 		));
 		return filteredStores.pop();
 	}
@@ -132,7 +136,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
-		yield * new FilteredStore(this.recordManager, this.blockManager, this.tree, {}, {});
+		yield * new FilteredStore(this.recordManager, this.blockManager, this.keys, this.tree.length(), this.tree, {}, {}, undefined);
 	}
 
 	delete(): void {
@@ -189,7 +193,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			keys.push(...this.recordManager.encodeKeys(keysRemaining, anchor));
 		}
 		let iterable = tree.filter(relationship, keys, directions);
-		return new FilteredStore(this.recordManager, this.blockManager, iterable, filters, orders);
+		return new FilteredStore(this.recordManager, this.blockManager, this.keys, tree.length(), iterable, filters, orders, undefined);
 	}
 
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
@@ -595,7 +599,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			}
 			filteredStores.push(filteredStore);
 		}
-		let fullTableScan = new FilteredStore<any>(this.recordManager, this.blockManager, this.table, filters, orders, anchor);
+		let fullTableScan = new FilteredStore<any>(this.recordManager, this.blockManager, [], this.table.length(), this.table, filters, orders, anchor);
 		filteredStores.push(fullTableScan);
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
 		if (filteredStore === fullTableScan) {
