@@ -374,6 +374,432 @@ export class RadixTreeWalker {
 	}
 };
 
+enum NodeKeyRelationship {
+	KEY_IS_NODE_KEY,
+	KEY_IS_PREFIX_TO_NODE_KEY,
+	KEY_IS_BEFORE_NODE_KEY,
+	KEY_IS_AFTER_NODE_KEY,
+	NODE_KEY_IS_PREFIX_TO_KEY
+};
+
+const NOTHING_FLAG = 0;
+const CHILD_FLAGS = new Array(16).fill(0).map((value, index) => {
+	return (1 << index);
+});
+const CHILDREN_FLAG = (1 << 16) - 1;
+const CURRENT_FLAG = 1 << 16;
+const CHILDREN_BEFORE_FLAGS = new Array(16).fill(0).map((value, index) => {
+	let flags = 0;
+	for (let i = 0; i < index; i++) {
+		flags |= (1 << i);
+	}
+	return flags;
+});
+const CHILDREN_AFTER_FLAGS = new Array(16).fill(0).map((value, index) => {
+	let flags = 0;
+	for (let i = index + 1; i < 16; i++) {
+		flags |= (1 << i);
+	}
+	return flags;
+});
+
+type NodeVisitorOutcome = [yield_outcome: number, check_outcome: number];
+
+const YIELD_NOTHING_CHECK_NOTHING: NodeVisitorOutcome = [NOTHING_FLAG, NOTHING_FLAG];
+const YIELD_CURRENT_CHECK_NOTHING: NodeVisitorOutcome = [CURRENT_FLAG, NOTHING_FLAG];
+const YIELD_CHILDREN_CHECK_NOTHING: NodeVisitorOutcome = [CHILDREN_FLAG, NOTHING_FLAG];
+const YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING: NodeVisitorOutcome = [CURRENT_FLAG | CHILDREN_FLAG, NOTHING_FLAG];
+const YIELD_NOTHING_CHECK_CHILD: Array<NodeVisitorOutcome> = new Array(16).fill(0).map((value, index) => {
+	return [NOTHING_FLAG, CHILD_FLAGS[index]];
+});
+const YIELD_CHILDREN_AFTER_CHECK_CHILD: Array<NodeVisitorOutcome> = new Array(16).fill(0).map((value, index) => {
+	return [CHILDREN_AFTER_FLAGS[index], CHILD_FLAGS[index]];
+});
+const YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD: Array<NodeVisitorOutcome> = new Array(16).fill(0).map((value, index) => {
+	return [CURRENT_FLAG | CHILDREN_BEFORE_FLAGS[index], CHILD_FLAGS[index]];
+});
+
+export interface NodeVisitor {
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+};
+
+export class NodeVisitorEqual implements NodeVisitor {
+	protected key_nibbles: Array<number>;
+
+	constructor(key_nibbles: Array<number>) {
+		this.key_nibbles = key_nibbles;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let key_nibbles = this.key_nibbles;
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
+		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
+		if (next_key_nibble == null) {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.KEY_IS_NODE_KEY
+				return YIELD_CURRENT_CHECK_NOTHING;
+			} else {
+				// NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+				return YIELD_NOTHING_CHECK_NOTHING;
+			}
+		} else {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+				return YIELD_NOTHING_CHECK_CHILD[next_key_nibble];
+			} else {
+				if (next_key_nibble < next_node_nibble) {
+					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				} else {
+					// NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				}
+			}
+		}
+	}
+};
+
+export class NodeVisitorPrefix implements NodeVisitor {
+	protected key_nibbles: Array<number>;
+
+	constructor(key_nibbles: Array<number>) {
+		this.key_nibbles = key_nibbles;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let key_nibbles = this.key_nibbles;
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
+		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
+		if (next_key_nibble == null) {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.KEY_IS_NODE_KEY
+				return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+			} else {
+				// NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+				return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+			}
+		} else {
+			if (next_node_nibble == null) {
+				return YIELD_NOTHING_CHECK_CHILD[next_key_nibble];
+			} else {
+				if (next_key_nibble < next_node_nibble) {
+					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				} else {
+					// NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				}
+			}
+		}
+	}
+};
+
+export class NodeVisitorGreaterThan implements NodeVisitor {
+	protected key_nibbles: Array<number>;
+
+	constructor(key_nibbles: Array<number>) {
+		this.key_nibbles = key_nibbles;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let key_nibbles = this.key_nibbles;
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
+		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
+		if (next_key_nibble == null) {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.KEY_IS_NODE_KEY
+				return YIELD_CHILDREN_CHECK_NOTHING;
+			} else {
+				// NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+				return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+			}
+		} else {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+				return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
+			} else {
+				if (next_key_nibble < next_node_nibble) {
+					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+					return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+				} else {
+					// NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				}
+			}
+		}
+	}
+};
+
+export class NodeVisitorGreaterThanOrEqual implements NodeVisitor {
+	protected key_nibbles: Array<number>;
+
+	constructor(key_nibbles: Array<number>) {
+		this.key_nibbles = key_nibbles;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let key_nibbles = this.key_nibbles;
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
+		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
+		if (next_key_nibble == null) {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.KEY_IS_NODE_KEY
+				return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+			} else {
+				// NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+				return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+			}
+		} else {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+				return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
+			} else {
+				if (next_key_nibble < next_node_nibble) {
+					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+					return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+				} else {
+					// NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				}
+			}
+		}
+	}
+};
+
+export class NodeVisitorLessThan implements NodeVisitor {
+	protected key_nibbles: Array<number>;
+
+	constructor(key_nibbles: Array<number>) {
+		this.key_nibbles = key_nibbles;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let key_nibbles = this.key_nibbles;
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
+		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
+		if (next_key_nibble == null) {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.KEY_IS_NODE_KEY
+				return YIELD_NOTHING_CHECK_NOTHING;
+			} else {
+				// NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+				return YIELD_NOTHING_CHECK_NOTHING;
+			}
+		} else {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+				return YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD[next_key_nibble];
+			} else {
+				if (next_key_nibble < next_node_nibble) {
+					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				} else {
+					// NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+					return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+				}
+			}
+		}
+	}
+};
+
+export class NodeVisitorLessThanOrEqual implements NodeVisitor {
+	protected key_nibbles: Array<number>;
+
+	constructor(key_nibbles: Array<number>) {
+		this.key_nibbles = key_nibbles;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let key_nibbles = this.key_nibbles;
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
+		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
+		if (next_key_nibble == null) {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.KEY_IS_NODE_KEY
+				return YIELD_CURRENT_CHECK_NOTHING;
+			} else {
+				// NodeKeyRelationship.KEY_IS_PREFIX_TO_NODE_KEY
+				return YIELD_NOTHING_CHECK_NOTHING;
+			}
+		} else {
+			if (next_node_nibble == null) {
+				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
+				return YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD[next_key_nibble];
+			} else {
+				if (next_key_nibble < next_node_nibble) {
+					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
+					return YIELD_NOTHING_CHECK_NOTHING;
+				} else {
+					// NodeKeyRelationship.KEY_IS_AFTER_NODE_KEY
+					return YIELD_CURRENT_AND_CHILDREN_CHECK_NOTHING;
+				}
+			}
+		}
+	}
+};
+
+export class NodeVisitorOr implements NodeVisitor {
+	protected visitors: Array<NodeVisitor>;
+
+	constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>) {
+		this.visitors = [visitor, ...vistors];
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let combined_yield_outcome = NOTHING_FLAG;
+		let combined_check_outcome = NOTHING_FLAG;
+		for (let visitor of this.visitors) {
+			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
+			combined_yield_outcome |= yield_outcome;
+			combined_check_outcome |= check_outcome;
+		}
+		return [combined_yield_outcome, combined_check_outcome];
+	}
+};
+
+export class NodeVisitorAnd implements NodeVisitor {
+	protected visitors: Array<NodeVisitor>;
+
+	constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>) {
+		this.visitors = [visitor, ...vistors];
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let combined_yield_outcome = NOTHING_FLAG;
+		let combined_check_outcome = NOTHING_FLAG;
+		for (let visitor of this.visitors) {
+			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
+			combined_yield_outcome &= yield_outcome;
+			combined_check_outcome &= check_outcome;
+		}
+		return [combined_yield_outcome, combined_check_outcome];
+	}
+};
+
+export class RadixTreeIncreasingWalker {
+	protected block_manager: BlockManager;
+	protected node_visitor: NodeVisitor;
+
+	protected * yieldChild(node_bid: number): Iterable<number> {
+		yield node_bid;
+		if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+			for (let i = 0; i < 16; i++) {
+				let child_node_bid = body.child(i);
+				if (child_node_bid !== 0) {
+					yield * this.yieldChild(child_node_bid);
+				}
+			}
+		}
+	}
+
+	protected * visitNode(node_bid: number, previous_node_nibbles: Array<number>): Iterable<number> {
+		let head = new NodeHead();
+		this.block_manager.readBlock(node_bid, head.buffer, 0);
+		let node_nibbles = head.prefix();
+		let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
+		let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles, previous_node_nibbles.length);
+		if (yield_outcome & CURRENT_FLAG) {
+			yield node_bid;
+		}
+		if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+			for (let i = 0; i < 16; i++) {
+				if (yield_outcome & CHILD_FLAGS[i]) {
+					let child_node_bid = body.child(i);
+					if (child_node_bid !== 0) {
+						yield * this.yieldChild(child_node_bid);
+					}
+					continue;
+				}
+				if (check_outcome & CHILD_FLAGS[i]) {
+					let child_node_bid = body.child(i);
+					if (child_node_bid !== 0) {
+						yield * this.visitNode(child_node_bid, [...new_node_nibbles, i]);
+					}
+					continue;
+				}
+			}
+		}
+	}
+
+	constructor(block_manager: BlockManager, node_visitor: NodeVisitor) {
+		this.block_manager = block_manager;
+		this.node_visitor = node_visitor;
+	}
+
+	* traverse(node_bid: number): Iterable<number> {
+		yield * this.visitNode(node_bid, []);
+	}
+};
+
+export class RadixTreeDecreasingWalker {
+	protected block_manager: BlockManager;
+	protected node_visitor: NodeVisitor;
+
+	protected * yieldChild(node_bid: number): Iterable<number> {
+		if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+			for (let i = 16 - 1; i >= 0; i--) {
+				let child_node_bid = body.child(i);
+				if (child_node_bid !== 0) {
+					yield * this.yieldChild(child_node_bid);
+				}
+			}
+		}
+		yield node_bid;
+	}
+
+	protected * visitNode(node_bid: number, previous_node_nibbles: Array<number>): Iterable<number> {
+		let head = new NodeHead();
+		this.block_manager.readBlock(node_bid, head.buffer, 0);
+		let node_nibbles = head.prefix();
+		let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
+		let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles, previous_node_nibbles.length);
+		if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+			this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+			for (let i = 16 - 1; i >= 0; i--) {
+				if (yield_outcome & CHILD_FLAGS[i]) {
+					let child_node_bid = body.child(i);
+					if (child_node_bid !== 0) {
+						yield * this.yieldChild(child_node_bid);
+					}
+					continue;
+				}
+				if (check_outcome & CHILD_FLAGS[i]) {
+					let child_node_bid = body.child(i);
+					if (child_node_bid !== 0) {
+						yield * this.visitNode(child_node_bid, [...new_node_nibbles, i]);
+					}
+					continue;
+				}
+			}
+		}
+		if (yield_outcome & CURRENT_FLAG) {
+			yield node_bid;
+		}
+	}
+
+	constructor(block_manager: BlockManager, node_visitor: NodeVisitor) {
+		this.block_manager = block_manager;
+		this.node_visitor = node_visitor;
+	}
+
+	* traverse(node_bid: number): Iterable<number> {
+		yield * this.visitNode(node_bid, []);
+	}
+};
+
 export abstract class RadixTreeTraverser {
 	protected blockManager: BlockManager;
 	protected bid: number;
