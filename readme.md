@@ -516,7 +516,7 @@ Records matching certain criteria may be retrieved using the `filter(queue, para
 
 ### Performance
 
-The performance of Atlas will utimately depend on the general performance of the underlying hardware, most notably the hardware used to store the database.
+The performance of Atlas will utimately depend on the general performance of the hardware utilized, most notably the hardware used to store the database.
 
 The table shown below gives a rough estimate of the performance of Atlas in fully ACID-compliant transactions per second. Please note how write performance drops significantly when the database is stored using mechanical storage. This is a direct result of the transaction model employed by Atlas and due to the high latency of synchronizing mechanical storage.
 
