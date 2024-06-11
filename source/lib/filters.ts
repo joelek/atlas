@@ -1,9 +1,11 @@
 import * as bedrock from "@joelek/bedrock";
 import { Record, Value } from "./records";
+import { NodeVisitor, NodeVisitorEqual, NodeVisitorGreaterThan } from "./trees";
 
 export abstract class Filter<A extends Value> {
 	constructor() {}
 
+	abstract createNodeVisitor(key_nibbles: Array<number>): NodeVisitor;
 	abstract getValue(): A;
 	abstract matches(encodedFilterValue: Uint8Array, encodedRecordValue: Uint8Array): boolean;
 };
@@ -14,6 +16,10 @@ export class EqualityFilter<A extends Value> extends Filter<A> {
 	constructor(value: A) {
 		super();
 		this.value = value;
+	}
+
+	createNodeVisitor(key_nibbles: Array<number>): NodeVisitor {
+		return new NodeVisitorEqual(key_nibbles);
 	}
 
 	getValue(): A {
@@ -31,6 +37,10 @@ export class GreaterThanFilter<A extends Value> extends Filter<A> {
 	constructor(value: A) {
 		super();
 		this.value = value;
+	}
+
+	createNodeVisitor(key_nibbles: Array<number>): NodeVisitor {
+		return new NodeVisitorGreaterThan(key_nibbles);
 	}
 
 	getValue(): A {
