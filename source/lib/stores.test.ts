@@ -635,17 +635,25 @@ wtf.test(`It should use the optimal index when filtering with filters.`, async (
 	let usersOne = new StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
 	usersOne.insert({
 		user_id: "User 1",
-		name: "Name"
+		name: "Right Name"
+	});
+	usersOne.insert({
+		user_id: "User 2",
+		name: "Wrong Name"
 	});
 	let indexTwo = new IndexManager(recordManager, blockManager, ["name", "user_id"]);
 	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
 	usersTwo.insert({
+		user_id: "User 1",
+		name: "Wrong Name"
+	});
+	usersTwo.insert({
 		user_id: "User 2",
-		name: "Name"
+		name: "Right Name"
 	});
 	let users = new StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
 	let iterable = users.filter({
-		name: new EqualityFilter("Name")
+		name: new EqualityFilter("Right Name")
 	});
 	let observed = Array.from(iterable).map((record) => record.user_id);
 	let expected = ["User 2"] as Array<string>;
@@ -671,17 +679,25 @@ wtf.test(`It should use the optimal index when filtering with filters and orders
 	let usersOne = new StoreManager(blockManager, fields, keys, {}, table, [indexOne], []);
 	usersOne.insert({
 		user_id: "User 1",
-		name: "Name"
+		name: "Right Name"
+	});
+	usersOne.insert({
+		user_id: "User 2",
+		name: "Wrong Name"
 	});
 	let indexTwo = new IndexManager(recordManager, blockManager, ["name", "user_id"]);
 	let usersTwo = new StoreManager(blockManager, fields, keys, {}, table, [indexTwo], []);
 	usersTwo.insert({
+		user_id: "User 1",
+		name: "Wrong Name"
+	});
+	usersTwo.insert({
 		user_id: "User 2",
-		name: "Name"
+		name: "Right Name"
 	});
 	let users = new StoreManager(blockManager, fields, keys, {}, table, [indexOne, indexTwo], []);
 	let iterable = users.filter({
-		name: new EqualityFilter("Name")
+		name: new EqualityFilter("Right Name")
 	});
 	let observed = Array.from(iterable).map((record) => record.user_id);
 	let expected = ["User 2"] as Array<string>;
