@@ -7,6 +7,18 @@ function * filter<A>(iterable: Iterable<A>, predicate: (value: A, index: number)
 	}
 };
 
+type FlattenType<A> = A extends Iterable<infer B> ? B : A;
+
+function * flatten<A>(iterable: Iterable<A>): Iterable<FlattenType<A>> {
+	for (let value of iterable as Iterable<any>) {
+		if (typeof value[Symbol.iterator] === "function") {
+			yield * value;
+		} else {
+			yield value;
+		}
+	}
+};
+
 function * include<A, B extends A>(iterable: Iterable<A>, predicate: (value: A, index: number) => value is B): Iterable<B> {
 	let index = 0;
 	for (let value of iterable) {
@@ -64,6 +76,10 @@ export class StreamIterable<A> {
 				return value;
 			}
 		}
+	}
+
+	flatten(): StreamIterable<FlattenType<A>> {
+		return new StreamIterable(flatten(this.values));
 	}
 
 	include<B extends A>(predicate: (value: A, index: number) => value is B): StreamIterable<B> {
