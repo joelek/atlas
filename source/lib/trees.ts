@@ -1423,6 +1423,32 @@ export class RadixTree {
 		yield * treeWalker.traverse(this.blockIndex);
 	}
 
+	* get_filtered_node_bids(nodeVisitor: NodeVisitor | undefined, direction: Direction | undefined): Iterable<number> {
+		nodeVisitor = nodeVisitor ?? new NodeVisitorPrefix([]);
+		let treeWalker = direction === "decreasing" ? new RadixTreeDecreasingWalker(this.blockManager, nodeVisitor) : new RadixTreeIncreasingWalker(this.blockManager, nodeVisitor);
+		yield * treeWalker.traverse(this.blockIndex);
+	}
+
+	get_resident_bid(): number | undefined {
+		let head = new NodeHead();
+		this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+		let resident = head.resident();
+		if (resident === 0) {
+			return;
+		}
+		return resident;
+	}
+
+	get_subtree_bid(): number | undefined {
+		let head = new NodeHead();
+		this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+		let subtree = head.subtree();
+		if (subtree === 0) {
+			return;
+		}
+		return subtree;
+	}
+
 	insert(keys: Array<Uint8Array>, value: number): boolean {
 		if (DEBUG) IntegerAssert.atLeast(1, value);
 		let nibbles = keys.map(getNibblesFromBytes);
