@@ -1553,7 +1553,7 @@ wtf.test(`It should support filtering of the records stored when there is an ind
     let expected = ["A"];
     assert.equals(observed, expected);
 });
-wtf.test(`It should support filtering the records using a greater than filter when there is no index.`, async (assert) => {
+function createUsersStore(indices) {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     let users = stores_1.StoreManager.construct(blockManager, {
         fields: {
@@ -1561,7 +1561,7 @@ wtf.test(`It should support filtering the records using a greater than filter wh
             value: new records_1.IntegerField(0)
         },
         keys: ["key"],
-        indices: []
+        indices: indices
     });
     users.insert({
         key: "A",
@@ -1573,80 +1573,130 @@ wtf.test(`It should support filtering the records using a greater than filter wh
     });
     users.insert({
         key: "C",
+        value: 5
+    });
+    users.insert({
+        key: "D",
         value: 3
     });
-    let iterable = users.filter({
-        value: new filters_1.GreaterThanFilter(1)
-    }, {
-        key: new orders_1.IncreasingOrder()
-    });
-    let observed = Array.from(iterable).map((entry) => entry.key);
-    let expected = ["A", "C"];
-    assert.equals(observed, expected);
-});
-wtf.test(`It should support filtering the records using a greater than filter when there is an index for the filter.`, async (assert) => {
-    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
-    let users = stores_1.StoreManager.construct(blockManager, {
-        fields: {
-            key: new records_1.StringField(""),
-            value: new records_1.IntegerField(0)
-        },
-        keys: ["key"],
-        indices: [
-            new stores_1.Index(["value"])
-        ]
-    });
     users.insert({
-        key: "A",
-        value: 2
+        key: "E",
+        value: 4
     });
-    users.insert({
-        key: "B",
-        value: 1
+    return users;
+}
+;
+const USERS_INDICES = [
+    [],
+    [
+        // Not technically a valid index since key is missing meaning that only a single record may be stored for each distinct value.
+        new stores_1.Index(["value"])
+    ],
+    [
+        new stores_1.Index(["key"])
+    ],
+    [
+        new stores_1.Index(["value", "key"])
+    ],
+    [
+        new stores_1.Index(["key", "value"])
+    ]
+];
+for (let indices of USERS_INDICES) {
+    wtf.test(`It should support filtering the records in increasing key order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            key: new orders_1.IncreasingOrder()
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["A", "C", "D", "E"];
+        assert.equals(observed, expected);
     });
-    users.insert({
-        key: "C",
-        value: 3
+    wtf.test(`It should support anchored filtering of the records in increasing key order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            key: new orders_1.IncreasingOrder()
+        }, {
+            key: "A"
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["C", "D", "E"];
+        assert.equals(observed, expected);
     });
-    let iterable = users.filter({
-        value: new filters_1.GreaterThanFilter(1)
-    }, {
-        key: new orders_1.IncreasingOrder()
+    wtf.test(`It should support filtering the records in increasing value order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            value: new orders_1.IncreasingOrder()
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["A", "D", "E", "C"];
+        assert.equals(observed, expected);
     });
-    let observed = Array.from(iterable).map((entry) => entry.key);
-    let expected = ["A", "C"];
-    assert.equals(observed, expected);
-});
-wtf.test(`It should support filtering the records using a greater than filter when there is a combined index for the filter and the key.`, async (assert) => {
-    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
-    let users = stores_1.StoreManager.construct(blockManager, {
-        fields: {
-            key: new records_1.StringField(""),
-            value: new records_1.IntegerField(0)
-        },
-        keys: ["key"],
-        indices: [
-            new stores_1.Index(["value", "key"])
-        ]
+    wtf.test(`It should support anchored filtering of the records in increasing value order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            value: new orders_1.IncreasingOrder()
+        }, {
+            key: "A"
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["D", "E", "C"];
+        assert.equals(observed, expected);
     });
-    users.insert({
-        key: "A",
-        value: 2
+    wtf.test(`It should support filtering the records in decreasing key order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            key: new orders_1.DecreasingOrder()
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["E", "D", "C", "A"];
+        assert.equals(observed, expected);
     });
-    users.insert({
-        key: "B",
-        value: 1
+    wtf.test(`It should support anchored filtering of the records in decreasing key order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            key: new orders_1.DecreasingOrder()
+        }, {
+            key: "E"
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["D", "C", "A"];
+        assert.equals(observed, expected);
     });
-    users.insert({
-        key: "C",
-        value: 3
+    wtf.test(`It should support filtering the records in decreasing value order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            value: new orders_1.DecreasingOrder()
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["C", "E", "D", "A"];
+        assert.equals(observed, expected);
     });
-    let iterable = users.filter({
-        value: new filters_1.GreaterThanFilter(1)
-    }, {
-        key: new orders_1.IncreasingOrder()
+    wtf.test(`It should support anchored filtering of the records in decreasing value order using a greater than filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}.`, async (assert) => {
+        let users = createUsersStore(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanFilter(1)
+        }, {
+            value: new orders_1.DecreasingOrder()
+        }, {
+            key: "C"
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["E", "D", "A"];
+        assert.equals(observed, expected);
     });
-    let observed = Array.from(iterable).map((entry) => entry.key);
-    let expected = ["A", "C"];
-    assert.equals(observed, expected);
-});
+}

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadixTree = exports.RadixTreeTraverserAfter = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeDecreasingWalker = exports.RadixTreeIncreasingWalker = exports.NodeVisitorAnd = exports.NodeVisitorOr = exports.NodeVisitorLessThanOrEqual = exports.NodeVisitorLessThan = exports.NodeVisitorGreaterThanOrEqual = exports.NodeVisitorGreaterThan = exports.NodeVisitorPrefix = exports.NodeVisitorEqual = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
+exports.RadixTree = exports.RadixTreeTraverserAfter = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeDecreasingWalker = exports.RadixTreeIncreasingWalker = exports.NodeVisitorIn = exports.NodeVisitorAfter = exports.NodeVisitorBefore = exports.NodeVisitorNot = exports.NodeVisitorAnd = exports.NodeVisitorOr = exports.NodeVisitorLessThanOrEqual = exports.NodeVisitorLessThan = exports.NodeVisitorGreaterThanOrEqual = exports.NodeVisitorGreaterThan = exports.NodeVisitorPrefix = exports.NodeVisitorEqual = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
 const asserts_1 = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const utils_1 = require("./utils");
@@ -674,13 +674,14 @@ class NodeVisitorLessThanOrEqual {
 exports.NodeVisitorLessThanOrEqual = NodeVisitorLessThanOrEqual;
 ;
 class NodeVisitorOr {
+    visitor;
     visitors;
     constructor(visitor, ...vistors) {
-        this.visitors = [visitor, ...vistors];
+        this.visitor = visitor;
+        this.visitors = vistors;
     }
     visit(node_nibbles, offset) {
-        let combined_yield_outcome = NOTHING_FLAG;
-        let combined_check_outcome = NOTHING_FLAG;
+        let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles, offset);
         for (let visitor of this.visitors) {
             let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
             combined_yield_outcome |= yield_outcome;
@@ -692,13 +693,14 @@ class NodeVisitorOr {
 exports.NodeVisitorOr = NodeVisitorOr;
 ;
 class NodeVisitorAnd {
+    visitor;
     visitors;
     constructor(visitor, ...vistors) {
-        this.visitors = [visitor, ...vistors];
+        this.visitor = visitor;
+        this.visitors = vistors;
     }
     visit(node_nibbles, offset) {
-        let combined_yield_outcome = NOTHING_FLAG;
-        let combined_check_outcome = NOTHING_FLAG;
+        let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles, offset);
         for (let visitor of this.visitors) {
             let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
             combined_yield_outcome &= yield_outcome;
@@ -708,6 +710,58 @@ class NodeVisitorAnd {
     }
 }
 exports.NodeVisitorAnd = NodeVisitorAnd;
+;
+class NodeVisitorNot {
+    visitor;
+    constructor(visitor) {
+        this.visitor = visitor;
+    }
+    visit(node_nibbles, offset) {
+        let [yield_outcome, check_outcome] = this.visitor.visit(node_nibbles, offset);
+        yield_outcome = (~yield_outcome) >>> 0;
+        check_outcome = (~check_outcome) >>> 0;
+        return [yield_outcome, check_outcome];
+    }
+}
+exports.NodeVisitorNot = NodeVisitorNot;
+;
+class NodeVisitorBefore {
+    visitor;
+    constructor(key_nibbles, direction) {
+        this.visitor = direction === "decreasing" ? new NodeVisitorGreaterThan(key_nibbles) : new NodeVisitorLessThan(key_nibbles);
+    }
+    visit(node_nibbles, offset) {
+        return this.visitor.visit(node_nibbles, offset);
+    }
+}
+exports.NodeVisitorBefore = NodeVisitorBefore;
+;
+class NodeVisitorAfter {
+    visitor;
+    constructor(key_nibbles, direction) {
+        this.visitor = direction === "decreasing" ? new NodeVisitorLessThan(key_nibbles) : new NodeVisitorGreaterThan(key_nibbles);
+    }
+    visit(node_nibbles, offset) {
+        return this.visitor.visit(node_nibbles, offset);
+    }
+}
+exports.NodeVisitorAfter = NodeVisitorAfter;
+;
+class NodeVisitorIn {
+    visitor;
+    constructor(key_nibbles_array) {
+        let visitors = key_nibbles_array.map((key_nibbles) => new NodeVisitorEqual(key_nibbles));
+        let visitor = visitors.shift();
+        if (visitor == null) {
+            throw new Error(`Expected a visitor!`);
+        }
+        this.visitor = new NodeVisitorOr(visitor, ...visitors);
+    }
+    visit(node_nibbles, offset) {
+        return this.visitor.visit(node_nibbles, offset);
+    }
+}
+exports.NodeVisitorIn = NodeVisitorIn;
 ;
 class RadixTreeIncreasingWalker {
     block_manager;

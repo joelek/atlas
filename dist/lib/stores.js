@@ -10,20 +10,26 @@ const records_1 = require("./records");
 const trees_1 = require("./trees");
 const sorters_1 = require("../mod/sorters");
 const utils_1 = require("./utils");
+const variables_1 = require("./variables");
 ;
 class FilteredStore {
     recordManager;
     blockManager;
     keys;
+    key_index;
     numberOfRecords;
     bids;
     filters;
     orders;
     anchor;
-    constructor(recordManager, blockManager, keys, numberOfRecords, bids, filters, orders, anchor) {
+    isFullyOptimized() {
+        return Object.keys(this.filters).length === 0 && Object.keys(this.orders).length === 0 && this.anchor == null;
+    }
+    constructor(recordManager, blockManager, keys, key_index, numberOfRecords, bids, filters, orders, anchor) {
         this.recordManager = recordManager;
         this.blockManager = blockManager;
         this.keys = keys;
+        this.key_index = key_index;
         this.numberOfRecords = numberOfRecords;
         this.bids = bids;
         this.filters = filters ?? {};
@@ -90,11 +96,79 @@ class FilteredStore {
         yield* iterable;
     }
     static getOptimal(filteredStores) {
-        filteredStores.sort(sorters_1.CompositeSorter.of(sorters_1.NumberSorter.decreasing((value) => Object.keys(value.orders).length), sorters_1.NumberSorter.decreasing((value) => Object.keys(value.filters).length * value.numberOfRecords)));
-        return filteredStores.pop();
+        filteredStores.sort(sorters_1.CompositeSorter.of(sorters_1.NumberSorter.decreasing((value) => Object.keys(value.orders).length), sorters_1.NumberSorter.decreasing((value) => Object.keys(value.filters).length * value.numberOfRecords + (value.anchor == null ? 0 : value.numberOfRecords))));
+        if (variables_1.LOG) {
+            console.log(`candidates (least suitable to most suitable):`);
+            for (let { keys, key_index, orders, filters, numberOfRecords, anchor } of filteredStores) {
+                console.log(`\tcandidate:`);
+                console.log(`\t\tkeys: ${JSON.stringify((keys))}`);
+                console.log(`\t\tkey_index: ${key_index}`);
+                console.log(`\t\trecords: ${numberOfRecords}`);
+                console.log(`\t\tpost-filters:`);
+                for (let key in filters) {
+                    if (filters[key] != null) {
+                        console.log(`\t\t\t${key}: ${filters[key].constructor.name}(${JSON.stringify(filters[key]?.getValue())})`);
+                    }
+                }
+                console.log(`\t\tpost-orders:`);
+                for (let key in orders) {
+                    if (orders[key] != null) {
+                        console.log(`\t\t\t${key}: ${orders[key].constructor.name}()`);
+                    }
+                }
+                console.log(`\t\tpost-anchor: ${JSON.stringify(anchor)}`);
+            }
+        }
+        let filteredStore = filteredStores.pop();
+        if (variables_1.LOG && filteredStore != null && !filteredStore.isFullyOptimized()) {
+            console.warn(`most suitable index is not fully optimized!`);
+        }
+        return filteredStore;
     }
 }
 exports.FilteredStore = FilteredStore;
+;
+function branchIntoSubtrees(branches, blockManager) {
+    return branches
+        .map((branch) => branch.get_subtree_bid())
+        .include((bid) => bid != null)
+        .map((bid) => new trees_1.RadixTree(blockManager, bid));
+}
+;
+function filterBranches(branches, blockManager, nodeVisitor, direction) {
+    return branches
+        .map((branch) => branch.get_filtered_node_bids(nodeVisitor, direction))
+        .flatten()
+        .map((bid) => new trees_1.RadixTree(blockManager, bid));
+}
+;
+function createFilterNodeVisitor(filter, recordManager, key) {
+    if (filter != null) {
+        let filterValue = filter.getValue();
+        // Links may request all records matching the value null in the child store.
+        let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : recordManager.encodeKeys([key], {
+            [key]: filterValue
+        })[0];
+        let filterNodeVisitor = filter.createNodeVisitor((0, trees_1.getNibblesFromBytes)(encodedFilterValue));
+        return filterNodeVisitor;
+    }
+}
+;
+function createCombinedNodeVisitor(anchorNodeVisitor, filterNodeVisitor) {
+    if (anchorNodeVisitor != null) {
+        if (filterNodeVisitor != null) {
+            return new trees_1.NodeVisitorAnd(anchorNodeVisitor, filterNodeVisitor);
+        }
+        else {
+            return anchorNodeVisitor;
+        }
+    }
+    else {
+        if (filterNodeVisitor != null) {
+            return filterNodeVisitor;
+        }
+    }
+}
 ;
 class IndexManager {
     recordManager;
@@ -108,7 +182,7 @@ class IndexManager {
         this.tree = new trees_1.RadixTree(blockManager, options?.bid);
     }
     *[Symbol.iterator]() {
-        yield* new FilteredStore(this.recordManager, this.blockManager, this.keys, this.tree.length(), this.tree, {}, {}, undefined);
+        yield* new FilteredStore(this.recordManager, this.blockManager, this.keys, 0, this.tree.length(), this.tree, {}, {}, undefined);
     }
     delete() {
         this.tree.delete();
@@ -117,7 +191,18 @@ class IndexManager {
         filters = filters ?? {};
         orders = orders ?? {};
         filters = { ...filters };
+        for (let key in filters) {
+            if (filters[key] == null) {
+                delete filters[key];
+            }
+        }
         orders = { ...orders };
+        for (let key in orders) {
+            if (orders[key] == null) {
+                delete orders[key];
+            }
+        }
+        // Reduce the search space into a single branch by excluding all other branches containing records that may never match all filters.
         let tree = this.tree;
         let key_index = 0;
         for (; key_index < this.keys.length; key_index += 1) {
@@ -157,6 +242,7 @@ class IndexManager {
                 break;
             }
         }
+        // Remove orders that are inherently satisfied by walking the tree in the appropriate directions.
         let directions = [];
         let orderKeys = Object.keys(orders);
         for (let i = 0; i < orderKeys.length; i++) {
@@ -164,22 +250,24 @@ class IndexManager {
                 break;
             }
             let order = orders[orderKeys[i]];
-            if (order == null) {
-                continue;
-            }
             directions.push(order.getDirection());
             delete orders[orderKeys[i]];
         }
-        let anchorKeyBytes = anchor != null ? this.recordManager.encodeKeys(this.keys, anchor) : [];
-        let outerBranches = [];
-        if (anchor != null) {
+        // Determine whether the anchor should be satisfied by walking the tree or by post-anchoring.
+        let walkAnchor = anchor;
+        let postAnchor = undefined;
+        if (Object.keys(orders).length > 0) {
+            walkAnchor = undefined;
+            postAnchor = anchor;
+        }
+        // Perform one or more tree walks over the subsets of distinct records.
+        let treeWalks = [];
+        if (walkAnchor != null) {
+            let anchorKeyBytes = this.recordManager.encodeKeys(this.keys, walkAnchor);
             for (let j = key_index; j < this.keys.length; j++) {
                 let branches = streams_1.StreamIterable.of([tree]);
                 for (let i = key_index; i < this.keys.length; i++) {
-                    let subtree_branches = i === 0 ? branches : branches
-                        .map((branch) => branch.get_subtree_bid())
-                        .include((bid) => bid != null)
-                        .map((bid) => new trees_1.RadixTree(this.blockManager, bid));
+                    let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
                     let key = this.keys[i];
                     let direction = directions[i];
                     let anchorNodeVisitor;
@@ -190,81 +278,36 @@ class IndexManager {
                     }
                     else {
                         if (i + j === this.keys.length - 1 + key_index) {
-                            if (direction === "decreasing") {
-                                anchorNodeVisitor = new trees_1.NodeVisitorLessThan((0, trees_1.getNibblesFromBytes)(keyBytes));
-                            }
-                            else {
-                                anchorNodeVisitor = new trees_1.NodeVisitorGreaterThan((0, trees_1.getNibblesFromBytes)(keyBytes));
-                            }
+                            anchorNodeVisitor = new trees_1.NodeVisitorAfter((0, trees_1.getNibblesFromBytes)(keyBytes), direction);
                         }
-                        let filter = filters[key];
-                        if (filter != null) {
-                            let filterValue = filter.getValue();
-                            // Links may request all records matching the value null in the child store.
-                            let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : this.recordManager.encodeKeys([key], {
-                                [key]: filterValue
-                            })[0];
-                            filterNodeVisitor = filter.createNodeVisitor((0, trees_1.getNibblesFromBytes)(encodedFilterValue));
-                        }
+                        filterNodeVisitor = createFilterNodeVisitor(filters[key], this.recordManager, key);
                     }
-                    let nodeVisitor;
-                    if (anchorNodeVisitor != null) {
-                        if (filterNodeVisitor != null) {
-                            nodeVisitor = new trees_1.NodeVisitorAnd(anchorNodeVisitor, filterNodeVisitor);
-                        }
-                        else {
-                            nodeVisitor = anchorNodeVisitor;
-                        }
-                    }
-                    else {
-                        if (filterNodeVisitor != null) {
-                            nodeVisitor = filterNodeVisitor;
-                        }
-                    }
-                    let new_branches = subtree_branches
-                        .map((branch) => branch.get_filtered_node_bids(nodeVisitor, direction))
-                        .flatten()
-                        .map((bid) => new trees_1.RadixTree(this.blockManager, bid));
-                    branches = new_branches;
+                    let nodeVisitor = createCombinedNodeVisitor(anchorNodeVisitor, filterNodeVisitor);
+                    branches = filterBranches(subtree_branches, this.blockManager, nodeVisitor, direction);
                 }
-                outerBranches.push(branches);
+                treeWalks.push(branches);
             }
         }
         else {
             let branches = streams_1.StreamIterable.of([tree]);
             for (let i = key_index; i < this.keys.length; i++) {
-                let subtree_branches = i === 0 ? branches : branches
-                    .map((branch) => branch.get_subtree_bid())
-                    .include((bid) => bid != null)
-                    .map((bid) => new trees_1.RadixTree(this.blockManager, bid));
+                let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
                 let key = this.keys[i];
                 let direction = directions[i];
-                let filterNodeVisitor;
-                let filter = filters[key];
-                if (filter != null) {
-                    let filterValue = filter.getValue();
-                    // Links may request all records matching the value null in the child store.
-                    let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : this.recordManager.encodeKeys([key], {
-                        [key]: filterValue
-                    })[0];
-                    filterNodeVisitor = filter.createNodeVisitor((0, trees_1.getNibblesFromBytes)(encodedFilterValue));
-                }
-                let new_branches = subtree_branches
-                    .map((branch) => branch.get_filtered_node_bids(filterNodeVisitor, direction))
-                    .flatten()
-                    .map((bid) => new trees_1.RadixTree(this.blockManager, bid));
-                branches = new_branches;
+                let filterNodeVisitor = createFilterNodeVisitor(filters[key], this.recordManager, key);
+                branches = filterBranches(subtree_branches, this.blockManager, filterNodeVisitor, direction);
             }
-            outerBranches.push(branches);
+            treeWalks.push(branches);
         }
+        // Delete all filters satisfied by tree walking.
         for (let key of this.keys) {
             delete filters[key];
         }
-        let resident_bids = streams_1.StreamIterable.of(outerBranches)
+        let resident_bids = streams_1.StreamIterable.of(treeWalks)
             .flatten()
             .map((branch) => branch.get_resident_bid())
             .include((bid) => bid != null);
-        return new FilteredStore(this.recordManager, this.blockManager, this.keys, tree.length(), resident_bids, filters, orders, undefined);
+        return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, orders, postAnchor);
     }
     insert(keysRecord, bid) {
         let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
@@ -605,6 +648,14 @@ class StoreManager {
             throw new Error(`Expected value of field "${fieldKey}" to be unique!`);
         }
     }
+    containsOrders(orders) {
+        for (let key in orders) {
+            if (orders[key] != null) {
+                return true;
+            }
+        }
+        return false;
+    }
     constructor(blockManager, fields, keys, orders, table, indexManagers, searchIndexManagers) {
         this.blockManager = blockManager;
         this.fields = fields;
@@ -614,6 +665,11 @@ class StoreManager {
         this.table = table;
         this.indexManagers = indexManagers;
         this.searchIndexManagers = searchIndexManagers;
+        if (!this.containsOrders(orders)) {
+            for (let key of this.keys) {
+                orders[key] = new orders_1.IncreasingOrder();
+            }
+        }
     }
     *[Symbol.iterator]() {
         yield* this.filter();
@@ -631,11 +687,9 @@ class StoreManager {
         this.table.delete();
     }
     filter(filters, orders, anchorKeysRecord, limit) {
-        orders = orders ?? this.orders;
-        for (let key of this.keys) {
-            if (!(key in orders)) {
-                orders[key] = new orders_1.IncreasingOrder();
-            }
+        orders = orders ?? {};
+        if (!this.containsOrders(orders)) {
+            orders = this.orders;
         }
         let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
         let filteredStores = [];
@@ -647,12 +701,9 @@ class StoreManager {
             }
             filteredStores.push(filteredStore);
         }
-        let fullTableScan = new FilteredStore(this.recordManager, this.blockManager, [], this.table.length(), this.table, filters, orders, anchor);
+        let fullTableScan = new FilteredStore(this.recordManager, this.blockManager, [], 0, this.table.length(), this.table, filters, orders, anchor);
         filteredStores.push(fullTableScan);
         let filteredStore = FilteredStore.getOptimal(filteredStores);
-        if (filteredStore === fullTableScan) {
-            // There should be an option to prevent this.
-        }
         let iterable = streams_1.StreamIterable.of(filteredStore);
         if (limit != null) {
             iterable = iterable.limit(limit);

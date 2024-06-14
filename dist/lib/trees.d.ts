@@ -74,13 +74,35 @@ export declare class NodeVisitorLessThanOrEqual implements NodeVisitor {
     visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
 }
 export declare class NodeVisitorOr implements NodeVisitor {
+    protected visitor: NodeVisitor;
     protected visitors: Array<NodeVisitor>;
     constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>);
     visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
 }
 export declare class NodeVisitorAnd implements NodeVisitor {
+    protected visitor: NodeVisitor;
     protected visitors: Array<NodeVisitor>;
     constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorNot implements NodeVisitor {
+    protected visitor: NodeVisitor;
+    constructor(visitor: NodeVisitor);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorBefore implements NodeVisitor {
+    protected visitor: NodeVisitor;
+    constructor(key_nibbles: Array<number>, direction: Direction | undefined);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorAfter implements NodeVisitor {
+    protected visitor: NodeVisitor;
+    constructor(key_nibbles: Array<number>, direction: Direction | undefined);
+    visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+}
+export declare class NodeVisitorIn implements NodeVisitor {
+    protected visitor: NodeVisitor;
+    constructor(key_nibbles_array: Array<Array<number>>);
     visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
 }
 export declare class RadixTreeIncreasingWalker {

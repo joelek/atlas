@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEBUG = exports.getBoolean = void 0;
+exports.LOG = exports.DEBUG = exports.getBoolean = void 0;
 function getBoolean(key, defaultValue) {
     let string = globalThis?.process?.env[key];
     try {
@@ -15,3 +15,4 @@ function getBoolean(key, defaultValue) {
 exports.getBoolean = getBoolean;
 ;
 exports.DEBUG = getBoolean("DEBUG", false);
+exports.LOG = getBoolean("LOG", false);

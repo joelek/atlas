@@ -33,12 +33,14 @@ export declare class FilteredStore<A extends Record> {
     private recordManager;
     private blockManager;
     private keys;
+    private key_index;
     private numberOfRecords;
     private bids;
     private filters;
     private orders;
     private anchor?;
-    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A);
+    protected isFullyOptimized(): boolean;
+    constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, key_index: number, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A);
     [Symbol.iterator](): Iterator<A>;
     static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined;
 }
@@ -96,6 +98,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     private getDefaultRecord;
     private lookupBlockIndex;
     private checkConstraints;
+    protected containsOrders(orders: OrderMap<A>): boolean;
     constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>);
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
