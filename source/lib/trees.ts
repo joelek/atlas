@@ -562,7 +562,7 @@ export class NodeVisitorGreaterThanOrEqual implements NodeVisitor {
 		} else {
 			if (next_node_nibble == null) {
 				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
-				return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
+				return YIELD_CHILDREN_AFTER_INCLUSIVE_CHECK_NOTHING[next_key_nibble];
 			} else {
 				if (next_key_nibble < next_node_nibble) {
 					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
