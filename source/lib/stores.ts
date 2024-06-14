@@ -751,9 +751,6 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		let fullTableScan = new FilteredStore<any>(this.recordManager, this.blockManager, [], 0, this.table.length(), this.table, filters, orders, anchor);
 		filteredStores.push(fullTableScan);
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
-		if (filteredStore === fullTableScan) {
-			// There should be an option to prevent this.
-		}
 		let iterable = StreamIterable.of(filteredStore)
 		if (limit != null) {
 			iterable = iterable.limit(limit);
