@@ -289,10 +289,18 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			directions.push(order.getDirection());
 			delete orders[orderKeys[i]];
 		}
+
+		// Determine whether the anchor should be satisfied by walking the tree or by post-anchoring.
+		let walkAnchor = anchor;
+		let postAnchor: A | undefined = undefined;
+		if (Object.keys(orders).length > 0) {
+			walkAnchor = undefined;
+			postAnchor = anchor;
+		}
 		// Perform one or more tree walks over the subsets of distinct records.
 		let treeWalks: Array<StreamIterable<RadixTree>> = [];
-		if (anchor != null) {
-			let anchorKeyBytes = this.recordManager.encodeKeys(this.keys, anchor);
+		if (walkAnchor != null) {
+			let anchorKeyBytes = this.recordManager.encodeKeys(this.keys, walkAnchor);
 			for (let j = key_index; j < this.keys.length; j++) {
 				let branches = StreamIterable.of([tree]);
 				for (let i = key_index; i < this.keys.length; i++) {
@@ -334,7 +342,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			.flatten()
 			.map((branch) => branch.get_resident_bid())
 			.include((bid): bid is number => bid != null);
-		return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, orders, undefined);
+		return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, orders, postAnchor);
 	}
 
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
