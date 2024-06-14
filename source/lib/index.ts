@@ -1,6 +1,6 @@
 import { Context, LinkReferences, LinksFromLinkReferences, QueriesFromQueryReferences, QueryReferences, StoreReference, StoreReferences, StoresFromStoreReferences } from "./contexts";
 import { DecreasingOrder, IncreasingOrder } from "./orders";
-import { EqualityFilter, GreaterThanFilter } from "./filters";
+import { EqualityFilter, GreaterThanFilter, LessThanFilter } from "./filters";
 import { Value } from "./records";
 import * as transactions from "./transactions";
 import { LinkManagersFromLinks } from "./links";
@@ -38,4 +38,8 @@ export function createEqualityFilter<A extends Value>(value: A): EqualityFilter<
 
 export function createGreaterThanFilter<A extends Value>(value: A): GreaterThanFilter<A> {
 	return new GreaterThanFilter(value);
+};
+
+export function createLessThanFilter<A extends Value>(value: A): LessThanFilter<A> {
+	return new LessThanFilter(value);
 };
