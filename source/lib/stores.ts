@@ -9,6 +9,7 @@ import { SubsetOf } from "./inference";
 import { Direction, getNibblesFromBytes, NodeVisitor, RadixTree, NodeVisitorLessThan, NodeVisitorGreaterThan, NodeVisitorAnd, NodeVisitorEqual } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 import { SeekableIterable, Tokenizer, union, intersection } from "./utils";
+import { LOG } from "./variables";
 
 export type SearchResult<A extends Record> = {
 	record: A;
@@ -48,6 +49,10 @@ export class FilteredStore<A extends Record> {
 	private filters: FilterMap<A>;
 	private orders: OrderMap<A>;
 	private anchor?: A;
+
+	protected isFullyOptimized(): boolean {
+		return Object.keys(this.filters).length === 0 && Object.keys(this.orders).length === 0 && this.anchor == null;
+	}
 
 	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, key_index: number, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
 		this.recordManager = recordManager;
@@ -126,7 +131,33 @@ export class FilteredStore<A extends Record> {
 			NumberSorter.decreasing((value) => Object.keys(value.orders).length),
 			NumberSorter.decreasing((value) => Object.keys(value.filters).length * value.numberOfRecords)
 		));
-		return filteredStores.pop();
+		if (LOG) {
+			console.log(`candidates (least suitable to most suitable):`);
+			for (let { keys, key_index, orders, filters, numberOfRecords, anchor } of filteredStores) {
+				console.log(`\tcandidate:`);
+				console.log(`\t\tkeys: ${JSON.stringify((keys))}`);
+				console.log(`\t\tkey_index: ${key_index}`);
+				console.log(`\t\trecords: ${numberOfRecords}`);
+				console.log(`\t\tpost-filters:`);
+				for (let key in filters) {
+					if (filters[key] != null) {
+ 						console.log(`\t\t\t${key}: ${(filters[key] as any).constructor.name}(${JSON.stringify(filters[key]?.getValue())})`);
+					}
+				}
+				console.log(`\t\tpost-orders:`);
+				for (let key in orders) {
+					if (orders[key] != null) {
+ 						console.log(`\t\t\t${key}: ${(orders[key] as any).constructor.name}()`);
+					}
+				}
+				console.log(`\t\tpost-anchor: ${JSON.stringify(anchor)}`);
+			}
+		}
+		let filteredStore = filteredStores.pop();
+		if (LOG && filteredStore != null && !filteredStore.isFullyOptimized()) {
+			console.warn(`most suitable index is not fully optimized!`);
+		}
+		return filteredStore;
 	}
 };
 
