@@ -129,7 +129,7 @@ export class FilteredStore<A extends Record> {
 	static getOptimal<A extends Record>(filteredStores: Array<FilteredStore<A>>): FilteredStore<A> | undefined {
 		filteredStores.sort(CompositeSorter.of<FilteredStore<A>>(
 			NumberSorter.decreasing((value) => Object.keys(value.orders).length),
-			NumberSorter.decreasing((value) => Object.keys(value.filters).length * value.numberOfRecords)
+			NumberSorter.decreasing((value) => Object.keys(value.filters).length * value.numberOfRecords + (value.anchor == null ? 0 : value.numberOfRecords))
 		));
 		if (LOG) {
 			console.log(`candidates (least suitable to most suitable):`);
