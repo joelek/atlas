@@ -42,16 +42,18 @@ export class FilteredStore<A extends Record> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
 	private keys: Array<string>;
+	private key_index: number;
 	private numberOfRecords: number;
 	private bids: Iterable<number>;
 	private filters: FilterMap<A>;
 	private orders: OrderMap<A>;
 	private anchor?: A;
 
-	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
+	constructor(recordManager: RecordManager<A>, blockManager: BlockManager, keys: Array<string>, key_index: number, numberOfRecords: number, bids: Iterable<number>, filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A) {
 		this.recordManager = recordManager;
 		this.blockManager = blockManager;
 		this.keys = keys;
+		this.key_index = key_index;
 		this.numberOfRecords = numberOfRecords;
 		this.bids = bids;
 		this.filters = filters ?? {};
@@ -144,7 +146,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
-		yield * new FilteredStore(this.recordManager, this.blockManager, this.keys, this.tree.length(), this.tree, {}, {}, undefined);
+		yield * new FilteredStore(this.recordManager, this.blockManager, this.keys, 0, this.tree.length(), this.tree, {}, {}, undefined);
 	}
 
 	delete(): void {
@@ -306,7 +308,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			.flatten()
 			.map((branch) => branch.get_resident_bid())
 			.include((bid): bid is number => bid != null);
-		return new FilteredStore(this.recordManager, this.blockManager, this.keys, tree.length(), resident_bids, filters, orders, undefined);
+		return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, orders, undefined);
 	}
 
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
@@ -712,7 +714,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			}
 			filteredStores.push(filteredStore);
 		}
-		let fullTableScan = new FilteredStore<any>(this.recordManager, this.blockManager, [], this.table.length(), this.table, filters, orders, anchor);
+		let fullTableScan = new FilteredStore<any>(this.recordManager, this.blockManager, [], 0, this.table.length(), this.table, filters, orders, anchor);
 		filteredStores.push(fullTableScan);
 		let filteredStore = FilteredStore.getOptimal(filteredStores);
 		if (filteredStore === fullTableScan) {
