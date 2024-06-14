@@ -645,15 +645,16 @@ export class NodeVisitorLessThanOrEqual implements NodeVisitor {
 };
 
 export class NodeVisitorOr implements NodeVisitor {
+	protected visitor: NodeVisitor;
 	protected visitors: Array<NodeVisitor>;
 
 	constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>) {
-		this.visitors = [visitor, ...vistors];
+		this.visitor = visitor;
+		this.visitors = vistors;
 	}
 
 	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		let combined_yield_outcome = NOTHING_FLAG;
-		let combined_check_outcome = NOTHING_FLAG;
+		let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles, offset);
 		for (let visitor of this.visitors) {
 			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
 			combined_yield_outcome |= yield_outcome;
@@ -664,15 +665,16 @@ export class NodeVisitorOr implements NodeVisitor {
 };
 
 export class NodeVisitorAnd implements NodeVisitor {
+	protected visitor: NodeVisitor;
 	protected visitors: Array<NodeVisitor>;
 
 	constructor(visitor: NodeVisitor, ...vistors: Array<NodeVisitor>) {
-		this.visitors = [visitor, ...vistors];
+		this.visitor = visitor;
+		this.visitors = vistors;
 	}
 
 	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		let combined_yield_outcome = NOTHING_FLAG;
-		let combined_check_outcome = NOTHING_FLAG;
+		let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles, offset);
 		for (let visitor of this.visitors) {
 			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
 			combined_yield_outcome &= yield_outcome;
