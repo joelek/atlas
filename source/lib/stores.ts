@@ -703,6 +703,15 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		}
 	}
 
+	protected containsOrders(orders: OrderMap<A>): boolean {
+		for (let key in orders) {
+			if (orders[key] != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	constructor(blockManager: BlockManager, fields: Fields<A>, keys: [...B], orders: OrderMap<A>, table: Table, indexManagers: Array<IndexManager<A, Keys<A>>>, searchIndexManagers: Array<SearchIndexManager<A, Key<A>>>) {
 		this.blockManager = blockManager;
 		this.fields = fields;
@@ -712,6 +721,11 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		this.table = table;
 		this.indexManagers = indexManagers;
 		this.searchIndexManagers = searchIndexManagers;
+		if (!this.containsOrders(orders)) {
+			for (let key of this.keys) {
+				orders[key] = new IncreasingOrder();
+			}
+		}
 	}
 
 	* [Symbol.iterator](): Iterator<A> {
@@ -732,11 +746,9 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A> {
-		orders = orders ?? this.orders;
-		for (let key of this.keys) {
-			if (!(key in orders)) {
-				orders[key] = new IncreasingOrder();
-			}
+		orders = orders ?? {};
+		if (!this.containsOrders(orders)) {
+			orders = this.orders;
 		}
 		let anchor = anchorKeysRecord != null ? this.lookup(anchorKeysRecord) : undefined;
 		let filteredStores = [] as Array<FilteredStore<A>>;
