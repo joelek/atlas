@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.SearchIndicesSchema = exports.SearchIndexSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.LessThanOperatorSchema = exports.GreaterThanOperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
+exports.SchemaManager = exports.isSchemaCompatible = exports.DatabaseSchema = exports.QueriesSchema = exports.QuerySchema = exports.LinksSchema = exports.LinkSchema = exports.StoresSchema = exports.StoreSchema = exports.SearchIndicesSchema = exports.SearchIndexSchema = exports.KeysMapSchema = exports.KeyOrdersSchema = exports.KeyOrderSchema = exports.OrderSchema = exports.IncreasingOrderSchema = exports.DecreasingOrderSchema = exports.KeyOperatorsSchema = exports.KeyOperatorSchema = exports.OperatorSchema = exports.LessThanOrEqualOperatorSchema = exports.LessThanOperatorSchema = exports.GreaterThanOrEqualOperatorSchema = exports.GreaterThanOperatorSchema = exports.EqualityOperatorSchema = exports.IndicesSchema = exports.IndexSchema = exports.KeysSchema = exports.FieldsSchema = exports.FieldSchema = exports.NullableStringFieldSchema = exports.StringFieldSchema = exports.NullableNumberFieldSchema = exports.NumberFieldSchema = exports.NullableIntegerFieldSchema = exports.IntegerFieldSchema = exports.NullableBooleanFieldSchema = exports.BooleanFieldSchema = exports.NullableBinaryFieldSchema = exports.BinaryFieldSchema = exports.NullableBigIntFieldSchema = exports.BigIntFieldSchema = void 0;
 const bedrock = require("@joelek/bedrock");
 const databases_1 = require("./databases");
 const tables_1 = require("./tables");
@@ -99,10 +99,16 @@ exports.EqualityOperatorSchema = bedrock.codecs.Object.of({
 exports.GreaterThanOperatorSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("GreaterThanOperator")
 });
+exports.GreaterThanOrEqualOperatorSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("GreaterThanOrEqualOperator")
+});
 exports.LessThanOperatorSchema = bedrock.codecs.Object.of({
     type: bedrock.codecs.StringLiteral.of("LessThanOperator")
 });
-exports.OperatorSchema = bedrock.codecs.Union.of(exports.EqualityOperatorSchema, exports.GreaterThanOperatorSchema, exports.LessThanOperatorSchema);
+exports.LessThanOrEqualOperatorSchema = bedrock.codecs.Object.of({
+    type: bedrock.codecs.StringLiteral.of("LessThanOrEqualOperator")
+});
+exports.OperatorSchema = bedrock.codecs.Union.of(exports.EqualityOperatorSchema, exports.GreaterThanOperatorSchema, exports.GreaterThanOrEqualOperatorSchema, exports.LessThanOperatorSchema, exports.LessThanOrEqualOperatorSchema);
 exports.KeyOperatorSchema = bedrock.codecs.Object.of({
     key: bedrock.codecs.String,
     operator: exports.OperatorSchema

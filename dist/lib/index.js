@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createLessThanFilter = exports.createGreaterThanFilter = exports.createEqualityFilter = exports.createDecreasingOrder = exports.createIncreasingOrder = exports.createTransactionManager = exports.createContext = void 0;
+exports.createLessThanOrEqualFilter = exports.createLessThanFilter = exports.createGreaterThanOrEqualFilter = exports.createGreaterThanFilter = exports.createEqualityFilter = exports.createDecreasingOrder = exports.createIncreasingOrder = exports.createTransactionManager = exports.createContext = void 0;
 const contexts_1 = require("./contexts");
 const orders_1 = require("./orders");
 const filters_1 = require("./filters");
@@ -36,8 +36,18 @@ function createGreaterThanFilter(value) {
 }
 exports.createGreaterThanFilter = createGreaterThanFilter;
 ;
+function createGreaterThanOrEqualFilter(value) {
+    return new filters_1.GreaterThanOrEqualFilter(value);
+}
+exports.createGreaterThanOrEqualFilter = createGreaterThanOrEqualFilter;
+;
 function createLessThanFilter(value) {
     return new filters_1.LessThanFilter(value);
 }
 exports.createLessThanFilter = createLessThanFilter;
+;
+function createLessThanOrEqualFilter(value) {
+    return new filters_1.LessThanOrEqualFilter(value);
+}
+exports.createLessThanOrEqualFilter = createLessThanOrEqualFilter;
 ;

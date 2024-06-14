@@ -234,9 +234,21 @@ class Context {
         this.operators.set(reference, operator);
         return reference;
     }
+    createGreaterThanOrEqualOperator() {
+        let reference = new OperatorReference();
+        let operator = new operators_1.GreaterThanOrEqualOperator();
+        this.operators.set(reference, operator);
+        return reference;
+    }
     createLessThanOperator() {
         let reference = new OperatorReference();
         let operator = new operators_1.LessThanOperator();
+        this.operators.set(reference, operator);
+        return reference;
+    }
+    createLessThanOrEqualOperator() {
+        let reference = new OperatorReference();
+        let operator = new operators_1.LessThanOrEqualOperator();
         this.operators.set(reference, operator);
         return reference;
     }

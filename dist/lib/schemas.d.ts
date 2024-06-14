@@ -215,16 +215,28 @@ export declare const GreaterThanOperatorSchema: bedrock.codecs.ObjectCodec<{
     type: "GreaterThanOperator";
 }, {}>;
 export type GreaterThanOperatorSchema = ReturnType<typeof GreaterThanOperatorSchema["decode"]>;
+export declare const GreaterThanOrEqualOperatorSchema: bedrock.codecs.ObjectCodec<{
+    type: "GreaterThanOrEqualOperator";
+}, {}>;
+export type GreaterThanOrEqualOperatorSchema = ReturnType<typeof GreaterThanOrEqualOperatorSchema["decode"]>;
 export declare const LessThanOperatorSchema: bedrock.codecs.ObjectCodec<{
     type: "LessThanOperator";
 }, {}>;
 export type LessThanOperatorSchema = ReturnType<typeof LessThanOperatorSchema["decode"]>;
+export declare const LessThanOrEqualOperatorSchema: bedrock.codecs.ObjectCodec<{
+    type: "LessThanOrEqualOperator";
+}, {}>;
+export type LessThanOrEqualOperatorSchema = ReturnType<typeof LessThanOrEqualOperatorSchema["decode"]>;
 export declare const OperatorSchema: bedrock.codecs.UnionCodec<[{
     type: "EqualityOperator";
 }, {
     type: "GreaterThanOperator";
 }, {
+    type: "GreaterThanOrEqualOperator";
+}, {
     type: "LessThanOperator";
+}, {
+    type: "LessThanOrEqualOperator";
 }]>;
 export type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;
 export declare const KeyOperatorSchema: bedrock.codecs.ObjectCodec<{
@@ -234,7 +246,11 @@ export declare const KeyOperatorSchema: bedrock.codecs.ObjectCodec<{
     } | {
         type: "GreaterThanOperator";
     } | {
+        type: "GreaterThanOrEqualOperator";
+    } | {
         type: "LessThanOperator";
+    } | {
+        type: "LessThanOrEqualOperator";
     };
 }, {}>;
 export type KeyOperatorSchema = ReturnType<typeof KeyOperatorSchema["decode"]>;
@@ -245,7 +261,11 @@ export declare const KeyOperatorsSchema: bedrock.codecs.ArrayCodec<{
     } | {
         type: "GreaterThanOperator";
     } | {
+        type: "GreaterThanOrEqualOperator";
+    } | {
         type: "LessThanOperator";
+    } | {
+        type: "LessThanOrEqualOperator";
     };
 }>;
 export type KeyOperatorsSchema = ReturnType<typeof KeyOperatorsSchema["decode"]>;
@@ -479,7 +499,11 @@ export declare const QuerySchema: bedrock.codecs.ObjectCodec<{
         } | {
             type: "GreaterThanOperator";
         } | {
+            type: "GreaterThanOrEqualOperator";
+        } | {
             type: "LessThanOperator";
+        } | {
+            type: "LessThanOrEqualOperator";
         };
     }[];
     orders: {
@@ -502,7 +526,11 @@ export declare const QueriesSchema: bedrock.codecs.RecordCodec<{
         } | {
             type: "GreaterThanOperator";
         } | {
+            type: "GreaterThanOrEqualOperator";
+        } | {
             type: "LessThanOperator";
+        } | {
+            type: "LessThanOrEqualOperator";
         };
     }[];
     orders: {
@@ -612,7 +640,11 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
             } | {
                 type: "GreaterThanOperator";
             } | {
+                type: "GreaterThanOrEqualOperator";
+            } | {
                 type: "LessThanOperator";
+            } | {
+                type: "LessThanOrEqualOperator";
             };
         }[];
         orders: {

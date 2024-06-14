@@ -430,8 +430,14 @@ const YIELD_NOTHING_CHECK_CHILD = new Array(16).fill(0).map((value, index) => {
 const YIELD_CHILDREN_AFTER_CHECK_CHILD = new Array(16).fill(0).map((value, index) => {
     return [CHILDREN_AFTER_FLAGS[index], CHILD_FLAGS[index]];
 });
+const YIELD_CHILDREN_AFTER_INCLUSIVE_CHECK_NOTHING = new Array(16).fill(0).map((value, index) => {
+    return [CHILD_FLAGS[index] | CHILDREN_AFTER_FLAGS[index], NOTHING_FLAG];
+});
 const YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD = new Array(16).fill(0).map((value, index) => {
     return [CURRENT_FLAG | CHILDREN_BEFORE_FLAGS[index], CHILD_FLAGS[index]];
+});
+const YIELD_CURRENT_AND_CHILDREN_BEFORE_INCLUSIVE_CHECK_NOTHING = new Array(16).fill(0).map((value, index) => {
+    return [CURRENT_FLAG | CHILDREN_BEFORE_FLAGS[index] | CHILD_FLAGS[index], NOTHING_FLAG];
 });
 ;
 class NodeVisitorEqual {
@@ -576,7 +582,7 @@ class NodeVisitorGreaterThanOrEqual {
         else {
             if (next_node_nibble == null) {
                 // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
-                return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
+                return YIELD_CHILDREN_AFTER_INCLUSIVE_CHECK_NOTHING[next_key_nibble];
             }
             else {
                 if (next_key_nibble < next_node_nibble) {
@@ -656,7 +662,7 @@ class NodeVisitorLessThanOrEqual {
         else {
             if (next_node_nibble == null) {
                 // NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
-                return YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD[next_key_nibble];
+                return YIELD_CURRENT_AND_CHILDREN_BEFORE_INCLUSIVE_CHECK_NOTHING[next_key_nibble];
             }
             else {
                 if (next_key_nibble < next_node_nibble) {

@@ -16,9 +16,21 @@ wtf.test(`It should determine matches (GreaterThanFilter).`, async (assert) => {
     assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(0)), false);
     assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(1)), true);
 });
+wtf.test(`It should determine matches (GreaterThanOrEqualFilter).`, async (assert) => {
+    let filter = new filters_1.GreaterThanOrEqualFilter(0);
+    assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(-1)), false);
+    assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(0)), true);
+    assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(1)), true);
+});
 wtf.test(`It should determine matches (LessThanFilter).`, async (assert) => {
     let filter = new filters_1.LessThanFilter(0);
     assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(-1)), true);
     assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(0)), false);
+    assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(1)), false);
+});
+wtf.test(`It should determine matches (LessThanOrEqualFilter).`, async (assert) => {
+    let filter = new filters_1.LessThanOrEqualFilter(0);
+    assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(-1)), true);
+    assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(0)), true);
     assert.equals(filter.matches(CODEC.encode(filter.getValue()), CODEC.encode(1)), false);
 });
