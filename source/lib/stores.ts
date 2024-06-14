@@ -155,7 +155,17 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		filters = filters ?? {};
 		orders = orders ?? {};
 		filters = { ...filters };
+		for (let key in filters) {
+			if (filters[key] == null) {
+				delete filters[key];
+			}
+		}
 		orders = { ...orders };
+		for (let key in orders) {
+			if (orders[key] == null) {
+				delete orders[key];
+			}
+		}
 		let tree = this.tree;
 		let key_index = 0;
 		for (; key_index < this.keys.length; key_index += 1) {
