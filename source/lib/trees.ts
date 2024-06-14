@@ -682,6 +682,65 @@ export class NodeVisitorAnd implements NodeVisitor {
 	}
 };
 
+export class NodeVisitorNot implements NodeVisitor {
+	protected visitor: NodeVisitor;
+
+	constructor(visitor: NodeVisitor) {
+		this.visitor = visitor;
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		let [yield_outcome, check_outcome] = this.visitor.visit(node_nibbles, offset);
+		yield_outcome = (~yield_outcome) >>> 0;
+		check_outcome = (~check_outcome) >>> 0;
+		return [yield_outcome, check_outcome];
+	}
+};
+
+export class NodeVisitorBefore implements NodeVisitor {
+	protected visitor: NodeVisitor;
+
+	constructor(key_nibbles: Array<number>, direction: Direction | undefined) {
+		this.visitor = direction === "decreasing" ? new NodeVisitorGreaterThan(key_nibbles) : new NodeVisitorLessThan(key_nibbles);
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		return this.visitor.visit(node_nibbles, offset);
+	}
+};
+
+export class NodeVisitorAfter implements NodeVisitor {
+	protected visitor: NodeVisitor;
+
+	constructor(key_nibbles: Array<number>, direction: Direction | undefined) {
+		this.visitor = direction === "decreasing" ? new NodeVisitorLessThan(key_nibbles) : new NodeVisitorGreaterThan(key_nibbles);
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		return this.visitor.visit(node_nibbles, offset);
+	}
+};
+
+export class NodeVisitorIn implements NodeVisitor {
+	protected visitor: NodeVisitor;
+
+	constructor(key_nibbles_array: Array<Array<number>>) {
+		let visitors = key_nibbles_array.map((key_nibbles) => new NodeVisitorEqual(key_nibbles));
+		let visitor = visitors.shift();
+		if (visitor == null) {
+			throw new Error(`Expected a visitor!`);
+		}
+		this.visitor = new NodeVisitorOr(
+			visitor,
+			...visitors
+		);
+	}
+
+	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+		return this.visitor.visit(node_nibbles, offset);
+	}
+};
+
 export class RadixTreeIncreasingWalker {
 	protected block_manager: BlockManager;
 	protected node_visitor: NodeVisitor;
