@@ -62,6 +62,18 @@ wtf.test(`It should support filtering with a greater than operator.`, async (ass
     let expected = ["User 2", "User 3"];
     assert.equals(observed, expected);
 });
+wtf.test(`It should support filtering with a less than operator.`, async (assert) => {
+    let { users } = { ...createUsers() };
+    let queryManager = new queries_1.QueryManager(users, {
+        name: new operators_1.LessThanOperator()
+    }, {});
+    let iterable = queryManager.filter({
+        name: "B"
+    });
+    let observed = Array.from(iterable).map((user) => user.key);
+    let expected = ["User 0", "User 1"];
+    assert.equals(observed, expected);
+});
 wtf.test(`It should support filtering with explicit ordering.`, async (assert) => {
     let { users } = { ...createUsers() };
     let queryManager = new queries_1.QueryManager(users, {

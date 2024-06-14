@@ -20,6 +20,13 @@ export declare class GreaterThanFilter<A extends Value> extends Filter<A> {
     getValue(): A;
     matches(encodedFilterValue: Uint8Array, encodedRecordValue: Uint8Array): boolean;
 }
+export declare class LessThanFilter<A extends Value> extends Filter<A> {
+    private value;
+    constructor(value: A);
+    createNodeVisitor(key_nibbles: Array<number>): NodeVisitor;
+    getValue(): A;
+    matches(encodedFilterValue: Uint8Array, encodedRecordValue: Uint8Array): boolean;
+}
 export type FilterMap<A extends Record> = {
     [C in keyof A]?: Filter<A[C]>;
 };

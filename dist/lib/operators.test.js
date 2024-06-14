@@ -13,3 +13,8 @@ wtf.test(`It should create a filter (GreaterThanOperator).`, async (assert) => {
     let filter = operator.createFilter(0);
     assert.equals(filter instanceof filters_1.GreaterThanFilter, true);
 });
+wtf.test(`It should create a filter (LessThanOperator).`, async (assert) => {
+    let operator = new operators_1.LessThanOperator();
+    let filter = operator.createFilter(0);
+    assert.equals(filter instanceof filters_1.LessThanFilter, true);
+});

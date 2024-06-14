@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GreaterThanOperator = exports.EqualityOperator = exports.Operator = void 0;
+exports.LessThanOperator = exports.GreaterThanOperator = exports.EqualityOperator = exports.Operator = void 0;
 const filters_1 = require("./filters");
 class Operator {
     constructor() { }
@@ -26,4 +26,14 @@ class GreaterThanOperator extends Operator {
     }
 }
 exports.GreaterThanOperator = GreaterThanOperator;
+;
+class LessThanOperator extends Operator {
+    constructor() {
+        super();
+    }
+    createFilter(value) {
+        return new filters_1.LessThanFilter(value);
+    }
+}
+exports.LessThanOperator = LessThanOperator;
 ;
