@@ -1,12 +1,12 @@
 import * as bedrock from "@joelek/bedrock";
 import { StreamIterable } from "./streams";
-import { EqualityFilter, FilterMap } from "./filters";
+import { EqualityFilter, Filter, FilterMap } from "./filters";
 import { compareBuffers, Table } from "./tables";
-import { IncreasingOrder, OrderMap, Orders } from "./orders";
-import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key } from "./records";
+import { IncreasingOrder, Order, OrderMap, Orders } from "./orders";
+import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key, Value } from "./records";
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
-import { Direction, getNibblesFromBytes, NodeVisitor, RadixTree, NodeVisitorLessThan, NodeVisitorGreaterThan, NodeVisitorAnd, NodeVisitorEqual } from "./trees";
+import { Direction, getNibblesFromBytes, NodeVisitor, RadixTree, NodeVisitorAnd, NodeVisitorEqual, NodeVisitorAfter } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
 import { SeekableIterable, Tokenizer, union, intersection } from "./utils";
 import { LOG } from "./variables";
@@ -161,6 +161,46 @@ export class FilteredStore<A extends Record> {
 	}
 };
 
+function branchIntoSubtrees(branches: StreamIterable<RadixTree>, blockManager: BlockManager): StreamIterable<RadixTree> {
+	return branches
+		.map((branch) => branch.get_subtree_bid())
+		.include((bid): bid is number => bid != null)
+		.map((bid) => new RadixTree(blockManager, bid));
+};
+
+function filterBranches(branches: StreamIterable<RadixTree>, blockManager: BlockManager, nodeVisitor: NodeVisitor | undefined, direction: Direction | undefined): StreamIterable<RadixTree> {
+	return branches
+		.map((branch) => branch.get_filtered_node_bids(nodeVisitor, direction))
+		.flatten()
+		.map((bid) => new RadixTree(blockManager, bid));
+};
+
+function createFilterNodeVisitor(filter: Filter<Value> | undefined, recordManager: RecordManager<Record>, key: string): NodeVisitor | undefined {
+	if (filter != null) {
+		let filterValue = filter.getValue();
+		// Links may request all records matching the value null in the child store.
+		let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : recordManager.encodeKeys([key], {
+			[key]: filterValue
+		} as any)[0];
+		let filterNodeVisitor = filter.createNodeVisitor(getNibblesFromBytes(encodedFilterValue));
+		return filterNodeVisitor;
+	}
+};
+
+function createCombinedNodeVisitor(anchorNodeVisitor: NodeVisitor | undefined, filterNodeVisitor: NodeVisitor | undefined): NodeVisitor | undefined {
+	if (anchorNodeVisitor != null) {
+		if (filterNodeVisitor != null) {
+			return new NodeVisitorAnd(anchorNodeVisitor, filterNodeVisitor);
+		} else {
+			return anchorNodeVisitor;
+		}
+	} else {
+		if (filterNodeVisitor != null) {
+			return filterNodeVisitor;
+		}
+	}
+};
+
 export class IndexManager<A extends Record, B extends Keys<A>> {
 	private recordManager: RecordManager<A>;
 	private blockManager: BlockManager;
@@ -199,6 +239,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				delete orders[key];
 			}
 		}
+		// Reduce the search space into a single branch by excluding all other branches containing records that may never match all filters.
 		let tree = this.tree;
 		let key_index = 0;
 		for (; key_index < this.keys.length; key_index += 1) {
@@ -237,29 +278,25 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				break;
 			}
 		}
+		// Remove orders that are inherently satisfied by walking the tree in the appropriate directions.
 		let directions = [] as Array<Direction>;
 		let orderKeys = Object.keys(orders) as Keys<A>;
 		for (let i = 0; i < orderKeys.length; i++) {
 			if (this.keys[key_index + i] !== orderKeys[i]) {
 				break;
 			}
-			let order = orders[orderKeys[i]];
-			if (order == null) {
-				continue;
-			}
+			let order = orders[orderKeys[i]] as Order<any>;
 			directions.push(order.getDirection());
 			delete orders[orderKeys[i]];
 		}
-		let anchorKeyBytes = anchor != null ? this.recordManager.encodeKeys(this.keys, anchor) : [];
-		let outerBranches: Array<StreamIterable<RadixTree>> = [];
+		// Perform one or more tree walks over the subsets of distinct records.
+		let treeWalks: Array<StreamIterable<RadixTree>> = [];
 		if (anchor != null) {
+			let anchorKeyBytes = this.recordManager.encodeKeys(this.keys, anchor);
 			for (let j = key_index; j < this.keys.length; j++) {
 				let branches = StreamIterable.of([tree]);
 				for (let i = key_index; i < this.keys.length; i++) {
-					let subtree_branches = i === 0 ? branches : branches
-						.map((branch) => branch.get_subtree_bid())
-						.include((bid): bid is number => bid != null)
-						.map((bid) => new RadixTree(this.blockManager, bid));
+					let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
 					let key = this.keys[i];
 					let direction = directions[i] as Direction | undefined;
 					let anchorNodeVisitor: NodeVisitor | undefined;
@@ -269,73 +306,31 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 						anchorNodeVisitor = new NodeVisitorEqual(getNibblesFromBytes(keyBytes));
 					} else {
 						if (i + j === this.keys.length - 1 + key_index) {
-							if (direction === "decreasing") {
-								anchorNodeVisitor = new NodeVisitorLessThan(getNibblesFromBytes(keyBytes));
-							} else {
-								anchorNodeVisitor = new NodeVisitorGreaterThan(getNibblesFromBytes(keyBytes));
-							}
+							anchorNodeVisitor = new NodeVisitorAfter(getNibblesFromBytes(keyBytes), direction);
 						}
-						let filter = filters[key];
-						if (filter != null) {
-							let filterValue = filter.getValue();
-							// Links may request all records matching the value null in the child store.
-							let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : this.recordManager.encodeKeys([key], {
-								[key]: filterValue
-							} as any)[0];
-							filterNodeVisitor = filter.createNodeVisitor(getNibblesFromBytes(encodedFilterValue));
-						}
+						filterNodeVisitor = createFilterNodeVisitor(filters[key], this.recordManager, key);
 					}
-					let nodeVisitor: NodeVisitor | undefined;
-					if (anchorNodeVisitor != null) {
-						if (filterNodeVisitor != null) {
-							nodeVisitor = new NodeVisitorAnd(anchorNodeVisitor, filterNodeVisitor);
-						} else {
-							nodeVisitor = anchorNodeVisitor;
-						}
-					} else {
-						if (filterNodeVisitor != null) {
-							nodeVisitor = filterNodeVisitor;
-						}
-					}
-					let new_branches = subtree_branches
-						.map((branch) => branch.get_filtered_node_bids(nodeVisitor, direction))
-						.flatten()
-						.map((bid) => new RadixTree(this.blockManager, bid));
-					branches = new_branches;
+					let nodeVisitor = createCombinedNodeVisitor(anchorNodeVisitor, filterNodeVisitor);
+					branches = filterBranches(subtree_branches, this.blockManager, nodeVisitor, direction);
 				}
-				outerBranches.push(branches);
+				treeWalks.push(branches);
 			}
 		} else {
 			let branches = StreamIterable.of([tree]);
 			for (let i = key_index; i < this.keys.length; i++) {
-				let subtree_branches = i === 0 ? branches : branches
-					.map((branch) => branch.get_subtree_bid())
-					.include((bid): bid is number => bid != null)
-					.map((bid) => new RadixTree(this.blockManager, bid));
+				let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
 				let key = this.keys[i];
 				let direction = directions[i] as Direction | undefined;
-				let filterNodeVisitor: NodeVisitor | undefined;
-				let filter = filters[key];
-				if (filter != null) {
-					let filterValue = filter.getValue();
-					// Links may request all records matching the value null in the child store.
-					let encodedFilterValue = filterValue == null ? bedrock.codecs.Null.encodePayload(filterValue) : this.recordManager.encodeKeys([key], {
-						[key]: filterValue
-					} as any)[0];
-					filterNodeVisitor = filter.createNodeVisitor(getNibblesFromBytes(encodedFilterValue));
-				}
-				let new_branches = subtree_branches
-					.map((branch) => branch.get_filtered_node_bids(filterNodeVisitor, direction))
-					.flatten()
-					.map((bid) => new RadixTree(this.blockManager, bid));
-				branches = new_branches;
+				let filterNodeVisitor = createFilterNodeVisitor(filters[key], this.recordManager, key);
+				branches = filterBranches(subtree_branches, this.blockManager, filterNodeVisitor, direction);
 			}
-			outerBranches.push(branches);
+			treeWalks.push(branches);
 		}
+		// Delete all filters satisfied by tree walking.
 		for (let key of this.keys) {
 			delete filters[key];
 		}
-		let resident_bids = StreamIterable.of(outerBranches)
+		let resident_bids = StreamIterable.of(treeWalks)
 			.flatten()
 			.map((branch) => branch.get_resident_bid())
 			.include((bid): bid is number => bid != null);
