@@ -10,3 +10,4 @@ export function getBoolean(key: string, defaultValue: boolean): boolean {
 };
 
 export const DEBUG = getBoolean("DEBUG", false);
+export const LOG = getBoolean("LOG", false);
