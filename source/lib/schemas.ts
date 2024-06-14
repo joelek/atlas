@@ -194,10 +194,17 @@ export const LessThanOperatorSchema = bedrock.codecs.Object.of({
 
 export type LessThanOperatorSchema = ReturnType<typeof LessThanOperatorSchema["decode"]>;
 
+export const LessThanOrEqualOperatorSchema = bedrock.codecs.Object.of({
+	type: bedrock.codecs.StringLiteral.of("LessThanOrEqualOperator")
+});
+
+export type LessThanOrEqualOperatorSchema = ReturnType<typeof LessThanOrEqualOperatorSchema["decode"]>;
+
 export const OperatorSchema = bedrock.codecs.Union.of(
 	EqualityOperatorSchema,
 	GreaterThanOperatorSchema,
-	LessThanOperatorSchema
+	LessThanOperatorSchema,
+	LessThanOrEqualOperatorSchema
 );
 
 export type OperatorSchema = ReturnType<typeof OperatorSchema["decode"]>;

@@ -347,6 +347,7 @@ Atlas defines the operator entity as a logical operator that subsequently may be
 context.createEqualityOperator();
 context.createGreaterThanOperator();
 context.createLessThanOperator();
+context.createLessThanOrEqualOperator();
 ```
 
 ### Filters

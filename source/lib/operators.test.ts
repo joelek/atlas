@@ -1,6 +1,6 @@
 import * as wtf from "@joelek/wtf";
-import { EqualityFilter, GreaterThanFilter, LessThanFilter } from "./filters";
-import { EqualityOperator, GreaterThanOperator, LessThanOperator } from "./operators";
+import { EqualityFilter, GreaterThanFilter, LessThanFilter, LessThanOrEqualFilter } from "./filters";
+import { EqualityOperator, GreaterThanOperator, LessThanOperator, LessThanOrEqualOperator } from "./operators";
 
 wtf.test(`It should create a filter (EqualityOperator).`, async (assert) => {
 	let operator = new EqualityOperator<number>();
@@ -18,4 +18,10 @@ wtf.test(`It should create a filter (LessThanOperator).`, async (assert) => {
 	let operator = new LessThanOperator<number>();
 	let filter = operator.createFilter(0);
 	assert.equals(filter instanceof LessThanFilter, true);
+});
+
+wtf.test(`It should create a filter (LessThanOrEqualOperator).`, async (assert) => {
+	let operator = new LessThanOrEqualOperator<number>();
+	let filter = operator.createFilter(0);
+	assert.equals(filter instanceof LessThanOrEqualFilter, true);
 });

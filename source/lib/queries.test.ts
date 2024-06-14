@@ -1,7 +1,7 @@
 import * as wtf from "@joelek/wtf";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
-import { EqualityOperator, GreaterThanOperator, LessThanOperator } from "./operators";
+import { EqualityOperator, GreaterThanOperator, LessThanOperator, LessThanOrEqualOperator } from "./operators";
 import { DecreasingOrder, IncreasingOrder } from "./orders";
 import { Query, QueryManager } from "./queries";
 import { StringField } from "./records";
@@ -73,6 +73,19 @@ wtf.test(`It should support filtering with a less than operator.`, async (assert
 	});
 	let observed = Array.from(iterable).map((user) => user.key);
 	let expected = ["User 0", "User 1"];
+	assert.equals(observed, expected);
+});
+
+wtf.test(`It should support filtering with a less than or equal operator.`, async (assert) => {
+	let { users } = { ...createUsers() };
+	let queryManager = new QueryManager(users, {
+		name: new LessThanOrEqualOperator<string>()
+	}, {});
+	let iterable = queryManager.filter({
+		name: "B"
+	});
+	let observed = Array.from(iterable).map((user) => user.key);
+	let expected = ["User 0", "User 1", "User 2", "User 3"];
 	assert.equals(observed, expected);
 });
 

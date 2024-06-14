@@ -5,7 +5,7 @@ import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { File, PagedDurableFile, PagedFile, PhysicalFile } from "./files";
 import { Database, DatabaseLinksFromLinkManagers, DatabaseQueriesFromQueryManagers, DatabaseStoresFromStorManagers } from "./databases";
-import { EqualityOperator, GreaterThanOperator, LessThanOperator, Operator, Operators } from "./operators";
+import { EqualityOperator, GreaterThanOperator, LessThanOperator, LessThanOrEqualOperator, Operator, Operators } from "./operators";
 import { SchemaManager } from "./schemas";
 import { SubsetOf } from "./inference";
 import { Query, QueryManagersFromQueries, QueryInterfacesFromQueryManagers } from "./queries";
@@ -292,6 +292,13 @@ export class Context {
 	createLessThanOperator<A extends Value>(): OperatorReference<LessThanOperator<A>> {
 		let reference = new OperatorReference();
 		let operator = new LessThanOperator();
+		this.operators.set(reference, operator);
+		return reference;
+	}
+
+	createLessThanOrEqualOperator<A extends Value>(): OperatorReference<LessThanOrEqualOperator<A>> {
+		let reference = new OperatorReference();
+		let operator = new LessThanOrEqualOperator();
 		this.operators.set(reference, operator);
 		return reference;
 	}
