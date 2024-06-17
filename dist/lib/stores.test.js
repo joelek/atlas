@@ -1988,3 +1988,68 @@ for (let indices of USERS_INDICES) {
         assert.equals(observed, expected);
     });
 }
+function createUsersStoreWithBinaryValues(indices) {
+    let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
+    let users = stores_1.StoreManager.construct(blockManager, {
+        fields: {
+            key: new records_1.StringField(""),
+            value: new records_1.BinaryField(Uint8Array.of())
+        },
+        keys: ["key"],
+        indices: indices
+    });
+    users.insert({
+        key: "A",
+        value: Uint8Array.of(1)
+    });
+    users.insert({
+        key: "B",
+        value: Uint8Array.of(0)
+    });
+    users.insert({
+        key: "C",
+        value: Uint8Array.of(4, 0)
+    });
+    users.insert({
+        key: "D",
+        value: Uint8Array.of(2, 0)
+    });
+    users.insert({
+        key: "E",
+        value: Uint8Array.of(3)
+    });
+    users.insert({
+        key: "F",
+        value: Uint8Array.of(4)
+    });
+    return users;
+}
+;
+for (let indices of USERS_INDICES) {
+    wtf.test(`It should support anchored filtering of the records in increasing value order using a less than or equal filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}`, async (assert) => {
+        let users = createUsersStoreWithBinaryValues(indices);
+        let iterable = users.filter({
+            value: new filters_1.LessThanOrEqualFilter(Uint8Array.of(4))
+        }, {
+            value: new orders_1.IncreasingOrder()
+        }, {
+            key: "B"
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["A", "D", "E", "F"];
+        assert.equals(observed, expected);
+    });
+    wtf.test(`It should support anchored filtering of the records in decreasing value order using a greater than or equal filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}`, async (assert) => {
+        let users = createUsersStoreWithBinaryValues(indices);
+        let iterable = users.filter({
+            value: new filters_1.GreaterThanOrEqualFilter(Uint8Array.of(1))
+        }, {
+            value: new orders_1.DecreasingOrder()
+        }, {
+            key: "C"
+        });
+        let observed = Array.from(iterable).map((entry) => entry.key);
+        let expected = ["F", "E", "D", "A"];
+        assert.equals(observed, expected);
+    });
+}
