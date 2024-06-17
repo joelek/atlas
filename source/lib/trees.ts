@@ -2,15 +2,15 @@ import { IntegerAssert } from "../mod/asserts";
 import { BlockManager } from "./blocks";
 import { Chunk } from "./chunks";
 import { Binary } from "./utils";
-import { DEBUG } from "./variables";
+import { DEBUG, LOG } from "./variables";
 
 export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 
 export type Direction = "increasing" | "decreasing";
 
-export function computeCommonPrefixLength(one: Array<number>, two: Array<number>, start: number = 0): number {
+export function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number {
 	let length = Math.min(one.length, two.length);
-	for (let i = start; i < length; i++) {
+	for (let i = 0; i < length; i++) {
 		if (one[i] !== two[i]) {
 			return i;
 		}
@@ -421,12 +421,9 @@ const YIELD_CHILDREN_AFTER_INCLUSIVE_CHECK_NOTHING: Array<NodeVisitorOutcome> = 
 const YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD: Array<NodeVisitorOutcome> = new Array(16).fill(0).map((value, index) => {
 	return [CURRENT_FLAG | CHILDREN_BEFORE_FLAGS[index], CHILD_FLAGS[index]];
 });
-const YIELD_CURRENT_AND_CHILDREN_BEFORE_INCLUSIVE_CHECK_NOTHING: Array<NodeVisitorOutcome> = new Array(16).fill(0).map((value, index) => {
-	return [CURRENT_FLAG | CHILDREN_BEFORE_FLAGS[index] | CHILD_FLAGS[index], NOTHING_FLAG];
-});
 
 export interface NodeVisitor {
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome;
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome;
 };
 
 export class NodeVisitorEqual implements NodeVisitor {
@@ -436,9 +433,9 @@ export class NodeVisitorEqual implements NodeVisitor {
 		this.key_nibbles = key_nibbles;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
 		let key_nibbles = this.key_nibbles;
-		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles);
 		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
 		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
 		if (next_key_nibble == null) {
@@ -473,9 +470,9 @@ export class NodeVisitorPrefix implements NodeVisitor {
 		this.key_nibbles = key_nibbles;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
 		let key_nibbles = this.key_nibbles;
-		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles);
 		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
 		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
 		if (next_key_nibble == null) {
@@ -509,9 +506,9 @@ export class NodeVisitorGreaterThan implements NodeVisitor {
 		this.key_nibbles = key_nibbles;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
 		let key_nibbles = this.key_nibbles;
-		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles);
 		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
 		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
 		if (next_key_nibble == null) {
@@ -546,9 +543,9 @@ export class NodeVisitorGreaterThanOrEqual implements NodeVisitor {
 		this.key_nibbles = key_nibbles;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
 		let key_nibbles = this.key_nibbles;
-		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles);
 		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
 		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
 		if (next_key_nibble == null) {
@@ -562,7 +559,7 @@ export class NodeVisitorGreaterThanOrEqual implements NodeVisitor {
 		} else {
 			if (next_node_nibble == null) {
 				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
-				return YIELD_CHILDREN_AFTER_INCLUSIVE_CHECK_NOTHING[next_key_nibble];
+				return YIELD_CHILDREN_AFTER_CHECK_CHILD[next_key_nibble];
 			} else {
 				if (next_key_nibble < next_node_nibble) {
 					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
@@ -583,9 +580,9 @@ export class NodeVisitorLessThan implements NodeVisitor {
 		this.key_nibbles = key_nibbles;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
 		let key_nibbles = this.key_nibbles;
-		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles);
 		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
 		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
 		if (next_key_nibble == null) {
@@ -620,9 +617,9 @@ export class NodeVisitorLessThanOrEqual implements NodeVisitor {
 		this.key_nibbles = key_nibbles;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
 		let key_nibbles = this.key_nibbles;
-		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles, offset);
+		let common_prefix_length = computeCommonPrefixLength(node_nibbles, key_nibbles);
 		let next_node_nibble = node_nibbles[common_prefix_length] as number | undefined;
 		let next_key_nibble = key_nibbles[common_prefix_length] as number | undefined;
 		if (next_key_nibble == null) {
@@ -636,7 +633,7 @@ export class NodeVisitorLessThanOrEqual implements NodeVisitor {
 		} else {
 			if (next_node_nibble == null) {
 				// NodeKeyRelationship.NODE_KEY_IS_PREFIX_TO_KEY
-				return YIELD_CURRENT_AND_CHILDREN_BEFORE_INCLUSIVE_CHECK_NOTHING[next_key_nibble];
+				return YIELD_CURRENT_AND_CHILDREN_BEFORE_CHECK_CHILD[next_key_nibble];
 			} else {
 				if (next_key_nibble < next_node_nibble) {
 					// NodeKeyRelationship.KEY_IS_BEFORE_NODE_KEY
@@ -659,12 +656,12 @@ export class NodeVisitorOr implements NodeVisitor {
 		this.visitors = vistors;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles, offset);
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
+		let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles);
 		for (let visitor of this.visitors) {
-			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
-			combined_yield_outcome |= yield_outcome;
-			combined_check_outcome |= check_outcome;
+			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles);
+			combined_yield_outcome = combined_yield_outcome | yield_outcome;
+			combined_check_outcome = combined_check_outcome | check_outcome;
 		}
 		return [combined_yield_outcome, combined_check_outcome];
 	}
@@ -679,12 +676,12 @@ export class NodeVisitorAnd implements NodeVisitor {
 		this.visitors = vistors;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles, offset);
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
+		let [combined_yield_outcome, combined_check_outcome] = this.visitor.visit(node_nibbles);
 		for (let visitor of this.visitors) {
-			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles, offset);
-			combined_yield_outcome &= yield_outcome;
-			combined_check_outcome &= check_outcome;
+			let [yield_outcome, check_outcome] = visitor.visit(node_nibbles);
+			combined_check_outcome = (check_outcome & combined_yield_outcome) | (combined_check_outcome & yield_outcome) | (check_outcome & combined_check_outcome);
+			combined_yield_outcome = combined_yield_outcome & yield_outcome;
 		}
 		return [combined_yield_outcome, combined_check_outcome];
 	}
@@ -697,10 +694,10 @@ export class NodeVisitorNot implements NodeVisitor {
 		this.visitor = visitor;
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		let [yield_outcome, check_outcome] = this.visitor.visit(node_nibbles, offset);
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
+		let [yield_outcome, check_outcome] = this.visitor.visit(node_nibbles);
 		yield_outcome = (~yield_outcome) >>> 0;
-		check_outcome = (~check_outcome) >>> 0;
+		check_outcome = check_outcome;
 		return [yield_outcome, check_outcome];
 	}
 };
@@ -712,8 +709,8 @@ export class NodeVisitorBefore implements NodeVisitor {
 		this.visitor = direction === "decreasing" ? new NodeVisitorGreaterThan(key_nibbles) : new NodeVisitorLessThan(key_nibbles);
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		return this.visitor.visit(node_nibbles, offset);
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
+		return this.visitor.visit(node_nibbles);
 	}
 };
 
@@ -724,8 +721,8 @@ export class NodeVisitorAfter implements NodeVisitor {
 		this.visitor = direction === "decreasing" ? new NodeVisitorLessThan(key_nibbles) : new NodeVisitorGreaterThan(key_nibbles);
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		return this.visitor.visit(node_nibbles, offset);
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
+		return this.visitor.visit(node_nibbles);
 	}
 };
 
@@ -744,8 +741,8 @@ export class NodeVisitorIn implements NodeVisitor {
 		);
 	}
 
-	visit(node_nibbles: Array<number>, offset: number): NodeVisitorOutcome {
-		return this.visitor.visit(node_nibbles, offset);
+	visit(node_nibbles: Array<number>): NodeVisitorOutcome {
+		return this.visitor.visit(node_nibbles);
 	}
 };
 
@@ -772,7 +769,7 @@ export class RadixTreeIncreasingWalker {
 		this.block_manager.readBlock(node_bid, head.buffer, 0);
 		let node_nibbles = head.prefix();
 		let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
-		let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles, previous_node_nibbles.length);
+		let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles);
 		if (yield_outcome & CURRENT_FLAG) {
 			yield node_bid;
 		}
@@ -831,7 +828,7 @@ export class RadixTreeDecreasingWalker {
 		this.block_manager.readBlock(node_bid, head.buffer, 0);
 		let node_nibbles = head.prefix();
 		let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
-		let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles, previous_node_nibbles.length);
+		let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles);
 		if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
 			let body = new NodeBody();
 			this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
