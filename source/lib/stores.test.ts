@@ -1,6 +1,6 @@
 import * as wtf from "@joelek/wtf";
 import { Index, IndexManager, SearchIndexManager, Store, StoreManager } from "./stores";
-import { IntegerField, NullableStringField, RecordManager, StringField } from "./records";
+import { BinaryField, IntegerField, NullableStringField, RecordManager, StringField } from "./records";
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
 import { EqualityFilter, GreaterThanFilter, GreaterThanOrEqualFilter, LessThanFilter, LessThanOrEqualFilter } from "./filters";
@@ -2092,6 +2092,73 @@ for (let indices of USERS_INDICES) {
 		});
 		let observed = Array.from(iterable).map((entry) => entry.key);
 		let expected = ["D", "A", "B"];
+		assert.equals(observed, expected);
+	});
+}
+
+function createUsersStoreWithBinaryValues(indices: Array<Index<{ key: string, value: number }>>) {
+	let blockManager = new BlockManager(new VirtualFile(0));
+	let users = StoreManager.construct(blockManager, {
+		fields: {
+			key: new StringField(""),
+			value: new BinaryField(Uint8Array.of())
+		},
+		keys: ["key"],
+		indices: indices
+	});
+	users.insert({
+		key: "A",
+		value: Uint8Array.of(1)
+	});
+	users.insert({
+		key: "B",
+		value: Uint8Array.of(0)
+	});
+	users.insert({
+		key: "C",
+		value: Uint8Array.of(4, 0)
+	});
+	users.insert({
+		key: "D",
+		value: Uint8Array.of(2, 0)
+	});
+	users.insert({
+		key: "E",
+		value: Uint8Array.of(3)
+	});
+	users.insert({
+		key: "F",
+		value: Uint8Array.of(4)
+	});
+	return users;
+};
+
+for (let indices of USERS_INDICES) {
+	wtf.test(`It should support anchored filtering of the records in increasing value order using a less than or equal filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}`, async (assert) => {
+		let users = createUsersStoreWithBinaryValues(indices);
+		let iterable = users.filter({
+			value: new LessThanOrEqualFilter(Uint8Array.of(4))
+		}, {
+			value: new IncreasingOrder()
+		}, {
+			key: "B"
+		});
+		let observed = Array.from(iterable).map((entry) => entry.key);
+		let expected = ["A", "D", "E", "F"];
+		assert.equals(observed, expected);
+	});
+
+	wtf.test(`It should support anchored filtering of the records in decreasing value order using a greater than or equal filter when indices are ${JSON.stringify(indices.map((index) => index.keys))}`, async (assert) => {
+		let users = createUsersStoreWithBinaryValues(indices);
+		let iterable = users.filter({
+			value: new GreaterThanOrEqualFilter(Uint8Array.of(1))
+		}, {
+			value: new DecreasingOrder()
+		}, {
+			key: "C"
+		});
+		let observed = Array.from(iterable).map((entry) => entry.key);
+		let expected = ["F", "E", "D", "A"];
 		assert.equals(observed, expected);
 	});
 }
