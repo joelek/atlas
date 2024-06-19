@@ -226,13 +226,13 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 
 	filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined {
 		filters = filters ?? {};
-		orders = orders ?? {};
 		filters = { ...filters };
 		for (let key in filters) {
 			if (filters[key] == null) {
 				delete filters[key];
 			}
 		}
+		orders = orders ?? {};
 		orders = { ...orders };
 		for (let key in orders) {
 			if (orders[key] == null) {
@@ -278,23 +278,27 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				break;
 			}
 		}
+		let walkOrders: OrderMap<A> | undefined = { ...orders };
+		let postOrders: OrderMap<A> | undefined = undefined;
 		// Remove orders that are inherently satisfied by walking the tree in the appropriate directions.
 		let directions = [] as Array<Direction>;
-		let orderKeys = Object.keys(orders) as Keys<A>;
+		let orderKeys = Object.keys(walkOrders) as Keys<A>;
 		for (let i = 0; i < orderKeys.length; i++) {
 			if (this.keys[key_index + i] !== orderKeys[i]) {
 				break;
 			}
-			let order = orders[orderKeys[i]] as Order<any>;
+			let order = walkOrders[orderKeys[i]] as Order<any>;
 			directions.push(order.getDirection());
-			delete orders[orderKeys[i]];
+			delete walkOrders[orderKeys[i]];
 		}
-		// Determine whether the anchor should be satisfied by walking the tree or by post-anchoring.
-		let walkAnchor = anchor;
+		// Determine whether the orders and anchor should be satisfied by walking the tree or by post-ordering and post-anchoring.
+		let walkAnchor: A | undefined = anchor;
 		let postAnchor: A | undefined = undefined;
-		if (Object.keys(orders).length > 0) {
+		if (Object.keys(walkOrders).length > 0) {
 			walkAnchor = undefined;
 			postAnchor = anchor;
+			walkOrders = undefined;
+			postOrders = orders;
 		}
 		// Perform one or more tree walks over the subsets of distinct records.
 		let treeWalks: Array<StreamIterable<RadixTree>> = [];
@@ -341,7 +345,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			.flatten()
 			.map((branch) => branch.get_resident_bid())
 			.include((bid): bid is number => bid != null);
-		return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, orders, postAnchor);
+		return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, postOrders, postAnchor);
 	}
 
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
