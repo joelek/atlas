@@ -289,7 +289,6 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			directions.push(order.getDirection());
 			delete orders[orderKeys[i]];
 		}
-
 		// Determine whether the anchor should be satisfied by walking the tree or by post-anchoring.
 		let walkAnchor = anchor;
 		let postAnchor: A | undefined = undefined;
@@ -306,7 +305,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 				for (let i = key_index; i < this.keys.length; i++) {
 					let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
 					let key = this.keys[i];
-					let direction = directions[i] as Direction | undefined;
+					let direction = directions[i - key_index] as Direction | undefined;
 					let anchorNodeVisitor: NodeVisitor | undefined;
 					let filterNodeVisitor: NodeVisitor | undefined;
 					let keyBytes = anchorKeyBytes[i];
@@ -328,7 +327,7 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 			for (let i = key_index; i < this.keys.length; i++) {
 				let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
 				let key = this.keys[i];
-				let direction = directions[i] as Direction | undefined;
+				let direction = directions[i - key_index] as Direction | undefined;
 				let filterNodeVisitor = createFilterNodeVisitor(filters[key], this.recordManager, key);
 				branches = filterBranches(subtree_branches, this.blockManager, filterNodeVisitor, direction);
 			}
