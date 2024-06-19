@@ -189,13 +189,13 @@ class IndexManager {
     }
     filter(filters, orders, anchor) {
         filters = filters ?? {};
-        orders = orders ?? {};
         filters = { ...filters };
         for (let key in filters) {
             if (filters[key] == null) {
                 delete filters[key];
             }
         }
+        orders = orders ?? {};
         orders = { ...orders };
         for (let key in orders) {
             if (orders[key] == null) {
@@ -242,23 +242,27 @@ class IndexManager {
                 break;
             }
         }
+        let walkOrders = { ...orders };
+        let postOrders = undefined;
         // Remove orders that are inherently satisfied by walking the tree in the appropriate directions.
         let directions = [];
-        let orderKeys = Object.keys(orders);
+        let orderKeys = Object.keys(walkOrders);
         for (let i = 0; i < orderKeys.length; i++) {
             if (this.keys[key_index + i] !== orderKeys[i]) {
                 break;
             }
-            let order = orders[orderKeys[i]];
+            let order = walkOrders[orderKeys[i]];
             directions.push(order.getDirection());
-            delete orders[orderKeys[i]];
+            delete walkOrders[orderKeys[i]];
         }
-        // Determine whether the anchor should be satisfied by walking the tree or by post-anchoring.
+        // Determine whether the orders and anchor should be satisfied by walking the tree or by post-ordering and post-anchoring.
         let walkAnchor = anchor;
         let postAnchor = undefined;
-        if (Object.keys(orders).length > 0) {
+        if (Object.keys(walkOrders).length > 0) {
             walkAnchor = undefined;
             postAnchor = anchor;
+            walkOrders = undefined;
+            postOrders = orders;
         }
         // Perform one or more tree walks over the subsets of distinct records.
         let treeWalks = [];
@@ -269,7 +273,7 @@ class IndexManager {
                 for (let i = key_index; i < this.keys.length; i++) {
                     let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
                     let key = this.keys[i];
-                    let direction = directions[i];
+                    let direction = directions[i - key_index];
                     let anchorNodeVisitor;
                     let filterNodeVisitor;
                     let keyBytes = anchorKeyBytes[i];
@@ -293,7 +297,7 @@ class IndexManager {
             for (let i = key_index; i < this.keys.length; i++) {
                 let subtree_branches = i === 0 ? branches : branchIntoSubtrees(branches, this.blockManager);
                 let key = this.keys[i];
-                let direction = directions[i];
+                let direction = directions[i - key_index];
                 let filterNodeVisitor = createFilterNodeVisitor(filters[key], this.recordManager, key);
                 branches = filterBranches(subtree_branches, this.blockManager, filterNodeVisitor, direction);
             }
@@ -307,7 +311,7 @@ class IndexManager {
             .flatten()
             .map((branch) => branch.get_resident_bid())
             .include((bid) => bid != null);
-        return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, orders, postAnchor);
+        return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, postOrders, postAnchor);
     }
     insert(keysRecord, bid) {
         let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
