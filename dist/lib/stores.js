@@ -7,6 +7,7 @@ const filters_1 = require("./filters");
 const tables_1 = require("./tables");
 const orders_1 = require("./orders");
 const records_1 = require("./records");
+const blocks_1 = require("./blocks");
 const trees_1 = require("./trees");
 const sorters_1 = require("../mod/sorters");
 const utils_1 = require("./utils");
@@ -313,6 +314,11 @@ class IndexManager {
             .include((bid) => bid != null);
         return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, postOrders, postAnchor);
     }
+    get_statistics() {
+        let statistics = {};
+        statistics[this.keys.join(":")] = this.tree.get_statistics();
+        return statistics;
+    }
     insert(keysRecord, bid) {
         let keys = this.recordManager.encodeKeys(this.keys, keysRecord);
         this.tree.insert(keys, bid);
@@ -452,6 +458,9 @@ class SearchIndexManager {
     }
     delete() {
         this.tree.delete();
+    }
+    get_statistics() {
+        return this.tree.get_statistics();
     }
     insert(record, bid) {
         let tokens = this.tokenizeRecord(record);
@@ -713,6 +722,25 @@ class StoreManager {
             iterable = iterable.limit(limit);
         }
         return iterable.collect();
+    }
+    get_statistics() {
+        let statistics = {};
+        statistics.hashTable = this.table.getStatistics();
+        let recordStorage = statistics.recordStorage = new Array(64).fill(0).map((_, category) => {
+            return {
+                entries: 0,
+                bytesPerEntry: blocks_1.BlockHeader.getLength(category)
+            };
+        });
+        for (let record_bid of this.table) {
+            let category = blocks_1.BlockHeader.getCategory(this.blockManager.getBlockSize(record_bid));
+            recordStorage[category].entries += 1;
+        }
+        // Only include blocks with a size of at most 2^40 (1 TiB) since the number of larger blocks is virtually always zero.
+        recordStorage.splice(40 + 1, 64 - 40);
+        statistics.indices = this.indexManagers.map((indexManager) => indexManager.get_statistics());
+        statistics.searchIndices = this.searchIndexManagers.map((searchIndexManager) => searchIndexManager.get_statistics());
+        return statistics;
     }
     insert(record) {
         this.checkConstraints(record);

@@ -5,7 +5,7 @@ import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key } fr
 import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 import { RadixTree } from "./trees";
-import { SeekableIterable } from "./utils";
+import { SeekableIterable, Statistic } from "./utils";
 export type SearchResult<A extends Record> = {
     record: A;
     rank: number;
@@ -55,6 +55,7 @@ export declare class IndexManager<A extends Record, B extends Keys<A>> {
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchor?: A): FilteredStore<A> | undefined;
+    get_statistics(): globalThis.Record<string, Statistic>;
     insert(keysRecord: KeysRecord<A, B>, bid: number): void;
     remove(keysRecord: KeysRecord<A, B>): void;
     update(oldKeysRecord: KeysRecord<A, B>, newKeysRecord: KeysRecord<A, B>, bid: number): void;
@@ -79,6 +80,7 @@ export declare class SearchIndexManager<A extends Record, B extends Key<A>> {
     });
     [Symbol.iterator](): Iterator<SearchResult<A>>;
     delete(): void;
+    get_statistics(): globalThis.Record<string, Statistic>;
     insert(record: A, bid: number): void;
     remove(record: A, bid: number): void;
     search(query: string, bid?: number): Iterable<SearchResult<A>>;
@@ -103,6 +105,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
+    get_statistics(): globalThis.Record<string, Statistic>;
     insert(record: A): void;
     length(): number;
     lookup(keysRecord: KeysRecord<A, B>): A;

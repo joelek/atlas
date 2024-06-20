@@ -26,3 +26,9 @@ export type Collator<A> = (one: A, two: A) => number;
 export declare function makeSeekableIterable<A>(source: Iterable<A>, collator: Collator<A>): SeekableIterable<A>;
 export declare function intersection<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A>;
 export declare function union<A>(iterables: Iterable<SeekableIterable<A>>, collator: Collator<A>): SeekableIterable<A>;
+export type Statistic = {
+    entries: number;
+    bytesPerEntry: number;
+} | Statistic[] | {
+    [key: string]: Statistic;
+};

@@ -72,7 +72,7 @@ class Table {
             this.header.table.value(table);
         }
         this.header.write(blockManager.makeWritable(this.bid), 0);
-        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / blocks_1.BlockReference.LENGTH);
+        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / HashTableSlot.LENGTH);
     }
     readSlot(index, slot) {
         slot.read(this.blockManager.makeReadable(this.header.table.value()), index * HashTableSlot.LENGTH);
@@ -192,10 +192,10 @@ class Table {
                 values.push(value);
             }
         }
-        let minLength = desiredSlotCount * blocks_1.BlockReference.LENGTH;
+        let minLength = desiredSlotCount * HashTableSlot.LENGTH;
         this.blockManager.resizeBlock(this.header.table.value(), minLength);
         this.blockManager.clearBlock(this.header.table.value());
-        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / blocks_1.BlockReference.LENGTH);
+        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / HashTableSlot.LENGTH);
         for (let value of values) {
             let key = this.detail.getKeyFromValue(value);
             this.doInsert(key, value);
@@ -216,6 +216,22 @@ class Table {
         this.blockManager.deleteBlock(this.header.table.value());
         this.blockManager.deleteBlock(this.bid);
         this.header.count.value(0);
+    }
+    getStatistics() {
+        let statistics = {};
+        statistics.header = {
+            entries: 1,
+            bytesPerEntry: HashTableHeader.LENGTH
+        };
+        statistics.slotsUsed = {
+            entries: this.header.count.value(),
+            bytesPerEntry: HashTableSlot.LENGTH
+        };
+        statistics.slotsFree = {
+            entries: this.slotCount - this.header.count.value(),
+            bytesPerEntry: HashTableSlot.LENGTH
+        };
+        return statistics;
     }
     insert(key, value) {
         if (variables_1.DEBUG)
@@ -243,7 +259,7 @@ class Table {
     }
     reload() {
         this.header.read(this.blockManager.makeReadable(this.bid), 0);
-        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / blocks_1.BlockReference.LENGTH);
+        this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / HashTableSlot.LENGTH);
     }
     remove(key) {
         let slotIndex = this.doRemove(key);

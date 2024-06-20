@@ -1,5 +1,6 @@
 import { BlockManager, BlockReference } from "./blocks";
 import { Chunk } from "./chunks";
+import * as utils from "./utils";
 export declare function compareBuffers(one: Array<Uint8Array>, two: Array<Uint8Array>): number;
 export declare class HashTableHeader extends Chunk {
     readonly count: BlockReference;
@@ -35,6 +36,7 @@ export declare class Table {
     private resizeIfNecessary;
     [Symbol.iterator](): Iterator<number>;
     delete(): void;
+    getStatistics(): Record<string, utils.Statistic>;
     insert(key: Array<Uint8Array>, value: number): boolean;
     length(): number;
     lookup(key: Array<Uint8Array>): number | undefined;

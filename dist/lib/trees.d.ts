@@ -1,5 +1,6 @@
 import { BlockManager } from "./blocks";
 import { Chunk } from "./chunks";
+import { Statistic } from "./utils";
 export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 export type Direction = "increasing" | "decreasing";
 export declare function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number;
@@ -163,6 +164,7 @@ export declare class RadixTree {
     filter(relationship: Relationship, keys: Array<Uint8Array>, directions?: Array<Direction>): Iterable<number>;
     get_filtered_node_bids(nodeVisitor: NodeVisitor | undefined, direction: Direction | undefined): Iterable<number>;
     get_resident_bid(): number | undefined;
+    get_statistics(): Record<string, Statistic>;
     get_subtree_bid(): number | undefined;
     insert(keys: Array<Uint8Array>, value: number): boolean;
     length(): number;

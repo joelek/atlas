@@ -8,6 +8,7 @@ const links_1 = require("./links");
 const orders_1 = require("./orders");
 const records_1 = require("./records");
 const stores_1 = require("./stores");
+const blocks_1 = require("./blocks");
 const queries_1 = require("./queries");
 const operators_1 = require("./operators");
 const trees_1 = require("./trees");
@@ -189,7 +190,7 @@ class SchemaManager {
         };
         let buffer = exports.DatabaseSchema.encode(databaseSchema, "schema");
         blockManager.createBlock(buffer.length);
-        blockManager.writeBlock(0, buffer);
+        blockManager.writeBlock(blocks_1.BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA, buffer);
     }
     loadFieldManager(blockManager, fieldSchema) {
         if (isSchemaCompatible(exports.BigIntFieldSchema, fieldSchema)) {
@@ -953,11 +954,11 @@ class SchemaManager {
         if (blockManager.getBlockCount() === 0) {
             this.initializeDatabase(blockManager);
         }
-        let oldSchema = exports.DatabaseSchema.decode(blockManager.readBlock(0), "schema");
+        let oldSchema = exports.DatabaseSchema.decode(blockManager.readBlock(blocks_1.BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA), "schema");
         let newSchema = this.updateDatabase(blockManager, database, oldSchema);
         let buffer = exports.DatabaseSchema.encode(newSchema, "schema");
-        blockManager.resizeBlock(0, buffer.length);
-        blockManager.writeBlock(0, buffer);
+        blockManager.resizeBlock(blocks_1.BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA, buffer.length);
+        blockManager.writeBlock(blocks_1.BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA, buffer);
         let databaseManager = this.loadDatabaseManager(newSchema, blockManager);
         let dirtyLinkNames = this.getDirtyLinkNames(oldSchema.links, newSchema.links);
         let dirtyStoreNames = this.getDirtyStoreNames(oldSchema.stores, newSchema.stores);

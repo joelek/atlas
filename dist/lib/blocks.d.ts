@@ -1,5 +1,6 @@
 import { Chunk, Readable, Writable } from "./chunks";
 import { File } from "./files";
+import * as utils from "./utils";
 export declare enum BlockFlags {
     APPLICATION_0 = 0,
     APPLICATION_1 = 1,
@@ -61,6 +62,7 @@ export declare class BlockManager {
     getBlockCount(): number;
     getBlockFlag(id: number, bit: number): boolean;
     getBlockSize(id: number): number;
+    getStatistics(): Record<string, utils.Statistic>;
     makeReadable(id: number): Readable;
     makeWritable(id: number): Writable;
     readBlock(id: number, data?: Uint8Array, blockOffset?: number): Uint8Array;
@@ -69,4 +71,5 @@ export declare class BlockManager {
     setBlockFlag(id: number, bit: number, value: boolean): void;
     swapBlocks(idOne: number, idTwo: number): void;
     writeBlock(id: number, data: Uint8Array, blockOffset?: number): Uint8Array;
+    static readonly RESERVED_BLOCK_DATABASE_SCHEMA = 0;
 }
