@@ -5,6 +5,7 @@ import { Chunk } from "./chunks";
 import { DEBUG } from "./variables";
 import * as asserts from "../mod/asserts";
 import { IntegerAssert } from "../mod/asserts";
+import * as utils from "./utils";
 
 export function compareBuffers(one: Array<Uint8Array>, two: Array<Uint8Array>): number {
 	if (one.length < two.length) {
@@ -234,6 +235,23 @@ export class Table {
 		this.blockManager.deleteBlock(this.header.table.value());
 		this.blockManager.deleteBlock(this.bid);
 		this.header.count.value(0);
+	}
+
+	getStatistics(): Record<string, utils.Statistic> {
+		let statistics: Record<string, utils.Statistic> = {};
+		statistics.header = {
+			entries: 1,
+			bytesPerEntry: HashTableHeader.LENGTH
+		};
+		statistics.slotsUsed = {
+			entries: this.header.count.value(),
+			bytesPerEntry: BlockReference.LENGTH
+		};
+		statistics.slotsFree = {
+			entries: this.slotCount - this.header.count.value(),
+			bytesPerEntry: BlockReference.LENGTH
+		};
+		return statistics;
 	}
 
 	insert(key: Array<Uint8Array>, value: number): boolean {
