@@ -81,7 +81,7 @@ export class Table {
 			this.header.table.value(table);
 		}
 		this.header.write(blockManager.makeWritable(this.bid), 0);
-		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / BlockReference.LENGTH);
+		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / HashTableSlot.LENGTH);
 	}
 
 	private readSlot(index: number, slot: HashTableSlot): HashTableSlot {
@@ -209,10 +209,10 @@ export class Table {
 				values.push(value);
 			}
 		}
-		let minLength = desiredSlotCount * BlockReference.LENGTH;
+		let minLength = desiredSlotCount * HashTableSlot.LENGTH;
 		this.blockManager.resizeBlock(this.header.table.value(), minLength);
 		this.blockManager.clearBlock(this.header.table.value());
-		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / BlockReference.LENGTH);
+		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / HashTableSlot.LENGTH);
 		for (let value of values) {
 			let key = this.detail.getKeyFromValue(value);
 			this.doInsert(key, value);
@@ -245,11 +245,11 @@ export class Table {
 		};
 		statistics.slotsUsed = {
 			entries: this.header.count.value(),
-			bytesPerEntry: BlockReference.LENGTH
+			bytesPerEntry: HashTableSlot.LENGTH
 		};
 		statistics.slotsFree = {
 			entries: this.slotCount - this.header.count.value(),
-			bytesPerEntry: BlockReference.LENGTH
+			bytesPerEntry: HashTableSlot.LENGTH
 		};
 		return statistics;
 	}
@@ -282,7 +282,7 @@ export class Table {
 
 	reload(): void {
 		this.header.read(this.blockManager.makeReadable(this.bid), 0);
-		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / BlockReference.LENGTH);
+		this.slotCount = Math.floor(this.blockManager.getBlockSize(this.header.table.value()) / HashTableSlot.LENGTH);
 	}
 
 	remove(key: Array<Uint8Array>): boolean {
