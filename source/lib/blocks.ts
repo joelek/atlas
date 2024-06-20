@@ -323,6 +323,35 @@ export class BlockManager {
 		return header.length();
 	}
 
+	getStatistics(): Record<string, utils.Statistic> {
+		let statistics: Record<string, utils.Statistic> = {};
+		statistics.header = {
+			entries: 1,
+			bytesPerEntry: BinHeader.LENGTH
+		};
+		statistics.allocationTable = {
+			entries: this.header.table.length() / BlockHeader.LENGTH,
+			bytesPerEntry: BlockHeader.LENGTH
+		};
+		statistics.freeBlockLists = this.header.pools.map((pool) => {
+			return {
+				entries: pool.length() / BlockReference.LENGTH,
+				bytesPerEntry: BlockReference.LENGTH
+			};
+		});
+		// Only include free blocks with a size of at most 2^40 (1 TiB) since the number of larger blocks is virtually always zero.
+		statistics.freeBlockStorage = this.header.pools.slice(0, 40 + 1).map((pool, category) => {
+			let offset = pool.offset();
+			let blockReference = new BlockReference();
+			blockReference.read(this.file, offset);
+			return {
+				entries: blockReference.value(),
+				bytesPerEntry: BlockHeader.getLength(category)
+			};
+		});
+		return statistics;
+	}
+
 	makeReadable(id: number): Readable {
 		return {
 			read: (buffer, offset) => this.readBlock(id, buffer, offset)

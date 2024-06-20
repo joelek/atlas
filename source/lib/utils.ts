@@ -290,3 +290,5 @@ export function union<A>(iterables: Iterable<SeekableIterable<A>>, collator: Col
 		}
 	};
 };
+
+export type Statistic = { entries: number; bytesPerEntry: number; } | Statistic[] | { [key: string]: Statistic };
