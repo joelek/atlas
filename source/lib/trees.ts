@@ -1,7 +1,7 @@
 import { IntegerAssert } from "../mod/asserts";
 import { BlockManager } from "./blocks";
 import { Chunk } from "./chunks";
-import { Binary } from "./utils";
+import { Binary, Statistic } from "./utils";
 import { DEBUG, LOG } from "./variables";
 
 export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
@@ -1501,6 +1501,42 @@ export class RadixTree {
 			return;
 		}
 		return resident;
+	}
+
+	get_statistics(): Record<string, Statistic> {
+		let statistics: Record<string, Statistic> = {};
+		let compactNodes = statistics.compactNodes = {
+			entries: 0,
+			bytesPerEntry: NodeHead.LENGTH
+		};
+		let fullNodes = statistics.fullNodes = {
+			entries: 0,
+			bytesPerEntry: NodeHead.LENGTH + NodeBody.LENGTH
+		};
+		let blockManager = this.blockManager;
+		function traverse(node_bid: number): void {
+			let head = new NodeHead();
+			blockManager.readBlock(node_bid, head.buffer, 0);
+			if (blockManager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
+			let body = new NodeBody();
+				fullNodes.entries += 1;
+				blockManager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+				for (let i = 0; i < 16; i++) {
+					let child = body.child(i);
+					if (child !== 0) {
+						traverse(child);
+					}
+				}
+			} else {
+				compactNodes.entries += 1;
+			}
+			let subtree = head.subtree();
+			if (subtree !== 0) {
+				traverse(subtree);
+			}
+		};
+		traverse(this.blockIndex);
+		return statistics;
 	}
 
 	get_subtree_bid(): number | undefined {
