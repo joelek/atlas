@@ -580,3 +580,5 @@ NB: This project targets TypeScript 4 in strict mode.
 * Create EntityManagers in SchemaManager.
 * Cache decoded records on a per-transaction basis. Readable transactions may re-use caches.
 * Restrict filters and orders into proper record subsets.
+* Add statistics for stores, metadata and indices.
+* Investigate adding object, array and tuple fields.
