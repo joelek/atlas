@@ -4,11 +4,11 @@ import { EqualityFilter, Filter, FilterMap } from "./filters";
 import { compareBuffers, Table } from "./tables";
 import { IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { Fields, Record, Keys, KeysRecord, RecordManager, RequiredKeys, Key, Value } from "./records";
-import { BlockManager } from "./blocks";
+import { BlockHeader, BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 import { Direction, getNibblesFromBytes, NodeVisitor, RadixTree, NodeVisitorAnd, NodeVisitorEqual, NodeVisitorAfter } from "./trees";
 import { CompositeSorter, NumberSorter } from "../mod/sorters";
-import { SeekableIterable, Tokenizer, union, intersection } from "./utils";
+import { SeekableIterable, Tokenizer, union, intersection, Statistic } from "./utils";
 import { LOG } from "./variables";
 
 export type SearchResult<A extends Record> = {
@@ -348,6 +348,12 @@ export class IndexManager<A extends Record, B extends Keys<A>> {
 		return new FilteredStore(this.recordManager, this.blockManager, this.keys, key_index, tree.length(), resident_bids, filters, postOrders, postAnchor);
 	}
 
+	get_statistics(): globalThis.Record<string, Statistic> {
+		let statistics: globalThis.Record<string, Statistic> = {};
+		statistics[this.keys.join(":")] = this.tree.get_statistics();
+		return statistics;
+	}
+
 	insert(keysRecord: KeysRecord<A, B>, bid: number): void {
 		let keys = this.recordManager.encodeKeys<Keys<A>>(this.keys, keysRecord);
 		this.tree.insert(keys, bid);
@@ -495,6 +501,10 @@ export class SearchIndexManager<A extends Record, B extends Key<A>> {
 
 	delete(): void {
 		this.tree.delete();
+	}
+
+	get_statistics(): globalThis.Record<string, Statistic> {
+		return this.tree.get_statistics();
 	}
 
 	insert(record: A, bid: number): void {
@@ -771,6 +781,26 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 			iterable = iterable.limit(limit);
 		}
 		return iterable.collect();
+	}
+
+	get_statistics(): globalThis.Record<string, Statistic> {
+		let statistics: globalThis.Record<string, Statistic> = {};
+		statistics.hashTable = this.table.getStatistics();
+		let recordStorage = statistics.recordStorage = new Array(64).fill(0).map((_, category) => {
+			return {
+				entries: 0,
+				bytesPerEntry: BlockHeader.getLength(category)
+			};
+		});
+		for (let record_bid of this.table) {
+			let category = BlockHeader.getCategory(this.blockManager.getBlockSize(record_bid));
+			recordStorage[category].entries += 1;
+		}
+		// Only include blocks with a size of at most 2^40 (1 TiB) since the number of larger blocks is virtually always zero.
+		recordStorage.splice(40 + 1, 64 - 40);
+		statistics.indices = this.indexManagers.map((indexManager) => indexManager.get_statistics());
+		statistics.searchIndices = this.searchIndexManagers.map((searchIndexManager) => searchIndexManager.get_statistics());
+		return statistics;
 	}
 
 	insert(record: A): void {

@@ -339,7 +339,7 @@ export class BlockManager {
 				bytesPerEntry: BlockReference.LENGTH
 			};
 		});
-		// Only include free blocks with a size of at most 2^40 (1 TiB) since the number of larger blocks is virtually always zero.
+		// Only include blocks with a size of at most 2^40 (1 TiB) since the number of larger blocks is virtually always zero.
 		statistics.freeBlockStorage = this.header.pools.slice(0, 40 + 1).map((pool, category) => {
 			let offset = pool.offset();
 			let blockReference = new BlockReference();
