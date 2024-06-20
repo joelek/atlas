@@ -350,7 +350,7 @@ export class SchemaManager {
 		};
 		let buffer = DatabaseSchema.encode(databaseSchema, "schema");
 		blockManager.createBlock(buffer.length);
-		blockManager.writeBlock(0, buffer);
+		blockManager.writeBlock(BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA, buffer);
 	}
 
 	private loadFieldManager(blockManager: BlockManager, fieldSchema: FieldSchema): Field<any> {
@@ -1151,11 +1151,11 @@ export class SchemaManager {
 		if (blockManager.getBlockCount() === 0) {
 			this.initializeDatabase(blockManager);
 		}
-		let oldSchema = DatabaseSchema.decode(blockManager.readBlock(0), "schema");
+		let oldSchema = DatabaseSchema.decode(blockManager.readBlock(BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA), "schema");
 		let newSchema = this.updateDatabase(blockManager, database, oldSchema);
 		let buffer = DatabaseSchema.encode(newSchema, "schema");
-		blockManager.resizeBlock(0, buffer.length);
-		blockManager.writeBlock(0, buffer);
+		blockManager.resizeBlock(BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA, buffer.length);
+		blockManager.writeBlock(BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA, buffer);
 		let databaseManager = this.loadDatabaseManager(newSchema, blockManager);
 		let dirtyLinkNames = this.getDirtyLinkNames(oldSchema.links, newSchema.links);
 		let dirtyStoreNames = this.getDirtyStoreNames(oldSchema.stores, newSchema.stores);

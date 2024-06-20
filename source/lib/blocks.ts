@@ -409,4 +409,6 @@ export class BlockManager {
 		}
 		return data;
 	}
+
+	static readonly RESERVED_BLOCK_DATABASE_SCHEMA = 0;
 };
