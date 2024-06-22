@@ -2,7 +2,7 @@ import * as wtf from "@joelek/wtf";
 import * as bedrock from "@joelek/bedrock"
 import { BlockManager } from "./blocks";
 import { VirtualFile } from "./files";
-import { RadixTree } from "./trees";
+import { getKeyPermutations, RadixTree } from "./trees";
 import { StreamIterable } from "./streams";
 
 function getKeyFromString(string: string): Uint8Array {
@@ -848,4 +848,14 @@ wtf.test(`It should support removing long values.`, async (assert) => {
 	let observed = Array.from(tree);
 	let expected = [] as Array<number>;
 	assert.equals(observed, expected);
+});
+
+wtf.test(`It should create key permutations.`, async (assert) => {
+	let observed = getKeyPermutations([[0], [1, 2], [3, 4], [5]].map((array) => array.map((value) => Uint8Array.of(value)))).map((array) => array.map((value) => value[0]));
+	assert.equals(observed, [
+		[0, 1, 3, 5],
+		[0, 1, 4, 5],
+		[0, 2, 3, 5],
+		[0, 2, 4, 5]
+	]);
 });

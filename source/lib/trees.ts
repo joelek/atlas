@@ -8,6 +8,26 @@ export type Relationship = "^=" | "=" | ">" | ">=" | "<" | "<=";
 
 export type Direction = "increasing" | "decreasing";
 
+export function getKeyPermutations(keys: Array<Array<Uint8Array>>): Array<Array<Uint8Array>> {
+	let permutations: Array<Array<Uint8Array>> = [];
+	if (keys.length > 0) {
+		let headPermutations = keys[0];
+		if (keys.length > 1) {
+			let tailPermutations = getKeyPermutations(keys.slice(1));
+			for (let headPermutation of headPermutations) {
+				for (let tailPermutation of tailPermutations) {
+					permutations.push([headPermutation, ...tailPermutation]);
+				}
+			}
+		} else {
+			for (let headPermutation of headPermutations) {
+				permutations.push([headPermutation]);
+			}
+		}
+	}
+	return permutations;
+};
+
 export function computeCommonPrefixLength(one: Array<number>, two: Array<number>): number {
 	let length = Math.min(one.length, two.length);
 	for (let i = 0; i < length; i++) {
