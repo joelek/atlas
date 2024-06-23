@@ -2,7 +2,7 @@ import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
 import { LinkInterface } from "./links";
 import { StoreInterface } from "./stores";
-import { PromiseQueue } from "./utils";
+import { PromiseQueue, Statistic } from "./utils";
 import { QueryInterface } from "./queries";
 import { SubsetOf } from "./inference";
 import { DatabaseLink, DatabaseLinks, DatabaseQueries, DatabaseQuery, DatabaseStore, DatabaseStores } from "./databases";
@@ -51,6 +51,7 @@ export type ReadableTransaction<A> = (queue: ReadableQueue) => Promise<A>;
 export type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
 export interface TransactionManagerDetail {
     onDiscard?(): void;
+    getStatistics?(): globalThis.Record<string, Statistic>;
 }
 export declare class TransactionManager<A extends DatabaseStores<any>, B extends DatabaseLinks<any>, C extends DatabaseQueries<any>> {
     private file;
@@ -66,4 +67,5 @@ export declare class TransactionManager<A extends DatabaseStores<any>, B extends
     constructor(file: File, databaseStores: A, databaseLinks: B, databaseQueries: C, detail?: TransactionManagerDetail);
     enqueueReadableTransaction<D>(transaction: ReadableTransaction<D>): Promise<D>;
     enqueueWritableTransaction<D>(transaction: WritableTransaction<D>): Promise<D>;
+    getStatistics(): globalThis.Record<string, Statistic>;
 }

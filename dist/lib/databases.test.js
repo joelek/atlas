@@ -59,7 +59,7 @@ function createUsersPostsAndComments() {
         postComments,
         userComments,
         userMetas
-    }, {});
+    }, {}, blockManager);
     return {
         storeManagers: {
             users,
@@ -188,7 +188,7 @@ function createDirectories() {
         directories
     }, {
         childDirectories
-    }, {});
+    }, {}, blockManager);
     return {
         storeManagers: {
             directories

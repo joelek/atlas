@@ -162,6 +162,9 @@ class TransactionManager {
             queue.close();
         }
     }
+    getStatistics() {
+        return this.detail?.getStatistics?.() ?? {};
+    }
 }
 exports.TransactionManager = TransactionManager;
 ;

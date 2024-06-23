@@ -344,7 +344,7 @@ class SchemaManager {
         for (let key in databaseSchema.queries) {
             queryManagers[key] = this.loadQueryManager(blockManager, databaseSchema.queries[key], storeManagers);
         }
-        return new databases_1.DatabaseManager(storeManagers, linkManagers, queryManagers);
+        return new databases_1.DatabaseManager(storeManagers, linkManagers, queryManagers, blockManager);
     }
     compareField(field, schema) {
         if (field.getUnique() && !schema.unique) {

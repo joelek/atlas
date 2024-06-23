@@ -1,8 +1,10 @@
+import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 import { LinkManager, LinkManagers, Links, LinkInterface } from "./links";
 import { Queries, QueryManager, QueryManagers, QueryInterface } from "./queries";
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
 import { StoreManager, StoreManagers, Stores, StoreInterface } from "./stores";
+import { Statistic } from "./utils";
 export declare class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
     private storeManager;
     private overrides;
@@ -51,6 +53,7 @@ export declare class DatabaseManager<A extends StoreManagers<any>, B extends Lin
     private storeManagers;
     private linkManagers;
     private queryManagers;
+    private blockManager;
     private linksWhereStoreIsParent;
     private linksWhereStoreIsChild;
     private doInsert;
@@ -59,13 +62,14 @@ export declare class DatabaseManager<A extends StoreManagers<any>, B extends Lin
     private doVacate;
     private getLinksWhereStoreIsParent;
     private getLinksWhereStoreIsChild;
-    constructor(storeManagers: A, linkManagers: B, queryManagers: C);
+    constructor(storeManagers: A, linkManagers: B, queryManagers: C, blockManager: BlockManager);
     createDatabaseStores(): DatabaseStoresFromStorManagers<A>;
     createDatabaseLinks(): DatabaseLinksFromLinkManagers<B>;
     createDatabaseQueries(): DatabaseQueriesFromQueryManagers<C>;
     enforceStoreConsistency<C extends Keys<A>>(storeNames: [...C]): void;
     enforceLinkConsistency<D extends Keys<B>>(linkNames: [...D]): void;
     enforceConsistency<C extends Keys<A>, D extends Keys<B>>(storeNames: [...C], linkNames: [...D]): void;
+    getStatistics(): globalThis.Record<string, Statistic>;
     reload(): void;
 }
 export declare class Database<A extends Stores<any>, B extends Links<any>, C extends Queries<any>> {

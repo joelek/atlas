@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = exports.DatabaseManager = exports.DatabaseQuery = exports.DatabaseLink = exports.DatabaseStore = void 0;
+const blocks_1 = require("./blocks");
 class DatabaseStore {
     storeManager;
     overrides;
@@ -68,6 +69,7 @@ class DatabaseManager {
     storeManagers;
     linkManagers;
     queryManagers;
+    blockManager;
     linksWhereStoreIsParent;
     linksWhereStoreIsChild;
     doInsert(storeManager, records) {
@@ -180,10 +182,11 @@ class DatabaseManager {
         }
         return set;
     }
-    constructor(storeManagers, linkManagers, queryManagers) {
+    constructor(storeManagers, linkManagers, queryManagers, blockManager) {
         this.storeManagers = storeManagers;
         this.linkManagers = linkManagers;
         this.queryManagers = queryManagers;
+        this.blockManager = blockManager;
         this.linksWhereStoreIsParent = new Map();
         this.linksWhereStoreIsChild = new Map();
         for (let key in storeManagers) {
@@ -306,6 +309,19 @@ class DatabaseManager {
             }
             this.doRemove(child, records);
         }
+    }
+    getStatistics() {
+        let statistics = {};
+        statistics.databaseSchema = {
+            entries: 1,
+            bytesPerEntry: this.blockManager.getBlockSize(blocks_1.BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA)
+        };
+        statistics.blockManager = this.blockManager.getStatistics();
+        let storeManagers = statistics.storeManagers = {};
+        for (let key in this.storeManagers) {
+            storeManagers[key] = this.storeManagers[key].getStatistics();
+        }
+        return statistics;
     }
     reload() {
         for (let key in this.storeManagers) {
