@@ -1,8 +1,10 @@
+import { BlockManager } from "./blocks";
 import { SubsetOf } from "./inference";
 import { LinkManager, LinkManagers, Links, LinkInterface } from "./links";
 import { Queries, QueryManager, QueryManagers, QueryInterface } from "./queries";
 import { Record, Keys, RequiredKeys, KeysRecordMap } from "./records";
 import { StoreManager, StoreManagers, Stores, StoreInterface } from "./stores";
+import { Statistic } from "./utils";
 
 export class DatabaseStore<A extends Record, B extends RequiredKeys<A>> implements StoreInterface<A, B> {
 	private storeManager: StoreManager<A, B>;
@@ -106,6 +108,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	private storeManagers: A;
 	private linkManagers: B;
 	private queryManagers: C;
+	private blockManager: BlockManager;
 	private linksWhereStoreIsParent: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 	private linksWhereStoreIsChild: Map<StoreManager<any, any>, Set<LinkManager<any, any, any, any, any>>>;
 
@@ -225,10 +228,11 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 		return set;
 	}
 
-	constructor(storeManagers: A, linkManagers: B, queryManagers: C) {
+	constructor(storeManagers: A, linkManagers: B, queryManagers: C, blockManager: BlockManager) {
 		this.storeManagers = storeManagers;
 		this.linkManagers = linkManagers;
 		this.queryManagers = queryManagers;
+		this.blockManager = blockManager;
 		this.linksWhereStoreIsParent = new Map();
 		this.linksWhereStoreIsChild = new Map();
 		for (let key in storeManagers) {
@@ -354,6 +358,20 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			}
 			this.doRemove(child, records);
 		}
+	}
+
+	getStatistics(): globalThis.Record<string, Statistic> {
+		let statistics: globalThis.Record<string, Statistic> = {};
+		statistics.databaseSchema = {
+			entries: 1,
+			bytesPerEntry: this.blockManager.getBlockSize(BlockManager.RESERVED_BLOCK_DATABASE_SCHEMA)
+		};
+		statistics.blockManager = this.blockManager.getStatistics();
+		let storeManagers: globalThis.Record<string, Statistic> = statistics.storeManagers = {};
+		for (let key in this.storeManagers) {
+			storeManagers[key] = this.storeManagers[key].getStatistics();
+		}
+		return statistics;
 	}
 
 	reload(): void {

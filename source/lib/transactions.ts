@@ -2,7 +2,7 @@ import { File } from "./files";
 import { Record, KeysRecordMap, RequiredKeys } from "./records";
 import { LinkInterface } from "./links";
 import { StoreInterface } from "./stores";
-import { PromiseQueue } from "./utils";
+import { PromiseQueue, Statistic } from "./utils";
 import { QueryInterface } from "./queries";
 import { SubsetOf } from "./inference";
 import { DatabaseLink, DatabaseLinks, DatabaseQueries, DatabaseQuery, DatabaseStore, DatabaseStores } from "./databases";
@@ -115,6 +115,7 @@ export type WritableTransaction<A> = (queue: WritableQueue) => Promise<A>;
 
 export interface TransactionManagerDetail {
 	onDiscard?(): void;
+	getStatistics?(): globalThis.Record<string, Statistic>;
 };
 
 export class TransactionManager<A extends DatabaseStores<any>, B extends DatabaseLinks<any>, C extends DatabaseQueries<any>> {
@@ -199,5 +200,9 @@ export class TransactionManager<A extends DatabaseStores<any>, B extends Databas
 		} finally {
 			queue.close();
 		}
+	}
+
+	getStatistics(): globalThis.Record<string, Statistic> {
+		return this.detail?.getStatistics?.() ?? {};
 	}
 };

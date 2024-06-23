@@ -349,6 +349,9 @@ export class Context {
 			onDiscard: () => {
 				blockManager.reload();
 				databaseManager.reload();
+			},
+			getStatistics: () => {
+				return databaseManager.getStatistics()
 			}
 		});
 		return transactionManager;

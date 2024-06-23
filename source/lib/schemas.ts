@@ -514,7 +514,7 @@ export class SchemaManager {
 		for (let key in databaseSchema.queries) {
 			queryManagers[key] = this.loadQueryManager(blockManager, databaseSchema.queries[key], storeManagers);
 		}
-		return new DatabaseManager(storeManagers, linkManagers, queryManagers);
+		return new DatabaseManager(storeManagers, linkManagers, queryManagers, blockManager);
 	}
 
 	private compareField<A extends Value>(field: Field<A>, schema: FieldSchema): boolean {
