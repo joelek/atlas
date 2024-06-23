@@ -797,7 +797,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return record;
 	}
 
-	get_statistics(): globalThis.Record<string, Statistic> {
+	getStatistics(): globalThis.Record<string, Statistic> {
 		let statistics: globalThis.Record<string, Statistic> = {};
 		statistics.hashTable = this.table.getStatistics();
 		let recordStorage = statistics.recordStorage = new Array(64).fill(0).map((_, category) => {
