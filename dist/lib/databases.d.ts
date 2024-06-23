@@ -55,6 +55,7 @@ export declare class DatabaseManager<A extends StoreManagers<any>, B extends Lin
     private linksWhereStoreIsChild;
     private doInsert;
     private doRemove;
+    private doUpdate;
     private doVacate;
     private getLinksWhereStoreIsParent;
     private getLinksWhereStoreIsChild;

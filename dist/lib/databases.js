@@ -73,9 +73,29 @@ class DatabaseManager {
     doInsert(storeManager, records) {
         for (let record of records) {
             for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
-                linkManager.lookup(record);
+                let parentRecord = linkManager.lookup(record);
+                let partialChild = linkManager.createPartialChild(parentRecord);
+                if (partialChild != null) {
+                    record = {
+                        ...record,
+                        ...partialChild
+                    };
+                }
             }
             storeManager.insert(record);
+            for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+                let partialChild = linkManager.createPartialChild(record);
+                if (partialChild != null) {
+                    let childStoreManager = linkManager.getChild();
+                    let records = linkManager.filter(record);
+                    for (let record of records) {
+                        childStoreManager.update({
+                            ...record,
+                            ...partialChild
+                        });
+                    }
+                }
+            }
         }
     }
     doRemove(storeManager, records) {
@@ -102,6 +122,34 @@ class DatabaseManager {
                         storeManager,
                         records
                     });
+                }
+            }
+        }
+    }
+    doUpdate(storeManager, records) {
+        for (let record of records) {
+            for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
+                let parentRecord = linkManager.lookup(record);
+                let partialChild = linkManager.createPartialChild(parentRecord);
+                if (partialChild != null) {
+                    record = {
+                        ...record,
+                        ...partialChild
+                    };
+                }
+            }
+            storeManager.update(record);
+            for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+                let partialChild = linkManager.createPartialChild(record);
+                if (partialChild != null) {
+                    let childStoreManager = linkManager.getChild();
+                    let records = linkManager.filter(record);
+                    for (let record of records) {
+                        childStoreManager.update({
+                            ...record,
+                            ...partialChild
+                        });
+                    }
                 }
             }
         }
@@ -161,6 +209,7 @@ class DatabaseManager {
             databaseStores[key] = new DatabaseStore(storeManager, {
                 insert: async (record) => this.doInsert(storeManager, [record]),
                 remove: async (record) => this.doRemove(storeManager, [record]),
+                update: async (record) => this.doUpdate(storeManager, [record]),
                 vacate: async () => this.doVacate(storeManager, [])
             });
         }
@@ -207,7 +256,15 @@ class DatabaseManager {
             let records = [];
             for (let childRecord of child) {
                 try {
-                    linkManager.lookup(childRecord);
+                    let parentRecord = linkManager.lookup(childRecord);
+                    let partialChild = linkManager.createPartialChild(parentRecord);
+                    if (partialChild != null) {
+                        childRecord = {
+                            ...childRecord,
+                            ...partialChild
+                        };
+                    }
+                    child.update(childRecord);
                 }
                 catch (error) {
                     records.push(childRecord);
@@ -232,7 +289,15 @@ class DatabaseManager {
             let records = [];
             for (let childRecord of child) {
                 try {
-                    linkManager.lookup(childRecord);
+                    let parentRecord = linkManager.lookup(childRecord);
+                    let partialChild = linkManager.createPartialChild(parentRecord);
+                    if (partialChild != null) {
+                        childRecord = {
+                            ...childRecord,
+                            ...partialChild
+                        };
+                    }
+                    child.update(childRecord);
                 }
                 catch (error) {
                     records.push(childRecord);

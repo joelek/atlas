@@ -749,3 +749,12 @@ wtf.test(`It should support removing long values.`, async (assert) => {
     let expected = [];
     assert.equals(observed, expected);
 });
+wtf.test(`It should create key permutations.`, async (assert) => {
+    let observed = (0, trees_1.getKeyPermutations)([[0], [1, 2], [3, 4], [5]].map((array) => array.map((value) => Uint8Array.of(value)))).map((array) => array.map((value) => value[0]));
+    assert.equals(observed, [
+        [0, 1, 3, 5],
+        [0, 1, 4, 5],
+        [0, 2, 3, 5],
+        [0, 2, 4, 5]
+    ]);
+});

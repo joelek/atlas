@@ -15,6 +15,11 @@ export type KeysRecordMap<A extends Record, B extends Keys<A>, C extends Record>
         [E in keyof C]: A[D] extends C[E] ? E : never;
     }[keyof C];
 };
+export type MetadataKeysRecordMap<A extends Record, B extends Keys<A>, C extends Record, D extends Keys<C>> = {
+    [E in Keys<A>[number]]?: {
+        [F in Exclude<keyof C, D[number]>]: A[E] extends C[F] ? F : never;
+    }[Exclude<keyof C, D[number]>];
+};
 export declare abstract class Field<A extends Value> {
     protected codec: bedrock.codecs.Codec<A>;
     protected defaultValue: A;

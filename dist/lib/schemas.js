@@ -149,6 +149,8 @@ exports.LinkSchema = bedrock.codecs.Object.of({
     child: bedrock.codecs.String,
     keysMap: exports.KeysMapSchema,
     orders: exports.KeyOrdersSchema
+}, {
+    syncedFields: exports.KeysMapSchema
 });
 exports.LinksSchema = bedrock.codecs.Record.of(exports.LinkSchema);
 exports.QuerySchema = bedrock.codecs.Object.of({
@@ -311,7 +313,8 @@ class SchemaManager {
         for (let order of linkSchema.orders) {
             orders[order.key] = this.loadOrderManager(order.order);
         }
-        return new links_1.LinkManager(parent, child, recordKeysMap, orders);
+        let syncedFields = linkSchema.syncedFields;
+        return new links_1.LinkManager(parent, child, recordKeysMap, orders, syncedFields);
     }
     loadQueryManager(blockManager, querySchema, storeManagers) {
         let store = storeManagers[querySchema.store];
@@ -497,6 +500,16 @@ class SchemaManager {
         }
         for (let key in oldSchema.keysMap) {
             if (oldSchema.keysMap[key] !== link.recordKeysMap[key]) {
+                return false;
+            }
+        }
+        for (let key in link.syncedFields) {
+            if (link.syncedFields[key] !== oldSchema.syncedFields?.[key]) {
+                return false;
+            }
+        }
+        for (let key in oldSchema.syncedFields) {
+            if (oldSchema.syncedFields[key] !== link.syncedFields[key]) {
                 return false;
             }
         }
@@ -826,12 +839,14 @@ class SchemaManager {
         let child = this.getStoreName(link.child, stores);
         let keysMap = link.recordKeysMap;
         let orders = this.createKeyOrders(blockManager, link.orders);
+        let syncedFields = link.syncedFields;
         return {
             version,
             parent,
             child,
             keysMap,
-            orders
+            orders,
+            syncedFields
         };
     }
     deleteLink(blockManager, oldSchema) {

@@ -1,5 +1,5 @@
 import { OrderMap } from "./orders";
-import { KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
+import { KeysRecord, KeysRecordMap, MetadataKeysRecordMap, Record, RequiredKeys } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 export interface LinkInterface<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
     filter(keysRecord?: KeysRecord<A, B>, anchor?: KeysRecord<C, D>, limit?: number): Promise<Array<C>>;
@@ -19,7 +19,9 @@ export declare class LinkManager<A extends Record, B extends RequiredKeys<A>, C 
     private child;
     private keysRecordMap;
     private orders;
-    constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>);
+    private syncedFields;
+    constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>, syncedFields?: MetadataKeysRecordMap<A, B, C, D>);
+    createPartialChild(parentRecord: A): Partial<C> | undefined;
     getParent(): StoreManager<A, B>;
     getChild(): StoreManager<C, D>;
     filter(keysRecord?: KeysRecord<A, B>, anchorKeysRecord?: KeysRecord<C, D>, limit?: number): Array<C>;
@@ -40,7 +42,8 @@ export declare class Link<A extends Record, B extends RequiredKeys<A>, C extends
     child: Store<C, D>;
     recordKeysMap: E;
     orders: OrderMap<C>;
-    constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders?: OrderMap<C>);
+    syncedFields: MetadataKeysRecordMap<A, B, C, D>;
+    constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders?: OrderMap<C>, syncedFields?: MetadataKeysRecordMap<A, B, C, D>);
     createIndex(): Index<C>;
 }
 export type Links<A> = {

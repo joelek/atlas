@@ -14,12 +14,15 @@ wtf.test(`It should work.`, async (assert) => {
     let posts = context.createStore({
         post_id: context.createStringField(),
         user_id: context.createStringField(),
-        title: context.createStringField()
+        title: context.createStringField(),
+        user_age: context.createNullableIntegerField()
     }, ["post_id"]);
     let userPosts = context.createLink(users, posts, {
         user_id: "user_id"
     }, {
         title: context.createIncreasingOrder()
+    }, {
+        age: "user_age"
     });
     let query = context.createQuery(users, {
         name: context.createEqualityOperator(),
@@ -43,7 +46,8 @@ wtf.test(`It should work.`, async (assert) => {
         stores.posts.insert(queue, {
             post_id: "Post 1",
             user_id: "User 1",
-            title: "Some title."
+            title: "Some title.",
+            user_age: null
         });
     });
     let observed = await transactionManager.enqueueReadableTransaction(async (queue) => {

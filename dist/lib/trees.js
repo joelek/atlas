@@ -1,10 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadixTree = exports.RadixTreeTraverserAfter = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeDecreasingWalker = exports.RadixTreeIncreasingWalker = exports.NodeVisitorIn = exports.NodeVisitorAfter = exports.NodeVisitorBefore = exports.NodeVisitorNot = exports.NodeVisitorAnd = exports.NodeVisitorOr = exports.NodeVisitorLessThanOrEqual = exports.NodeVisitorLessThan = exports.NodeVisitorGreaterThanOrEqual = exports.NodeVisitorGreaterThan = exports.NodeVisitorPrefix = exports.NodeVisitorEqual = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = void 0;
+exports.RadixTree = exports.RadixTreeTraverserAfter = exports.RadixTreeTraverserAtOrAfter = exports.RadixTreeTraverserPrefix = exports.RadixTreeTraverserAt = exports.RadixTreeTraverser = exports.RadixTreeDecreasingWalker = exports.RadixTreeIncreasingWalker = exports.NodeVisitorIn = exports.NodeVisitorAfter = exports.NodeVisitorBefore = exports.NodeVisitorNot = exports.NodeVisitorAnd = exports.NodeVisitorOr = exports.NodeVisitorLessThanOrEqual = exports.NodeVisitorLessThan = exports.NodeVisitorGreaterThanOrEqual = exports.NodeVisitorGreaterThan = exports.NodeVisitorPrefix = exports.NodeVisitorEqual = exports.RadixTreeWalker = exports.NodeBody = exports.NodeHead = exports.getBytesFromNibbles = exports.getNibblesFromBytes = exports.computeCommonPrefixLength = exports.getKeyPermutations = void 0;
 const asserts_1 = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const utils_1 = require("./utils");
 const variables_1 = require("./variables");
+function getKeyPermutations(keys) {
+    let permutations = [];
+    if (keys.length > 0) {
+        let headPermutations = keys[0];
+        if (keys.length > 1) {
+            let tailPermutations = getKeyPermutations(keys.slice(1));
+            for (let headPermutation of headPermutations) {
+                for (let tailPermutation of tailPermutations) {
+                    permutations.push([headPermutation, ...tailPermutation]);
+                }
+            }
+        }
+        else {
+            for (let headPermutation of headPermutations) {
+                permutations.push([headPermutation]);
+            }
+        }
+    }
+    return permutations;
+}
+exports.getKeyPermutations = getKeyPermutations;
+;
 function computeCommonPrefixLength(one, two) {
     let length = Math.min(one.length, two.length);
     for (let i = 0; i < length; i++) {

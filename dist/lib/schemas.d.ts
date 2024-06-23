@@ -472,7 +472,9 @@ export declare const LinkSchema: bedrock.codecs.ObjectCodec<{
             type: "IncreasingOrder";
         };
     }[];
-}, {}>;
+}, {
+    syncedFields: globalThis.Record<string, string>;
+}>;
 export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
 export declare const LinksSchema: bedrock.codecs.RecordCodec<{
     version: number;
@@ -487,6 +489,7 @@ export declare const LinksSchema: bedrock.codecs.RecordCodec<{
             type: "IncreasingOrder";
         };
     }[];
+    syncedFields?: globalThis.Record<string, string> | undefined;
 }>;
 export type LinksSchema = ReturnType<typeof LinksSchema["decode"]>;
 export declare const QuerySchema: bedrock.codecs.ObjectCodec<{
@@ -629,6 +632,7 @@ export declare const DatabaseSchema: bedrock.codecs.ObjectCodec<{
                 type: "IncreasingOrder";
             };
         }[];
+        syncedFields?: globalThis.Record<string, string> | undefined;
     }>;
     queries: globalThis.Record<string, {
         version: number;

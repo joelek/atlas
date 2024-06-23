@@ -9,11 +9,24 @@ class LinkManager {
     child;
     keysRecordMap;
     orders;
-    constructor(parent, child, keysRecordMap, orders) {
+    syncedFields;
+    constructor(parent, child, keysRecordMap, orders, syncedFields) {
         this.parent = parent;
         this.child = child;
         this.keysRecordMap = keysRecordMap;
         this.orders = orders ?? {};
+        this.syncedFields = syncedFields ?? {};
+    }
+    createPartialChild(parentRecord) {
+        let partialChild;
+        for (let parentKey in this.syncedFields) {
+            let childKey = this.syncedFields[parentKey];
+            if (childKey != null) {
+                partialChild = partialChild ?? {};
+                partialChild[childKey] = parentRecord[parentKey];
+            }
+        }
+        return partialChild;
     }
     getParent() {
         return this.parent;
@@ -53,11 +66,13 @@ class Link {
     child;
     recordKeysMap;
     orders;
-    constructor(parent, child, recordKeysMap, orders) {
+    syncedFields;
+    constructor(parent, child, recordKeysMap, orders, syncedFields) {
         this.parent = parent;
         this.child = child;
         this.recordKeysMap = recordKeysMap;
         this.orders = orders ?? {};
+        this.syncedFields = syncedFields ?? {};
         this.child.index(this.createIndex());
     }
     createIndex() {

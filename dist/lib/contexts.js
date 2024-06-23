@@ -177,7 +177,7 @@ class Context {
         this.fields.set(reference, field);
         return reference;
     }
-    createLink(parent, child, recordKeysMap, orderReferences) {
+    createLink(parent, child, recordKeysMap, orderReferences, syncedFields) {
         let reference = new LinkReference();
         let orders = {};
         for (let key in orderReferences) {
@@ -187,7 +187,7 @@ class Context {
             }
             orders[key] = this.getOrder(orderReference);
         }
-        let link = new links_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
+        let link = new links_1.Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders, syncedFields);
         this.links.set(reference, link);
         return reference;
     }
