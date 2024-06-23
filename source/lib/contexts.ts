@@ -1,6 +1,6 @@
 import { Link, LinkManagersFromLinks, LinkInterfacesFromLinkManagers } from "./links";
 import { Store, StoreManagersFromStores, StoreInterfacesFromStoreManagers } from "./stores";
-import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
+import { Record, Fields, KeysRecordMap, BinaryField, BooleanField, StringField, NullableStringField, RequiredKeys, Value, Field, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField, MetadataKeysRecordMap } from "./records";
 import { TransactionManager } from "./transactions";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
 import { File, PagedDurableFile, PagedFile, PhysicalFile } from "./files";
@@ -227,7 +227,7 @@ export class Context {
 		return reference;
 	}
 
-	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>): LinkReference<A, B, C, D, E> {
+	createLink<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>>(parent: StoreReference<A, B>, child: StoreReference<C, D>, recordKeysMap: E, orderReferences?: Partial<OrderReferences<C>>, syncedFields?: MetadataKeysRecordMap<A, B, C, D>): LinkReference<A, B, C, D, E> {
 		let reference = new LinkReference<A, B, C, D, E>();
 		let orders = {} as OrderMap<C>;
 		for (let key in orderReferences) {
@@ -237,7 +237,7 @@ export class Context {
 			}
 			orders[key] = this.getOrder(orderReference);
 		}
-		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders);
+		let link = new Link(this.getStore(parent), this.getStore(child), recordKeysMap, orders, syncedFields);
 		this.links.set(reference, link);
 		return reference;
 	}

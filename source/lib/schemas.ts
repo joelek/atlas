@@ -4,7 +4,7 @@ import { File } from "./files";
 import { Table } from "./tables";
 import { LinkManager, LinkManagers, Links, LinkManagersFromLinks, Link } from "./links";
 import { DecreasingOrder, IncreasingOrder, Order, OrderMap, Orders } from "./orders";
-import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField } from "./records";
+import { RequiredKeys, RecordManager, KeysRecordMap, Value, NullableStringField, Record, BinaryField, BooleanField, Field, StringField, Fields, Keys, BigIntField, NumberField, IntegerField, NullableBigIntField, NullableBinaryField, NullableBooleanField, NullableIntegerField, NullableNumberField, MetadataKeysRecordMap } from "./records";
 import { Stores, StoreManager, StoreManagers, StoreManagersFromStores, Store, Index, IndexManager, SearchIndex, SearchIndexManager } from "./stores";
 import { BlockManager } from "./blocks";
 import { Queries, Query, QueryManager, QueryManagers, QueryManagersFromQueries } from "./queries";
@@ -294,6 +294,8 @@ export const LinkSchema = bedrock.codecs.Object.of({
 	child: bedrock.codecs.String,
 	keysMap: KeysMapSchema,
 	orders: KeyOrdersSchema
+}, {
+	syncedFields: KeysMapSchema
 });
 
 export type LinkSchema = ReturnType<typeof LinkSchema["decode"]>;
@@ -479,7 +481,8 @@ export class SchemaManager {
 		for (let order of linkSchema.orders) {
 			orders[order.key] = this.loadOrderManager(order.order);
 		}
-		return new LinkManager(parent, child, recordKeysMap, orders);
+		let syncedFields = linkSchema.syncedFields as MetadataKeysRecordMap<any, any, any, any> | undefined;
+		return new LinkManager(parent, child, recordKeysMap, orders, syncedFields);
 	}
 
 	private loadQueryManager(blockManager: BlockManager, querySchema: QuerySchema, storeManagers: StoreManagers<any>): QueryManager<any, any, any, any> {
@@ -673,6 +676,16 @@ export class SchemaManager {
 		}
 		for (let key in oldSchema.keysMap) {
 			if (oldSchema.keysMap[key] !== link.recordKeysMap[key as keyof E]) {
+				return false;
+			}
+		}
+		for (let key in link.syncedFields) {
+			if (link.syncedFields[key] !== oldSchema.syncedFields?.[key as any]) {
+				return false;
+			}
+		}
+		for (let key in oldSchema.syncedFields) {
+			if (oldSchema.syncedFields[key] !== link.syncedFields[key as any]) {
 				return false;
 			}
 		}
@@ -1012,12 +1025,14 @@ export class SchemaManager {
 		let child = this.getStoreName(link.child, stores);
 		let keysMap = link.recordKeysMap as KeyMapSchema;
 		let orders = this.createKeyOrders(blockManager, link.orders);
+		let syncedFields = link.syncedFields as KeyMapSchema;
 		return {
 			version,
 			parent,
 			child,
 			keysMap,
-			orders
+			orders,
+			syncedFields
 		};
 	}
 

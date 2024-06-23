@@ -1,6 +1,6 @@
 import { EqualityFilter, FilterMap } from "./filters";
 import { OrderMap } from "./orders";
-import { Key, Keys, KeysRecord, KeysRecordMap, Record, RequiredKeys } from "./records";
+import { Key, Keys, KeysRecord, KeysRecordMap, MetadataKeysRecordMap, Record, RequiredKeys } from "./records";
 import { Index, Store, StoreManager } from "./stores";
 
 export interface LinkInterface<A extends Record, B extends RequiredKeys<A>, C extends Record, D extends RequiredKeys<C>, E extends KeysRecordMap<A, B, C>> {
@@ -25,12 +25,26 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 	private child: StoreManager<C, D>;
 	private keysRecordMap: E;
 	private orders: OrderMap<C>;
+	private syncedFields: MetadataKeysRecordMap<A, B, C, D>;
 
-	constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>) {
+	constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>, syncedFields?: MetadataKeysRecordMap<A, B, C, D>) {
 		this.parent = parent;
 		this.child = child;
 		this.keysRecordMap = keysRecordMap;
 		this.orders = orders ?? {};
+		this.syncedFields = syncedFields ?? {};
+	}
+
+	createPartialChild(parentRecord: A): Partial<C> | undefined {
+		let partialChild: Partial<C> | undefined;
+		for (let parentKey in this.syncedFields) {
+			let childKey = this.syncedFields[parentKey];
+			if (childKey != null) {
+				partialChild = partialChild ?? {};
+				partialChild[childKey] = parentRecord[parentKey] as any;
+			}
+		}
+		return partialChild;
 	}
 
 	getParent(): StoreManager<A, B> {
@@ -86,12 +100,14 @@ export class Link<A extends Record, B extends RequiredKeys<A>, C extends Record,
 	child: Store<C, D>;
 	recordKeysMap: E;
 	orders: OrderMap<C>;
+	syncedFields: MetadataKeysRecordMap<A, B, C, D>;
 
-	constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders?: OrderMap<C>) {
+	constructor(parent: Store<A, B>, child: Store<C, D>, recordKeysMap: E, orders?: OrderMap<C>, syncedFields?: MetadataKeysRecordMap<A, B, C, D>) {
 		this.parent = parent;
 		this.child = child;
 		this.recordKeysMap = recordKeysMap;
 		this.orders = orders ?? {};
+		this.syncedFields = syncedFields ?? {};
 		this.child.index(this.createIndex());
 	}
 

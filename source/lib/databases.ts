@@ -112,9 +112,29 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 	private doInsert<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
 		for (let record of records) {
 			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
-				linkManager.lookup(record);
+				let parentRecord = linkManager.lookup(record);
+				let partialChild = linkManager.createPartialChild(parentRecord);
+				if (partialChild != null) {
+					record = {
+						...record,
+						...partialChild
+					};
+				}
 			}
 			storeManager.insert(record);
+			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+				let partialChild = linkManager.createPartialChild(record);
+				if (partialChild != null) {
+					let childStoreManager = linkManager.getChild();
+					let records = linkManager.filter(record);
+					for (let record of records) {
+						childStoreManager.update({
+							...record,
+							...partialChild
+						});
+					}
+				}
+			}
 		}
 	}
 
@@ -142,6 +162,35 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 						storeManager,
 						records
 					});
+				}
+			}
+		}
+	}
+
+	private doUpdate<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
+		for (let record of records) {
+			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
+				let parentRecord = linkManager.lookup(record);
+				let partialChild = linkManager.createPartialChild(parentRecord);
+				if (partialChild != null) {
+					record = {
+						...record,
+						...partialChild
+					};
+				}
+			}
+			storeManager.update(record);
+			for (let linkManager of this.getLinksWhereStoreIsParent(storeManager)) {
+				let partialChild = linkManager.createPartialChild(record);
+				if (partialChild != null) {
+					let childStoreManager = linkManager.getChild();
+					let records = linkManager.filter(record);
+					for (let record of records) {
+						childStoreManager.update({
+							...record,
+							...partialChild
+						});
+					}
 				}
 			}
 		}
@@ -206,6 +255,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			databaseStores[key] = new DatabaseStore(storeManager, {
 				insert: async (record) => this.doInsert(storeManager, [record]),
 				remove: async (record) => this.doRemove(storeManager, [record]),
+				update: async (record) => this.doUpdate(storeManager, [record]),
 				vacate: async () => this.doVacate(storeManager, [])
 			});
 		}
@@ -255,7 +305,15 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			let records = [] as Array<Record>;
 			for (let childRecord of child) {
 				try {
-					linkManager.lookup(childRecord);
+					let parentRecord = linkManager.lookup(childRecord);
+					let partialChild = linkManager.createPartialChild(parentRecord);
+					if (partialChild != null) {
+						childRecord = {
+							...childRecord,
+							...partialChild
+						};
+					}
+					child.update(childRecord);
 				} catch (error) {
 					records.push(childRecord);
 				}
@@ -280,7 +338,15 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 			let records = [] as Array<Record>;
 			for (let childRecord of child) {
 				try {
-					linkManager.lookup(childRecord);
+					let parentRecord = linkManager.lookup(childRecord);
+					let partialChild = linkManager.createPartialChild(parentRecord);
+					if (partialChild != null) {
+						childRecord = {
+							...childRecord,
+							...partialChild
+						};
+					}
+					child.update(childRecord);
 				} catch (error) {
 					records.push(childRecord);
 				}
