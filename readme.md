@@ -339,6 +339,45 @@ let tm = atlas.createTransactionManager("./private/db", (context) => {
 });
 ```
 
+#### Synchronized fields
+
+Metadata fields may be automatically synchronized between stores by specifying the way in which the fields should map from the parent store to the child store when a link is created. Synchronized fields may be used in the same way as normal fields when filtering and ordering the store.
+
+```ts
+import * as atlas from "@joelek/atlas";
+
+let tm = atlas.createTransactionManager("./private/db", (context) => {
+	let users = context.createStore({
+		user_id: context.createBinaryField(),
+		name: context.createStringField(),
+		age: context.createIntegerField()
+	}, ["user_id"]);
+
+	let posts = context.createStore({
+		post_id: context.createBinaryField(),
+		post_user_id: context.createBinaryField(),
+		title: context.createStringField(),
+		post_user_name: context.createStringField() // Create a field in the child store (posts).
+	}, ["post_id"]);
+
+	let userPosts = context.createLink(users, posts, {
+		user_id: "post_user_id"
+	}, { /* orders */ }, {
+		name: "post_user_name" // Specify that the field should be synchronized from the parent store (users).
+	});
+
+	return {
+		stores: {
+			users,
+			posts
+		},
+		links: {
+			userPosts
+		}
+	};
+});
+```
+
 ### Operators
 
 Atlas defines the operator entity as a logical operator that subsequently may be used to create a filter entity using a parameter value.
