@@ -737,7 +737,7 @@ class StoreManager {
         catch (error) { }
         return record;
     }
-    get_statistics() {
+    getStatistics() {
         let statistics = {};
         statistics.hashTable = this.table.getStatistics();
         let recordStorage = statistics.recordStorage = new Array(64).fill(0).map((_, category) => {
