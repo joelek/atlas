@@ -169,6 +169,7 @@ export class DatabaseManager<A extends StoreManagers<any>, B extends LinkManager
 
 	private doUpdate<C extends Record, D extends RequiredKeys<C>>(storeManager: StoreManager<C, D>, records: Array<C>): void {
 		for (let record of records) {
+			record = storeManager.getCompleteRecord(record);
 			for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
 				let parentRecord = linkManager.lookup(record);
 				let partialChild = linkManager.createPartialChild(parentRecord);

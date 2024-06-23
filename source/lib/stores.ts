@@ -783,6 +783,20 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 		return iterable.collect();
 	}
 
+	getCompleteRecord(keysRecord: KeysRecord<A, B>): A {
+		let record = {
+			...this.getDefaultRecord(),
+			...keysRecord
+		};
+		try {
+			record = {
+				...this.lookup(keysRecord),
+				...keysRecord
+			};
+		} catch (error) {}
+		return record;
+	}
+
 	get_statistics(): globalThis.Record<string, Statistic> {
 		let statistics: globalThis.Record<string, Statistic> = {};
 		statistics.hashTable = this.table.getStatistics();
@@ -886,16 +900,7 @@ export class StoreManager<A extends Record, B extends RequiredKeys<A>> {
 	}
 
 	update(keysRecord: KeysRecord<A, B>): void {
-		let record = {
-			...this.getDefaultRecord(),
-			...keysRecord
-		};
-		try {
-			record = {
-				...this.lookup(keysRecord),
-				...keysRecord
-			};
-		} catch (error) {}
+		let record = this.getCompleteRecord(keysRecord);
 		return this.insert(record);
 	}
 
