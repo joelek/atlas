@@ -723,6 +723,20 @@ class StoreManager {
         }
         return iterable.collect();
     }
+    getCompleteRecord(keysRecord) {
+        let record = {
+            ...this.getDefaultRecord(),
+            ...keysRecord
+        };
+        try {
+            record = {
+                ...this.lookup(keysRecord),
+                ...keysRecord
+            };
+        }
+        catch (error) { }
+        return record;
+    }
     get_statistics() {
         let statistics = {};
         statistics.hashTable = this.table.getStatistics();
@@ -820,17 +834,7 @@ class StoreManager {
         return iterable.collect();
     }
     update(keysRecord) {
-        let record = {
-            ...this.getDefaultRecord(),
-            ...keysRecord
-        };
-        try {
-            record = {
-                ...this.lookup(keysRecord),
-                ...keysRecord
-            };
-        }
-        catch (error) { }
+        let record = this.getCompleteRecord(keysRecord);
         return this.insert(record);
     }
     vacate() {

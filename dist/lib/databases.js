@@ -128,6 +128,7 @@ class DatabaseManager {
     }
     doUpdate(storeManager, records) {
         for (let record of records) {
+            record = storeManager.getCompleteRecord(record);
             for (let linkManager of this.getLinksWhereStoreIsChild(storeManager)) {
                 let parentRecord = linkManager.lookup(record);
                 let partialChild = linkManager.createPartialChild(parentRecord);

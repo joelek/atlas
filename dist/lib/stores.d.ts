@@ -105,6 +105,7 @@ export declare class StoreManager<A extends Record, B extends RequiredKeys<A>> {
     [Symbol.iterator](): Iterator<A>;
     delete(): void;
     filter(filters?: FilterMap<A>, orders?: OrderMap<A>, anchorKeysRecord?: KeysRecord<A, B>, limit?: number): Array<A>;
+    getCompleteRecord(keysRecord: KeysRecord<A, B>): A;
     get_statistics(): globalThis.Record<string, Statistic>;
     insert(record: A): void;
     length(): number;
