@@ -1,4 +1,4 @@
-import * as stdlib from "@joelek/ts-stdlib";
+import * as stdlib from "@joelek/stdlib";
 import * as libfs from "fs";
 import * as libpath from "path";
 import * as asserts from "../mod/asserts";
