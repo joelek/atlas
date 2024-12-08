@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cache = void 0;
-const stdlib = require("@joelek/ts-stdlib");
+const stdlib = require("@joelek/stdlib");
 ;
 class Cache {
     detail;

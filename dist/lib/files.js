@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VirtualFile = exports.PhysicalFile = exports.PagedFile = exports.DurableFile = exports.PagedDurableFile = exports.LogDeltaHeader = exports.LogHeader = exports.CachedFile = exports.File = void 0;
-const stdlib = require("@joelek/ts-stdlib");
+const stdlib = require("@joelek/stdlib");
 const libfs = require("fs");
 const libpath = require("path");
 const asserts = require("../mod/asserts");
