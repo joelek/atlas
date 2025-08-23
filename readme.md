@@ -621,3 +621,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Restrict filters and orders into proper record subsets.
 * Cache statistics for Stores.
 * Investigate adding object, array and tuple fields.
+* Reduce index size by storing direct record references inside NodeBody.
