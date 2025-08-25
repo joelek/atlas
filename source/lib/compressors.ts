@@ -6,7 +6,7 @@ export class BufferTooShortError extends Error {
 		this.length = length;
 	}
 
-	toString(): string {
+	get message(): string {
 		return `Expected buffer with length ${this.length} to contain additional bytes!`;
 	}
 };
@@ -19,7 +19,7 @@ export class BufferOverflowError extends Error {
 		this.length = length;
 	}
 
-	toString(): string {
+	get message(): string {
 		return `Expected buffer with length ${this.length} to not overflow!`;
 	}
 };
@@ -32,8 +32,28 @@ export class InvalidBitLengthError extends Error {
 		this.length = length;
 	}
 
-	toString(): string {
+	get message(): string {
 		return `Expected the bit length of ${this.length} to be between 1 and 32!`;
+	}
+};
+
+export class CompressionFailureError extends Error {
+	constructor() {
+		super();
+	}
+
+	get message(): string {
+		return `Expected compression to succeed!`;
+	}
+};
+
+export class DecompressionFailureError extends Error {
+	constructor() {
+		super();
+	}
+
+	get message(): string {
+		return `Expected decompression to succeed!`;
 	}
 };
 
@@ -165,14 +185,14 @@ function decode_value_using_exponential_golomb_coding(k: number, bitreader: BitR
 	return value;
 };
 
-function compress_data_using_rle_coding(buffer: Uint8Array): Uint8Array | undefined {
+function compress_data_using_rle_coding(source: Uint8Array): Uint8Array {
 	try {
-		let bitwriter = new BitWriter(buffer.length);
+		let bitwriter = new BitWriter(source.length);
 		let offset = 0;
-		while (offset < buffer.length) {
+		while (offset < source.length) {
 			let raw_length = 1;
-			for (let byte_index = offset + 1; byte_index < buffer.length; byte_index += 1) {
-				if (buffer[byte_index] !== buffer[byte_index - 1]) {
+			for (let byte_index = offset + 1; byte_index < source.length; byte_index += 1) {
+				if (source[byte_index] !== source[byte_index - 1]) {
 					raw_length += 1;
 				} else {
 					raw_length -= 1;
@@ -183,13 +203,13 @@ function compress_data_using_rle_coding(buffer: Uint8Array): Uint8Array | undefi
 				bitwriter.append_zero();
 				encode_value_using_exponential_golomb_coding(raw_length - 1, 0, bitwriter);
 				for (let byte_index = offset; byte_index < offset + raw_length; byte_index += 1) {
-					bitwriter.append_bits(buffer[byte_index], 8);
+					bitwriter.append_bits(source[byte_index], 8);
 				}
 				offset += raw_length;
 			}
 			let run_length = 1;
-			for (let byte_index = offset + 1; byte_index < buffer.length; byte_index += 1) {
-				if (buffer[byte_index] === buffer[byte_index - 1]) {
+			for (let byte_index = offset + 1; byte_index < source.length; byte_index += 1) {
+				if (source[byte_index] === source[byte_index - 1]) {
 					run_length += 1;
 				} else {
 					break;
@@ -198,7 +218,7 @@ function compress_data_using_rle_coding(buffer: Uint8Array): Uint8Array | undefi
 			if (run_length > 1) {
 				bitwriter.append_one();
 				encode_value_using_exponential_golomb_coding(run_length - 2, 0, bitwriter);
-				bitwriter.append_bits(buffer[offset], 8);
+				bitwriter.append_bits(source[offset], 8);
 				offset += run_length;
 			}
 		}
@@ -206,53 +226,38 @@ function compress_data_using_rle_coding(buffer: Uint8Array): Uint8Array | undefi
 		return bitwriter.get_buffer();
 	} catch (error) {
 		if (error instanceof BufferOverflowError) {
-			return;
+			throw new CompressionFailureError();
 		}
 		throw error;
 	}
 };
 
-function decompress_data_using_rle_coding(buffer: Uint8Array): Uint8Array | undefined {
+function decompress_data_using_rle_coding(source: Uint8Array, target: Uint8Array): Uint8Array {
 	try {
-		let bitreader = new BitReader(buffer);
+		let bitreader = new BitReader(source);
 		let offset = 0;
-		let chunks = [] as Array<Uint8Array>;
-		while (offset < buffer.length) {
+		while (offset < target.length) {
 			let control = bitreader.decode_bits(1);
 			if (control) {
 				let run_length = 2 + decode_value_using_exponential_golomb_coding(0, bitreader);
 				let byte = bitreader.decode_bits(8);
 				for (let byte_count = 0; byte_count < run_length; byte_count += 1) {
-					let chunk_index = offset >>> 8;
-					let byte_index = offset & 255;
-					if (chunk_index >= chunks.length) {
-						chunks.push(new Uint8Array(256));
-					}
-					chunks[chunk_index][byte_index] = byte;
+					target[offset] = byte;
 					offset += 1;
 				}
 			} else {
 				let raw_length = 1 + decode_value_using_exponential_golomb_coding(0, bitreader);
 				for (let byte_count = 0; byte_count < raw_length; byte_count += 1) {
 					let byte = bitreader.decode_bits(8);
-					let chunk_index = offset >>> 8;
-					let byte_index = offset & 255;
-					if (chunk_index >= chunks.length) {
-						chunks.push(new Uint8Array(256));
-					}
-					chunks[chunk_index][byte_index] = byte;
+					target[offset] = byte;
 					offset += 1;
 				}
 			}
 		}
-		let combined_chunks = new Uint8Array(chunks.length * 256);
-		for (let chunk_index = 0; chunk_index < chunks.length; chunk_index += 1) {
-			combined_chunks.set(chunks[chunk_index], chunk_index * 256);
-		}
-		return combined_chunks.subarray(0, offset);
+		return target;
 	} catch (error) {
 		if (error instanceof BufferTooShortError) {
-			return;
+			throw new DecompressionFailureError();
 		}
 		throw error;
 	}
