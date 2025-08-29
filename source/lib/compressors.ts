@@ -185,7 +185,7 @@ function decode_value_using_exponential_golomb_coding(k: number, bitreader: BitR
 	return value;
 };
 
-function compress_data_using_rle_coding(source: Uint8Array): Uint8Array {
+function compress_data_using_rle_coding(source: Uint8Array): Uint8Array | undefined {
 	try {
 		let bitwriter = new BitWriter(source.length);
 		let offset = 0;
@@ -226,7 +226,7 @@ function compress_data_using_rle_coding(source: Uint8Array): Uint8Array {
 		return bitwriter.get_buffer();
 	} catch (error) {
 		if (error instanceof BufferOverflowError) {
-			throw new CompressionFailureError();
+			return;
 		}
 		throw error;
 	}

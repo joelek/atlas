@@ -1,5 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { CompressionFailureError, RLECompressor } from "./compressors";
+import { RLECompressor } from "./compressors";
 
 wtf.test(`RLECompressor should compress data.`, async (assert) => {
 	let compressed = RLECompressor.compress(Uint8Array.of(0x01, 0x02, 0x03, 0x03, 0x03, 0x03));
@@ -20,18 +20,14 @@ wtf.test(`RLECompressor should be robust.`, async (assert) => {
 		for (let j = 0; j < array.length; j += 1) {
 			array[j] = Math.random() < 0.875 ? 0 : Math.floor(Math.random() * 256);
 		}
-		try {
-			let compressed = RLECompressor.compress(array);
-			let decompressed = RLECompressor.decompress(compressed, new Uint8Array(array.length));
-			assert.equals(decompressed, array);
-			count += 1;
-			factors.push(compressed.length / decompressed.length);
-		} catch (error) {
-			if (error instanceof CompressionFailureError) {
-				continue;
-			}
-			throw error;
+		let compressed = RLECompressor.compress(array);
+		if (compressed == null) {
+			continue;
 		}
+		let decompressed = RLECompressor.decompress(compressed, new Uint8Array(array.length));
+		assert.equals(decompressed, array);
+		count += 1;
+		factors.push(compressed.length / decompressed.length);
 	}
 	let duration = Date.now() - start;
 	factors.sort();
