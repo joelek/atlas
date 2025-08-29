@@ -1199,7 +1199,7 @@ export class RadixTree {
 				} else {
 					let subtree = head.subtree();
 					if (subtree === 0) {
-						subtree = head.subtree(this.blockManager.createBlock(NodeHead.LENGTH));
+						subtree = head.subtree(this.blockManager.createBlock(NodeHead.LENGTH, true));
 						this.blockManager.writeBlock(bid, head.buffer, 0);
 					}
 					let outcome = this.doInsert(keys.slice(1), value, subtree, keys[0]);
@@ -1215,7 +1215,7 @@ export class RadixTree {
 				let index = nextPrefixNibble;
 				head.prefix(prefix.slice(commonPrefixLength + 1));
 				this.blockManager.writeBlock(bid, head.buffer, 0);
-				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
+				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, true);
 				let headTwo = new NodeHead();
 				headTwo.prefix(prefix.slice(0, commonPrefixLength));
 				headTwo.total(total);
@@ -1242,7 +1242,7 @@ export class RadixTree {
 					this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
 					let child = body.child(index);
 					if (child === 0) {
-						child = body.child(index, this.blockManager.createBlock(NodeHead.LENGTH));
+						child = body.child(index, this.blockManager.createBlock(NodeHead.LENGTH, true));
 						this.blockManager.writeBlock(bid, body.buffer, NodeBody.OFFSET);
 					}
 					let outcome = this.doInsert(keys, value, child, suffix.slice(commonPrefixLength + 1));
@@ -1258,7 +1258,7 @@ export class RadixTree {
 				let index = nextPrefixNibble;
 				head.prefix(prefix.slice(commonPrefixLength + 1));
 				this.blockManager.writeBlock(bid, head.buffer, 0);
-				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
+				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, true);
 				let headTwo = new NodeHead();
 				headTwo.prefix(prefix.slice(0, commonPrefixLength));
 				headTwo.total(total);
@@ -1446,7 +1446,7 @@ export class RadixTree {
 
 	constructor(blockManager: BlockManager, blockIndex?: number) {
 		this.blockManager = blockManager;
-		this.blockIndex = blockIndex ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
+		this.blockIndex = blockIndex ?? blockManager.createBlock(RadixTree.INITIAL_SIZE, true);
 	}
 
 	* [Symbol.iterator](): Iterator<number> {

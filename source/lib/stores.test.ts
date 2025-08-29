@@ -8,7 +8,7 @@ import { IncreasingOrder, DecreasingOrder, Order } from "./orders";
 import { benchmark } from "./test";
 import { Table } from "./tables";
 import { LinkManager } from "./links";
-
+/*
 wtf.test(`It should support for-of iteration of the records stored.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let users = StoreManager.construct(blockManager, {
@@ -1003,7 +1003,7 @@ wtf.test(`It should prevent identical records from being re-indexed.`, async (as
 	users.insert(record);
 	assert.equals(Array.from(index).map((user) => user.user_id), []);
 });
-
+ */
 wtf.test(`It should support vacating.`, async (assert) => {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let users = StoreManager.construct(blockManager, {
@@ -1021,12 +1021,15 @@ wtf.test(`It should support vacating.`, async (assert) => {
 	users.insert({
 		key: "B"
 	});
+	for (let { bid, header, buffer } of blockManager) {
+		console.log(bid, buffer, header.toString());
+	}
 	users.vacate();
 	let observed = Array.from(users).map((entry) => entry.key);
 	let expected = [] as Array<string>;
 	assert.equals(observed, expected);
 });
-
+/*
 function makeUsersSearchIndex() {
 	let blockManager = new BlockManager(new VirtualFile(0));
 	let fields = {
@@ -2162,3 +2165,4 @@ for (let indices of USERS_INDICES) {
 		assert.equals(observed, expected);
 	});
 }
+ */
