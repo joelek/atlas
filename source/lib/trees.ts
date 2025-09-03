@@ -1145,6 +1145,7 @@ export class RadixTreeTraverserAfter extends RadixTreeTraverser {
 export class RadixTree {
 	private blockManager: BlockManager;
 	private blockIndex: number;
+	private requestCompression: boolean;
 
 	private doDelete(bid: number): void {
 		let completeBlock = this.blockManager.readBlock(bid);
@@ -1206,7 +1207,7 @@ export class RadixTree {
 				let index = nextPrefixNibble;
 				head.prefix(prefix.slice(commonPrefixLength + 1));
 				this.blockManager.writeBlock(bid, completeBlock);
-				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
+				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, this.requestCompression);
 				let completeBlockTwo = new Uint8Array(NodeHead.LENGTH + NodeBody.LENGTH);
 				let headTwo = new NodeHead(completeBlockTwo.subarray(0, NodeHead.LENGTH));
 				let bodyTwo = new NodeBody(completeBlockTwo.subarray(NodeBody.OFFSET));
@@ -1226,7 +1227,7 @@ export class RadixTree {
 					return this.doInsert(keys, value, bid, suffix);
 				} else {
 					if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
-						let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
+						let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, this.requestCompression);
 						this.blockManager.swapBlocks(bid, bidTwo);
 						this.blockManager.deleteBlock(bidTwo);
 						let completeBlockTwo = new Uint8Array(NodeHead.LENGTH + NodeBody.LENGTH);
@@ -1255,7 +1256,7 @@ export class RadixTree {
 				let index = nextPrefixNibble;
 				head.prefix(prefix.slice(commonPrefixLength + 1));
 				this.blockManager.writeBlock(bid, completeBlock);
-				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
+				let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, this.requestCompression);
 				let completeBlockTwo = new Uint8Array(NodeHead.LENGTH + NodeBody.LENGTH);
 				let headTwo = new NodeHead(completeBlockTwo.subarray(0, NodeHead.LENGTH));
 				let bodyTwo = new NodeBody(completeBlockTwo.subarray(NodeBody.OFFSET));
@@ -1436,9 +1437,10 @@ export class RadixTree {
 		throw new Error("Expected code to be unreachable!");
 	}
 
-	constructor(blockManager: BlockManager, blockIndex?: number) {
+	constructor(blockManager: BlockManager, blockIndex?: number, requestCompression?: boolean) {
 		this.blockManager = blockManager;
 		this.blockIndex = blockIndex ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
+		this.requestCompression = requestCompression ?? false;
 	}
 
 	* [Symbol.iterator](): Iterator<number> {
@@ -1454,7 +1456,7 @@ export class RadixTree {
 			if (subtree === 0) {
 				continue;
 			}
-			yield new RadixTree(this.blockManager, subtree);
+			yield new RadixTree(this.blockManager, subtree, this.requestCompression);
 		}
 	}
 
@@ -1473,7 +1475,7 @@ export class RadixTree {
 		}
 		if (subtree !== 0) {
 			console.log(`${indent}subtree: (${subtree})`);
-			new RadixTree(this.blockManager, subtree).debug(indent + "\t");
+			new RadixTree(this.blockManager, subtree, this.requestCompression).debug(indent + "\t");
 		}
 		console.log(`${indent}total: ${total}`);
 		if (this.blockManager.getBlockSize(this.blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
@@ -1482,7 +1484,7 @@ export class RadixTree {
 				let child = body.child(i);
 				if (child !== 0) {
 					console.log(`${indent}children[${i.toString(16)}]: (${child})`);
-					new RadixTree(this.blockManager, child).debug(indent + "\t");
+					new RadixTree(this.blockManager, child, this.requestCompression).debug(indent + "\t");
 				}
 			}
 		}
