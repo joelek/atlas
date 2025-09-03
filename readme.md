@@ -608,7 +608,6 @@ NB: This project targets TypeScript 4 in strict mode.
 ## Roadmap
 
 * Make memory limit configurable for Cache.
-* Allow BlockManager to keep track of the exact stored size.
 * Optimize HashTable with minProbeDistance and maxProbeDistance.
 * Add type-safety checks for keys during schema deserialization.
 * Defer decoding of records until record is filtered and ordered.
@@ -617,8 +616,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Only recreate indices when referenced fields are altered.
 * Retain last block when resizing PagedFile and only clear affected bytes.
 * Create EntityManagers in SchemaManager.
-* Cache decoded records on a per-transaction basis. Readable transactions may re-use caches.
 * Restrict filters and orders into proper record subsets.
 * Cache statistics for Stores.
 * Investigate adding object, array and tuple fields.
-* Reduce index size by storing direct record references inside NodeBody.
