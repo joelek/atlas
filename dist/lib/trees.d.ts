@@ -151,13 +151,14 @@ export declare class RadixTreeTraverserAfter extends RadixTreeTraverser {
 export declare class RadixTree {
     private blockManager;
     private blockIndex;
+    private requestCompression;
     private doDelete;
     private doInsert;
     private doLocate;
     private doRemove;
     private doVacate;
     private traverse;
-    constructor(blockManager: BlockManager, blockIndex?: number);
+    constructor(blockManager: BlockManager, blockIndex?: number, requestCompression?: boolean);
     [Symbol.iterator](): Iterator<number>;
     branch(relationship: Relationship, keys: Array<Uint8Array>): Iterable<RadixTree>;
     debug(indent?: string): void;

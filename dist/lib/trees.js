@@ -133,9 +133,9 @@ class RadixTreeWalker {
     directions;
     *doYield(bid, depth, relationship, reverse, include) {
         let iterables = [];
+        let completeBlock = this.blockManager.readBlock(bid);
         if (include.resident || include.subtree) {
-            let head = new NodeHead();
-            this.blockManager.readBlock(bid, head.buffer, 0);
+            let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
             if (include.resident) {
                 let resident = head.resident();
                 if (resident !== 0) {
@@ -167,8 +167,7 @@ class RadixTreeWalker {
         }
         if (include.children) {
             if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-                let body = new NodeBody();
-                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                 for (let i = 0; i < 16; i++) {
                     let child = body.child(i);
                     if (child !== 0) {
@@ -188,8 +187,8 @@ class RadixTreeWalker {
                 iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
             }
             else {
-                let head = new NodeHead();
-                this.blockManager.readBlock(bid, head.buffer, 0);
+                let completeBlock = this.blockManager.readBlock(bid);
+                let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                 let subtree = head.subtree();
                 if (subtree !== 0) {
                     iterables.push(this.doTraverse(subtree, depth + 1));
@@ -201,8 +200,8 @@ class RadixTreeWalker {
                 iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: false, children: false }));
             }
             else {
-                let head = new NodeHead();
-                this.blockManager.readBlock(bid, head.buffer, 0);
+                let completeBlock = this.blockManager.readBlock(bid);
+                let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                 let subtree = head.subtree();
                 if (subtree !== 0) {
                     iterables.push(this.doTraverse(subtree, depth + 1));
@@ -214,8 +213,8 @@ class RadixTreeWalker {
                 iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: false, subtree: true, children: true }));
             }
             else {
-                let head = new NodeHead();
-                this.blockManager.readBlock(bid, head.buffer, 0);
+                let completeBlock = this.blockManager.readBlock(bid);
+                let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                 let subtree = head.subtree();
                 if (subtree !== 0) {
                     iterables.push(this.doTraverse(subtree, depth + 1));
@@ -228,8 +227,8 @@ class RadixTreeWalker {
                 iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: true, children: true }));
             }
             else {
-                let head = new NodeHead();
-                this.blockManager.readBlock(bid, head.buffer, 0);
+                let completeBlock = this.blockManager.readBlock(bid);
+                let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                 let subtree = head.subtree();
                 if (subtree !== 0) {
                     iterables.push(this.doTraverse(subtree, depth + 1));
@@ -242,8 +241,8 @@ class RadixTreeWalker {
                 iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: false, subtree: false, children: false }));
             }
             else {
-                let head = new NodeHead();
-                this.blockManager.readBlock(bid, head.buffer, 0);
+                let completeBlock = this.blockManager.readBlock(bid);
+                let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                 let resident = head.resident();
                 if (resident !== 0) {
                     iterables.push([resident]);
@@ -259,8 +258,8 @@ class RadixTreeWalker {
                 iterables.push(this.doYield(bid, depth, relationship, reverse, { resident: true, subtree: false, children: false }));
             }
             else {
-                let head = new NodeHead();
-                this.blockManager.readBlock(bid, head.buffer, 0);
+                let completeBlock = this.blockManager.readBlock(bid);
+                let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                 let resident = head.resident();
                 if (resident !== 0) {
                     iterables.push([resident]);
@@ -309,10 +308,10 @@ class RadixTreeWalker {
         }
     }
     *onNodeKeyIsPrefixForKey(bid, depth, relationship, reverse, suffix) {
+        let completeBlock = this.blockManager.readBlock(bid);
         let iterables = [];
         if (relationship === "<" || relationship === "<=") {
-            let head = new NodeHead();
-            this.blockManager.readBlock(bid, head.buffer, 0);
+            let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
             let resident = head.resident();
             if (resident !== 0) {
                 iterables.push([resident]);
@@ -323,8 +322,7 @@ class RadixTreeWalker {
             }
         }
         if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             let index = suffix[0];
             if (relationship === "<" || relationship === "<=") {
                 for (let i = 0; i < index; i++) {
@@ -352,8 +350,8 @@ class RadixTreeWalker {
         }
     }
     *visitNode(bid, depth, relationship, reverse, suffix) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let prefix = head.prefix();
         let commonPrefixLength = computeCommonPrefixLength(prefix, suffix);
         let nextPrefixNibble = prefix[commonPrefixLength];
@@ -794,8 +792,8 @@ class RadixTreeIncreasingWalker {
     *yieldChild(node_bid) {
         yield node_bid;
         if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            let completeBlock = this.block_manager.readBlock(node_bid);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 0; i < 16; i++) {
                 let child_node_bid = body.child(i);
                 if (child_node_bid !== 0) {
@@ -805,8 +803,8 @@ class RadixTreeIncreasingWalker {
         }
     }
     *visitNode(node_bid, previous_node_nibbles) {
-        let head = new NodeHead();
-        this.block_manager.readBlock(node_bid, head.buffer, 0);
+        let completeBlock = this.block_manager.readBlock(node_bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let node_nibbles = head.prefix();
         let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
         let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles);
@@ -814,8 +812,7 @@ class RadixTreeIncreasingWalker {
             yield node_bid;
         }
         if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 0; i < 16; i++) {
                 if (yield_outcome & CHILD_FLAGS[i]) {
                     let child_node_bid = body.child(i);
@@ -849,8 +846,8 @@ class RadixTreeDecreasingWalker {
     node_visitor;
     *yieldChild(node_bid) {
         if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            let completeBlock = this.block_manager.readBlock(node_bid);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 16 - 1; i >= 0; i--) {
                 let child_node_bid = body.child(i);
                 if (child_node_bid !== 0) {
@@ -861,14 +858,13 @@ class RadixTreeDecreasingWalker {
         yield node_bid;
     }
     *visitNode(node_bid, previous_node_nibbles) {
-        let head = new NodeHead();
-        this.block_manager.readBlock(node_bid, head.buffer, 0);
+        let completeBlock = this.block_manager.readBlock(node_bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let node_nibbles = head.prefix();
         let new_node_nibbles = [...previous_node_nibbles, ...node_nibbles];
         let [yield_outcome, check_outcome] = this.node_visitor.visit(new_node_nibbles);
         if (this.block_manager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.block_manager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 16 - 1; i >= 0; i--) {
                 if (yield_outcome & CHILD_FLAGS[i]) {
                     let child_node_bid = body.child(i);
@@ -909,8 +905,8 @@ class RadixTreeTraverser {
     }
     *traverseChildrenUnconditionally(bid) {
         if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+            let completeBlock = this.blockManager.readBlock(bid);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 0; i < 16; i++) {
                 let child = body.child(i);
                 if (child !== 0) {
@@ -931,8 +927,8 @@ exports.RadixTreeTraverser = RadixTreeTraverser;
 ;
 class RadixTreeTraverserAt extends RadixTreeTraverser {
     *doTraverse(bid, keys, keyNibbles) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let nodeNibbles = head.prefix();
         let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
         let nextNodeNibble = nodeNibbles[commonPrefixLength];
@@ -961,8 +957,7 @@ class RadixTreeTraverserAt extends RadixTreeTraverser {
                 if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
                     return;
                 }
-                let body = new NodeBody();
-                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                 let child = body.child(nextKeyNibble);
                 if (child !== 0) {
                     yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
@@ -988,8 +983,8 @@ exports.RadixTreeTraverserAt = RadixTreeTraverserAt;
 ;
 class RadixTreeTraverserPrefix extends RadixTreeTraverser {
     *doTraverse(bid, keys, keyNibbles) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let nodeNibbles = head.prefix();
         let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
         let nextNodeNibble = nodeNibbles[commonPrefixLength];
@@ -1023,8 +1018,7 @@ class RadixTreeTraverserPrefix extends RadixTreeTraverser {
                 if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
                     return;
                 }
-                let body = new NodeBody();
-                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                 let child = body.child(nextKeyNibble);
                 if (child !== 0) {
                     yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
@@ -1050,8 +1044,8 @@ exports.RadixTreeTraverserPrefix = RadixTreeTraverserPrefix;
 ;
 class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
     *doTraverse(bid, keys, keyNibbles) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let nodeNibbles = head.prefix();
         let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
         let nextNodeNibble = nodeNibbles[commonPrefixLength];
@@ -1085,8 +1079,7 @@ class RadixTreeTraverserAtOrAfter extends RadixTreeTraverser {
                 if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
                     return;
                 }
-                let body = new NodeBody();
-                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                 let child = body.child(nextKeyNibble);
                 if (child !== 0) {
                     yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
@@ -1118,8 +1111,8 @@ exports.RadixTreeTraverserAtOrAfter = RadixTreeTraverserAtOrAfter;
 ;
 class RadixTreeTraverserAfter extends RadixTreeTraverser {
     *doTraverse(bid, keys, keyNibbles) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let nodeNibbles = head.prefix();
         let commonPrefixLength = computeCommonPrefixLength(nodeNibbles, keyNibbles);
         let nextNodeNibble = nodeNibbles[commonPrefixLength];
@@ -1153,8 +1146,7 @@ class RadixTreeTraverserAfter extends RadixTreeTraverser {
                 if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
                     return;
                 }
-                let body = new NodeBody();
-                this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                 let child = body.child(nextKeyNibble);
                 if (child !== 0) {
                     yield* this.doTraverse(child, keys, keyNibbles.slice(commonPrefixLength + 1));
@@ -1187,12 +1179,12 @@ exports.RadixTreeTraverserAfter = RadixTreeTraverserAfter;
 class RadixTree {
     blockManager;
     blockIndex;
+    requestCompression;
     doDelete(bid) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 0; i < 16; i++) {
                 let child = body.child(i);
                 if (child !== 0) {
@@ -1207,8 +1199,8 @@ class RadixTree {
         this.blockManager.deleteBlock(bid);
     }
     doInsert(keys, value, bid, suffix) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let prefix = head.prefix();
         let total = head.total();
         let commonPrefixLength = computeCommonPrefixLength(prefix, suffix);
@@ -1221,26 +1213,26 @@ class RadixTree {
                     let resident = head.resident();
                     if (resident !== 0) {
                         resident = head.resident(value);
-                        this.blockManager.writeBlock(bid, head.buffer, 0);
+                        this.blockManager.writeBlock(bid, completeBlock);
                         return;
                     }
                     total = head.total(total + 1);
                     resident = head.resident(value);
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return total;
                 }
                 else {
                     let subtree = head.subtree();
                     if (subtree === 0) {
                         subtree = head.subtree(this.blockManager.createBlock(NodeHead.LENGTH));
-                        this.blockManager.writeBlock(bid, head.buffer, 0);
+                        this.blockManager.writeBlock(bid, completeBlock);
                     }
                     let outcome = this.doInsert(keys.slice(1), value, subtree, keys[0]);
                     if (outcome == null) {
                         return;
                     }
                     total = head.total(total + 1);
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return total;
                 }
             }
@@ -1248,15 +1240,15 @@ class RadixTree {
                 // Key is prefix to node.
                 let index = nextPrefixNibble;
                 head.prefix(prefix.slice(commonPrefixLength + 1));
-                this.blockManager.writeBlock(bid, head.buffer, 0);
-                let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
-                let headTwo = new NodeHead();
+                this.blockManager.writeBlock(bid, completeBlock);
+                let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, this.requestCompression);
+                let completeBlockTwo = new Uint8Array(NodeHead.LENGTH + NodeBody.LENGTH);
+                let headTwo = new NodeHead(completeBlockTwo.subarray(0, NodeHead.LENGTH));
+                let bodyTwo = new NodeBody(completeBlockTwo.subarray(NodeBody.OFFSET));
                 headTwo.prefix(prefix.slice(0, commonPrefixLength));
                 headTwo.total(total);
-                this.blockManager.writeBlock(bidTwo, headTwo.buffer, 0);
-                let bodyTwo = new NodeBody();
                 bodyTwo.child(index, bidTwo);
-                this.blockManager.writeBlock(bidTwo, bodyTwo.buffer, NodeBody.OFFSET);
+                this.blockManager.writeBlock(bidTwo, completeBlockTwo);
                 this.blockManager.swapBlocks(bid, bidTwo);
                 return this.doInsert(keys, value, bid, suffix);
             }
@@ -1266,27 +1258,33 @@ class RadixTree {
                 // Node is prefix to key.
                 if (commonPrefixLength === 0 && total === 0) {
                     head.prefix(suffix.slice(0, NodeHead.MAX_PREFIX_NIBBLES));
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return this.doInsert(keys, value, bid, suffix);
                 }
                 else {
                     if (this.blockManager.getBlockSize(bid) < NodeHead.LENGTH + NodeBody.LENGTH) {
-                        this.blockManager.resizeBlock(bid, NodeHead.LENGTH + NodeBody.LENGTH);
+                        let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, this.requestCompression);
+                        this.blockManager.swapBlocks(bid, bidTwo);
+                        this.blockManager.deleteBlock(bidTwo);
+                        let completeBlockTwo = new Uint8Array(NodeHead.LENGTH + NodeBody.LENGTH);
+                        completeBlockTwo.set(completeBlock, 0);
+                        completeBlock = completeBlockTwo;
+                        this.blockManager.writeBlock(bid, completeBlock);
+                        head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
                     }
                     let index = nextSuffixNibble;
-                    let body = new NodeBody();
-                    this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                    let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                     let child = body.child(index);
                     if (child === 0) {
                         child = body.child(index, this.blockManager.createBlock(NodeHead.LENGTH));
-                        this.blockManager.writeBlock(bid, body.buffer, NodeBody.OFFSET);
+                        this.blockManager.writeBlock(bid, completeBlock);
                     }
                     let outcome = this.doInsert(keys, value, child, suffix.slice(commonPrefixLength + 1));
                     if (outcome == null) {
                         return;
                     }
                     total = head.total(total + 1);
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return total;
                 }
             }
@@ -1294,23 +1292,23 @@ class RadixTree {
                 // Key is sibling to node.
                 let index = nextPrefixNibble;
                 head.prefix(prefix.slice(commonPrefixLength + 1));
-                this.blockManager.writeBlock(bid, head.buffer, 0);
-                let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH);
-                let headTwo = new NodeHead();
+                this.blockManager.writeBlock(bid, completeBlock);
+                let bidTwo = this.blockManager.createBlock(NodeHead.LENGTH + NodeBody.LENGTH, this.requestCompression);
+                let completeBlockTwo = new Uint8Array(NodeHead.LENGTH + NodeBody.LENGTH);
+                let headTwo = new NodeHead(completeBlockTwo.subarray(0, NodeHead.LENGTH));
+                let bodyTwo = new NodeBody(completeBlockTwo.subarray(NodeBody.OFFSET));
                 headTwo.prefix(prefix.slice(0, commonPrefixLength));
                 headTwo.total(total);
-                this.blockManager.writeBlock(bidTwo, headTwo.buffer, 0);
-                let bodyTwo = new NodeBody();
                 bodyTwo.child(index, bidTwo);
-                this.blockManager.writeBlock(bidTwo, bodyTwo.buffer, NodeBody.OFFSET);
+                this.blockManager.writeBlock(bidTwo, completeBlockTwo);
                 this.blockManager.swapBlocks(bid, bidTwo);
                 return this.doInsert(keys, value, bid, suffix);
             }
         }
     }
     doLocate(keys, bid, suffix) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let prefix = head.prefix();
         let total = head.total();
         let commonPrefixLength = computeCommonPrefixLength(prefix, suffix);
@@ -1346,8 +1344,7 @@ class RadixTree {
                         return;
                     }
                     let index = nextSuffixNibble;
-                    let body = new NodeBody();
-                    this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                    let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                     let child = body.child(index);
                     if (child === 0) {
                         return;
@@ -1362,8 +1359,8 @@ class RadixTree {
         }
     }
     doRemove(keys, bid, suffix) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let prefix = head.prefix();
         let total = head.total();
         let commonPrefixLength = computeCommonPrefixLength(prefix, suffix);
@@ -1379,7 +1376,7 @@ class RadixTree {
                     }
                     resident = head.resident(0);
                     total = head.total(total - 1);
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return total;
                 }
                 else {
@@ -1394,10 +1391,9 @@ class RadixTree {
                     if (outcome === 0) {
                         this.blockManager.deleteBlock(subtree);
                         subtree = head.subtree(0);
-                        this.blockManager.writeBlock(bid, head.buffer, 0);
                     }
                     total = head.total(total - 1);
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return total;
                 }
             }
@@ -1417,8 +1413,7 @@ class RadixTree {
                         return;
                     }
                     let index = nextSuffixNibble;
-                    let body = new NodeBody();
-                    this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+                    let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                     let child = body.child(index);
                     if (child === 0) {
                         return;
@@ -1430,10 +1425,9 @@ class RadixTree {
                     if (outcome === 0) {
                         this.blockManager.deleteBlock(child);
                         child = body.child(index, 0);
-                        this.blockManager.writeBlock(bid, body.buffer, NodeBody.OFFSET);
                     }
                     total = head.total(total - 1);
-                    this.blockManager.writeBlock(bid, head.buffer, 0);
+                    this.blockManager.writeBlock(bid, completeBlock);
                     return total;
                 }
             }
@@ -1444,11 +1438,10 @@ class RadixTree {
         }
     }
     doVacate(bid) {
-        let head = new NodeHead();
-        this.blockManager.readBlock(bid, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(bid);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         if (this.blockManager.getBlockSize(bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(bid, body.buffer, NodeBody.OFFSET);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 0; i < 16; i++) {
                 let child = body.child(i);
                 if (child !== 0) {
@@ -1487,9 +1480,10 @@ class RadixTree {
         }
         throw new Error("Expected code to be unreachable!");
     }
-    constructor(blockManager, blockIndex) {
+    constructor(blockManager, blockIndex, requestCompression) {
         this.blockManager = blockManager;
         this.blockIndex = blockIndex ?? blockManager.createBlock(RadixTree.INITIAL_SIZE);
+        this.requestCompression = requestCompression ?? false;
     }
     *[Symbol.iterator]() {
         yield* this.filter("^=", []);
@@ -1497,18 +1491,18 @@ class RadixTree {
     *branch(relationship, keys) {
         let bids = this.traverse(relationship, keys);
         for (let bid of bids) {
-            let head = new NodeHead();
-            this.blockManager.readBlock(bid, head.buffer, 0);
+            let completeBlock = this.blockManager.readBlock(bid);
+            let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
             let subtree = head.subtree();
             if (subtree === 0) {
                 continue;
             }
-            yield new RadixTree(this.blockManager, subtree);
+            yield new RadixTree(this.blockManager, subtree, this.requestCompression);
         }
     }
     debug(indent = "") {
-        let head = new NodeHead();
-        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(this.blockIndex);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let prefix = head.prefix();
         let resident = head.resident();
         let subtree = head.subtree();
@@ -1521,17 +1515,16 @@ class RadixTree {
         }
         if (subtree !== 0) {
             console.log(`${indent}subtree: (${subtree})`);
-            new RadixTree(this.blockManager, subtree).debug(indent + "\t");
+            new RadixTree(this.blockManager, subtree, this.requestCompression).debug(indent + "\t");
         }
         console.log(`${indent}total: ${total}`);
         if (this.blockManager.getBlockSize(this.blockIndex) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-            let body = new NodeBody();
-            this.blockManager.readBlock(this.blockIndex, body.buffer, NodeBody.OFFSET);
+            let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
             for (let i = 0; i < 16; i++) {
                 let child = body.child(i);
                 if (child !== 0) {
                     console.log(`${indent}children[${i.toString(16)}]: (${child})`);
-                    new RadixTree(this.blockManager, child).debug(indent + "\t");
+                    new RadixTree(this.blockManager, child, this.requestCompression).debug(indent + "\t");
                 }
             }
         }
@@ -1550,8 +1543,8 @@ class RadixTree {
         yield* treeWalker.traverse(this.blockIndex);
     }
     get_resident_bid() {
-        let head = new NodeHead();
-        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(this.blockIndex);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let resident = head.resident();
         if (resident === 0) {
             return;
@@ -1570,12 +1563,11 @@ class RadixTree {
         };
         let blockManager = this.blockManager;
         function traverse(node_bid) {
-            let head = new NodeHead();
-            blockManager.readBlock(node_bid, head.buffer, 0);
+            let completeBlock = blockManager.readBlock(node_bid);
+            let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
             if (blockManager.getBlockSize(node_bid) >= NodeHead.LENGTH + NodeBody.LENGTH) {
-                let body = new NodeBody();
+                let body = new NodeBody(completeBlock.subarray(NodeBody.OFFSET));
                 fullNodes.entries += 1;
-                blockManager.readBlock(node_bid, body.buffer, NodeBody.OFFSET);
                 for (let i = 0; i < 16; i++) {
                     let child = body.child(i);
                     if (child !== 0) {
@@ -1596,8 +1588,8 @@ class RadixTree {
         return statistics;
     }
     get_subtree_bid() {
-        let head = new NodeHead();
-        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(this.blockIndex);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         let subtree = head.subtree();
         if (subtree === 0) {
             return;
@@ -1611,15 +1603,15 @@ class RadixTree {
         return this.doInsert(nibbles.slice(1), value, this.blockIndex, nibbles[0] ?? []) != null;
     }
     length() {
-        let head = new NodeHead();
-        this.blockManager.readBlock(this.blockIndex, head.buffer, 0);
+        let completeBlock = this.blockManager.readBlock(this.blockIndex);
+        let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
         return head.total();
     }
     lookup(keys) {
         let bids = this.traverse("=", keys);
         for (let bid of bids) {
-            let head = new NodeHead();
-            this.blockManager.readBlock(bid, head.buffer, 0);
+            let completeBlock = this.blockManager.readBlock(bid);
+            let head = new NodeHead(completeBlock.subarray(0, NodeHead.LENGTH));
             let resident = head.resident();
             if (resident === 0) {
                 return;

@@ -1,21 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BlockManager = exports.BinHeader = exports.BlockReference = exports.BlockHeader = exports.BlockFlags = void 0;
+exports.BlockManager = exports.BinHeader = exports.BlockReference = exports.BlockHeader = exports.BlockFlags2 = exports.BlockFlags1 = void 0;
 const asserts = require("../mod/asserts");
 const chunks_1 = require("./chunks");
 const variables_1 = require("./variables");
 const utils = require("./utils");
-var BlockFlags;
-(function (BlockFlags) {
-    BlockFlags[BlockFlags["APPLICATION_0"] = 0] = "APPLICATION_0";
-    BlockFlags[BlockFlags["APPLICATION_1"] = 1] = "APPLICATION_1";
-    BlockFlags[BlockFlags["APPLICATION_2"] = 2] = "APPLICATION_2";
-    BlockFlags[BlockFlags["APPLICATION_3"] = 3] = "APPLICATION_3";
-    BlockFlags[BlockFlags["RESERVED_4"] = 4] = "RESERVED_4";
-    BlockFlags[BlockFlags["RESERVED_5"] = 5] = "RESERVED_5";
-    BlockFlags[BlockFlags["RESERVED_6"] = 6] = "RESERVED_6";
-    BlockFlags[BlockFlags["DELETED"] = 7] = "DELETED";
-})(BlockFlags = exports.BlockFlags || (exports.BlockFlags = {}));
+const compressors_1 = require("./compressors");
+var BlockFlags1;
+(function (BlockFlags1) {
+    BlockFlags1[BlockFlags1["COMPRESSION_REQUESTED"] = 6] = "COMPRESSION_REQUESTED";
+    BlockFlags1[BlockFlags1["DELETED"] = 7] = "DELETED";
+})(BlockFlags1 = exports.BlockFlags1 || (exports.BlockFlags1 = {}));
+;
+var BlockFlags2;
+(function (BlockFlags2) {
+    BlockFlags2[BlockFlags2["RESERVED_6"] = 6] = "RESERVED_6";
+    BlockFlags2[BlockFlags2["RESERVED_7"] = 7] = "RESERVED_7";
+})(BlockFlags2 = exports.BlockFlags2 || (exports.BlockFlags2 = {}));
 ;
 class BlockHeader extends chunks_1.Chunk {
     constructor(buffer) {
@@ -23,21 +24,65 @@ class BlockHeader extends chunks_1.Chunk {
         if (variables_1.DEBUG)
             asserts.IntegerAssert.exactly(this.buffer.length, BlockHeader.LENGTH);
     }
-    flag(bit, value) {
+    flag1(bit, value) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(BlockFlags1.COMPRESSION_REQUESTED, bit, BlockFlags1.DELETED);
         return utils.Binary.boolean(this.buffer, 0, bit, value);
     }
-    flags(value) {
-        return utils.Binary.unsigned(this.buffer, 0, 1, value);
+    flags1(value) {
+        return utils.Binary.unsigned(this.buffer, 0, 1, value) & BlockHeader.FLAGS_MASK;
     }
-    category(value) {
-        return utils.Binary.unsigned(this.buffer, 1, 1, value);
+    uncompressedCategory(value) {
+        if (this.isCompressionRequested()) {
+            return utils.Binary.unsigned(this.buffer, 0, 1, value != null ? this.flags1() | (value & BlockHeader.CATEGORY_MASK) : undefined) & BlockHeader.CATEGORY_MASK;
+        }
+        else {
+            return this.allocatedCategory(value);
+        }
+    }
+    flag2(bit, value) {
+        if (variables_1.DEBUG)
+            asserts.IntegerAssert.between(BlockFlags2.RESERVED_6, bit, BlockFlags2.RESERVED_7);
+        return utils.Binary.boolean(this.buffer, 1, bit, value);
+    }
+    flags2(value) {
+        return utils.Binary.unsigned(this.buffer, 1, 1, value) & BlockHeader.FLAGS_MASK;
+    }
+    allocatedCategory(value) {
+        return utils.Binary.unsigned(this.buffer, 1, 1, value != null ? this.flags2() | (value & BlockHeader.CATEGORY_MASK) : undefined) & BlockHeader.CATEGORY_MASK;
     }
     offset(value) {
         return utils.Binary.unsigned(this.buffer, 2, 6, value);
     }
-    length(value) {
-        let category = this.category(value != null ? BlockHeader.getCategory(value) : undefined);
-        return BlockHeader.getLength(category);
+    uncompressedLength(value) {
+        let compressedCategory = this.uncompressedCategory(value != null ? BlockHeader.getCategory(value) : undefined);
+        return BlockHeader.getLength(compressedCategory);
+    }
+    allocatedLength(value) {
+        let allocatedCategory = this.allocatedCategory(value != null ? BlockHeader.getCategory(value) : undefined);
+        return BlockHeader.getLength(allocatedCategory);
+    }
+    isCompressionRequested() {
+        return this.flag1(BlockFlags1.COMPRESSION_REQUESTED);
+    }
+    isDeleted() {
+        return this.flag1(BlockFlags1.DELETED);
+    }
+    isCompressed() {
+        return this.uncompressedCategory() > this.allocatedCategory();
+    }
+    toJSON() {
+        return {
+            isDeleted: this.isDeleted(),
+            isCompressionRequested: this.isCompressionRequested(),
+            isCompressed: this.isCompressed(),
+            allocatedCategory: this.allocatedCategory(),
+            uncompressedCategory: this.uncompressedCategory(),
+            offset: this.offset()
+        };
+    }
+    toString() {
+        return JSON.stringify(this.toJSON(), null, "\t");
     }
     static getCategory(minLength) {
         if (variables_1.DEBUG)
@@ -56,6 +101,8 @@ class BlockHeader extends chunks_1.Chunk {
         }
     }
     static LENGTH = 8;
+    static CATEGORY_MASK = 0b00111111;
+    static FLAGS_MASK = 0b11000000;
 }
 exports.BlockHeader = BlockHeader;
 ;
@@ -139,19 +186,19 @@ class BlockManager {
     }
     allocateBlock(header, minLength) {
         let offset = header.offset(this.file.size());
-        let length = header.length(minLength);
-        this.file.resize(offset + length);
+        let allocatedLength = header.allocatedLength(minLength);
+        this.file.resize(offset + allocatedLength);
     }
     resizeSystemBlock(header, minLength) {
-        if (BlockHeader.getCategory(minLength) <= header.category()) {
+        if (BlockHeader.getCategory(minLength) <= header.allocatedCategory()) {
             return;
         }
         let offset = header.offset();
-        let length = header.length();
+        let allocatedLength = header.allocatedLength();
         let oldHeader = new BlockHeader();
         oldHeader.offset(offset);
-        oldHeader.length(length);
-        let buffer = new Uint8Array(length);
+        oldHeader.allocatedLength(allocatedLength);
+        let buffer = new Uint8Array(allocatedLength);
         this.file.read(buffer, offset);
         this.allocateBlock(header, minLength);
         this.file.write(buffer, header.offset());
@@ -162,12 +209,12 @@ class BlockManager {
         this.writeBlockHeader(id, oldHeader);
         this.deleteBlock(id);
     }
-    createNewBlock(minLength) {
-        let length = this.header.table.length();
+    createNewBlock(minLength, compression) {
+        let allocatedLength = this.header.table.allocatedLength();
         let count = this.header.count.value();
-        let capactity = Math.floor(length / BlockHeader.LENGTH);
+        let capactity = Math.floor(allocatedLength / BlockHeader.LENGTH);
         if (count === capactity) {
-            this.resizeSystemBlock(this.header.table, length + length);
+            this.resizeSystemBlock(this.header.table, allocatedLength + allocatedLength);
             // The old system block becomes an application block which affects the block count.
             count = this.header.count.value();
         }
@@ -176,10 +223,12 @@ class BlockManager {
         let id = count;
         let header = new BlockHeader();
         this.allocateBlock(header, minLength);
+        header.flag1(BlockFlags1.COMPRESSION_REQUESTED, compression ?? false);
+        header.uncompressedCategory(header.allocatedCategory());
         this.writeBlockHeader(id, header);
         return id;
     }
-    createOldBlock(minLength) {
+    createOldBlock(minLength, compression) {
         let category = BlockHeader.getCategory(minLength);
         let pool = this.header.pools[category];
         let offset = pool.offset();
@@ -198,7 +247,9 @@ class BlockManager {
         counter.write(this.file, offset);
         let header = new BlockHeader();
         this.readBlockHeader(id, header, true);
-        header.flag(BlockFlags.DELETED, false);
+        header.flag1(BlockFlags1.COMPRESSION_REQUESTED, compression ?? false);
+        header.uncompressedCategory(header.allocatedCategory());
+        header.flag1(BlockFlags1.DELETED, false);
         this.writeBlockHeader(id, header);
         return id;
     }
@@ -210,13 +261,13 @@ class BlockManager {
         header.read(this.file, offset + id * BlockHeader.LENGTH);
         if (deleted != null) {
             if (deleted) {
-                if (!header.flag(BlockFlags.DELETED)) {
-                    throw `Expected block to be deleted!`;
+                if (!header.flag1(BlockFlags1.DELETED)) {
+                    throw `Expected block ${id} to be deleted!`;
                 }
             }
             else {
-                if (header.flag(BlockFlags.DELETED)) {
-                    throw `Expected block to not be deleted!`;
+                if (header.flag1(BlockFlags1.DELETED)) {
+                    throw `Expected block ${id} to not be deleted!`;
                 }
             }
         }
@@ -232,7 +283,7 @@ class BlockManager {
         for (let bid = 0; bid < this.getBlockCount(); bid++) {
             let header = new BlockHeader();
             this.readBlockHeader(bid, header);
-            if (!header.flag(BlockFlags.DELETED)) {
+            if (!header.flag1(BlockFlags1.DELETED)) {
                 let buffer = this.readBlock(bid);
                 yield {
                     bid,
@@ -244,25 +295,25 @@ class BlockManager {
     clearBlock(id) {
         let header = new BlockHeader();
         this.readBlockHeader(id, header, false);
-        let buffer = new Uint8Array(header.length());
+        let buffer = new Uint8Array(header.uncompressedLength());
         this.writeBlock(id, buffer, 0);
     }
-    cloneBlock(idOne) {
+    cloneBlock(idOne, compression) {
         let headerOne = new BlockHeader();
         this.readBlockHeader(idOne, headerOne, false);
-        let buffer = new Uint8Array(headerOne.length());
+        let buffer = new Uint8Array(headerOne.uncompressedLength());
         this.readBlock(idOne, buffer, 0);
-        let idTwo = this.createBlock(buffer.length);
+        let idTwo = this.createBlock(buffer.length, compression);
         this.writeBlock(idTwo, buffer, 0);
         return idTwo;
     }
-    createBlock(minLength) {
+    createBlock(minLength, compression) {
         try {
-            return this.createOldBlock(minLength);
+            return this.createOldBlock(minLength, compression);
         }
         catch (error) { }
         try {
-            return this.createNewBlock(minLength);
+            return this.createNewBlock(minLength, compression);
         }
         catch (error) { }
         throw `Expected block with a length of at least ${minLength} bytes to be created!`;
@@ -270,14 +321,14 @@ class BlockManager {
     deleteBlock(id) {
         let header = new BlockHeader();
         this.readBlockHeader(id, header, false);
-        let category = header.category();
-        let pool = this.header.pools[category];
+        let allocatedCategory = header.allocatedCategory();
+        let pool = this.header.pools[allocatedCategory];
         let offset = pool.offset();
         let counter = new BlockReference();
         counter.read(this.file, offset);
         let count = counter.value();
         let minLength = BlockReference.LENGTH + (count + 1) * BlockReference.LENGTH;
-        if (minLength > pool.length()) {
+        if (minLength > pool.allocatedLength()) {
             this.resizeSystemBlock(pool, minLength);
             offset = pool.offset();
             // The pool block may in theory be deleted and placed in itself.
@@ -289,25 +340,20 @@ class BlockManager {
         pointer.write(this.file, offset + BlockReference.LENGTH + count * BlockReference.LENGTH);
         counter.value(count + 1);
         counter.write(this.file, offset);
-        this.clearBlock(id);
-        header.flags(0);
-        header.flag(BlockFlags.DELETED, true);
+        let buffer = new Uint8Array(header.allocatedLength());
+        this.file.write(buffer, header.offset());
+        header.uncompressedCategory(allocatedCategory);
+        header.flag1(BlockFlags1.COMPRESSION_REQUESTED, false);
+        header.flag1(BlockFlags1.DELETED, true);
         this.writeBlockHeader(id, header);
     }
     getBlockCount() {
         return this.header.count.value();
     }
-    getBlockFlag(id, bit) {
-        let header = new BlockHeader();
-        this.readBlockHeader(id, header, false);
-        if (variables_1.DEBUG)
-            asserts.IntegerAssert.between(BlockFlags.APPLICATION_0, bit, BlockFlags.APPLICATION_3);
-        return header.flag(bit);
-    }
     getBlockSize(id) {
         let header = new BlockHeader();
         this.readBlockHeader(id, header, false);
-        return header.length();
+        return header.uncompressedLength();
     }
     getStatistics() {
         let statistics = {};
@@ -316,12 +362,12 @@ class BlockManager {
             bytesPerEntry: BinHeader.LENGTH
         };
         statistics.allocationTable = {
-            entries: this.header.table.length() / BlockHeader.LENGTH,
+            entries: this.header.table.uncompressedLength() / BlockHeader.LENGTH,
             bytesPerEntry: BlockHeader.LENGTH
         };
         statistics.freeBlockLists = this.header.pools.map((pool) => {
             return {
-                entries: pool.length() / BlockReference.LENGTH,
+                entries: pool.uncompressedLength() / BlockReference.LENGTH,
                 bytesPerEntry: BlockReference.LENGTH
             };
         });
@@ -350,50 +396,84 @@ class BlockManager {
     readBlock(id, data, blockOffset) {
         let header = new BlockHeader();
         this.readBlockHeader(id, header, false);
-        let offset = header.offset();
-        let length = header.length();
-        data = data ?? new Uint8Array(length);
+        let uncompressedLength = header.uncompressedLength();
+        data = data ?? new Uint8Array(uncompressedLength);
         let activeBlockOffset = blockOffset ?? 0;
         if (variables_1.DEBUG)
-            asserts.IntegerAssert.between(0, activeBlockOffset, length);
+            asserts.IntegerAssert.between(0, activeBlockOffset, uncompressedLength);
         if (variables_1.DEBUG)
-            asserts.IntegerAssert.between(0, data.length, length - activeBlockOffset);
+            asserts.IntegerAssert.between(0, data.length, uncompressedLength - activeBlockOffset);
         if (blockOffset == null) {
-            let buffer = new Uint8Array(length);
-            this.file.read(buffer, offset + activeBlockOffset);
-            data.set(buffer.subarray(0, data.length), 0);
+            if (data.length !== uncompressedLength) {
+                let blockBuffer = new Uint8Array(uncompressedLength);
+                this.readCompleteBlock(header, blockBuffer);
+                data.set(blockBuffer.subarray(0, data.length), 0);
+            }
+            else {
+                this.readCompleteBlock(header, data);
+            }
         }
         else {
-            this.file.read(data, offset + activeBlockOffset);
+            this.readPartialBlock(header, data, activeBlockOffset);
         }
         return data;
+    }
+    readCompleteBlock(header, data) {
+        let offset = header.offset();
+        if (header.isCompressed()) {
+            let compressedData = new Uint8Array(header.allocatedLength());
+            this.file.read(compressedData, offset);
+            compressors_1.RLECompressor.decompress(compressedData, data);
+        }
+        else {
+            this.file.read(data, offset);
+        }
+    }
+    readPartialBlock(header, data, activeBlockOffset) {
+        if (header.isCompressed()) {
+            let uncompressedLength = header.uncompressedLength();
+            if (data.length !== uncompressedLength) {
+                let blockBuffer = new Uint8Array(uncompressedLength);
+                this.readCompleteBlock(header, blockBuffer);
+                data.set(blockBuffer.subarray(activeBlockOffset, activeBlockOffset + data.length), 0);
+            }
+            else {
+                this.readCompleteBlock(header, data);
+            }
+        }
+        else {
+            let offset = header.offset();
+            this.file.read(data, offset + activeBlockOffset);
+        }
     }
     reload() {
         this.header.read(this.file, 0);
     }
+    recreateBlock(idOne, minLength) {
+        let headerOne = new BlockHeader();
+        this.readBlockHeader(idOne, headerOne, false);
+        if (BlockHeader.getCategory(minLength) === headerOne.allocatedCategory()) {
+            return;
+        }
+        let idTwo = this.createBlock(minLength, headerOne.isCompressionRequested());
+        this.swapBlocks(idOne, idTwo);
+        this.deleteBlock(idTwo);
+    }
     resizeBlock(idOne, minLength) {
         let headerOne = new BlockHeader();
         this.readBlockHeader(idOne, headerOne, false);
-        if (BlockHeader.getCategory(minLength) === headerOne.category()) {
+        if (BlockHeader.getCategory(minLength) === headerOne.allocatedCategory()) {
             return;
         }
-        let idTwo = this.createBlock(minLength);
+        let idTwo = this.createBlock(minLength, headerOne.isCompressionRequested());
         let headerTwo = new BlockHeader();
         this.readBlockHeader(idTwo, headerTwo, false);
-        let length = Math.min(headerOne.length(), headerTwo.length());
+        let length = Math.min(headerOne.uncompressedLength(), headerTwo.uncompressedLength());
         let buffer = new Uint8Array(length);
         this.readBlock(idOne, buffer, 0);
         this.writeBlock(idTwo, buffer, 0);
         this.swapBlocks(idOne, idTwo);
         this.deleteBlock(idTwo);
-    }
-    setBlockFlag(id, bit, value) {
-        let header = new BlockHeader();
-        this.readBlockHeader(id, header, false);
-        if (variables_1.DEBUG)
-            asserts.IntegerAssert.between(BlockFlags.APPLICATION_0, bit, BlockFlags.APPLICATION_3);
-        header.flag(bit, value);
-        this.writeBlockHeader(id, header);
     }
     swapBlocks(idOne, idTwo) {
         let headerOne = new BlockHeader();
@@ -406,22 +486,61 @@ class BlockManager {
     writeBlock(id, data, blockOffset) {
         let header = new BlockHeader();
         this.readBlockHeader(id, header, false);
-        let offset = header.offset();
-        let length = header.length();
+        let uncompressedLength = header.uncompressedLength();
         let activeBlockOffset = blockOffset ?? 0;
         if (variables_1.DEBUG)
-            asserts.IntegerAssert.between(0, activeBlockOffset, length);
+            asserts.IntegerAssert.between(0, activeBlockOffset, uncompressedLength);
         if (variables_1.DEBUG)
-            asserts.IntegerAssert.between(0, data.length, length - activeBlockOffset);
+            asserts.IntegerAssert.between(0, data.length, uncompressedLength - activeBlockOffset);
         if (blockOffset == null) {
-            let buffer = new Uint8Array(length);
-            buffer.set(data, 0);
-            this.file.write(buffer, offset + activeBlockOffset);
+            let blockBuffer = data;
+            if (data.length !== uncompressedLength) {
+                blockBuffer = new Uint8Array(uncompressedLength);
+                blockBuffer.set(data, 0);
+            }
+            this.writeCompleteBlock(header, id, blockBuffer);
         }
         else {
-            this.file.write(data, offset + activeBlockOffset);
+            this.writePartialBlock(header, id, data, activeBlockOffset);
         }
         return data;
+    }
+    writeCompleteBlock(header, id, data) {
+        if (header.isCompressionRequested()) {
+            let compressedData = compressors_1.RLECompressor.compress(data);
+            if (compressedData == null || BlockHeader.getCategory(compressedData.length) >= BlockHeader.getCategory(data.length)) {
+                compressedData = data;
+            }
+            this.recreateBlock(id, compressedData.length);
+            this.readBlockHeader(id, header, false);
+            let blockBuffer = compressedData;
+            if (compressedData.length != header.allocatedLength()) {
+                blockBuffer = new Uint8Array(header.allocatedLength());
+                blockBuffer.set(compressedData, 0);
+            }
+            this.file.write(blockBuffer, header.offset());
+            header.uncompressedLength(data.length);
+            this.writeBlockHeader(id, header);
+        }
+        else {
+            this.file.write(data, header.offset());
+        }
+    }
+    writePartialBlock(header, id, data, activeBlockOffset) {
+        if (header.isCompressionRequested()) {
+            let uncompressedLength = header.uncompressedLength();
+            let blockBuffer = data;
+            if (data.length !== uncompressedLength) {
+                blockBuffer = new Uint8Array(uncompressedLength),
+                    this.readCompleteBlock(header, blockBuffer);
+                blockBuffer.set(data, activeBlockOffset);
+            }
+            this.writeCompleteBlock(header, id, blockBuffer);
+        }
+        else {
+            let offset = header.offset();
+            this.file.write(data, offset + activeBlockOffset);
+        }
     }
     static RESERVED_BLOCK_DATABASE_SCHEMA = 0;
 }

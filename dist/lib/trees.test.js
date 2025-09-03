@@ -13,7 +13,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("A"), getKeyFromString("A"), getKeyFromString("A")], 1);
     tree.insert([getKeyFromString("A"), getKeyFromString("A"), getKeyFromString("B")], 2);
     tree.insert([getKeyFromString("A"), getKeyFromString("B"), getKeyFromString("A")], 3);
@@ -46,7 +46,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("a"), getKeyFromString("a")], 2);
     tree.insert([getKeyFromString("a"), getKeyFromString("b")], 3);
@@ -148,7 +148,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("apa")], 1);
     wtf.test(`It should return the correct values for a full root node match in > mode.`, async (assert) => {
         let results = tree.filter(">", [getKeyFromString("")]);
@@ -160,7 +160,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("apa")], 1);
     tree.insert([getKeyFromString("apa1")], 2);
     tree.insert([getKeyFromString("apa3")], 3);
@@ -387,7 +387,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("one")], 1);
     tree.insert([getKeyFromString("one"), getKeyFromString("a")], 2);
     tree.insert([getKeyFromString("one"), getKeyFromString("b")], 3);
@@ -410,7 +410,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("b"), getKeyFromString("1")], 2);
     tree.insert([getKeyFromString("b"), getKeyFromString("2")], 3);
@@ -446,7 +446,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("one")], 1);
     tree.insert([getKeyFromString("two")], 2);
     wtf.test(`It should support iteration.`, async (assert) => {
@@ -458,7 +458,7 @@ function getKeyFromString(string) {
 (async () => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a"), getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("a"), getKeyFromString("b")], 2);
     tree.insert([getKeyFromString("a"), getKeyFromString("c")], 3);
@@ -520,7 +520,7 @@ function getKeyFromString(string) {
 wtf.test(`It should throw errors when used after deletion.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.delete();
     await assert.throws(async () => {
         Array.from(tree);
@@ -553,7 +553,7 @@ wtf.test(`It should throw errors when used after deletion.`, async (assert) => {
 wtf.test(`It should support inserting values not prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.lookup([]), undefined);
     tree.insert([], 1);
     assert.equals(tree.lookup([]), 1);
@@ -561,7 +561,7 @@ wtf.test(`It should support inserting values not prevously inserted.`, async (as
 wtf.test(`It should support inserting values prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.lookup([]), undefined);
     tree.insert([], 1);
     assert.equals(tree.lookup([]), 1);
@@ -571,7 +571,7 @@ wtf.test(`It should support inserting values prevously inserted.`, async (assert
 wtf.test(`It should keep track of the number of values stored.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.length(), 0);
     tree.insert([getKeyFromString("a")], 1);
     assert.equals(tree.length(), 1);
@@ -585,13 +585,13 @@ wtf.test(`It should keep track of the number of values stored.`, async (assert) 
 wtf.test(`It should support looking up values not prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.lookup([]), undefined);
 });
 wtf.test(`It should support looking up values prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.lookup([]), undefined);
     tree.insert([], 1);
     assert.equals(tree.lookup([]), 1);
@@ -599,7 +599,7 @@ wtf.test(`It should support looking up values prevously inserted.`, async (asser
 wtf.test(`It should support removing values not prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.lookup([]), undefined);
     tree.remove([]);
     assert.equals(tree.lookup([]), undefined);
@@ -607,7 +607,7 @@ wtf.test(`It should support removing values not prevously inserted.`, async (ass
 wtf.test(`It should support removing values prevously inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     assert.equals(tree.lookup([]), undefined);
     tree.insert([], 1);
     assert.equals(tree.lookup([]), 1);
@@ -617,7 +617,7 @@ wtf.test(`It should support removing values prevously inserted.`, async (assert)
 wtf.test(`It should support vacating.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([], 1);
     tree.insert([], 2);
     tree.vacate();
@@ -628,7 +628,7 @@ wtf.test(`It should support vacating.`, async (assert) => {
 wtf.test(`It should support inserting values with a key already inserted being a prefix for the key.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("ab")], 2);
     let observed = Array.from(tree);
@@ -638,7 +638,7 @@ wtf.test(`It should support inserting values with a key already inserted being a
 wtf.test(`It should support inserting values with the key being a prefix for a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("ab")], 1);
     tree.insert([getKeyFromString("a")], 2);
     let observed = Array.from(tree);
@@ -648,7 +648,7 @@ wtf.test(`It should support inserting values with the key being a prefix for a k
 wtf.test(`It should support inserting values with the key being indentical to a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("a")], 2);
     let observed = Array.from(tree);
@@ -658,7 +658,7 @@ wtf.test(`It should support inserting values with the key being indentical to a 
 wtf.test(`It should support inserting values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("b")], 1);
     tree.insert([getKeyFromString("a")], 2);
     let observed = Array.from(tree);
@@ -668,7 +668,7 @@ wtf.test(`It should support inserting values with the key being a lesser sibling
 wtf.test(`It should support inserting values with the key being a greater sibling of a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("b")], 2);
     let observed = Array.from(tree);
@@ -678,7 +678,7 @@ wtf.test(`It should support inserting values with the key being a greater siblin
 wtf.test(`It should support inserting long values.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("01234566789abcdef")], 1);
     let observed = Array.from(tree);
     let expected = [1];
@@ -687,7 +687,7 @@ wtf.test(`It should support inserting long values.`, async (assert) => {
 wtf.test(`It should support removing values with a key already inserted being a prefix for the key.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("ab")], 2);
     tree.remove([getKeyFromString("ab")]);
@@ -698,7 +698,7 @@ wtf.test(`It should support removing values with a key already inserted being a 
 wtf.test(`It should support removing values with the key being a prefix for a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("ab")], 1);
     tree.insert([getKeyFromString("a")], 2);
     tree.remove([getKeyFromString("a")]);
@@ -709,7 +709,7 @@ wtf.test(`It should support removing values with the key being a prefix for a ke
 wtf.test(`It should support removing values with the key being indentical to a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("a")], 2);
     tree.remove([getKeyFromString("a")]);
@@ -720,7 +720,7 @@ wtf.test(`It should support removing values with the key being indentical to a k
 wtf.test(`It should support removing values with the key being a lesser sibling of a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("b")], 1);
     tree.insert([getKeyFromString("a")], 2);
     tree.remove([getKeyFromString("a")]);
@@ -731,7 +731,7 @@ wtf.test(`It should support removing values with the key being a lesser sibling 
 wtf.test(`It should support removing values with the key being a greater sibling of a key already inserted.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("a")], 1);
     tree.insert([getKeyFromString("b")], 2);
     tree.remove([getKeyFromString("b")]);
@@ -742,7 +742,7 @@ wtf.test(`It should support removing values with the key being a greater sibling
 wtf.test(`It should support removing long values.`, async (assert) => {
     let blockManager = new blocks_1.BlockManager(new files_1.VirtualFile(0));
     blockManager.createBlock(256);
-    let tree = new trees_1.RadixTree(blockManager, blockManager.createBlock(256));
+    let tree = new trees_1.RadixTree(blockManager);
     tree.insert([getKeyFromString("01234566789abcdef")], 1);
     tree.remove([getKeyFromString("01234566789abcdef")]);
     let observed = Array.from(tree);

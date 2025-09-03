@@ -1,26 +1,42 @@
 import { Chunk, Readable, Writable } from "./chunks";
 import { File } from "./files";
 import * as utils from "./utils";
-export declare enum BlockFlags {
-    APPLICATION_0 = 0,
-    APPLICATION_1 = 1,
-    APPLICATION_2 = 2,
-    APPLICATION_3 = 3,
-    RESERVED_4 = 4,
-    RESERVED_5 = 5,
-    RESERVED_6 = 6,
+export declare enum BlockFlags1 {
+    COMPRESSION_REQUESTED = 6,
     DELETED = 7
+}
+export declare enum BlockFlags2 {
+    RESERVED_6 = 6,
+    RESERVED_7 = 7
 }
 export declare class BlockHeader extends Chunk {
     constructor(buffer?: Uint8Array);
-    flag(bit: number, value?: boolean): boolean;
-    flags(value?: number): number;
-    category(value?: number): number;
+    flag1(bit: BlockFlags1, value?: boolean): boolean;
+    flags1(value?: number): number;
+    uncompressedCategory(value?: number): number;
+    flag2(bit: BlockFlags2, value?: boolean): boolean;
+    flags2(value?: number): number;
+    allocatedCategory(value?: number): number;
     offset(value?: number): number;
-    length(value?: number): number;
+    uncompressedLength(value?: number): number;
+    allocatedLength(value?: number): number;
+    isCompressionRequested(): boolean;
+    isDeleted(): boolean;
+    isCompressed(): boolean;
+    toJSON(): {
+        isDeleted: boolean;
+        isCompressionRequested: boolean;
+        isCompressed: boolean;
+        allocatedCategory: number;
+        uncompressedCategory: number;
+        offset: number;
+    };
+    toString(): string;
     static getCategory(minLength: number): number;
     static getLength(category: number): number;
     static readonly LENGTH = 8;
+    static readonly CATEGORY_MASK = 63;
+    static readonly FLAGS_MASK = 192;
 }
 export declare class BlockReference extends Chunk {
     constructor(buffer?: Uint8Array);
@@ -56,20 +72,23 @@ export declare class BlockManager {
         buffer: Uint8Array;
     }>;
     clearBlock(id: number): void;
-    cloneBlock(idOne: number): number;
-    createBlock(minLength: number): number;
+    cloneBlock(idOne: number, compression?: boolean): number;
+    createBlock(minLength: number, compression?: boolean): number;
     deleteBlock(id: number): void;
     getBlockCount(): number;
-    getBlockFlag(id: number, bit: number): boolean;
     getBlockSize(id: number): number;
     getStatistics(): Record<string, utils.Statistic>;
     makeReadable(id: number): Readable;
     makeWritable(id: number): Writable;
     readBlock(id: number, data?: Uint8Array, blockOffset?: number): Uint8Array;
+    protected readCompleteBlock(header: BlockHeader, data: Uint8Array): void;
+    protected readPartialBlock(header: BlockHeader, data: Uint8Array, activeBlockOffset: number): void;
     reload(): void;
+    recreateBlock(idOne: number, minLength: number): void;
     resizeBlock(idOne: number, minLength: number): void;
-    setBlockFlag(id: number, bit: number, value: boolean): void;
     swapBlocks(idOne: number, idTwo: number): void;
     writeBlock(id: number, data: Uint8Array, blockOffset?: number): Uint8Array;
+    protected writeCompleteBlock(header: BlockHeader, id: number, data: Uint8Array): void;
+    protected writePartialBlock(header: BlockHeader, id: number, data: Uint8Array, activeBlockOffset: number): void;
     static readonly RESERVED_BLOCK_DATABASE_SCHEMA = 0;
 }

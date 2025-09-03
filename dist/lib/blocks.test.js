@@ -3,7 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const files = require("./files");
 const blocks = require("./blocks");
-const blocks_1 = require("./blocks");
+wtf.test(`It should support compressed blocks.`, async (assert) => {
+    let file = new files.VirtualFile(0);
+    let blockManager = new blocks.BlockManager(file, {
+        initialPoolCapacity: 1,
+        initialTableCapacity: 1
+    });
+    let idOne = blockManager.createBlock(16, true);
+    blockManager.writeBlock(idOne, Uint8Array.of(1, 2, 3, 4));
+    assert.equals(blockManager.readBlock(idOne, new Uint8Array(4)), Uint8Array.of(1, 2, 3, 4));
+});
 wtf.test(`It should not support creating blocks with a size of 0.`, async (assert) => {
     let file = new files.VirtualFile(0);
     let blockManager = new blocks.BlockManager(file);
@@ -334,30 +343,4 @@ wtf.test(`It should recycle system blocks that get deleted during the deletion o
     assert.equals(idOne, idTwo);
     blockManager.createBlock(8);
     assert.equals(blockManager.getBlockCount(), 2);
-});
-wtf.test(`It should support storing block flags.`, async (assert) => {
-    let file = new files.VirtualFile(0);
-    let blockManager = new blocks.BlockManager(file);
-    let id = blockManager.createBlock(1);
-    blockManager.setBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0, true);
-    assert.equals(blockManager.getBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0), true);
-});
-wtf.test(`It should prevent setting flags for deleted blocks.`, async (assert) => {
-    let file = new files.VirtualFile(0);
-    let blockManager = new blocks.BlockManager(file);
-    let id = blockManager.createBlock(1);
-    blockManager.deleteBlock(id);
-    await assert.throws(async () => {
-        blockManager.setBlockFlag(id, blocks_1.BlockFlags.APPLICATION_0, true);
-    });
-});
-wtf.test(`It should clear block flags when deleting blocks.`, async (assert) => {
-    let file = new files.VirtualFile(0);
-    let blockManager = new blocks.BlockManager(file);
-    let idOne = blockManager.createBlock(1);
-    blockManager.setBlockFlag(idOne, blocks_1.BlockFlags.APPLICATION_0, true);
-    blockManager.deleteBlock(idOne);
-    let idTwo = blockManager.createBlock(1);
-    assert.equals(idOne, idTwo);
-    assert.equals(blockManager.getBlockFlag(idTwo, blocks_1.BlockFlags.APPLICATION_0), false);
 });
