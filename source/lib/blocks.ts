@@ -358,7 +358,9 @@ export class BlockManager {
 		counter.write(this.file, offset);
 		let buffer = new Uint8Array(header.allocatedLength());
 		this.file.write(buffer, header.offset());
-		header.uncompressedCategory(allocatedCategory);
+		if (header.isCompressionRequested()) {
+			header.uncompressedCategory(0);
+		}
 		header.flag1(BlockFlags1.COMPRESSION_REQUESTED, false);
 		header.flag1(BlockFlags1.DELETED, true);
 		this.writeBlockHeader(id, header);
