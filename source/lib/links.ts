@@ -35,13 +35,15 @@ export class LinkManager<A extends Record, B extends RequiredKeys<A>, C extends 
 		this.syncedFields = syncedFields ?? {};
 	}
 
-	createPartialChild(parentRecord: A): Partial<C> | undefined {
+	createPartialChild(parentRecord: A | undefined): Partial<C> | undefined {
 		let partialChild: Partial<C> | undefined;
-		for (let parentKey in this.syncedFields) {
-			let childKey = this.syncedFields[parentKey];
-			if (childKey != null) {
-				partialChild = partialChild ?? {};
-				partialChild[childKey] = parentRecord[parentKey] as any;
+		if (parentRecord != null) {
+			for (let parentKey in this.syncedFields) {
+				let childKey = this.syncedFields[parentKey];
+				if (childKey != null) {
+					partialChild = partialChild ?? {};
+					partialChild[childKey] = parentRecord[parentKey] as any;
+				}
 			}
 		}
 		return partialChild;
