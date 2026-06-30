@@ -19,11 +19,13 @@ class LinkManager {
     }
     createPartialChild(parentRecord) {
         let partialChild;
-        for (let parentKey in this.syncedFields) {
-            let childKey = this.syncedFields[parentKey];
-            if (childKey != null) {
-                partialChild = partialChild ?? {};
-                partialChild[childKey] = parentRecord[parentKey];
+        if (parentRecord != null) {
+            for (let parentKey in this.syncedFields) {
+                let childKey = this.syncedFields[parentKey];
+                if (childKey != null) {
+                    partialChild = partialChild ?? {};
+                    partialChild[childKey] = parentRecord[parentKey];
+                }
             }
         }
         return partialChild;

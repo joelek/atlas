@@ -21,7 +21,7 @@ export declare class LinkManager<A extends Record, B extends RequiredKeys<A>, C 
     private orders;
     private syncedFields;
     constructor(parent: StoreManager<A, B>, child: StoreManager<C, D>, keysRecordMap: E, orders?: OrderMap<C>, syncedFields?: MetadataKeysRecordMap<A, B, C, D>);
-    createPartialChild(parentRecord: A): Partial<C> | undefined;
+    createPartialChild(parentRecord: A | undefined): Partial<C> | undefined;
     getParent(): StoreManager<A, B>;
     getChild(): StoreManager<C, D>;
     filter(keysRecord?: KeysRecord<A, B>, anchorKeysRecord?: KeysRecord<C, D>, limit?: number): Array<C>;
